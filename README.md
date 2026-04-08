@@ -70,4 +70,7 @@ Pulls
 -  soggy used band-aid (replaces 1 prayerbead)
 -  New Age healing crystal (replaces another prayerbead)
 -  null-day exploit (develer for left door... probably not necessary)
+-  Lodestone (anemone mining)
+
+
 -  ink bladder (optional free run pulled with extra pulls)
