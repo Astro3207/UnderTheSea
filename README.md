@@ -1,9 +1,14 @@
 # UnderTheSea
 11,037 Loop
+
 Only mys and moxie support rn, will work on muscle after finalizing pathing.
+
 Moxie is obviously the best and you just take the L for the muscle and mysticality guild quests.
-I'm definitely missing some, but here's stuff off the top of my head
+
+I'm definitely missing some, but here's stuff off the top of my head:
+
 Critical items/skills
+
 - Steely eyed squint
 - Transcendent olfaction
 - VIP louge key + stocked lounge (3 free kills plus a bunch of buffs)
@@ -16,7 +21,9 @@ Critical items/skills
 - Spring shoes (1 free run but more importantly 1 nonkilling or runnin banish, useful in a few circumstances)
 - packaged Monodent of the Sea
 - lab-grown blood cubic zirconia (11 free fights early on)
+  
 Very useful items
+
 - Packaged backup camera (11 free kills plus other benefits)
 - Combat lover's locket (2 summons)
 - boxed august scepter (waffles mostly)
@@ -27,7 +34,9 @@ Very useful items
 - McHugeLarge deluxe ski set (sniff)
 - seal-clubbing club loot box (has some useful combos with backup camera)
 - PYEC (extends steely eyed squint and shadow affinity and fishy)
+  
 Slightly useful
+
 - Jurassic parka (1 free kill)
 - Rock garden (1 free kill)
 - packaged Everfull Dart Holster (1 free kill)
@@ -39,7 +48,9 @@ Slightly useful
 - new-in-box toy Cupid bow
 - assemble-it-yourself Leprecondo
 - Möbius ring box
+  
 Pulls
+
 - Mer-kin sneakmask
 -  sea lasso
 -  comb jelly
