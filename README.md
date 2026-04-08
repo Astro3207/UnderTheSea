@@ -73,4 +73,4 @@ Pulls
 -  Lodestone (anemone mining)
 
 
--  ink bladder (optional free run pulled with extra pulls)
+-  pepp parasol/GAP/Navel > mer-kin pinkslip/ink bladder/handful of split pea soup/anchor bomb (optional free run pulled with extra pulls)
