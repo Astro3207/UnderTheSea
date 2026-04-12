@@ -1,6 +1,6 @@
 import iotm.ash;
 void free_kill(string ptext, boolean drop){
-    foreach freeskill in $skills[Assert your Authority,Club 'Em Back in Time,Darts: Aim for the Bullseye,BCZ: Sweat Bullets,Shattering Punch,Gingerbread Mob Hit]{
+    foreach freeskill in $skills[Spit jurassic acid,Assert your Authority,Club 'Em Back in Time,Darts: Aim for the Bullseye,BCZ: Sweat Bullets,Shattering Punch,Gingerbread Mob Hit]{
         if (freeskill == $skill[Club 'Em Back in Time] && my_location() != $location[mer-kin colosseum]){
             continue;
         }
@@ -39,14 +39,13 @@ void free_run(string ptext, boolean banish){
             if (freecombat == $item[peppermint parasol] && to_int(get_property("parasolUsed")) > 3){
                 continue;
             }
-            if (freecombat == $item[mer-kin pinkslip]){
-                print(last_monster());
+            if (freecombat == $item[mer-kin pinkslip] && last_monster().phylum != $phylum[mer-kin]){
+                continue;
             }
             throw_item(freecombat);
         }
     }
 }
-
 void main(int round, monster mob, string page_text){
     switch (my_location()){
         case $location[The Haunted Pantry]:
@@ -56,43 +55,20 @@ void main(int round, monster mob, string page_text){
             if (have_skill($skill[Prepare to reanimate your Foe])){
                 use_skill($skill[Prepare to reanimate your Foe]);
             }
-            use_skill($skill[Darts: Throw at %part1]);
+            darts();
             use_skill($skill[saucegeyser]);
             use_skill($skill[saucegeyser]);
             break;
         case $location[Shadow Rift (The Misspelled Cemetary)]:
             if (my_primestat() == $stat[moxie])
                 steal();
-            if (mob.boss == true){
-                if (mob == $monster[shadow orrery]){
-                    attack();
-                    attack();
-                    attack();
-                    attack();
-                    attack();
-                    attack();
-                    attack();
-                    attack();
-                    attack();
-                }
-                if (mob == $monster[shadow spire]){
-                    use_skill($skill[raise backup dancer]);
-                    use_skill($skill[raise backup dancer]);
-                }
-                use_skill($skill[Darts: Throw at %part1]);
-                use_skill($skill[Saucegeyser]);
-                use_skill($skill[Saucegeyser]);
-                use_skill($skill[Saucegeyser]);
-            }
-            if (get_property("_seadentWaveUsed") == true && to_int(get_property("lassoTrainingCount")) < 20 && item_amount($item[sea cowbell]) > 0){
+            if (get_property("_seadentWaveUsed") == true && to_int(get_property("lassoTrainingCount")) < 20 && item_amount($item[sea cowbell]) > 0)
                 throw_item($item[sea lasso]);
-            }
-            if (mob == $monster[shadow slab] && item_amount($item[Septapus summoning charm]) > 0){
-                throw_item($item[Septapus summoning charm]);
-            }
-            if (mob == $monster[shadow slab] && to_int(get_property("_batWingsSwoopUsed")) < 11)
-                use_skill($skill[swoop like a bat]);
             if (mob == $monster[shadow slab]){
+                if (item_amount($item[Septapus summoning charm]) > 0)
+                    throw_item($item[Septapus summoning charm]);
+                if (to_int(get_property("_batWingsSwoopUsed")) < 11)
+                    use_skill($skill[swoop like a bat]);
                 while(to_int(get_property("_mildEvilPerpetrated")) < 3)
                     use_skill($skill[Perpetrate Mild Evil]);
                 int n = 0;
@@ -104,7 +80,7 @@ void main(int round, monster mob, string page_text){
             if (have_equipped($item[monodent of the sea])){
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
             }
-            use_skill($skill[Darts: Throw at %part1]);
+            darts();
             use_skill($skill[Saucegeyser]);
             use_skill($skill[Saucegeyser]);
             break;
@@ -116,8 +92,8 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[%fn, fire a Red, White and Blue Blast]);
             }
             if (mob == $monster[neptune flytrap]){
-                use_skill($skill[Darts: Throw at %part1]);
-                if (have_equipped($item[McHugeLarge left pole])){
+                darts();
+                if (have_equipped($item[McHugeLarge left pole]) && !contains_text(get_property("trackedMonsters"),"Neptune flytrap")){
                     use_skill($skill[transcendent olfaction]);
                     use_skill($skill[MCHUGELARGE SLASH]);
                 }
@@ -133,21 +109,17 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[transcendent olfaction]);
                 use_skill($skill[MCHUGELARGE SLASH]);
             }
-            if (mob == $monster[black crayon golem]){
-                if (to_int(get_property("_clubEmNextWeekUsed")) < 5){
-      //              use_skill($skill[Club 'Em Into Next Week]);
-                } else if (to_int(get_property("clubEmBattlefieldUsed")) < 5){
-        //            use_skill($skill[Club 'Em across the battlefield]);
-                }
+            if (mob == $monster[black crayon golem] || mob == $monster[time cop]){
+                use_skill($skill[BCZ: Refracted Gaze]);
                 use_skill($skill[Saucegeyser]);
                 use_skill($skill[Saucegeyser]);
             }
-            if(have_equipped($item[monodent of the sea]) && mob != $monster[giant squid] && mob != $monster[time cop]){
+            if(have_equipped($item[monodent of the sea]) && mob != $monster[giant squid]){
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
                 use_skill($skill[BCZ: Refracted Gaze]);
             }
             if (to_int(get_property("_dartsLeft")) > 1)
-                use_skill($skill[Darts: Throw at %part1]);
+                darts();
             free_kill(page_text,true);
             break;
         case $location[The Dive Bar]:
@@ -155,50 +127,42 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[transcendent olfaction]);
                 use_skill($skill[MCHUGELARGE SLASH]);
             }
-            if (mob == $monster[black crayon golem]){
-                if (to_int(get_property("_clubEmNextWeekUsed")) < 5){
-                    use_skill($skill[Club 'Em Into Next Week]);
-                } else if (to_int(get_property("clubEmBattlefieldUsed")) < 5){
-         //           use_skill($skill[Club 'Em across the battlefield]);
-                }
+            if (mob == $monster[black crayon golem] || mob == $monster[time cop]){
+                use_skill($skill[BCZ: Refracted Gaze]);
                 use_skill($skill[Saucegeyser]);
                 use_skill($skill[Saucegeyser]);
             }
-            if(have_equipped($item[monodent of the sea]) && mob != $monster[Mer-kin tippler] && mob != $monster[time cop]){
+            if(have_equipped($item[monodent of the sea]) && mob != $monster[Mer-kin tippler]){
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
-            }
-            if( mob != $monster[Mer-kin tippler]){
                 use_skill($skill[BCZ: Refracted Gaze]);
             }
             if (to_int(get_property("_dartsLeft")) > 1)
-                use_skill($skill[Darts: Throw at %part1]);
+                darts();
             free_kill(page_text,true);
             break;
         case $location[The Mer-Kin Outpost]:
             if (mob == $monster[time cop]){
-                    use_skill($skill[Darts: Throw at %part1]);
-                    use_skill($skill[saucegeyser]);
-                    use_skill($skill[saucegeyser]);
+                darts();
+                use_skill($skill[saucegeyser]);
+                use_skill($skill[saucegeyser]);
             }
             if (mob == $monster[black crayon golem]){
                 if (get_property("_monsterHabitatsFightsLeft") == "0" && have_effect($effect[everything looks purple]) == 0 && to_int(get_property("_monsterHabitatsRecalled")) == 2){
                     use_skill($skill[Blow the Purple Candle!]);
                 } else if (get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("_monsterHabitatsRecalled")) < 2){
                     use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
-                } else if (get_property("_monsterHabitatsFightsLeft") == "0" && have_effect($effect[everything looks purple]) == 0){
-                    abort();
                 }
                 if (get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("_monsterHabitatsRecalled")) >= 2 && my_familiar() == $familiar[Patriotic Eagle]){
                     use_skill($skill[%fn, Release the Patriotic Screech!]);
                 }
-                use_skill($skill[Darts: Throw at %part1]);
+                darts();
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
             }
             if ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != ""){
                 if (get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("_monsterHabitatsRecalled")) >= 2 && to_int(get_property("_backUpUses")) < 7){
                     if (get_property("lastCopyableMonster") != "Black Crayon Golem"){
-                    //    abort();
+                        abort("Last copyable monster is supposed to be Black Crayon Golem, but it is " + get_property("lastCopyableMonster"));
                     } else {
                         use_skill($skill[Back-Up to your Last Enemy]);
                         run_combat();
@@ -213,9 +177,6 @@ void main(int round, monster mob, string page_text){
                     free_run(page_text,false);
                     use_skill($skill[saucegeyser]);
                     use_skill($skill[saucegeyser]);
-                }
-                if (have_skill($skill[spring kick]) && have_effect($effect[Everything Looks Green]) == 0){
-                    use_skill($skill[spring kick]);
                 }
                 free_run(page_text,true);
                 free_kill(page_text,false);
@@ -232,87 +193,43 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
-            } else {
-                abort();
             }
             break;
         case $location[The skate park]:
-            abort();
+            abort("You hit a combat in skate park, that isn't supposed to happen...");
             break;
         case $location[cyberzone 1]:
             if (mob == $monster[eye in the darkness] || mob == $monster[slithering thing]){
                 int n;
-                while (n < 20){
+                while (n < 25){
                     use_skill($skill[Throw Cyber Rock]);
                     n += 1;
                 }
-                use_skill($skill[Throw Cyber Rock]);
-                use_skill($skill[Throw Cyber Rock]);
-                use_skill($skill[Throw Cyber Rock]);
-                use_skill($skill[Throw Cyber Rock]);
             } else {
                 use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
             }
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            break;
-        case $location[cyberzone 2]:
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            break;
-        case $location[cyberzone 3]:
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            break;
-        case $location[An Unusually Quiet Barroom Brawl]:
-            if (get_property("lastCopyableMonster") == "eye in the darkness"){
-                use_skill($skill[Back-Up to your Last Enemy]);
-                use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
-                use_skill($skill[saucegeyser]);
-                use_skill($skill[saucegeyser]);
-                use_skill($skill[saucegeyser]);
-            } else {
-                abort("Can't copy eye in darkness");
-            }
             break;
         case $location[The Coral Corral]:
-            if (have_equipped($item[backup camera]) && !contains_text(get_property("_lastCombatActions"),"sk7381")){
-                if (mob == $monster[mer-kin rustler])
-                    use_skill($skill[spring kick]);
-                use_skill($skill[Back-Up to your Last Enemy]);
-                run_combat();
-            }
             if (item_amount($item[sea cowbell]) == 0){
                 if (mob == $monster[wild seahorse]){
                     if (item_amount($item[waffle]) > 1){
                         throw_item($item[waffle]);
                         run_combat();
                     } else {
-                        abort();
+                        abort("Hit seahorse too early and have no waffles for some reason");
                     }
-                    free_run(page_text,false);
-                    runaway();
                 }
-                if (mob != $monster[sea cowboy] && mob != $monster[sea cow]){
+                if (have_equipped($item[backup camera])){
                     if (mob == $monster[mer-kin rustler])
                         use_skill($skill[spring kick]);
+                    use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                     use_skill($skill[Do an epic McTwist!]);
                     use_skill($skill[BCZ: Sweat Bullets]);
                 }
-                if (mob != $monster[mer-kin rustler]){
-                    if (item_amount($item[waffle]) <= 1){
-                        throw_item($item[software glitch]);
-                        run_combat();
-                    } else {
-                        throw_item($item[waffle]);
-                        run_combat();
-                    }
-                }
             } else if (item_amount($item[sea cowbell]) >= 2){
+                if (mob.phylum == $phylum[plant])
+                    use_skill($skill[Tear Away your Pants!]);
                 if (mob != $monster[wild seahorse]){
                     if (get_property("seahorseName") == ""){
                         if ((!contains_text(get_property("banishedMonsters"),"sea cow:") && !contains_text(get_property("banishedMonsters"),"sea cowboy")) || (!contains_text(get_property("banishedMonsters"),"mer-kin rustler") && !contains_text(get_property("banishedMonsters"),"sea cowboy")) || (!contains_text(get_property("banishedMonsters"),"sea cow:") && !contains_text(get_property("banishedMonsters"),"mer-kin rustler")))
@@ -322,39 +239,23 @@ void main(int round, monster mob, string page_text){
                         throw_item($item[waffle]);
                         run_combat();
                     } else if (item_amount($item[waffle]) == 0){
-                        abort();
-                    }
-                    if (mob == $monster[wild seahorse]){
-                        throw_items($item[sea cowbell],$item[sea cowbell]);
-                        throw_items($item[sea cowbell],$item[sea lasso]);
+                        abort("Ran out of waffles, oops");
                     }
                     free_kill(page_text,false);
-                    free_run(page_text,true);
+                    free_run(page_text,false);
                     attack();
                     attack();
                 }
                 if (mob == $monster[wild seahorse]){
                     throw_items($item[sea cowbell],$item[sea cowbell]);
                     throw_items($item[sea cowbell],$item[sea lasso]);
-                } else {
-                    if (mob.phylum == $phylum[plant]){
-                        use_skill($skill[Tear Away your Pants!]);
-                    } else {
-                        free_run(page_text,false);
-                    }
-                    free_kill(page_text,false);
                 }
-            } else {
-                abort();
             }
             break;
         case $location[The Caliginous Abyss]:
             if (mob == $monster[peanut]){
-                abort("sea if you can waffle");
-                throw_item($item[sea lasso]);
-                use_skill($skill[eggsplosion]);
-                use_skill($skill[eggsplosion]);
-                use_skill($skill[eggsplosion]);
+                throw_item($item[waffle]);
+                run_combat();
             } else if(mob == $monster[time cop]) {
                 use_skill($skill[saucegeyser]);
             } else {
@@ -363,7 +264,7 @@ void main(int round, monster mob, string page_text){
                 if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && (mob == $monster[slithering thing] || mob == $monster[eye in the darkness]) && get_property("corralUnlocked") == "true") {
                     use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
                 } else if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && get_property("corralUnlocked") == "true"){
-                    abort("Use waffle");
+                    abort("Hit an odd mob at caliginous abyss, should not have happened with peridot");
                 }
                 free_kill(page_text,false);
                 use_skill($skill[saucegeyser]);
@@ -377,11 +278,12 @@ void main(int round, monster mob, string page_text){
                     use_skill($skill[Club 'Em Across the Battlefield]);
             } else if (mob == $monster[Mer-kin teacher] || mob == $monster[Mer-kin punisher] || mob == $monster[Mer-kin monitor]){
                 steal();
-                if (item_amount($item[Septapus summoning charm]) > 0){
-                    throw_item($item[Septapus summoning charm]);
-                }
-                if (mob == $monster[Mer-kin monitor] && have_equipped($item[bat wings]) && to_int(get_property("_batWingsSwoopUsed")) < 11){
-                    use_skill($skill[swoop like a bat]);
+      
+                if (mob == $monster[Mer-kin monitor]){
+                    if (have_equipped($item[bat wings]) && to_int(get_property("_batWingsSwoopUsed")) < 11)
+                        use_skill($skill[swoop like a bat]);
+                    if (item_amount($item[Septapus summoning charm]) > 0)
+                        throw_item($item[Septapus summoning charm]);
                 } else if (have_equipped($item[spring shoes]) && !banishUsedAtYourLocation("Spring Kick")){
                     if ((mob == $monster[mer-kin teacher] && item_amount($item[mer-kin bunwig]) > 0) || (mob == $monster[mer-kin punisher] && item_amount($item[mer-kin mouthsoap]) > 0))
                         use_skill($skill[spring kick]);
@@ -460,7 +362,6 @@ void main(int round, monster mob, string page_text){
             use_skill($skill[saucegeyser]);
             break;
         case $location[Mer-kin Colosseum]:
-            print("Monster hp is " + monster_hp());
             if (have_skill($skill[Club 'Em Back in Time]))
                 use_skill($skill[Club 'Em Back in Time]);
             if (to_int(get_property("lastColosseumRoundWon")) < 15){
@@ -471,7 +372,7 @@ void main(int round, monster mob, string page_text){
             break;
         case $location[Mer-kin Temple (Right Door)]:
             if (my_maxhp() > 311)
-                abort();
+                abort("You have too much HP to beat Yogurt, there is a high likelihood you will lose, figure out what is giving you HP rn, you need less than 312 after being debuffed");
             throw_items($item[crayon shavings],$item[mer-kin healscroll]);
             throw_items($item[Mer-kin mouthsoap],$item[waterlogged scroll of healing]);
             throw_item($item[sea gel]);
@@ -507,11 +408,6 @@ void main(int round, monster mob, string page_text){
             use_skill($skill[raise backup dancer]);
     }
     switch (mob){
-        case $monster[time cop]:
-            use_skill($skill[Darts: Throw at %part1]);
-            use_skill($skill[saucegeyser]);
-            use_skill($skill[saucegeyser]);
-            break;
         case $monster[black crayon golem]:
             if (get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("_monsterHabitatsRecalled")) < 3){
                 use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
@@ -521,17 +417,12 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[transcendent olfaction]);
                 use_skill($skill[Club 'Em Into Next Week]);
             }
-            use_skill($skill[Darts: Throw at %part1]);
             break;
         case $monster[unholy diver]:
             if (my_familiar() == $familiar[chest mimic]){
                 use_skill($skill[%fn, lay an egg]);
             }
-            if (have_effect($effect[Everything Looks yellow]) == 0){
-                use_skill($skill[Spit jurassic acid]);
-            } else {
-                free_kill(page_text,true);
-            }
+            free_kill(page_text,true);
             break;
         case $monster[kid who is too old to be Trick-or-Treating]:
             use_skill($skill[CLUB 'EM INTO NEXT WEEK]);
