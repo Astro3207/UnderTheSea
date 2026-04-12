@@ -21,6 +21,7 @@ Critical items/skills
 - Spring shoes (1 free run but more importantly 1 nonkilling or runnin banish, useful in a few circumstances)
 - packaged Monodent of the Sea
 - lab-grown blood cubic zirconia (11 free fights early on)
+- Codpiece (smuggling)
   
 Very useful items
 
