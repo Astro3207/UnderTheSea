@@ -1,4 +1,4 @@
-int uniInt, uniAdv;
+int uniInt, uniAdv, pearlsDoneToday;
 string clan = get_clan_name();
 int estimatedTurns;
 int count_substring(string text, string sub) {
@@ -13,9 +13,6 @@ int count_substring(string text, string sub) {
     }
     return count;
 }
-
-int pearlsDoneToday;
-
 int chamoixAmount(){
     string chamoix = visit_url("clan_slimetube.php?action=bucket");
     int chamois_count = 0;
@@ -45,14 +42,12 @@ void NCforce(){
         }
     }
 }
-
 void candy(string action){
     int houseToVisit = index_of(get_property("_trickOrTreatBlock"),"D");
     visit_url("place.php?whichplace=town&action=town_trickortreat");
     visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
     run_combat();
 }
-
 void cyberzone(){
     while (to_int(get_property("_cyberFreeFights")) < 10){
         maximize("item drop",false);
@@ -87,7 +82,6 @@ void cyberzone(){
         }
     }
 }
-
 record ban {
 	string pref;
 	skill banSkill;
@@ -98,7 +92,6 @@ ban[item] banMap = {
     $item[Heartstone]:    new ban("Heartstone %banish",  $skill[Heartstone: %banish]),
     $item[none]:    new ban("snokebomb", $skill[snokebomb]),
 };
-
 location[int] monster_found_in(monster m) {
   location[int] output;
   foreach o in $locations[]
@@ -106,7 +99,6 @@ location[int] monster_found_in(monster m) {
       output[count(output)] = o;
   return output;
 }
-
 monster banished(string banisher){
     monster mon;
     matcher monster_matcher = create_matcher (":([A-Za-z'-]+(?: [A-Za-z'-]+){0,3}):"+banisher,get_property("banishedMonsters"));
@@ -115,7 +107,6 @@ monster banished(string banisher){
     }
     return mon;
 }
-
 boolean banishUsedAtYourLocation(string banisher){
     boolean bool;
     foreach num in monster_found_in(banished(banisher)){
@@ -125,7 +116,6 @@ boolean banishUsedAtYourLocation(string banisher){
     }
     return bool;
 }
-
 item banishGear(location loc){
     item it;
     foreach ite in $items[spring shoes,monodent of the sea,Heartstone]{
@@ -137,7 +127,6 @@ item banishGear(location loc){
     set_property(to_string(to_slot(it))+"Override", ", equip "+it);
     return it;
 }
-
 skill combatBan(){
     skill sk;
     foreach ite in $items[spring shoes,monodent of the sea,Heartstone]{
@@ -151,7 +140,6 @@ skill combatBan(){
     }
     return sk;
 }
-
 boolean bullseyeReady() {
     boolean bool;
     if ((contains_text(get_property("everfullDartPerks"),"You are less impressed by bullseyes") && contains_text(get_property("everfullDartPerks"),"Bullseyes do not impress you much")) || count_substring(get_property("everfullDartPerks"),"Bullseyes do not impress you much") >= 2 || count_substring(get_property("everfullDartPerks"),"You are less impressed by bullseyes") >= 2){
@@ -163,7 +151,6 @@ boolean bullseyeReady() {
         bool = true;
     return bool;
 }
-
 int BCZcost(string BCZskill){ 
     int cast = to_int(get_property("_bcz" + BCZskill));
     if (cast == 12)
@@ -191,7 +178,7 @@ int BCZcost(string BCZskill){
 void trainset(){
     int pos = to_int(get_property("trainsetPosition"))%8;
     int [int] trainset = {
-        (pos)%8:8, //nest station
+        (pos)%8:8, //next station
         (pos + 1)%8:1,
         (pos + 2)%8:15,
         (pos + 3)%8:20,
@@ -251,7 +238,6 @@ int universe(){
     }
     return uniAdv;
 }
-
 boolean delay(){
     boolean bool;
     if (to_int(get_property("_snokebombUsed")) < 3 )
@@ -266,7 +252,6 @@ boolean delay(){
         bool = true;
     return bool;
 }
-
 void camo(){
     if (chamoixAmount() < 1 ){
         string current_clan = get_clan_id();
@@ -283,7 +268,24 @@ void camo(){
         visit_url( "clan_slimetube.php?action=chamois" );
     }
 }
-
+void darts(){
+    int n = to_int(get_property("_dartsLeft"));
+    while(n > 0 && have_equipped($item[everfull dart holster])){
+        if (contains_text(get_property("everfullDartPerks"),"Butt")){
+            int butts_int;
+            matcher butts_matcher = create_matcher("(\\d+):butt", get_property("_currentDartboard")); 
+            if (butts_matcher.find()){
+                butts_int = butts_matcher.group(1).to_int();
+            } else {
+                break;
+            }
+            use_skill(to_skill(butts_int));
+        } else {
+            use_skill($skill[Darts: Throw at %part1]);
+        }
+        n -= 1;
+    }
+}
 void finisher(){
     set_property("script","");
     set_property("subscript","");
