@@ -52,25 +52,23 @@ Slightly useful
 Pulls
 
 - Mer-kin sneakmask
+- Mer-kin hidepaint
 -  sea lasso (1 turn save/1 monkey paw wish save)
 -  comb jelly (mom quest, 1-ish turn save, you can just fight diving belle)
 -  shark jumper (mom quest, hard to get in run)
 -  scale-mail underwear (mom quest, hard to get in run)
--  Elf Guard SCUBA tank (probably get entirely replaced by swimsuit or aerated diving helmet)
 -  Congressional Medal of Insanity (1 hit KO in colosseum)
 -  Mer-kin digpick (1 turn save, can just fight mer-kin miner)
 -  Spooky VHS Tape (1 turn save in mom quest)
 -  damp old wallet (0-1 turn save? Can get enough sand dollars normally with luck from stashbox, or using lucky)
--  software glitch (a safety net for coral corral)
--  fish sauce (may change to fishy pipe after optimization)
+-  Lodestone (maybe)
+-  fishy pipe
 -  sea cowbell (saves 1 turn or 1 monkey wish)
 -  Platinum Yendorian Express Card (see very useful items)
 -  Mer-kin wordquiz (1 turnsave)
 -  Mer-kin prayerbeads (actually really hard to get in run)
 -  soggy used band-aid (replaces 1 prayerbead)
 -  New Age healing crystal (replaces another prayerbead)
--  null-day exploit (develer for left door... probably not necessary)
--  Lodestone (anemone mining)
 
 
 -  pepp parasol/GAP/Navel > mer-kin pinkslip/ink bladder/handful of split pea soup/anchor bomb (optional free run pulled with extra pulls)
