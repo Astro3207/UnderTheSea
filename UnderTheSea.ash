@@ -605,14 +605,6 @@ void sorceress(){
         } else {
             abort("Hagnk does not have a PYEC, see if you can borrow one?");
         }
-        if (my_id() == 2813285){
-            int currentClan = get_clan_id();
-            visit_url("showclan.php?whichclan=2047009940&action=joinclan&confirm=on");
-            user_confirm("Put Pyec back");
-            visit_url("showclan.php?whichclan=" + currentClan + "&action=joinclan&confirm=on");
-        } else {
-            user_confirm("Send PYEC to FS");
-        }
     }
     while (have_effect($effect[shadow affinity]) > 0){
         shadowRift();
