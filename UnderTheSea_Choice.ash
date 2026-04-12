@@ -92,6 +92,10 @@ void main(int whichchoice, string page) {
                 Scroll7 = 1;
             }
             run_choice(1,"pro1="+get_property("dreadScroll1")+"&pro2="+get_property("dreadScroll2")+"&pro3="+get_property("dreadScroll3")+"&pro4="+get_property("dreadScroll4")+"&pro5="+get_property("dreadScroll5")+"&pro6="+get_property("dreadScroll6")+"&pro7="+Scroll7+"&pro8="+get_property("dreadScroll8"));
+            waitq(3);
+            if (have_effect($effect[Deep-Tainted Mind]) == 0){
+                set_property("dreadScroll7",Scroll7);
+            }
             break;
         case 704:
             string [int] choices1 = available_choice_options();
@@ -104,10 +108,16 @@ void main(int whichchoice, string page) {
         case 705:
             run_choice(4);
             break;
+        case 1475:
+            run_choice(1);
+            break;
         case 1564:
             run_choice(1);
             break;
         case 1565:
+            run_choice(1);
+            break;
+        case 1473:
             run_choice(1);
             break;
         case 1494:
@@ -139,7 +149,8 @@ void main(int whichchoice, string page) {
                     run_choice(1,"bandersnatch=740");
                     break;
                 case $location[The Coral Corral]:
-                    run_choice(1,"bandersnatch=777");
+                    run_choice(1,"bandersnatch=772");
+                    run_choice(2);
                     break;
                 case $location[The Marinara Trench]:
                     run_choice(1,"bandersnatch=763");
