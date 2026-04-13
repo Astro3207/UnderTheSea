@@ -142,6 +142,21 @@ void main(int round, monster mob, string page_text){
                 darts();
             free_kill(page_text,true);
             break;
+        case $location[Anemone Mine]:
+            if (mob == $monster[black crayon golem] || mob == $monster[time cop]){
+                use_skill($skill[BCZ: Refracted Gaze]);
+                use_skill($skill[Saucegeyser]);
+                use_skill($skill[Saucegeyser]);
+            }
+            if(have_equipped($item[monodent of the sea]) && mob != $monster[Mer-kin miner]){
+                use_skill($skill[Sea *dent: Talk to Some Fish]);
+                if (item_amount($item[mer-kin digpick]) == 0)
+                    use_skill($skill[BCZ: Refracted Gaze]);
+            }
+            if (to_int(get_property("_dartsLeft")) > 1)
+                darts();
+            free_kill(page_text,true);
+            break;
         case $location[The Mer-Kin Outpost]:
             if (mob == $monster[time cop]){
                 darts();
@@ -164,7 +179,6 @@ void main(int round, monster mob, string page_text){
             if ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != ""){
                 if (get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("_monsterHabitatsRecalled")) >= 2 && to_int(get_property("_backUpUses")) < 7){
                     if (get_property("lastCopyableMonster") != "Black Crayon Golem"){
-                        abort("Last copyable monster is supposed to be Black Crayon Golem, but it is " + get_property("lastCopyableMonster"));
                     } else {
                         use_skill($skill[Back-Up to your Last Enemy]);
                         run_combat();
@@ -189,7 +203,6 @@ void main(int round, monster mob, string page_text){
                 if (mob == $monster[mer-kin healer] && item_amount($item[mer-kin prayerbeads]) < 2){
                     free_kill(page_text,true);
                 } else {
-                    free_run(page_text,true);
                     free_kill(page_text,false);
                 }
                 use_skill($skill[saucegeyser]);
@@ -227,7 +240,7 @@ void main(int round, monster mob, string page_text){
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                     use_skill($skill[Do an epic McTwist!]);
-                    use_skill($skill[BCZ: Sweat Bullets]);
+                    free_kill(page_text,true);
                 }
             } else if (item_amount($item[sea cowbell]) >= 2){
                 if (mob.phylum == $phylum[plant])
@@ -241,7 +254,7 @@ void main(int round, monster mob, string page_text){
                         throw_item($item[waffle]);
                         run_combat();
                     } else if (item_amount($item[waffle]) == 0){
-                        abort("Ran out of waffles, oops");
+                        abort("Ran out of waffles, my recommendation: find a way to banish 2 of the 3 monsters in coral corral and then pull a waffle and rerun");
                     }
                     free_kill(page_text,false);
                     free_run(page_text,false);
@@ -255,13 +268,13 @@ void main(int round, monster mob, string page_text){
             }
             break;
         case $location[The Caliginous Abyss]:
-            if (mob == $monster[peanut]){
+            if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15){
                 throw_item($item[waffle]);
                 run_combat();
             } else if(mob == $monster[time cop]) {
                 use_skill($skill[saucegeyser]);
             } else {
-                if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == "")
+                if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == "" && (mob == $monster[slithering thing] || mob == $monster[eye in the darkness] || mob == $monster[school of many]))
                     throw_item($item[spooky VHS tape]);
                 if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && (mob == $monster[slithering thing] || mob == $monster[eye in the darkness]) && get_property("corralUnlocked") == "true") {
                     use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
@@ -269,6 +282,10 @@ void main(int round, monster mob, string page_text){
                     abort("Hit an odd mob at caliginous abyss, should not have happened with peridot");
                 }
                 free_kill(page_text,false);
+                if (mob == $monster[school of many]){
+                    use_skill($skill[garbage nova]);
+                    use_skill($skill[garbage nova]);
+                }
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
             }
