@@ -224,6 +224,35 @@ void codpiece(string input){
     }
     cli_execute("refresh all");
 }
+string[int] lepRoomToNum = {
+    1:"buckets of concrete",
+    2:"thrift store oil painting",
+    3:"boxes of old comic books",
+    4:"second-hand hot plate",
+    5:"beer cooler",
+    6:"free mattress",
+    7:"gigantic chess set",
+    8:"UltraDance karaoke machine",
+    9:"cupcake treadmill",
+    10:"beer pong table",
+    11:"padded weight bench",
+    12:"internet-connected laptop",
+    13:"sous vide laboratory",
+    14:"programmable blender",
+    15:"sensory deprivation tank",
+    16:"fruit-smashing robot",
+    17:"ManCave™ sports bar set",
+    18:"couch and flatscreen",
+    19:"kegerator",
+    20:"fine upholstered dining table set",
+    21:"whiskeybed",
+    22:"high-end home workout system",
+    23:"complete classics library",
+    24:"ultimate retro game console",
+    25:"Omnipot",
+    26:"fully-stocked wet bar",
+    27:"four-poster bed"
+};
 void leprecondo(string input){
     string[int] rooms = split_string(input, ",");
     int[int] lepRoom;
@@ -238,7 +267,7 @@ void leprecondo(string input){
             count += 1;
         }
     }
-    cli_execute ("leprecondo furnish "+ lepRoom[0] + "," + lepRoom[1] + ","+ lepRoom[2] + ","+ lepRoom[3]);
+    cli_execute ("leprecondo furnish "+ lepRoomToNum[lepRoom[0]] + "," + lepRoomToNum[lepRoom[1]] + ","+ lepRoomToNum[lepRoom[2]] + ","+ lepRoomToNum[lepRoom[3]]);
 }
 int universe(){
     int [string] sign {
