@@ -526,7 +526,7 @@ void seaMonkees(){
         buffer conditional;
         if (get_property("_monsterHabitatsFightsLeft") == 1 && have_effect($effect[Everything Looks Purple]) == 0 && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_item($item[roman candelabra]))
             conditional = append(conditional,", equip roman candelabra"); //trying to use purple ray
-        if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && ($location[The Mer-Kin Outpost].turns_spent <= 24 || get_property("merkinLockkeyMonster") != "")){
+        if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != "")){
             conditional = append(conditional,", equip backup camera"); //using back ups for free fights
         } else {
             conditional = append(conditional,", equip blood cubic zirconia"); //free kills needed
