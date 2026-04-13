@@ -57,7 +57,7 @@ Slightly useful
 - Möbius ring box
 
 Currently the script is inflexible, the following are iotms the scripts no longer NEED to function
-- None lmao
+- Leprecondo
 
 Items to add support for
 - Baseball diamond
