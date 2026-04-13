@@ -1,9 +1,7 @@
 # UnderTheSea
 11,037 Loop
 
-Only mys and moxie support rn, will work on muscle after finalizing pathing.
-
-Moxie is obviously the best and you just take the L for the muscle and mysticality guild quests.
+All classes works now, although mys classes can be optimized a little more
 
 Things to prepare BEFORE ascending:
 - Load up codpiece with unblemished pearl
