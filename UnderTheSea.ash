@@ -120,26 +120,27 @@ void mood(string mod){
             break;
     }
 }
+string freeRun(){
+    string free;
+    if (have_effect($effect[Everything Looks Green]) == 0){
+        free = ", equip spring shoes";
+    }
+    return free;
+}
+string freeKill(){
+    string free;
+    if (have_effect($effect[Everything Looks Red]) == 0){
+        free = ", equip everfull dart";
+    } else if ((my_basestat( $stat[submoxie])-22500) > BCZcost("SweatBulletsCasts")){
+        free = ", equip blood cubic zirconia";
+    }
+    return free;
+}
 string shrunkenHead(){
     string head;
     if (get_property("shrunkenHeadZombieMonster") == "")
         head = ", equip shrunken head";
     return head;}
-string springShoes(){
-    string shoes;
-    if (have_effect($effect[Everything Looks Green]) == 0)
-        shoes = ", equip spring shoes";
-    return shoes;}
-string dartHolster(){
-    string holster;
-    if (have_effect($effect[Everything Looks Red]) == 0)
-        holster = ", equip everfull dart";
-    return holster;} 
-string BCZ(){
-    string CZ;
-    if ((my_basestat( $stat[submoxie])-22500) > BCZcost("SweatBulletsCasts"))
-        CZ = ", equip blood cubic zirconia";
-    return CZ;} 
 void spading(){
     buffer spading;
     spading = append(spading,today_to_string( ));
@@ -294,7 +295,8 @@ void postAscend(){
             use(it, item_amount(it));
     }
     foreach sk in $skills[Aug. 24th: Waffle Day!,Summon Kokomo Resort Pass]{
-        use_skill(sk);
+        if (have_skill(sk))
+            use_skill(sk);
     }
     foreach it in $items[hamethyst,baconstone,porquoise,kokomo resort pass]{
         autosell(item_amount(it),it);
@@ -347,7 +349,7 @@ void unlockGuild(){
             use_familiar($familiar[Peace Turkey]);
             mood("itdrop");
             while ((get_property("questG07Myst"))== "started"){
-                maximize("item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + springShoes(),false);
+                maximize("item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + freeRun(),false);
                 adv1($location[The Haunted Pantry],0,"");
             }
             visit_url("guild.php?place=challenge");
@@ -363,7 +365,7 @@ void unlockGuild(){
                 use_familiar($familiar[Peace Turkey]);
                 mood("itdrop");
                 while ((get_property("questG08Moxie"))== "started"){
-                    maximize("item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + springShoes(),false);
+                    maximize("item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + freeRun(),false);
                     adv1($location[The Sleazy Back Alley],0,"");
                 }
             }
@@ -377,7 +379,7 @@ void unlockGuild(){
             use_familiar($familiar[Peace Turkey]);
             mood("itdrop");
             while ((get_property("questG09Muscle"))== "started"){
-                maximize("item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + springShoes(),false);
+                maximize("item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + freeRun(),false);
                 adv1($location[The Outskirts of Cobb's Knob],0,"");
             }
             visit_url("guild.php?place=challenge");
@@ -510,9 +512,9 @@ void seaMonkees(){
         }
         if (get_property("merkinLockkeyMonster") != ""){
             mood("noncom");
-            maximize("-combat, equip really nice swimming, equip little bitty" + dartHolster() + "" + conditional,false);
+            maximize("-combat, equip really nice swimming, equip little bitty" + freeKill() + "" + conditional,false);
         } else if (get_property("merkinLockkeyMonster") == "") {
-            maximize("-combat, equip really nice swimming, equip little bitty" + springShoes() + "" + dartHolster() + "" + conditional,false);
+            maximize("-combat, equip really nice swimming, equip little bitty" + freeRun() + "" + freeKill() + "" + conditional,false);
         }
         adv1($location[The Mer-Kin Outpost],0,"");
         post_adv();
@@ -885,7 +887,7 @@ void sorceress(){
                         if (get_property("skateParkStatus") == "war" && !contains_text($location[The Skate Park].noncombat_queue,"Holey Rollers")){
                             skatePark();
                         } else if (item_amount($item[Mer-kin thighguard]) == 0 || item_amount($item[Mer-kin headguard]) == 0){
-                            maximize("combat,equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece" + springShoes() + "" + dartHolster() + "" + BCZ(),false);
+                            maximize("combat,equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece" + freeRun() + "" + freeKill(),false);
                             mood("combat");
                             print(numeric_modifier("combat rate"));
                             adv1($location[Mer-kin Gymnasium],0,"");
@@ -958,7 +960,7 @@ void sorceress(){
         if (to_int(get_property("_assertYourAuthorityCast")) < 3){
             abort("equip assert");
         }
-        maximize("combat,equip crappy mer-kin mask,equip crappy mer-kin tailpiece" + springShoes() + "" + dartHolster() + "" + BCZ(),false);
+        maximize("combat,equip crappy mer-kin mask,equip crappy mer-kin tailpiece" + freeRun() + "" + freeKill(),false);
         mood("combat");
         if (item_amount($item[Mer-kin thighguard]) == 0 || item_amount($item[Mer-kin headguard]) == 0){
             print(numeric_modifier("combat rate"));
