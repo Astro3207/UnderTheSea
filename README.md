@@ -41,16 +41,15 @@ Very useful items
 - McHugeLarge deluxe ski set (sniff)
 - seal-clubbing club loot box (has some useful combos with backup camera)
 - PYEC (extends steely eyed squint and shadow affinity and fishy)
+- boxed Mayam Calendar (5 extra turns,gives chest mimic exp,necessary if you want a no organ run)
   
 Slightly useful
 
 - Jurassic parka (1 free kill)
 - Rock garden (1 free kill)
 - packaged Everfull Dart Holster (1 free kill)
-- boxed Mayam Calendar (5 extra turns)
 - packaged Roman Candelabra (1 free fight from copy)
 - untorn tearaway pants package (skips moxie guild quest)
-- boxed Sept-Ember Censer (3 pickpockets to get more shadow bricks, possibly not necessary? Will have to optimize)
 - Sealed TakerSpace letter of Marque (1 free run)
 - new-in-box toy Cupid bow
 - assemble-it-yourself Leprecondo
@@ -58,6 +57,11 @@ Slightly useful
 
 Currently the script is inflexible, the following are iotms the scripts no longer NEED to function
 - Leprecondo
+- Sealed TakerSpace letter of Marque
+- untorn tearaway pants package
+- packaged Roman Candelabra
+- Rock garden
+- Combat lover's locket
 
 Items to add support for
 - Baseball diamond
