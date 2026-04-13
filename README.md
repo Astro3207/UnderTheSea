@@ -9,7 +9,7 @@ Things to prepare BEFORE ascending:
 - Load up codpiece with unblemished pearl
 - Have all of the underwater maps done
 - Have a damp old wallet (not required but saves a turn)
-- Have black crayon golem and unholy diver in combat lover's locket
+- Have black crayon golem and unholy diver in combat lover's locket (optional)
 
 I'm definitely missing some, but here's stuff off the top of my head:
 
