@@ -407,6 +407,7 @@ void main(int round, monster mob, string page_text){
             use_skill($skill[saucegeyser]);
             use_skill($skill[saucegeyser]);
             use_skill($skill[saucegeyser]);
+            use_skill($skill[saucegeyser]);
             break;
         case $location[Mer-kin Temple (Left Door)]:
             throw_items($item[crayon shavings],$item[crayon shavings]);
