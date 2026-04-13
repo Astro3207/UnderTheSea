@@ -5,6 +5,12 @@ Only mys and moxie support rn, will work on muscle after finalizing pathing.
 
 Moxie is obviously the best and you just take the L for the muscle and mysticality guild quests.
 
+Things to prepare BEFORE ascending:
+- Load up codpiece with unblemished pearl
+- Have black crayon golem and unholy diver in combat lover's locket
+- Have all of the underwater maps done
+- Have a damp old wallet
+
 I'm definitely missing some, but here's stuff off the top of my head:
 
 Critical items/skills
@@ -49,6 +55,17 @@ Slightly useful
 - new-in-box toy Cupid bow
 - assemble-it-yourself Leprecondo
 - Möbius ring box
+
+Currently the script is inflexible, the following are iotms the scripts no longer NEED to function
+- None lmao
+
+Items to add support for
+- Baseball diamond
+- cosmic bowling ball
+- Crystal ball
+- Lil doctor's bag
+- May fourth lightsaber
+- Folder Holder
   
 Pulls
 
