@@ -29,6 +29,8 @@ Critical items/skills
 - packaged Monodent of the Sea
 - lab-grown blood cubic zirconia (11 free fights early on)
 - Codpiece (smuggling)
+- PYEC
+- Glover
   
 Very useful items
 
