@@ -13,6 +13,19 @@ int count_substring(string text, string sub) {
     }
     return count;
 }
+boolean [monster] haveLocketMonster = get_locket_monsters();
+boolean have_item(item it){
+    boolean bool;
+    if (item_amount(it) > 0)
+        bool = true;
+    if (have_equipped(it))
+        bool = true;
+    if (storage_amount(it) > 0)
+        bool = true;
+    if (closet_amount(it) > 0)
+        bool = true;
+    return bool;
+}
 int chamoixAmount(){
     string chamoix = visit_url("clan_slimetube.php?action=bucket");
     int chamois_count = 0;
@@ -210,6 +223,22 @@ void codpiece(string input){
         }
     }
     cli_execute("refresh all");
+}
+void leprecondo(string input){
+    string[int] rooms = split_string(input, ",");
+    int[int] lepRoom;
+    int count;
+    foreach num in rooms{
+        if (rooms[num] >= 10 && contains_text(get_property("leprecondoDiscovered"),rooms[num])){
+            lepRoom[count] = to_int(rooms[num]);
+            count += 1;
+        }
+        if (rooms[num] < 10 && contains_text(get_property("leprecondoDiscovered"),rooms[num] +",")){
+            lepRoom[count] = to_int(rooms[num]);
+            count += 1;
+        }
+    }
+    cli_execute ("leprecondo furnish "+ lepRoom[0] + "," + lepRoom[1] + ","+ lepRoom[2] + ","+ lepRoom[3]);
 }
 int universe(){
     int [string] sign {
