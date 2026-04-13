@@ -48,6 +48,8 @@ void free_run(string ptext, boolean banish){
 }
 void main(int round, monster mob, string page_text){
     switch (my_location()){
+        case $location[The Outskirts of Cobb's Knob]:
+        case $location[The Sleazy Back Alley]:
         case $location[The Haunted Pantry]:
             if(have_equipped($item[monodent of the sea])){
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
