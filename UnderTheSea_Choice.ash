@@ -117,10 +117,21 @@ void main(int whichchoice, string page) {
         case 1565:
             run_choice(1);
             break;
+        case 1468:
         case 1471:
+        case 1472:
         case 1473:
-        case 1494:
+        case 1475:
             run_choice(1);
+            break;
+        case 1469:
+        case 1470:
+        case 1474:
+        case 1494:
+            run_choice(2);
+            break;
+        case 1467:
+            run_choice(3);
             break;
         case 1497:
             if (have_effect($effect[Shadow Waters]) == 0){
