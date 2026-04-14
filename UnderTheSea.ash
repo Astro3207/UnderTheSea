@@ -671,7 +671,7 @@ void sorceress(){
         maximize("item drop, equip Flash Liquidizer Ultra Dousing Accessory, equip bat wings, equip everfull dart holster, equip monodent of the sea",false);
         use($item[closed-circuit pay phone]);
     }
-    if (get_property("expressCardUsed") == false){
+    if (get_property("expressCardUsed") == false && have_item($item[platinum yendorian express card])){
         if (storage_amount($item[Platinum Yendorian Express Card]) > 0){
             take_storage(1,$item[Platinum Yendorian Express Card]);
             use($item[Platinum Yendorian Express Card]);
