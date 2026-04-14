@@ -1,7 +1,8 @@
 # UnderTheSea
 11,037 Loop
 
-All classes works now, although mys classes can be optimized a little more
+All classes works now, although mys classes can be optimized a little more.
+Will try and make certain iotms optional on demand, but won't be proactive about it. Will slowly add iotms on request as well or as I get them.
 
 Things to prepare BEFORE ascending:
 - Load up codpiece with unblemished pearl
@@ -27,7 +28,6 @@ Critical items/skills
 - packaged Monodent of the Sea
 - lab-grown blood cubic zirconia (11 free fights early on)
 - Codpiece (smuggling)
-- PYEC
 - Glover
   
 Very useful items
@@ -43,6 +43,7 @@ Very useful items
 - seal-clubbing club loot box (has some useful combos with backup camera)
 - PYEC (extends steely eyed squint and shadow affinity and fishy)
 - boxed Mayam Calendar (5 extra turns,gives chest mimic exp,necessary if you want a no organ run)
+- PYEC
   
 Slightly useful
 
@@ -63,6 +64,7 @@ Currently the script is inflexible, the following are iotms the scripts no longe
 - packaged Roman Candelabra
 - Rock garden
 - Combat lover's locket
+- PYEC
 
 Items to add support for
 - Baseball diamond
