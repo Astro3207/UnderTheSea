@@ -59,6 +59,18 @@ int mineNum(){
           //  break;
         //}
     return num;}
+void teflon(){
+    equip($item[mer-kin digpick]);
+    equip($item[really\, really nice swimming trunks]);
+    use_familiar($familiar[grouper groupie]);
+    visit_url("mining.php?mine=3&which="+ mineNum());
+    if( my_hp() == 0){
+        cli_execute("restore HP");
+    }
+    if (have_effect($effect[beaten up]) > 0){
+        use_skill($skill[Tongue of the Walrus]);
+    }
+}
 void mood(string mod){
     switch (mod){
         case "itdrop":
@@ -241,6 +253,18 @@ void post_adv(){
             cli_execute("autumnaton send Shadow Rift");
         }
     }
+    if (to_int(get_property("_universeCalculated")) < min(3,to_int(get_property("skillLevel144"))) && uniAdv <= my_adventures()){
+        if (universe() == my_adventures()){
+            visit_url("runskillz.php?action=Skillz&whichskill=144&targetplayer=0&quantity=1");
+            visit_url("choice.php?whichchoice=1103&pwd=f94a0e2782ada4ea59a0957eaa4219de&option=1&num="+uniInt);
+        }
+    }
+    if (to_int(get_property("trainsetPosition")) >= to_int(get_property("lastTrainsetConfiguration")) + 42){
+        visit_url("campground.php?action=workshed");
+        trainset();
+    }
+    if (have_effect($effect[resined]) == 0 && item_amount($item[inflammable leaf]) > 50)
+        use($item[distilled resin]);
     if (have_effect($effect[fishy]) == 0){
         if (get_property("_fishyPipeUsed") == "false" && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card])){
             cli_execute("pull fishy pipe");
@@ -264,14 +288,14 @@ void post_adv(){
             cli_execute("maximize sleaze res, equip " + divingHelmet() +", equip legendary seal clubbing, equip shark jumper, equip scale-mail underwear; familiar grouper group");
             adv1($location[The Dive Bar],1,"");
         }
-        if (item_amount($item[spooky VHS tape]) > 0){
-            if (to_int(get_property("_assertYourAuthorityCast")) < 3){
-                maximize("item drop, equip " + divingHelmet() +", equip shark jumper, equip scale-mail underwear, equip black glass, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol, equip little bitty bathy", false);
-            } else {
-                maximize("item drop, equip shark jumper, equip scale-mail underwear, equip " + divingHelmet() +", equip black glass, equip blood cubic zirconia, equip peridot, equip little bitty",false);
-            }
-            adv1($location[The Caliginous Abyss],0,"");
+    }
+    if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 33){
+        if (to_int(get_property("_assertYourAuthorityCast")) < 3){
+            maximize("item drop, equip " + divingHelmet() +", equip shark jumper, equip scale-mail underwear, equip black glass, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol, equip little bitty bathy", false);
+        } else {
+            maximize("item drop, equip shark jumper, equip scale-mail underwear, equip " + divingHelmet() +", equip black glass, equip blood cubic zirconia, equip peridot, equip little bitty",false);
         }
+        adv1($location[The Caliginous Abyss],0,"");
     }
     if (total_turns_played() >= to_int(get_property("clubEmNextWeekMonsterTurn")) + 8 && get_property("clubEmNextWeekMonster") != ""){
         if (my_location() == $location[mer-kin elementary school] || my_location() == $location[mer-kin library]){
@@ -387,6 +411,10 @@ void unlockGuild(){
         }
     }
     if (my_primestat() == $stat[muscle]){
+        if (have_item($item[bat wings])){
+            equip($item[bat wings]);
+            use_skill($skill[rest upside down]);
+        }
         if (get_property("questG09Muscle") != "finished"){
             if (get_property("questG09Muscle") == "unstarted")
                 visit_url("guild.php?place=challenge");
@@ -671,6 +699,14 @@ void sorceress(){
         maximize("item drop, equip Flash Liquidizer Ultra Dousing Accessory, equip bat wings, equip everfull dart holster, equip monodent of the sea",false);
         use($item[closed-circuit pay phone]);
     }
+    if (item_amount($item[teflon ore]) == 0 && !tailpiece()){
+        while (to_int(get_property("_unaccompaniedMinerUsed")) < 5 && item_amount($item[teflon ore]) == 0){
+            teflon();
+        }
+        if (to_int(get_property("_unaccompaniedMinerUsed")) == 5 && !contains_text(get_property("_roninStoragePulls"),"11103") && item_amount($item[teflon ore]) == 0){
+            cli_execute("buy using storage lodestone; pull lodestone; use lodestone");
+        }
+    }
     if (get_property("expressCardUsed") == false && have_item($item[platinum yendorian express card])){
         if (storage_amount($item[Platinum Yendorian Express Card]) > 0){
             take_storage(1,$item[Platinum Yendorian Express Card]);
@@ -709,29 +745,16 @@ void sorceress(){
         if (item_amount($item[sea cowbell]) < 3){
             abort("need more cowbells");
         }
-        if (contains_text(get_property("banishedMonsters"),"Mer-kin rustler") && contains_text(get_property("banishedMonsters"),"sea cowboy") && contains_text(get_property("banishedMonsters"),"sea cow") && have_item($item[tearaway pants]))
+        if (contains_text(get_property("banishedMonsters"),"Mer-kin rustler") && contains_text(get_property("banishedMonsters"),"sea cowboy") && contains_text(get_property("banishedMonsters"),"sea cow:") && have_item($item[tearaway pants])){
             equip($item[Tearaway pants]);
+            equip(divingHelmet());
+        }
         adv1($location[The Coral Corral]);
         post_adv();
     }
     if (item_amount($item[teflon ore]) == 0 && !tailpiece()){
-        equip($item[mer-kin digpick]);
-        equip($item[really\, really nice swimming trunks]);
-        use_familiar($familiar[grouper groupie]);
-        boolean exposed = false;
-        while ((to_int(get_property("_unaccompaniedMinerUsed")) < 5 || have_effect($effect[Loded]) > 0) && item_amount($item[teflon ore]) == 0){
-            visit_url("mining.php?mine=3&which="+ mineNum());
-            if( my_hp() == 0){
-                cli_execute("restore HP");
-            }
-            if (to_int(get_property("_unaccompaniedMinerUsed")) == 5 && !contains_text(get_property("_roninStoragePulls"),"11103") && item_amount($item[teflon ore]) == 0){
-                cli_execute("buy using storage lodestone; pull lodestone; use lodestone");
-            }
-            if ((to_int(get_property("_unaccompaniedMinerUsed")) >= 5 && have_effect($effect[Loded]) == 0) || item_amount($item[teflon ore]) > 0)
-                break;
-        }
-        if (have_effect($effect[beaten up]) > 0){
-            use_skill($skill[Tongue of the Walrus]);
+        while (have_effect($effect[Loded]) > 0 && item_amount($item[teflon ore]) == 0){
+            teflon();
         }
         if (item_amount($item[teflon ore]) == 0){
             abort("failed to acquire teflon ore, pull minin dynamite for one more try");
@@ -744,7 +767,7 @@ void sorceress(){
             use($item[11-leaf clover]);
             adv1($location[The Mer-Kin Outpost]);
         }
-        cli_execute("unequip sea chaps; acquire crappy Mer-kin tailpiece, crappy Mer-kin mask");
+        cli_execute("unequip sea chaps; unequip aerated diving helmet; equip really nice swimming, acquire crappy Mer-kin tailpiece, crappy Mer-kin mask");
     }
     if (get_property("yogUrtDefeated") == "false"){
         while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0"){
