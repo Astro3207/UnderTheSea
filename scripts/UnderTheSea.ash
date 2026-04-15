@@ -781,7 +781,7 @@ void sorceress(){
             use($item[11-leaf clover]);
             adv1($location[The Mer-Kin Outpost]);
         }
-        cli_execute("unequip sea chaps; unequip aerated diving helmet; equip really nice swimming; acquire crappy Mer-kin tailpiece; crappy Mer-kin mask");
+        cli_execute("unequip sea chaps; unequip aerated diving helmet; equip really nice swimming; acquire crappy Mer-kin tailpiece, crappy Mer-kin mask");
     }
     if (get_property("yogUrtDefeated") == "false"){
         while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0"){
