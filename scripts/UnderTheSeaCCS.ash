@@ -201,9 +201,11 @@ void main(int round, monster mob, string page_text){
                     free_run(page_text,false);
                     use_skill($skill[saucegeyser]);
                     use_skill($skill[saucegeyser]);
-                } else if (mob == $monster[Mer-kin burglar] || mob == $monster[Mer-kin raider])
+                } else if (mob == $monster[Mer-kin burglar] || mob == $monster[Mer-kin raider]){
                     free_run(page_text,true);
-                free_kill(page_text,false);
+                }
+                if (mob != $monster[black crayon golem])
+                    free_kill(page_text,false);
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
