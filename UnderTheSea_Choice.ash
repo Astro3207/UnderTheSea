@@ -108,9 +108,6 @@ void main(int whichchoice, string page) {
         case 705:
             run_choice(4);
             break;
-        case 1475:
-            run_choice(1);
-            break;
         case 1564:
             run_choice(1);
             break;
