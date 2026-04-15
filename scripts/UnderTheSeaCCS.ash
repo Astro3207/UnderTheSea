@@ -181,6 +181,8 @@ void main(int round, monster mob, string page_text){
                 darts();
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
+                use_skill($skill[saucegeyser]);
+                use_skill($skill[saucegeyser]);
             }
             if ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != ""){
                 if (get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("_monsterHabitatsRecalled")) >= 2 && to_int(get_property("_backUpUses")) < 7){
@@ -199,8 +201,8 @@ void main(int round, monster mob, string page_text){
                     free_run(page_text,false);
                     use_skill($skill[saucegeyser]);
                     use_skill($skill[saucegeyser]);
-                }
-                free_run(page_text,true);
+                } else if (mob == $monster[Mer-kin burglar] || mob == $monster[Mer-kin raider])
+                    free_run(page_text,true);
                 free_kill(page_text,false);
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
