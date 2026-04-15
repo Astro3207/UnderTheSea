@@ -45,6 +45,7 @@ Very useful items
 - PYEC (extends steely eyed squint and shadow affinity and fishy)
 - boxed Mayam Calendar (5 extra turns,gives chest mimic exp,necessary if you want a no organ run)
 - PYEC
+- Unaccompanied Miner
   
 Slightly useful
 
