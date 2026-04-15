@@ -570,8 +570,10 @@ void seaMonkees(){
             conditional = append(conditional,", equip roman candelabra"); //trying to use purple ray
         if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != "")){
             conditional = append(conditional,", equip backup camera"); //using back ups for free fights
-        } else {
+        } else if (to_int(get_property("_bczSweatBulletsCasts")) < 11) {
             conditional = append(conditional,", equip blood cubic zirconia"); //free kills needed
+        } else {
+            conditional = append(conditional,", equip congressional medal of insanity"); //free kills needed
         }
         if (get_property("merkinLockkeyMonster") != ""){
             mood("noncom");
@@ -950,6 +952,9 @@ void sorceress(){
                             print(numeric_modifier("combat rate"));
                             adv1($location[Mer-kin Gymnasium],0,"");
                             post_adv();
+                            if (get_property("_skateBuff1") == "false"){
+                                visit_url("sea_skatepark.php?action=state2buff1");
+                            }
                         } else if (get_property("questS02Monkees") == "step12") {
                             maximize("item drop, equip shark jumper, equip scale-mail underwear, equip "+ divingHelmet() + ", equip black glass, equip blood cubic zirconia, equip mobius, equip little bitty",false);
                             adv1($location[The Caliginous Abyss],0,"");
