@@ -96,8 +96,10 @@ void main(int round, monster mob, string page_text){
             if (mob == $monster[neptune flytrap]){
                 darts();
                 if (have_equipped($item[McHugeLarge left pole]) && !contains_text(get_property("trackedMonsters"),"Neptune flytrap")){
-                    use_skill($skill[transcendent olfaction]);
-                    use_skill($skill[MCHUGELARGE SLASH]);
+                    foreach sk in $skills[transcendent olfaction,Gallapagosian Mating Call,MCHUGELARGE SLASH]{
+                        if (have_skill(sk))
+                            use_skill(sk);
+                    }
                 }
                 free_kill(page_text,true);
             } else if (mob == $monster[time cop]){
@@ -108,8 +110,10 @@ void main(int round, monster mob, string page_text){
             break;
         case $location[The Marinara Trench]:
             if (mob == $monster[giant squid] && !contains_text(get_property("trackedMonsters"),"giant squid")){
-                use_skill($skill[transcendent olfaction]);
-                use_skill($skill[MCHUGELARGE SLASH]);
+                foreach sk in $skills[transcendent olfaction,Gallapagosian Mating Call,MCHUGELARGE SLASH]{
+                    if (have_skill(sk))
+                        use_skill(sk);
+                }
             }
             if (mob == $monster[black crayon golem] || mob == $monster[time cop]){
                 use_skill($skill[BCZ: Refracted Gaze]);
@@ -126,8 +130,10 @@ void main(int round, monster mob, string page_text){
             break;
         case $location[The Dive Bar]:
             if (mob == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"),"Mer-kin tippler")){
-                use_skill($skill[transcendent olfaction]);
-                use_skill($skill[MCHUGELARGE SLASH]);
+                foreach sk in $skills[Gallapagosian Mating Call,MCHUGELARGE SLASH]{
+                    if (have_skill(sk))
+                        use_skill(sk);
+                }
             }
             if (mob == $monster[black crayon golem] || mob == $monster[time cop]){
                 use_skill($skill[BCZ: Refracted Gaze]);
@@ -433,8 +439,10 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
             }
             if (!contains_text(get_property("trackedMonsters"),"black crayon golem:McHugeLarge Slash")){
-                use_skill($skill[MCHUGELARGE SLASH]);
-                use_skill($skill[transcendent olfaction]);
+                foreach sk in $skills[Gallapagosian Mating Call,MCHUGELARGE SLASH]{
+                    if (have_skill(sk))
+                        use_skill(sk);
+                }
                 use_skill($skill[Club 'Em Into Next Week]);
             }
             break;
