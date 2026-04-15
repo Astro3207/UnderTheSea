@@ -16,7 +16,6 @@ I'm definitely missing some, but here's stuff off the top of my head:
 Critical items/skills
 
 - Steely eyed squint
-- Transcendent olfaction
 - VIP louge key + stocked lounge (3 free kills plus a bunch of buffs)
 - closed-circuit phone system (~15 turns of fishy with monodent and good lasso targets, up to 11 free kills from bricks)
 - Cursed monkey's glove (3-4 wishes of lassos)
@@ -53,6 +52,7 @@ Slightly useful
 - packaged Roman Candelabra (1 free fight from copy)
 - untorn tearaway pants package (skips moxie guild quest)
 - Sealed TakerSpace letter of Marque (1 free run)
+- Transcendent olfaction
 - new-in-box toy Cupid bow
 - assemble-it-yourself Leprecondo
 - Möbius ring box
@@ -65,6 +65,7 @@ Currently the script is inflexible, the following are iotms the scripts no longe
 - Rock garden
 - Combat lover's locket
 - PYEC
+- Transcendent olfaction
 
 Items to add support for
 - Baseball diamond
