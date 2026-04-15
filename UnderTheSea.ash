@@ -75,6 +75,8 @@ void mood(string mod){
     switch (mod){
         case "itdrop":
             foreach ef in $effects[Who's Going to Pay This Drunken Sailor?,Fat Leon's Phat Loot Lyric,Lubricating Sauce,Thoughtful Empathy,Singer's Faithful Ocelot,Leash of Linguini,Empathy,Spice Haze, donho's bubbly ballad, the ballad of richie thingfinder]{
+                if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
+                    continue;
                 if (have_effect(ef) == 0){
                     cli_execute(ef.default);
                 }
@@ -86,6 +88,8 @@ void mood(string mod){
                     if (ef == $effect[ultra-soft steps] && item_amount($item[ultra-soft ferns]) == 0)
                         continue;
                     if (ef == $effect[life goals] && item_amount($item[Life Goals Pamphlet]) == 0)
+                        continue;
+                    if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
                         continue;
                     cli_execute(ef.default);
                 }
@@ -104,6 +108,8 @@ void mood(string mod){
                     if (ef == $effect[Towering Muscles] && get_property("yogUrtDefeated") == false){
                         continue;
                     }
+                    if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
+                        continue;
                     cli_execute(ef.default);
                 }
             }
@@ -115,6 +121,8 @@ void mood(string mod){
             foreach ef in $effects[Astral Shell,Minor Invulnerability,Elemental Saucesphere]{
                 if (ef == $effect[Minor Invulnerability] && item_amount($item[scroll of minor invulnerability]) == 0)
                     continue;
+                if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
+                    continue;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
             }
@@ -122,6 +130,8 @@ void mood(string mod){
         case "sleazeres":
             foreach ef in $effects[Astral Shell,Minor Invulnerability,Elemental Saucesphere, scarysauce]{
                 if (ef == $effect[Minor Invulnerability] && item_amount($item[scroll of minor invulnerability]) == 0)
+                    continue;
+                if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
                     continue;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
@@ -131,12 +141,16 @@ void mood(string mod){
             foreach ef in $effects[Astral Shell,Minor Invulnerability,Elemental Saucesphere]{
                 if (ef == $effect[Minor Invulnerability] && item_amount($item[scroll of minor invulnerability]) == 0)
                     continue;
+                if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
+                    continue;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
             }
             break;
         case "colosseum":
             foreach ef in $effects[Ultraheart,Carol of the Hells,Elron's Explosive Etude,Big,Favored by Lyle,The Magical Mojomuscular Melody,Tubes of Universal Meat,Mariachi Moisture]{
+                if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
+                    continue;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
             }
@@ -518,7 +532,7 @@ void seaMonkees(){
                 mood("hotres");
                 adv1($location[The Marinara Trench],1,"");
             } else if (my_primestat() == $stat[muscle]){ //need to add mus
-                mood("hotres");
+                mood("spookyres");
                 adv1($location[Anemone Mine],1,"");
             }
             post_adv();
