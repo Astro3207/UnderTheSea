@@ -303,7 +303,7 @@ void post_adv(){
             adv1($location[The Dive Bar],1,"");
         }
     }
-    if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 33){
+    if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 33 && to_int(get_property("momSeaMonkeeProgress")) > 22){
         if (to_int(get_property("_assertYourAuthorityCast")) < 3){
             maximize("item drop, equip " + divingHelmet() +", equip shark jumper, equip scale-mail underwear, equip black glass, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol, equip little bitty bathy", false);
         } else {
@@ -370,7 +370,7 @@ void postAscend(){
         cli_execute("aprilband item tuba; aprilband item piccolo; aprilband play piccolo; aprilband play piccolo; aprilband play piccolo");
     if (get_property("_photoBoothEquipment") == 0)
         cli_execute("photobooth item sheriff pistol; photobooth item sheriff moustache; photobooth item sheriff badge");
-        visit_url("inventory.php?action=skiduffel");
+    visit_url("inventory.php?action=skiduffel");
     if (get_property(" _aprilShowerGlobsCollected") == false)
         visit_url("inventory.php?action=shower");
     if (get_property("_takerSpaceSuppliesDelivered") == "false"){
@@ -386,7 +386,7 @@ void postAscend(){
         buy($item[antique accordion]);
     if (item_amount($item[model train set]) == 1)
         use($item[model train set]);
-    foreach it in $items[mer-kin sneakmask, sea lasso, comb jelly, shark jumper,scale-mail underwear,Mer-kin digpick,Congressional Medal of Insanity, spooky VHS tape]{
+    foreach it in $items[mer-kin sneakmask, sea lasso, comb jelly, shark jumper,scale-mail underwear,Congressional Medal of Insanity, spooky VHS tape]{
         if (storage_amount( it ) == 0){
             buy_using_storage(it);
         }
@@ -729,7 +729,7 @@ void sorceress(){
             abort("Hagnk does not have a PYEC, see if you can borrow one?");
         }
     }
-    while (have_effect($effect[shadow affinity]) > 0){
+    while (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == false){
         shadowRift();
     }
     if (get_property("encountersUntilSRChoice") == "0")
