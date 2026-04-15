@@ -457,14 +457,9 @@ void main(int round, monster mob, string page_text){
             break;
         case $location[Mer-kin Temple (Left Door)]:
             throw_items($item[crayon shavings],$item[crayon shavings]);
-            user_confirm("looks good?");
             throw_items($item[crayon shavings],$item[crayon shavings]);
-            user_confirm("looks good?");
             throw_items($item[crayon shavings],$item[crayon shavings]);
-            user_confirm("looks good?");
             throw_items($item[crayon shavings],$item[crayon shavings]);
-            user_confirm("looks good?");
-
             attack();
             attack();
             attack();
