@@ -112,7 +112,7 @@ void mood(string mod){
             }
             break;
         case "hotres":
-            foreach ef in $effects[Astral Shell,Minor Invulnerability,Elemental Saucesphere,materiel intel,There's No N in Love,Incredibly Well Lit,Who's Going to Pay This Drunken Sailor?,Fat Leon's Phat Loot Lyric,Lubricating Sauce,Thoughtful Empathy]{
+            foreach ef in $effects[Astral Shell,Minor Invulnerability,Elemental Saucesphere]{
                 if (ef == $effect[Minor Invulnerability] && item_amount($item[scroll of minor invulnerability]) == 0)
                     continue;
                 if (have_effect(ef) == 0)
