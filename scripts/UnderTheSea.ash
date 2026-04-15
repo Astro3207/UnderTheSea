@@ -314,13 +314,13 @@ void post_adv(){
     if (total_turns_played() >= to_int(get_property("clubEmNextWeekMonsterTurn")) + 8 && get_property("clubEmNextWeekMonster") != ""){
         if (my_location() == $location[mer-kin elementary school] || my_location() == $location[mer-kin library]){
         } else if (my_primestat() == $stat[mysticality]){
-            cli_execute("maximize hot res; equip really nice swimming; equip legendary seal clubbing; familiar grouper group");
+            cli_execute("maximize hot res, equip really nice swimming, equip legendary seal clubbing; familiar grouper group");
             adv1($location[The Marinara Trench],1,"");
         } else if (my_primestat() == $stat[moxie]){
-            cli_execute("maximize sleaze res; equip really nice swimming; equip legendary seal clubbing; familiar grouper group");
+            cli_execute("maximize sleaze res, equip really nice swimming, equip legendary seal clubbing; familiar grouper group");
             adv1($location[The Dive Bar],1,"");
         } else if (my_primestat() == $stat[muscle]){
-            cli_execute("maximize spooky res; equip really nice swimming; equip legendary seal clubbing; familiar grouper group");
+            cli_execute("maximize spooky res, equip really nice swimming, equip legendary seal clubbing; familiar grouper group");
             adv1($location[Anemone Mine],1,"");
         }
     }
@@ -781,7 +781,7 @@ void sorceress(){
             use($item[11-leaf clover]);
             adv1($location[The Mer-Kin Outpost]);
         }
-        cli_execute("unequip sea chaps; unequip aerated diving helmet; equip really nice swimming, acquire crappy Mer-kin tailpiece, crappy Mer-kin mask");
+        cli_execute("unequip sea chaps; unequip aerated diving helmet; equip really nice swimming; acquire crappy Mer-kin tailpiece; crappy Mer-kin mask");
     }
     if (get_property("yogUrtDefeated") == "false"){
         while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0"){
