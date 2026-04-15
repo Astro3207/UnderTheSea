@@ -570,7 +570,7 @@ void seaMonkees(){
             conditional = append(conditional,", equip roman candelabra"); //trying to use purple ray
         if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != "")){
             conditional = append(conditional,", equip backup camera"); //using back ups for free fights
-        } else if (to_int(get_property("_bczSweatBulletsCasts")) < 11) {
+        } else if (to_int(get_property("_bczSweatBulletsCasts")) < 9) {
             conditional = append(conditional,", equip blood cubic zirconia"); //free kills needed
         } else {
             conditional = append(conditional,", equip congressional medal of insanity"); //free kills needed
@@ -654,8 +654,9 @@ void seaMonkees(){
                 }
             }
         }
-        cli_execute("acquire aerated diving helmet");
     }
+    if (divingHelmet() == $item[none])
+        cli_execute("acquire aerated diving helmet");
     if (to_int(get_property("momSeaMonkeeProgress")) < 24){
         while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing"){
             use_familiar($familiar[peace turkey]);
