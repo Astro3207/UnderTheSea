@@ -1,6 +1,8 @@
 # UnderTheSea
 11,037 Loop
 
+`git checkout Astro3207/UnderTheSea`
+
 All classes works now, although mys classes can be optimized a little more.
 Will try and make certain iotms optional on demand, but won't be proactive about it. Will slowly add iotms on request as well or as I get them.
 
