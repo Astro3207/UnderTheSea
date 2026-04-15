@@ -1047,7 +1047,6 @@ void sorceress(){
     }
     while (get_property("UnderTheSeaStage") == "stage4"){
         if (to_int(get_property("_assertYourAuthorityCast")) < 3){
-            abort("equip assert");
         }
         maximize("combat,equip crappy mer-kin mask,equip crappy mer-kin tailpiece" + freeRun() + "" + freeKill(),false);
         mood("combat");
