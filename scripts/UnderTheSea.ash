@@ -332,7 +332,7 @@ void post_adv(){
         cli_execute("acquire handful of split pea soup");
     }}
 void postAscend(){
-    write_ccs(to_buffer("consult undertheseaccs.ash \n abort"),"temp");
+    write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"),"temp");
     set_ccs("temp");
     set_property("battleAction","custom combat script");
     set_property("hpAutoRecovery","0.5");
