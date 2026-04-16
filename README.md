@@ -46,6 +46,7 @@ Very useful items
 - boxed Mayam Calendar (5 extra turns,gives chest mimic exp,necessary if you want a no organ run)
 - PYEC
 - Unaccompanied Miner
+- Foul ball
   
 Slightly useful
 
