@@ -11,12 +11,13 @@ Things to prepare BEFORE ascending:
 - Have all of the underwater maps done
 - Have a damp old wallet (not required but saves a turn)
 - Have black crayon golem and unholy diver in combat lover's locket (optional)
-- Get glover
+- Get glover (and foul ball?)
 
 Highly recommended skills to perm
 
 - Holiday Multitasking
 - Deep Dark Visions
+- Unaccompanied miner
 - Saucegeyser
 - Canneloni Cocoon
 - Tongue of the Walrus
