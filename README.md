@@ -13,6 +13,14 @@ Things to prepare BEFORE ascending:
 - Have black crayon golem and unholy diver in combat lover's locket (optional)
 - Get glover
 
+Highly recommended skills to perm
+
+- Holiday Multitasking
+- Deep Dark Visions
+- Saucegeyser
+- Canneloni Cocoon
+- Tongue of the Walrus
+
 I'm definitely missing some, but here's stuff off the top of my head:
 
 Critical items/skills
