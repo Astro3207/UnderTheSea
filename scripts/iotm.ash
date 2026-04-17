@@ -258,11 +258,11 @@ void leprecondo(string input){
     int[int] lepRoom;
     int count;
     foreach num in rooms{
-        if (rooms[num] >= 10 && contains_text(get_property("leprecondoDiscovered"),rooms[num])){
+        if (to_int(rooms[num]) >= 10 && contains_text(get_property("leprecondoDiscovered"),rooms[num])){
             lepRoom[count] = to_int(rooms[num]);
             count += 1;
         }
-        if (rooms[num] < 10 && contains_text(get_property("leprecondoDiscovered"),","+rooms[num] +",")){
+        if (to_int(rooms[num]) < 10 && contains_text(get_property("leprecondoDiscovered"),","+rooms[num] +",")){
             lepRoom[count] = to_int(rooms[num]);
             count += 1;
         }
