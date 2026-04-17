@@ -262,7 +262,7 @@ void leprecondo(string input){
             lepRoom[count] = to_int(rooms[num]);
             count += 1;
         }
-        if (rooms[num] < 10 && contains_text(get_property("leprecondoDiscovered"),rooms[num] +",")){
+        if (rooms[num] < 10 && contains_text(get_property("leprecondoDiscovered"),","+rooms[num] +",")){
             lepRoom[count] = to_int(rooms[num]);
             count += 1;
         }
