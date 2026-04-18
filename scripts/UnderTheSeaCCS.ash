@@ -4,7 +4,7 @@ void free_kill(string ptext, boolean drop){
         if (freeskill == $skill[Club 'Em Back in Time] && my_location() != $location[mer-kin colosseum]){
             continue;
         }
-        if (freeskill == $skill[Club 'Em Back in Time] && to_int(get_property("_bczSweatBulletsCasts")) >= 9 && my_location() == $location[mer-kin outpost])
+        if (freeskill == $skill[BCZ: Sweat Bullets] && to_int(get_property("_bczSweatBulletsCasts")) >= 9 && my_location() == $location[mer-kin outpost])
             continue;
         if (contains_text(ptext, to_string(freeskill)))
             use_skill(freeskill);
