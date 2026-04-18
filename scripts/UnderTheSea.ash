@@ -745,8 +745,8 @@ void seaMonkees(){
         while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0 && to_int(get_property("_cyberFreeFights")) < 10 && to_int(get_property("momSeaMonkeeProgress")) < 40){
             use_familiar($familiar[glover]); // fight 5 recalled mobs for free in cyberzone
             cli_execute("maximize moxie, equip shark jumper, equip scale-mail underwear, equip monodent");
-            if (my_buffedstat($stat[moxie]) < 610) {
-                abort("Need 610 moxie here to be safe");
+            if (my_buffedstat($stat[moxie]) < 500) {
+                abort("Need 500 moxie here to be safe");
             }
             adv1($location[Cyberzone 1],0,"");
             post_adv();
