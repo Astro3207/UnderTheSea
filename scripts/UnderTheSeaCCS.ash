@@ -297,14 +297,14 @@ void main(int round, monster mob, string page_text){
             break;
         case $location[The Coral Corral]:
             if (item_amount($item[sea cowbell]) == 0){
-                if (mob == $monster[wild seahorse]){
-                    if (item_amount($item[waffle]) > 1){
-                        throw_item($item[waffle]);
-                        run_combat();
-                    } else {
-                        abort("Hit seahorse too early and have no waffles for some reason");
-                    }
-                }
+            //    if (mob == $monster[wild seahorse]){
+            //        if (item_amount($item[waffle]) > 1){
+            //            throw_item($item[waffle]);
+            //            run_combat();
+            //        } else {
+            //            abort("Hit seahorse too early and have no waffles for some reason");
+            //        }
+            //    }
                 if (have_equipped($item[backup camera])){
                     if (mob == $monster[mer-kin rustler])
                         use_skill($skill[spring kick]);
@@ -406,7 +406,9 @@ void main(int round, monster mob, string page_text){
                     n+=1;
                 }
                 if (mob.phylum == $phylum[dude] || mob == $monster[black crayon golem]){
-                    use_skill($skill[BCZ: Refracted Gaze]);
+                    if ((my_basestat( $stat[submysticality])-40000) > BCZcost("RefractedGazeCasts")){
+                        use_skill($skill[BCZ: Refracted Gaze]);
+                    }
                 } else {
                     if (item_amount($item[mer-kin knucklebone]) == 0){
                         if (my_basestat($stat[mysticality]) > 200){
@@ -420,6 +422,8 @@ void main(int round, monster mob, string page_text){
                     }
                     free_kill(page_text,true);
                 }
+                use_skill($skill[saucegeyser]);
+                use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
                 use_skill($skill[saucegeyser]);
             } else {
