@@ -20,13 +20,14 @@ item divingHelmet(){
     }
     return it;
 }
-boolean tailpiece(){
-    boolean bool;
-    foreach it in $items[teflon swim fins,crappy Mer-kin tailpiece,Mer-kin gladiator tailpiece,Mer-kin scholar tailpiece]{
-        if (item_amount(it) > 0 || have_equipped(it))
-            bool = true;
+item tailpiece(){
+    cli_execute("refresh all");
+    item it;
+    foreach ite in $items[teflon swim fins,crappy Mer-kin tailpiece,Mer-kin gladiator tailpiece,Mer-kin scholar tailpiece]{
+        if (item_amount(ite) > 0 || have_equipped(ite))
+            it = ite;
     }
-    return bool;
+    return it;
 }
 string adjacentCaverns(int x_coor, int y_coor){
     buffer buf;
@@ -790,7 +791,7 @@ void sorceress(){
         cli_execute("maximize item drop, equip Flash Liquidizer Ultra Dousing Accessory, equip bat wings, equip everfull dart holster, equip monodent of the sea");
         use($item[closed-circuit pay phone]);
     }
-    if (item_amount($item[teflon ore]) == 0 && !tailpiece()){
+    if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]){
         while (to_int(get_property("_unaccompaniedMinerUsed")) < 5 && have_skill($skill[Unaccompanied Miner]) && item_amount($item[teflon ore]) == 0){
             teflon();
         }
@@ -808,7 +809,7 @@ void sorceress(){
     while (to_int(get_property("lassoTrainingCount")) < 20 && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == false)){
         shadowRift();
     }
-    if (item_amount($item[teflon ore]) == 0 && !tailpiece()){
+    if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]){
         while (have_effect($effect[Loded]) > 0 && item_amount($item[teflon ore]) == 0){
             teflon();
         }
@@ -850,6 +851,9 @@ void sorceress(){
         if (contains_text(get_property("crystalBallPredictions"),"The Coral Corral") && !contains_text(get_property("crystalBallPredictions"),"The Coral Corral:Wild seahorse") && have_effect($effect[shadow affinity]) > 0){
             shadowRift();
         }
+        while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0 && !contains_text(get_property("crystalBallPredictions"),"The Coral Corral:Wild seahorse")){
+            shadowRift();
+        }
     }
     while (have_effect($effect[shadow affinity]) > 0){
         shadowRift();
@@ -860,7 +864,8 @@ void sorceress(){
         use($item[closed-circuit pay phone]);
         adv1($location[Shadow Rift (The Misspelled Cemetary)],0,"");
     }
-    if (!tailpiece()){
+    if (tailpiece() == $item[none]){
+        use(item_amount($item[mer-kin thingpouch]),$item[mer-kin thingpouch]);
         if (item_amount($item[sand dollar]) < 9 && item_amount($item[damp old wallet]) > 0){ //if necesary pull and use the old wallet
             use($item[damp old wallet]);
         } else if (item_amount($item[sand dollar]) < 9){
@@ -882,9 +887,9 @@ void sorceress(){
             if (item_amount($item[mer-kin bunwig]) == 0 && !have_equipped($item[mer-kin bunwig]))
                 append(conditional,", hat drop");
             if (have_effect($effect[Steely-Eyed Squint]) > 0){
-                cli_execute("maximize item drop, equip crappy Mer-kin tailpiece, equip crappy Mer-kin mask, equip legendary seal-clubbing club, equip blood cubic zirc, equip mobius, equip toy cupid" + conditional);
+                cli_execute("maximize item drop, equip "+ divingHelmet() +", equip "+ tailpiece() +", equip legendary seal-clubbing club, equip blood cubic zirc, equip mobius, equip toy cupid" + conditional);
             } else {
-                cli_execute("maximize item drop, equip crappy Mer-kin tailpiece, equip crappy Mer-kin mask, equip legendary seal-clubbing club, equip blood cubic zirconia, equip mobius, equip toy cupid" + conditional);
+                cli_execute("maximize item drop, equip "+ divingHelmet() +", equip "+ tailpiece() +", equip legendary seal-clubbing club, equip blood cubic zirconia, equip mobius, equip toy cupid" + conditional);
             }
             if (get_property("merkinElementaryTeacherUnlock") == "false")
                 mood("noncom");
@@ -927,7 +932,7 @@ void sorceress(){
             } else if (to_int(get_property("merkinVocabularyMastery")) == 90 && item_amount($item[mer-kin wordquiz]) == 0){
                 cli_execute("buy using storage mer-kin wordquiz; pull mer-kin wordquiz");
             } else {
-                cli_execute("maximize item drop, equip crappy Mer-kin tailpiece, equip crappy Mer-kin mask, equip mobius");
+                cli_execute("maximize item drop, equip "+ divingHelmet() +", equip "+ tailpiece() +", equip mobius");
                 adv1($location[mer-kin elementary school]);
             }
             if (item_amount($item[mer-kin facecowl]) > 0 && item_amount($item[mer-kin waistrope]) > 0 && have_effect($effect[Steely-Eyed Squint]) > 0){
