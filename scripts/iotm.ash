@@ -344,6 +344,21 @@ void darts(){
         n -= 1;
     }
 }
+string [int] baseballLineup = split_string(get_property("baseballTeam"), ",");
+
+int baseballPlayers(){
+    int players;
+    foreach num in baseballLineup{
+        players = (num+1);
+    }
+    return players;
+}
+
+void baseballD(){
+    if (baseballPlayers() == 9){
+        visit_url("inventory.php?action=pball",false);
+    }
+}
 void finisher(){
     set_property("script","");
     set_property("subscript","");
