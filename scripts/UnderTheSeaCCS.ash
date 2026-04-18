@@ -4,6 +4,8 @@ void free_kill(string ptext, boolean drop){
         if (freeskill == $skill[Club 'Em Back in Time] && my_location() != $location[mer-kin colosseum]){
             continue;
         }
+        if (freeskill == $skill[Club 'Em Back in Time] && to_int(get_property("_bczSweatBulletsCasts")) >= 9 && my_location() == $location[mer-kin outpost])
+            continue;
         if (contains_text(ptext, to_string(freeskill)))
             use_skill(freeskill);
     }
@@ -28,6 +30,8 @@ void free_run(string ptext, boolean banish){
             if (banish == true && freeskill == $skill[spring away]){
                 use_skill($skill[spring kick]);
             }
+            if ($locations[The Outskirts of Cobb's Knob,The Sleazy Back Alley,The Haunted Pantry] contains my_location() && freeskill == $skill[snokebomb])
+                return;
             use_skill(freeskill);
         }
     }
@@ -58,6 +62,8 @@ void main(int round, monster mob, string page_text){
         case $location[The Outskirts of Cobb's Knob]:
         case $location[The Sleazy Back Alley]:
         case $location[The Haunted Pantry]:
+            if (!free_monster(mob))
+                free_run(page_text,true);
             if(have_equipped($item[monodent of the sea])){
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
             }
@@ -86,18 +92,20 @@ void main(int round, monster mob, string page_text){
                     throw_item($item[Septapus summoning charm]);
                 if (to_int(get_property("_batWingsSwoopUsed")) < 11)
                     use_skill($skill[swoop like a bat]);
-                while(to_int(get_property("_mildEvilPerpetrated")) < 3)
+                while(to_int(get_property("_mildEvilPerpetrated")) < 3 && have_skill($skill[perpetrate mild evil]))
                     use_skill($skill[Perpetrate Mild Evil]);
                 int n = 0;
-                while (to_int(get_property("_douseFoeUses")) < 3 && get_property("_douseFoeSuccess") == false && n < 23){
+                while (to_int(get_property("_douseFoeUses")) < 3 && get_property("_douseFoeSuccess") == false && n < 20){
                     use_skill($skill[douse foe]);
                     n += 1;
                 }
             }
-            if (have_equipped($item[monodent of the sea])){
+            if (have_equipped($item[monodent of the sea]) && (mob != $monster[shadow slab] || get_property("_douseFoeSuccess") == true)){
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
             }
             darts();
+            use_skill($skill[Saucegeyser]);
+            use_skill($skill[Saucegeyser]);
             use_skill($skill[Saucegeyser]);
             use_skill($skill[Saucegeyser]);
             break;
@@ -438,6 +446,8 @@ void main(int round, monster mob, string page_text){
                 free_run(page_text,false);
                 free_kill(page_text,false);
             }
+            use_skill($skill[saucegeyser]);
+            use_skill($skill[saucegeyser]);
             use_skill($skill[saucegeyser]);
             use_skill($skill[saucegeyser]);
             use_skill($skill[saucegeyser]);
