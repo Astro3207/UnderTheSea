@@ -38,6 +38,7 @@ void main(int whichchoice, string page) {
                     set_property("stashboxFound", "2");
             } else {
                 run_choice(3);
+                set_property("stashboxChecked","1,2,3");
                 if (item_amount($item[mer-kin stashbox]) > 0)
                     set_property("stashboxFound", "3");
             }
@@ -55,6 +56,7 @@ void main(int whichchoice, string page) {
                     set_property("stashboxFound", "1");
             } else {
                 run_choice(2);
+                set_property("stashboxChecked","1,2,3");
                 if (item_amount($item[mer-kin stashbox]) > 0)
                     set_property("stashboxFound", "2");
             }
