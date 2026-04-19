@@ -327,8 +327,7 @@ void camo(){
     }
 }
 void darts(){
-    int n = to_int(get_property("_dartsLeft"));
-    while(n > 0 && have_equipped($item[everfull dart holster])){
+    while(to_int(get_property("_dartsLeft")) > 0 && have_equipped($item[everfull dart holster]) && current_round() > 0){
         if (contains_text(get_property("everfullDartPerks"),"Butt")){
             int butts_int;
             matcher butts_matcher = create_matcher("(\\d+):butt", get_property("_currentDartboard")); 
@@ -341,12 +340,17 @@ void darts(){
         } else {
             use_skill($skill[Darts: Throw at %part1]);
         }
-        n -= 1;
     }
 }
+
 string [int] baseballLineup = split_string(get_property("baseballTeam"), ",");
+void refreshBaseballArray(){
+    baseballLineup = split_string(get_property("baseballTeam"), ",");
+}
+
 
 int baseballPlayers(){
+    refreshBaseballArray();
     int players;
     foreach num in baseballLineup{
         players = (num+1);
