@@ -1024,7 +1024,7 @@ void sorceress(){
             equip($item[really\, really nice swimming trunks]);
             visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=130");
         }
-        while (get_property("dreadScroll1") == "0" || get_property("dreadScroll6") == "0" || get_property("dreadScroll8") == "0" || item_amount($item[mer-kin healscroll]) == 0){
+        while (get_property("dreadScroll1") == "0" || get_property("dreadScroll6") == "0" || get_property("dreadScroll8") == "0"){
             use_familiar($familiar[grouper groupie]);
             string conditional;
             if (!contains_text(get_property("banishedMonsters"),"Mer-kin alphabetizer:Spring Kick")){
@@ -1058,7 +1058,7 @@ void sorceress(){
                 continue;
             if (get_property("dreadScroll"+x) == 0){
                 if (x == 2)
-                    print("Missed the healscrolll hint","red");
+                    print("Missed the healscroll hint","red");
                 if (X == 5)
                     print("Missed the killscroll hint","red");
                 abort("Somehow missed a few dreadscroll clues");
@@ -1103,6 +1103,9 @@ void sorceress(){
         if (get_property("_skateBuff1") == "false"){
             visit_url("sea_skatepark.php?action=state2buff1");
         }
+        if (item_amount($item[mer-kin healscroll]) == 0){
+            pullSequence($item[mer-kin healscroll]);
+        }
         if (get_property("yogUrtDefeated") == "false"){
             cli_execute("acquire mer-kin mouthsoap,waterlogged scroll of healing,sea gel;cast cannel");
             if (item_amount($item[mer-kin prayerbeads]) < 3 && !contains_text(get_property("_roninStoragePulls"),"3806")){
@@ -1131,6 +1134,13 @@ void sorceress(){
     }
     if (get_property("yogUrtDefeated") == "false"){
         abort("passing over yogurt too early, rerun script");
+    }
+    
+    while (get_property("skateParkStatus") == "war" && !contains_text($location[The Skate Park].noncombat_queue,"Holey Rollers")){
+        skatePark();
+    }
+    if (get_property("_skateBuff1") == "false"){
+        visit_url("sea_skatepark.php?action=state2buff1");
     }
     if (pulls_remaining() > 0){
         if (item_amount($item[crayon shavings]) < 8)
