@@ -556,7 +556,7 @@ void seaMonkees(){
         while (item_amount($item[wriggling flytrap pellet]) == 0 && to_int(get_property("rwbMonsterCount")) > 0){ //if it doesn't drop and RWB is active
             use_familiar($familiar[grouper groupie]);
             if (to_int(get_property("rwbMonsterCount")) == 1){
-                cli_execute("maximize item drop, equip really nice swimming trunks, equip McHugeLarge left pole,equip toy cupid bow");
+                cli_execute("maximize item drop, equip really nice swimming trunks, equip McHugeLarge left pole,equip toy cupid bow" + freeKill());
             } else {
                 cli_execute("maximize item drop, equip really nice swimming trunks, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol,equip toy cupid bow");
             }
@@ -570,10 +570,10 @@ void seaMonkees(){
             while (item_amount($item[wriggling flytrap pellet]) == 0){
                 use_familiar($familiar[grouper groupie]);
                 string conditional;
-                if (to_int(get_property("_assertYourAuthorityCast")) <= 3){
+                if (to_int(get_property("_assertYourAuthorityCast")) < 3){
                     cli_execute("maximize item drop, equip really nice swimming trunks, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol,equip toy cupid bow");
                 } else {
-                    cli_execute("maximize item drop, equip really nice swimming trunks,equip toy cupid bow , equip " + banishGear($location[An octopus's garden]));
+                    cli_execute("maximize item drop, equip really nice swimming trunks,equip toy cupid bow , equip " + banishGear($location[An octopus's garden]) + "" + freeKill());
                 }
                 adv1($location[An octopus's garden],1,"");
                 post_adv();
@@ -781,7 +781,7 @@ void seaMonkees(){
             if (to_int(get_property("_monsterHabitatsFightsLeft")) > 0)
                 abort("You need at least 1 free habitat recall and not currently being occupied");
             use_familiar($familiar[peace turkey]);
-            cli_execute("maximize item drop, equip " + divingHelmet() +", equip shark jumper, equip scale-mail underwear, equip black glass, equip peridot of peril, equip little bitty bath");
+            cli_execute("maximize item drop, equip " + divingHelmet() +", equip shark jumper, equip scale-mail underwear, equip black glass, equip peridot of peril, equip little bitty bath" + freeKill());
             if (have_effect($effect[jelly combed]) == 0){ //need to add that mys classes may get the comb easily
                 pullSequence($item[comb jelly]);
                 use($item[comb jelly]);
@@ -1135,7 +1135,7 @@ void sorceress(){
     if (get_property("yogUrtDefeated") == "false"){
         abort("passing over yogurt too early, rerun script");
     }
-    
+
     while (get_property("skateParkStatus") == "war" && !contains_text($location[The Skate Park].noncombat_queue,"Holey Rollers")){
         skatePark();
     }
