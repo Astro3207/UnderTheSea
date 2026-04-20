@@ -308,7 +308,8 @@ void main(int round, monster mob, string page_text){
                 if (free_monster(to_monster(get_property("lastCopyableMonster"))) && to_int(get_property("_backUpUses")) < 11){
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
-                    use_skill($skill[Club 'Em Across the Battlefield]);
+                    if (to_int(get_property("_clubEmBattlefieldUsed")) < 5)
+                        use_skill($skill[Club 'Em Across the Battlefield]);
                 }
             }
             if ((my_basestat( $stat[submysticality])-40000) > BCZcost("RefractedGazeCasts")){
