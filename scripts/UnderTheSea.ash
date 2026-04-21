@@ -105,6 +105,15 @@ void mood(string mod){
                 }
             }
             break;
+        case "superitdrop":
+            foreach ef in $effects[Hustlin',Steely-Eyed Squint,Party Soundtrack,Best Pals]{
+                if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
+                    continue;
+                if (have_effect(ef) == 0){
+                    cli_execute(ef.default);
+                }
+            }
+            break;
         case "noncom":
             foreach ef in $effects[the sonata of sneakiness, ultra-soft steps, Wild and Westy!, hiding from seekers,life goals, Smooth Movements,Apriling Band Patrol Beat,silent running,feeling lonely]{
                 if (have_effect(ef) == 0){
@@ -227,7 +236,9 @@ void spading(){
     }
 }
 void pullSequence(item it){
-    if (item_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"),to_int(it))){
+    if (pulls_remaining( ) == 0){
+        abort("Not enough pull to pull "+it);
+    } else if (item_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"),to_int(it))){
         if (storage_amount(it) == 0)
             buy_using_storage(it);
         take_storage(1 ,it);
@@ -325,12 +336,13 @@ void post_adv(){
                     cli_execute("pull fishy pipe");
                 use($item[fishy pipe]);
             } else if (get_property("_shadowAffinityToday") == false || have_effect($effect[shadow affinity]) > 0){
-                while(have_effect($effect[fishy]) == 0){
+                while(have_effect($effect[fishy]) == 0 && have_effect($effect[shadow affinity]) > 0){
                     shadowRift();
                 }
             }
         } else if (!contains_text(get_property("_roninStoragePulls"),"10360")){
-            cli_execute("buy using storage fish sauce; pull fish sauce; chew fish sauce");
+            pullSequence($item[fish sauce]);
+            chew($item[fish sauce]);
         } else if(get_property("dreadScroll7") == "0" && item_amount($item[mer-kin worktea]) > 0 && item_amount($item[mer-kin dreadscroll]) > 0){
             cli_execute("buy white rice; create 1 beefy nigiri");
         } else {
@@ -603,7 +615,7 @@ void seaMonkees(){
         mood("noncom");
         mood("item drop");
         if (have_effect($effect[ Colorfully Concealed]) == 0){
-            cli_execute("buy using storage mer-kin hidepaint; pull mer-kin hidepaint");
+            pullSequence($item[mer-kin hidepaint]);
             use($item[mer-kin hidepaint]);
         }
         while(get_property("questS02Monkees") == "step4"){
@@ -721,7 +733,7 @@ void seaMonkees(){
             use_familiar($familiar[chest mimic]);
             cli_execute("maximize item, equip blood cubic zirconia, equip toy cupid bow"+ if_equip($item[baseball diamond]));
             print("Item drop rate is " + numeric_modifier("item drop"));
-            cli_execute("pool 3; cast steely-eyed squint, cincho: Party Soundtrack, Heartstone: %pals");
+            mood("superitdrop");
             if (have_effect($effect[everything looks yellow]) == 0)
                 cli_execute("parka dilophosaur; equip jurassic parka");
             if (haveLocketMonster[$monster[unholy diver]]){
@@ -742,6 +754,7 @@ void seaMonkees(){
                 }
             }
         }
+        //abort();  in development
         if (item_amount($item[rusty rivet]) < 4){
             use_familiar($familiar[chest mimic]);
         } else {
@@ -758,7 +771,7 @@ void seaMonkees(){
                 run_combat();
             } else {
                 if (!contains_text(get_property("_roninStoragePulls"),"3604")){
-                    cli_execute("buy using storage rusty rivet; pull rusty rivet");
+                    pullSequence($item[rusty rivet]);
                 }
             }
         }
@@ -841,7 +854,8 @@ void sorceress(){
             teflon();
         }
         if ((to_int(get_property("_unaccompaniedMinerUsed")) == 5 || !have_skill($skill[Unaccompanied Miner])) && !contains_text(get_property("_roninStoragePulls"),"11103") && item_amount($item[teflon ore]) == 0){
-            cli_execute("buy using storage lodestone; pull lodestone; use lodestone");
+            pullSequence($item[lodestone]);
+            use($item[lodestone]);
         }
     }
     if (get_property("expressCardUsed") == false && have_item($item[platinum yendorian express card])){
@@ -867,7 +881,7 @@ void sorceress(){
     }
     while (get_property("seahorseName") == ""){
         if (item_amount($item[sea cowbell]) < 3 && !contains_text(get_property("_roninStoragePulls"),"4196")){
-            cli_execute("buy using storage sea cowbell; pull sea cowbell");
+            pullSequence($item[sea cowbell]);
         }
         use_familiar($familiar[grouper groupie]);
         buffer conditional;
@@ -970,11 +984,11 @@ void sorceress(){
         while (to_int(get_property("merkinVocabularyMastery")) < 100){
             if (item_amount($item[mer-kin wordquiz]) > 0){
                 if (item_amount($item[mer-kin cheatsheet]) == 0){
-                    cli_execute("buy using storage mer-kin cheatsheet; pull mer-kin cheatsheet");
+                    pullSequence($item[mer-kin cheatsheet]);
                 }
                 use($item[mer-kin wordquiz]);
             } else if (to_int(get_property("merkinVocabularyMastery")) == 90 && item_amount($item[mer-kin wordquiz]) == 0){
-                cli_execute("buy using storage mer-kin wordquiz; pull mer-kin wordquiz");
+                pullSequence($item[mer-kin wordquiz]);
             } else {
                 cli_execute("maximize item drop, equip "+ divingHelmet() +", equip "+ tailpiece() +", equip mobius");
                 adv1($location[mer-kin elementary school]);
@@ -1044,7 +1058,7 @@ void sorceress(){
         if (get_property("dreadScroll4") == "0" && item_amount($item[mer-kin knucklebone]) > 0){
             use($item[Mer-kin knucklebone]);
         } else if (get_property("dreadScroll4") == "0"){
-            cli_execute("buy using storage mer-kin knucklebone; pull mer-kin knucklebone");
+            pullSequence($item[mer-kin knucklebone]);
             use($item[Mer-kin knucklebone]);
         }
         if (get_property("dreadScroll3") == 0)
@@ -1109,19 +1123,19 @@ void sorceress(){
         if (get_property("yogUrtDefeated") == "false"){
             cli_execute("acquire mer-kin mouthsoap,waterlogged scroll of healing,sea gel;cast cannel");
             if (item_amount($item[mer-kin prayerbeads]) < 3 && !contains_text(get_property("_roninStoragePulls"),"3806")){
-                cli_execute("buy using storage mer-kin prayerbeads; pull mer-kin prayerbeads");
+                pullSequence($item[mer-kin prayerbeads]);
             }
             cli_execute("maximize spell damage percent, hot damage, cold damage, spooky damage, sleaze damage, stench damage,equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece, equip bat wings, equip toy cupid");
             equip($slot[acc1],$item[mer-kin prayerbeads]);
             if (item_amount($item[mer-kin prayerbeads]) < 3){
                 if (item_amount($item[mer-kin prayerbeads]) < 2){
                     if (item_amount($item[soggy used band-aid]) == 0)
-                        cli_execute("buy using storage soggy used band-aid; pull soggy used band-aid");
+                        pullSequence($item[soggy used band-aid]);
                 } else {
                     equip($slot[acc2],$item[mer-kin prayerbeads]);
                 }
                 if (item_amount($item[New Age healing crystal]) == 0)
-                    cli_execute("buy using storage New Age healing crystal; pull New Age healing crystal");
+                    pullSequence($item[New Age healing crystal]);
             } else {
                 equip($slot[acc3],$item[mer-kin prayerbeads]);
                 equip($slot[acc2],$item[mer-kin prayerbeads]);
