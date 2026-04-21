@@ -209,7 +209,7 @@ string freeKill(){
 }
 string shrunkenHead(){
     string head;
-    if (get_property("shrunkenHeadZombieMonster") == "")
+    if (get_property("shrunkenHeadZombieMonster") == "" && item_amount($item[shrunken head]) > 0)
         head = ", equip shrunken head";
     return head;}
 void spading(){
@@ -349,7 +349,7 @@ void post_adv(){
             abort("Out of fishy");
         }
     }
-    if (have_item($item[bat wings]) && (my_mp() < (my_maxmp() - 1000) || my_mp() < 75)){
+    if (have_item($item[bat wings]) && (my_mp() < (my_maxmp() - 1000) || my_mp() < 150)){
         equip($item[bat wings]);
         use_skill($skill[rest upside down]);
     }
@@ -822,9 +822,11 @@ void seaMonkees(){
         cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear, equip "+ divingHelmet()+", equip backup camera, equip pro skateboard, equip The Eternity Codpiece");
         mood("itdrop");
         adv1($location[The Coral Corral]);
+        codpiece("none");
         post_adv();
     }
     if (item_amount($item[sea cowboy hat]) == 0 && !have_equipped($item[sea cowboy hat])){
+        codpiece("none");
         if (item_amount($item[sea leather]) < 2 && item_amount($item[sea chaps]) == 0){
             abort("Not enough sea leather for some reason??");
         } else{
@@ -835,7 +837,6 @@ void seaMonkees(){
         } else{
             create($item[sea cowboy hat]);
         }
-        codpiece("none");
     }
 }
 void sorceress(){
@@ -872,7 +873,10 @@ void sorceress(){
             teflon();
         }
         if (item_amount($item[teflon ore]) == 0){
-            abort("failed to acquire teflon ore, pull minin dynamite for one more try");
+            print("failed to acquire teflon ore, can pull minin dynamite for one more try", "red");
+            while (item_amount($item[teflon ore]) == 0){
+                teflon();
+            }
         }
     }
     while (to_int(get_property("lassoTrainingCount")) < 20){
