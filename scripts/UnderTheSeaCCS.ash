@@ -111,6 +111,8 @@ void main(int round, monster mob, string page_text){
                 while (to_int(get_property("_douseFoeUses")) < 3 && get_property("_douseFoeSuccess") == false && current_round() < 25)
                     use_skill($skill[douse foe]);
             }
+            if (mob == $monster[tumbleweed])
+                abort("unexpected mob encountered in shadow rift");
             use_if_have_skill(page_text,$skill[Sea *dent: Talk to Some Fish]);
             darts();
             cleanUp();
