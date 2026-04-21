@@ -21,6 +21,7 @@ Highly recommended skills to perm
 - Saucegeyser
 - Canneloni Cocoon
 - Tongue of the Walrus
+- OVERCLOCK(10)
 
 I'm definitely missing some, but here's stuff off the top of my head:
 
