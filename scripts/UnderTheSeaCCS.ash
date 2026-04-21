@@ -82,7 +82,7 @@ void main(int round, monster mob, string page_text){
         case $location[The Sleazy Back Alley]:
         case $location[The Haunted Pantry]:
             if (!free_monster(mob))
-                free_run(page_text,true);
+                free_run(page_text,false);
             use_if_have_skill(page_text,$skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text,$skill[Prepare to reanimate your Foe]);
             darts();
@@ -135,6 +135,7 @@ void main(int round, monster mob, string page_text){
             } else {
                 free_run(page_text,true);
             }
+            cleanUp();
             break;
         case $location[The Marinara Trench]:
         case $location[The Dive Bar]:
