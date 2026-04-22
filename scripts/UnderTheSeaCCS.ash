@@ -1,5 +1,7 @@
 import iotm.ash;
 void free_kill(string ptext, boolean drop){
+    if (get_property("_curveballMonster") == last_monster() && to_int(get_property("_curveballFightsLeft")) > 0)
+        return;
     foreach freeskill in $skills[Spit jurassic acid,Assert your Authority,Club 'Em Back in Time,Darts: Aim for the Bullseye,BCZ: Sweat Bullets,Chest X-Ray,Shattering Punch,Gingerbread Mob Hit]{
         if (freeskill == $skill[Club 'Em Back in Time] && my_location() != $location[mer-kin colosseum]){
             continue;
@@ -20,6 +22,8 @@ void free_kill(string ptext, boolean drop){
     }
 }
 void free_run(string ptext, boolean banish){
+    if (get_property("_curveballMonster") == last_monster() && to_int(get_property("_curveballFightsLeft")) > 0)
+        return;
     foreach freeskill in $skills[spring away,Bowl a Curveball,snokebomb]{
         if (contains_text(ptext, to_string(freeskill))){
             if (banish == false && $skills[snokebomb,Bowl a Curveball] contains freeskill){
@@ -40,7 +44,7 @@ void free_run(string ptext, boolean banish){
             if (banish == false && (freecombat == $item[anchor bomb] || freecombat == $item[stuffed yam stinkbomb] || freecombat == $item[handful of split pea soup])){
                 continue;
             }
-            if (freecombat == $item[peppermint parasol] && to_int(get_property("parasolUsed")) > 3){
+            if (freecombat == $item[peppermint parasol] && to_int(get_property("parasolUsed")) >= 3){
                 continue;
             }
             if (freecombat == $item[mer-kin pinkslip] && last_monster().phylum != $phylum[mer-kin]){
@@ -164,6 +168,9 @@ void main(int round, monster mob, string page_text){
                 use_if_have_skill(page_text,$skill[BCZ: Refracted Gaze]);
             }
             darts();
+            if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish" && to_int(get_property("_curveballFightsLeft")) > 0)){
+                use_skill($skill[Sea *dent: Talk to Some Fish]);
+            }
             free_kill(page_text,true);
             cleanUp();
             break;
@@ -193,6 +200,9 @@ void main(int round, monster mob, string page_text){
                     }
                 }
                 if (mob == $monster[mer-kin healer] && item_amount($item[mer-kin prayerbeads]) < 2){
+                    if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish" && to_int(get_property("_curveballFightsLeft")) > 0)){
+                        use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    }
                     free_kill(page_text,true);
                     if (to_int(get_property("_backUpUses")) < 7 && have_equipped($item[backup camera])){
                         use_skill($skill[Back-Up to your Last Enemy]);
@@ -243,6 +253,7 @@ void main(int round, monster mob, string page_text){
                     use_skill($skill[BCZ: Refracted Gaze]);
                     use_skill($skill[Do an epic McTwist!]);
                     free_kill(page_text,true);
+                    cleanUp();
                 }
             } else if (item_amount($item[sea cowbell]) >= 2){
                 if (mob.phylum == $phylum[plant])
@@ -426,6 +437,7 @@ void main(int round, monster mob, string page_text){
                 use_skill($skill[%fn, lay an egg]);
             }
             free_kill(page_text,true);
+            cleanUp();
             break;
         case $monster[kid who is too old to be Trick-or-Treating]:
             cleanUp();
