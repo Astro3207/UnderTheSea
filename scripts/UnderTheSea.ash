@@ -207,11 +207,6 @@ string freeKill(){
     }
     return free;
 }
-string shrunkenHead(){
-    string head;
-    if (get_property("shrunkenHeadZombieMonster") == "" && item_amount($item[shrunken head]) > 0)
-        head = ", equip shrunken head";
-    return head;}
 void spading(){
     buffer spading;
     spading = append(spading,today_to_string( ));
@@ -289,7 +284,7 @@ void shadowRift(){
 }
 string if_equip(item it){
     string str;
-    if (available_amount(it) > 0 && it != $item[baseball diamond]){ // in development
+    if (available_amount(it) > 0){ // in development
         str = ", equip "+it;
     }
     return str;
@@ -471,6 +466,10 @@ void initialization(){
     }
 }
 void unlockGuild(){
+    buffer conditional;
+    if (baseballPlayers() < 9 && available_amount($item[baseball diamond]) > 0){ // in development
+        append (conditional, if_equip($item[baseball diamond]));
+    }
     if (my_primestat() == $stat[mysticality]){
         if (get_property("questG07Myst") != "finished"){
             if (get_property("questG07Myst") == "unstarted")
@@ -478,7 +477,7 @@ void unlockGuild(){
             use_familiar($familiar[Peace Turkey]);
             mood("itdrop");
             while ((get_property("questG07Myst"))== "started"){
-                cli_execute("maximize item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip spring shoes, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + freeRun());
+                cli_execute("maximize item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip spring shoes, equip toy cupid bow, equip designer sweatpants" + freeRun() + "" + conditional);
                 adv1($location[The Haunted Pantry],0,"");
             }
             visit_url("guild.php?place=challenge");
@@ -494,7 +493,7 @@ void unlockGuild(){
                 use_familiar($familiar[Peace Turkey]);
                 mood("itdrop");
                 while ((get_property("questG08Moxie"))== "started"){
-                    cli_execute("maximize item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip spring shoes, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + freeRun());
+                    cli_execute("maximize item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip spring shoes, equip toy cupid bow, equip designer sweatpants" + freeRun() + "" + conditional);
                     adv1($location[The Sleazy Back Alley],0,"");
                 }
             }
@@ -512,7 +511,7 @@ void unlockGuild(){
             use_familiar($familiar[Peace Turkey]);
             mood("itdrop");
             while ((get_property("questG09Muscle"))== "started"){
-                cli_execute("maximize item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip spring shoes, equip toy cupid bow, equip designer sweatpants" + shrunkenHead() + "" + freeRun());
+                cli_execute("maximize item drop, equip monodent of the sea, equip mobius, equip everfull dart, equip spring shoes, equip toy cupid bow, equip designer sweatpants" + freeRun() + "" + conditional);
                 adv1($location[The Outskirts of Cobb's Knob],0,"");
             }
             visit_url("guild.php?place=challenge");
@@ -620,14 +619,13 @@ void seaMonkees(){
         }
         while(get_property("questS02Monkees") == "step4"){
             buffer conditional;
-            if (baseballPlayers() < 8 && available_amount($item[baseball diamond]) < 0){ //in development
+            if (baseballPlayers() < 9 && available_amount($item[baseball diamond]) > 0){ //in development
                 append (conditional, if_equip($item[baseball diamond]));
             } else if ((my_primestat() == $stat[mysticality] && !contains_text(get_property("trackedMonsters"),"giant squid")) || (my_primestat() == $stat[moxie] && !contains_text(get_property("trackedMonsters"),"Mer-kin tippler"))){
                 append (conditional, ", equip McHugeLarge left pole");
             }
             if (baseballPlayers() >= 9){
-                print(baseballPlayers());
-                abort();
+                baseballD();
             }
             if (my_primestat() == $stat[moxie] && !contains_text(get_property("trackedMonsters"),"Mer-kin tippler")){
                 append (conditional, ", equip peridot of peril");
@@ -677,12 +675,8 @@ void seaMonkees(){
         buffer conditional;
         if (get_property("_monsterHabitatsFightsLeft") == 1 && have_effect($effect[Everything Looks Purple]) == 0 && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_item($item[roman candelabra])){
             conditional = append(conditional,", equip roman candelabra"); //trying to use purple ray
-        } else if (baseballPlayers() < 8 && available_amount($item[baseball diamond]) < 0){ // in development
+        } else if (baseballPlayers() < 8 && available_amount($item[baseball diamond]) > 0 && get_property("_baseballInnings") == 0){ // in development
             append (conditional, if_equip($item[baseball diamond]));
-        }
-        if (baseballPlayers() >= 9){
-            print(baseballPlayers());
-            abort();
         }
         if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != "")){
             conditional = append(conditional,", equip backup camera"); //using back ups for free fights
@@ -754,7 +748,9 @@ void seaMonkees(){
                 }
             }
         }
-        //abort();  in development
+        if (baseballPlayers() >= 9){
+            baseballD();
+        }
         if (item_amount($item[rusty rivet]) < 4){
             use_familiar($familiar[chest mimic]);
         } else {
@@ -898,7 +894,7 @@ void sorceress(){
         if (item_amount($item[sea lasso]) == 0){
             cli_execute("monkeypaw wish sea lasso");
         }
-        if (item_amount($item[sea cowbell]) < 3){
+        while (item_amount($item[sea cowbell]) < 3 && get_property("_monkeyPawWishesUsed") < 5){
             cli_execute("monkeypaw wish sea cowbell");
         }
         if (item_amount($item[sea cowbell]) < 3){
