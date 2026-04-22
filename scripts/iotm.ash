@@ -359,8 +359,83 @@ int baseballPlayers(){
 }
 
 void baseballD(){
-    if (baseballPlayers() == 9){
-        visit_url("inventory.php?action=pball",false);
+    refreshBaseballArray();
+    try{
+        int bbYR;
+        for x from 9 to 3 {
+            if ($strings[745,765,768,762,763] contains baseballLineup[x-1]){
+                bbYR = x;
+                set_property("pitchNum"+x,"1");
+                break;
+            }
+        }
+        int bbFreeKill;
+        for x from 9 to 3 {
+            if ($strings[2499] contains baseballLineup[x-1]){
+                bbFreeKill = x;
+                set_property("pitchNum"+x,"3");
+                break;
+            }
+        }
+        if (bbYR > bbFreeKill){
+            int n;
+            int before = bbYR-1;
+            while (n < 2){
+                if (get_property("pitchNum"+before) == ""){
+                    set_property("pitchNum"+before,get_property("pitchNum"+bbYR));
+                    n+=1;
+                }else{
+                    before -= 1;
+                }
+            }
+            n=0;
+            before = bbFreeKill-1;
+            while (n < 2){
+                if (get_property("pitchNum"+before) == ""){
+                    set_property("pitchNum"+before,get_property("pitchNum"+bbFreeKill));
+                    n+=1;
+                }else{
+                    before -= 1;
+                }
+            }
+        } else {
+            int n;
+            int before = bbFreeKill-1;
+            while (n < 2){
+                if (get_property("pitchNum"+before) == ""){
+                    set_property("pitchNum"+before,get_property("pitchNum"+bbFreeKill));
+                    n+=1;
+                }else{
+                    before -= 1;
+                }
+            }
+            n = 0;
+            before = bbYR-1;
+            while (n < 2){
+                if (get_property("pitchNum"+before) == ""){
+                    set_property("pitchNum"+before,get_property("pitchNum"+bbYR));
+                    n+=1;
+                }else{
+                    before -= 1;
+                }
+            }
+        }
+        if (baseballPlayers() == 9){
+            visit_url("inventory.php?pwd&action=pball"+"&pwd="+my_hash()+"&action=pball", false);
+            for x from 1 to 9{
+                if (get_property("pitchNum"+x) == ""){
+                    run_choice(4);
+                } else {
+                    int y = to_int(get_property("pitchNum"+x));
+                    run_choice(y);
+                }
+            }
+            run_choice(6);
+        }
+    } finally {
+        for x from 3 to 9{
+            set_property("pitchNum"+x,"");
+        }
     }
 }
 void finisher(){
