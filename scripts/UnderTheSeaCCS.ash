@@ -124,7 +124,7 @@ void main(int round, monster mob, string page_text){
         case $location[an octopus's garden]:
             if (have_effect($effect[Citizen of a Zone]) == 0)
                 use_skill($skill[%fn, let's pledge allegiance to a Zone]);
-            if (have_effect($effect[Everything Looks Red, White and Blue]) == 0)
+            if (have_effect($effect[Everything Looks Red, White and Blue]) == 0 && mob == $monster[neptune flytrap])
                 use_skill($skill[%fn, fire a Red, White and Blue Blast]);
             if (mob == $monster[neptune flytrap]){
                 darts();
