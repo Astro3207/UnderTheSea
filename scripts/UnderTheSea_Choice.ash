@@ -1,121 +1,125 @@
 import iotm;
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+// Try each stashbox option in the given priority order, skipping already-checked ones.
+void stashboxCheck(int [int] priority) {
+    foreach i, opt in priority {
+        if (!contains_text(get_property("stashboxChecked"), to_string(opt))) {
+            run_choice(opt);
+            string checked = get_property("stashboxChecked");
+            set_property("stashboxChecked", checked == "" ? to_string(opt) : checked + "," + to_string(opt));
+            if (item_amount($item[mer-kin stashbox]) > 0)
+                set_property("stashboxFound", to_string(opt));
+            return;
+        }
+    }
+}
+
+// Search available choices for the first text match and pick it.
+// Returns true if a match was found and chosen.
+boolean pickChoice(string keyword) {
+    string [int] choices = available_choice_options();
+    foreach num, choice_text in choices {
+        if (contains_text(choice_text, keyword)) {
+            run_choice(num);
+            return true;
+        }
+    }
+    return false;
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+
 void main(int whichchoice, string page) {
-    switch (whichchoice){
+    switch (whichchoice) {
+
+        // ── Simple run_choice(1) cases ─────────────────────────────────────
         case 299:
-            run_choice(1);
-            break;
         case 303:
-            run_choice(1);
-            break;
-        case 313:
-            if (!contains_text(get_property("stashboxChecked"),"1")){
-                run_choice(1);
-                set_property("stashboxChecked","1");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "1");
-            } else if (!contains_text(get_property("stashboxChecked"),"3")){
-                run_choice(3);
-                set_property("stashboxChecked","1,3");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "3");
-            } else if (!contains_text(get_property("stashboxChecked"),"2")){
-                run_choice(2);
-                set_property("stashboxChecked","1,2,3");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "2");
-            }
-            break;
-        case 314:
-            if (!contains_text(get_property("stashboxChecked"),"1")){
-                run_choice(1);
-                set_property("stashboxChecked","1");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "1");
-            } else if (!contains_text(get_property("stashboxChecked"),"2")){
-                run_choice(2);
-                set_property("stashboxChecked","1,2");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "2");
-            } else {
-                run_choice(3);
-                set_property("stashboxChecked","1,2,3");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "3");
-            }
-            break;
-        case 315:
-            if (!contains_text(get_property("stashboxChecked"),"3")){
-                run_choice(3);
-                set_property("stashboxChecked","3");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "3");
-            } else if (!contains_text(get_property("stashboxChecked"),"1")){
-                run_choice(1);
-                set_property("stashboxChecked","1,3");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "1");
-            } else {
-                run_choice(2);
-                set_property("stashboxChecked","1,2,3");
-                if (item_amount($item[mer-kin stashbox]) > 0)
-                    set_property("stashboxFound", "2");
-            }
-            break;
         case 399:
-            run_choice(1);
-            break;
         case 400:
-            run_choice(1);
-            break;
-        case 401:
-            if (have_equipped($item[mer-kin bunwig])){
-                run_choice(2);
-            } else {
-                run_choice(1);
-            }
-            break;
         case 403:
-            run_choice(1);
-            break;
         case 701:
+        case 1556:
+        case 1564:
+        case 1565:
+        case 1566:
             run_choice(1);
             break;
+
+        // ── Stashbox searches (different priority orders per lock monster) ──
+        case 313: stashboxCheck({0:1, 1:3, 2:2}); break;  // burglar:  1→3→2
+        case 314: stashboxCheck({0:1, 1:2, 2:3}); break;  // raider:   1→2→3
+        case 315: stashboxCheck({0:3, 1:1, 2:2}); break;  // healer:   3→1→2
+
+        // ── Mer-kin school ────────────────────────────────────────────────
+        case 401:
+            run_choice(have_equipped($item[mer-kin bunwig]) ? 2 : 1);
+            break;
+
+        // ── Dread scroll puzzle ───────────────────────────────────────────
         case 703:
             int Scroll7;
-            if (get_property("dreadScroll7") != 0){
-                Scroll7 = to_int(get_property("dreadScroll7"));
-            } else if (!contains_text(get_property("dreadScrollGuesses"),get_property("dreadScroll1")+""+get_property("dreadScroll2")+""+get_property("dreadScroll3")+""+get_property("dreadScroll4")+""+get_property("dreadScroll5")+""+get_property("dreadScroll6")+"4"+get_property("dreadScroll8"))){
-                Scroll7 = 4;
-            } else if (!contains_text(get_property("dreadScrollGuesses"),get_property("dreadScroll1")+""+get_property("dreadScroll2")+""+get_property("dreadScroll3")+""+get_property("dreadScroll4")+""+get_property("dreadScroll5")+""+get_property("dreadScroll6")+"3"+get_property("dreadScroll8"))){
-                Scroll7 = 3;
-            } else if (!contains_text(get_property("dreadScrollGuesses"),get_property("dreadScroll1")+""+get_property("dreadScroll2")+""+get_property("dreadScroll3")+""+get_property("dreadScroll4")+""+get_property("dreadScroll5")+""+get_property("dreadScroll6")+"2"+get_property("dreadScroll8"))){
-                Scroll7 = 2;
+            string knownScroll7 = get_property("dreadScroll7");
+            string scrollPrefix = get_property("dreadScroll1") + get_property("dreadScroll2")
+                + get_property("dreadScroll3") + get_property("dreadScroll4")
+                + get_property("dreadScroll5") + get_property("dreadScroll6");
+            string scrollSuffix = get_property("dreadScroll8");
+            string guesses = get_property("dreadScrollGuesses");
+
+            if (to_int(knownScroll7) != 0) {
+                Scroll7 = to_int(knownScroll7);
             } else {
-                Scroll7 = 1;
+                foreach candidate in $ints[4, 3, 2, 1] {
+                    if (!contains_text(guesses, scrollPrefix + candidate + scrollSuffix)) {
+                        Scroll7 = candidate;
+                        break;
+                    }
+                }
             }
-            run_choice(1,"pro1="+get_property("dreadScroll1")+"&pro2="+get_property("dreadScroll2")+"&pro3="+get_property("dreadScroll3")+"&pro4="+get_property("dreadScroll4")+"&pro5="+get_property("dreadScroll5")+"&pro6="+get_property("dreadScroll6")+"&pro7="+Scroll7+"&pro8="+get_property("dreadScroll8"));
+            run_choice(1, "pro1=" + get_property("dreadScroll1")
+                + "&pro2=" + get_property("dreadScroll2")
+                + "&pro3=" + get_property("dreadScroll3")
+                + "&pro4=" + get_property("dreadScroll4")
+                + "&pro5=" + get_property("dreadScroll5")
+                + "&pro6=" + get_property("dreadScroll6")
+                + "&pro7=" + Scroll7
+                + "&pro8=" + get_property("dreadScroll8"));
             waitq(3);
-            if (have_effect($effect[Deep-Tainted Mind]) == 0){
-                set_property("dreadScroll7",Scroll7);
-            }
+            if (have_effect($effect[Deep-Tainted Mind]) == 0)
+                set_property("dreadScroll7", Scroll7);
             break;
+
+        // ── Dread card ────────────────────────────────────────────────────
         case 704:
-            string [int] choices1 = available_choice_options();
-            foreach num, choice_text in choices1 {
-                set_property("cardChoice"+num,choice_text);
+            foreach num, choice_text in available_choice_options() {
+                set_property("cardChoice" + num, choice_text);
             }
-            int dread = to_int(to_boolean(to_int(get_property("dreadScroll1")))) + to_int(to_boolean(to_int(get_property("dreadScroll6")))) + to_int(to_boolean(to_int(get_property("dreadScroll8")))) + 1;
+            int dread = to_int(to_boolean(to_int(get_property("dreadScroll1"))))
+                + to_int(to_boolean(to_int(get_property("dreadScroll6"))))
+                + to_int(to_boolean(to_int(get_property("dreadScroll8"))))
+                + 1;
             run_choice(dread);
             break;
+
         case 705:
             run_choice(4);
             break;
-        case 1564:
-            run_choice(1);
+
+        // ── Underwater zone run_choice(2) cases ───────────────────────────
+        case 1469:
+        case 1470:
+        case 1474:
+        case 1494:
+            run_choice(2);
             break;
-        case 1565:
-            run_choice(1);
+
+        case 1467:
+            run_choice(3);
             break;
+
+        // ── Shadow rift ───────────────────────────────────────────────────
         case 1468:
         case 1471:
         case 1472:
@@ -123,119 +127,63 @@ void main(int whichchoice, string page) {
         case 1475:
             run_choice(1);
             break;
-        case 1469:
-        case 1470:
-        case 1474:
-        case 1494:
+
+        case 1497:
             run_choice(2);
             break;
-        case 1467:
-            run_choice(3);
-            break;
-        case 1497:
-            if (have_effect($effect[Shadow Waters]) == 0){
-                run_choice(2);
-            } else {
-                run_choice(2);
-            }
-            break;
+
         case 1500:
-            if (have_effect($effect[shadow waters]) == 0){
-                run_choice(2);
-            } else {
-                run_choice(3);
-            }
+            run_choice(have_effect($effect[Shadow Waters]) == 0 ? 2 : 3);
             break;
-        case 1556:
-            run_choice(1);
-            break;
-        case 1566:
-            run_choice(1);
-            break;
-        case 1557:
-            switch (my_location()){
-                case $location[An Octopus's Garden]:
-                    run_choice(1,"bandersnatch=740");
-                    break;
-                case $location[The Coral Corral]:
-                    run_choice(1,"bandersnatch=772");
-                    run_choice(2);
-                    break;
-                case $location[The Marinara Trench]:
-                    run_choice(1,"bandersnatch=763");
-                    break;
-                case $location[The Dive Bar]:
-                    run_choice(1,"bandersnatch=768");
-                    break;
-                case $location[Cyberzone 1]:
-                    run_choice(1,"bandersnatch=2458");
-                    break;
-                case $location[the caliginous abyss]:
-                    run_choice(1,"bandersnatch=1373");
-                    break;
-                case $location[mer-kin elementary school]:
-                    run_choice(1,"bandersnatch=838");
-                    break;
-            }
-            break;
+
+        // ── Everfull dart perk picker ─────────────────────────────────────
         case 1525:
-            string [int] choices = available_choice_options();
-            foreach num, choice_text in choices {
+            foreach num, choice_text in available_choice_options() {
                 print(`{num}: {choice_text}`);
             }
-            foreach perk in $strings[impress,better,targeting,Butt]{
-                foreach num, choice_text in choices {
-                    if (contains_text(choice_text,perk)){
-                        run_choice(num);
-                        exit;
-                    }
-                }
+            foreach perk in $strings[impress, better, targeting, Butt] {
+                if (pickChoice(perk)) exit;
             }
             run_choice(1);
             break;
+
+        // ── Mobius strip ──────────────────────────────────────────────────
         case 1562:
-            if (get_property("_mobiusStripEncounters") == "1"){
-                string [int] choices = available_choice_options();
-                foreach num, choice_text in choices {
-                    if (contains_text(choice_text,"arch-nemesis")){
-                        run_choice(num);
-                        exit;
-                    }
-                }
-            }
-            if (get_property("_mobiusStripEncounters") == "2"){
-                string [int] choices = available_choice_options();
-                foreach num, choice_text in choices {
-                    if (contains_text(choice_text,"trifecta")){
-                        run_choice(num);
-                        exit;
-                    }
-                }
-            }
-            if (get_property("_mobiusStripEncounters") == "3"){
-                string [int] choices = available_choice_options();
-                foreach num, choice_text in choices {
-                    if (contains_text(choice_text,"Go back and write a best-seller")){
-                        run_choice(num);
-                        exit;
-                    }
-                }
-            }
-            if (get_property("_mobiusStripEncounters") == "4"){
-                string [int] choices = available_choice_options();
-                foreach num, choice_text in choices {
-                    if (contains_text(choice_text,"Replace your novel with AI drivel")){
-                        run_choice(num);
-                        exit;
-                    }
-                }
+            string [int] mobiusKeywords = {
+                1: "arch-nemesis",
+                2: "trifecta",
+                3: "Go back and write a best-seller",
+                4: "Replace your novel with AI drivel"
+            };
+            int encounter = to_int(get_property("_mobiusStripEncounters"));
+            if (mobiusKeywords contains encounter)
+                pickChoice(mobiusKeywords[encounter]);
+            break;
+
+        // ── Peridot monsters ───────────────────────────────────────
+        case 1557:
+            int [location] banderMonster = {
+                $location[An Octopus's Garden]:      740,
+                $location[The Coral Corral]:         772,
+                $location[The Marinara Trench]:      763,
+                $location[The Dive Bar]:             768,
+                $location[Cyberzone 1]:             2458,
+                $location[the caliginous abyss]:    1373,
+                $location[mer-kin elementary school]: 838
+            };
+            location here = my_location();
+            if (banderMonster contains here) {
+                run_choice(1, "bandersnatch=" + banderMonster[here]);
+                if (here == $location[The Coral Corral]) run_choice(2);
             }
             break;
+
+        // ── Jelly ─────────────────────────────────────────────────────────
         case 1589:
-            if (my_location() == $location[The Marinara Trench]){
+            if (my_location() == $location[The Marinara Trench]) {
                 abort();
             } else {
-                run_choice(1,"victim=852");
+                run_choice(1, "victim=852");
             }
             break;
     }
