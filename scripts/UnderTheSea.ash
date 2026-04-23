@@ -558,7 +558,7 @@ void seaMonkees(){
     }
     post_adv();
     if (get_property("questS02Monkees") == "unstarted"){
-        if (have_effect($effect[Citizen of a Zone]) == 0){ //Peridot neptune flytrap, RWB ray to guarantee 2 more in case it doesn't drop the first time
+        while (have_effect($effect[Citizen of a Zone]) == 0 && have_effect($effect[everything looks red, white, and blue]) == 0){ //Peridot neptune flytrap, RWB ray to guarantee 2 more in case it doesn't drop the first time
             use_familiar($familiar[patriotic eagle]);
             cli_execute("maximize item drop, equip really nice swimming trunks, equip peridot of peril, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol,equip Little bitty bathysphere"+if_equip($item[baseball diamond]));
             adv1($location[An octopus's garden],1,"");
@@ -759,8 +759,10 @@ void seaMonkees(){
         cli_execute("maximize item, equip blood cubic zirconia, equip toy cupid bow");
         if (have_effect($effect[everything looks yellow]) == 0)
             cli_execute("parka dilophosaur; equip jurassic parka");
-        cli_execute("c2t_megg fight unholy diver");
-        run_combat();
+        if (item_amount($item[rusty rivet]) < 6){
+            cli_execute("c2t_megg fight unholy diver");
+            run_combat();
+        }
         if (item_amount($item[rusty rivet]) < 8){
             if (item_amount($item[rusty rivet]) < 7){
                 cli_execute("c2t_megg fight unholy diver");
