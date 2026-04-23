@@ -558,7 +558,7 @@ void seaMonkees(){
     }
     post_adv();
     if (get_property("questS02Monkees") == "unstarted"){
-        while (have_effect($effect[Citizen of a Zone]) == 0 && have_effect($effect[everything looks red, white, and blue]) == 0){ //Peridot neptune flytrap, RWB ray to guarantee 2 more in case it doesn't drop the first time
+        while (have_effect($effect[Citizen of a Zone]) == 0 && have_effect($effect[Everything Looks Red, White and Blue]) == 0){ //Peridot neptune flytrap, RWB ray to guarantee 2 more in case it doesn't drop the first time
             use_familiar($familiar[patriotic eagle]);
             cli_execute("maximize item drop, equip really nice swimming trunks, equip peridot of peril, equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol,equip Little bitty bathysphere"+if_equip($item[baseball diamond]));
             adv1($location[An octopus's garden],1,"");
@@ -724,7 +724,11 @@ void seaMonkees(){
             shadowRift();
         }
         if (item_amount($item[rusty porthole]) == 0){
-            use_familiar($familiar[chest mimic]);
+            if (baseballPlayers() >= 8){
+                use_familiar($familiar[jill-of-all-trades]);
+            }else{
+                use_familiar($familiar[chest mimic]);
+            }
             cli_execute("maximize item, equip blood cubic zirconia, equip toy cupid bow"+ if_equip($item[baseball diamond]));
             print("Item drop rate is " + numeric_modifier("item drop"));
             mood("superitdrop");
