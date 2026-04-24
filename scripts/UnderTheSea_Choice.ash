@@ -49,9 +49,9 @@ void main(int whichchoice, string page) {
             break;
 
         // ── Stashbox searches (different priority orders per lock monster) ──
-        case 313: stashboxCheck({0:1, 1:3, 2:2}); break;  // burglar:  1→3→2
-        case 314: stashboxCheck({0:1, 1:2, 2:3}); break;  // raider:   1→2→3
-        case 315: stashboxCheck({0:3, 1:1, 2:2}); break;  // healer:   3→1→2
+        case 313: int [int] burglar = {0:1, 1:3, 2:2}; stashboxCheck(burglar); break;  // burglar:  1→3→2
+        case 314: int [int] raider = {0:1, 1:2, 2:3}; stashboxCheck(raider); break;  // raider:   1→2→3
+        case 315: int [int] healer = {0:3, 1:1, 2:2}; stashboxCheck(healer); break;  // healer:   3→1→2
 
         // ── Mer-kin school ────────────────────────────────────────────────
         case 401:
