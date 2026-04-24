@@ -18,7 +18,6 @@ boolean seaOutfit() {
 }
 
 item divingHelmet() {
-    cli_execute("refresh inv");
     item it;
     foreach ite in $items[aerated diving helmet, crappy Mer-kin mask,
         Mer-kin gladiator mask, Mer-kin scholar mask] {
@@ -29,7 +28,6 @@ item divingHelmet() {
 }
 
 item tailpiece() {
-    cli_execute("refresh inv");
     item it;
     foreach ite in $items[teflon swim fins, crappy Mer-kin tailpiece,
         Mer-kin gladiator tailpiece, Mer-kin scholar tailpiece] {
@@ -37,18 +35,6 @@ item tailpiece() {
             it = ite;
     }
     return it;
-}
-
-// ─── ADVENTURE WRAPPER ────────────────────────────────────────────────────────
-// Combines adv1() and post_adv() so call sites don't have to repeat both.
-
-void adv(location loc, int turns, string spec) {
-    adv1(loc, turns, spec);
-    post_adv();
-}
-
-void adv(location loc) {
-    adv(loc, 0, "");
 }
 
 // ─── SCHOLAR GEAR BUYER ───────────────────────────────────────────────────────
@@ -59,13 +45,13 @@ void buyScholarGear() {
         && !have_equipped($item[Mer-kin scholar mask])) {
         equip($slot[hat], $item[none]);
         equip($item[really\, really nice swimming trunks]);
-        visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=129");
+        buy($coinmaster[Grandma Sea Monkey],1,$item[Mer-kin scholar mask]);
     }
     if (item_amount($item[Mer-kin scholar tailpiece]) == 0
         && !have_equipped($item[Mer-kin scholar tailpiece])) {
         equip($slot[pants], $item[none]);
         equip($item[really\, really nice swimming trunks]);
-        visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=130");
+        buy($coinmaster[Grandma Sea Monkey],1,$item[Mer-kin scholar tailpiece]);
     }
 }
 
@@ -118,17 +104,19 @@ void mood(string mod) {
 
     switch (mod) {
         case "itdrop":
-            applyEffects($effects[
-                Who's Going to Pay This Drunken Sailor?,
-                Fat Leon's Phat Loot Lyric, Lubricating Sauce,
-                Thoughtful Empathy, Singer's Faithful Ocelot,
-                Leash of Linguini, Empathy, Spice Haze,
-                donho's bubbly ballad, the ballad of richie thingfinder
-            ]);
+            effect [int] itdrop = {
+                $effect[Who's Going to Pay This Drunken Sailor?],
+                $effect[Fat Leon's Phat Loot Lyric], $effect[Lubricating Sauce],
+                $effect[Thoughtful Empathy], $effect[Singer's Faithful Ocelot],
+                $effect[Leash of Linguini], $effect[Empathy], $effect[Spice Haze],
+                $effect[donho's bubbly ballad], $effect[the ballad of richie thingfinder]
+            };
+            applyEffects(itdrop);
             break;
         case "superitdrop":
-            applyEffects($effects[Hustlin', Steely-Eyed Squint,
-                Party Soundtrack, Best Pals]);
+            effect [int] superitdrop = {$effect[Hustlin'], $effect[Steely-Eyed Squint],
+                $effect[Party Soundtrack], $effect[Best Pals]};
+            applyEffects(superitdrop);
             break;
         case "noncom":
             foreach ef in $effects[the sonata of sneakiness, ultra-soft steps,
@@ -207,7 +195,7 @@ string freeKill() {
     if (have_effect($effect[Everything Looks Red]) == 0)
         return ", equip everfull dart";
     if (to_int(get_property("_chestXRayUsed")) < 3
-        && have_item($item[Lil' Doctor™ bag]))
+        && have_item($item[Lil' Doctor&trade; bag]))
         return ", equip Lil' Doctor™ bag";
     if ((my_basestat($stat[submoxie]) - 22500) > BCZcost("SweatBulletsCasts"))
         return ", equip blood cubic zirconia";
@@ -333,13 +321,13 @@ void shadowRift() {
             use($item[closed-circuit pay phone]);
         if (get_property("questRufus") == "started") {
             NCforce();
-            adv($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
+            adv1($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
         }
         // Fixed: was comparing string property to boolean
         if (get_property("_seadentWaveUsed") == "false")
             use_skill($skill[Sea *dent: Summon a Wave]);
         use($item[closed-circuit pay phone]);
-        adv($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
+        adv1($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
     } else {
         if (to_int(get_property("encountersUntilSRChoice")) > 9
             && get_property("questRufus") == "unstarted"
@@ -370,14 +358,14 @@ void shadowRift() {
                     + " equip bat wings, equip everfull dart holster, equip monodent of the sea,"
                     + " equip toy cupid bow");
             }
-            adv($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
+            adv1($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
             if (get_property("_seadentWaveUsed") == "false"
                 && have_effect($effect[shadow affinity]) > 0) {
-                adv($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
+                adv1($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
                 use_skill($skill[Sea *dent: Summon a Wave]);
             }
             if (get_property("encountersUntilSRChoice") == "0")
-                adv($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
+                adv1($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
         }
     }
 }
@@ -532,6 +520,19 @@ void post_adv() {
     if (item_amount($item[whirled peas]) >= 2)
         cli_execute("acquire handful of split pea soup");
 }
+
+// ─── ADVENTURE WRAPPER ────────────────────────────────────────────────────────
+// Combines adv1() and post_adv() so call sites don't have to repeat both.
+
+void adv(location loc, int turns, string spec) {
+    adv1(loc, turns, spec);
+    post_adv();
+}
+
+void adv(location loc) {
+    adv(loc, 0, "");
+}
+
 // ─── INITIALIZATION ───────────────────────────────────────────────────────────
 
 void initialization() {
@@ -1434,8 +1435,7 @@ void sorceress() {
                             print(numeric_modifier("combat rate"));
                             adv($location[Mer-kin Gymnasium], 0, "");
                             if (get_property("_skateBuff1") == "false")
-                                visit_url(
-                                    "sea_skatepark.php?action=state2buff1");
+                                visit_url("sea_skatepark.php?action=state2buff1");
                         } else if (get_property("questS02Monkees") == "step12") {
                             cli_execute("maximize item drop,"
                                 + " equip shark jumper,"
@@ -1541,11 +1541,9 @@ void sorceress() {
             equip($slot[hat], $item[none]);
             equip($slot[pants], $item[none]);
             equip($item[really\, really nice swimming trunks]);
-            foreach row in $strings[131, 1619, 126, 127] {
-                visit_url("shop.php?whichshop=grandma&action=buyitem"
-                    + "&quantity=1&whichrow=" + row);
+            foreach it in $items[crappy Mer-kin mask,crappy Mer-kin tailpiece,Mer-kin gladiator mask,Mer-kin gladiator tailpiece]{
+                buy($coinmaster[Grandma Sea Monkey],1,it);
             }
-            cli_execute("refresh inv");
         }
     }
 
