@@ -261,8 +261,8 @@ void trainset() {
 void codpiece(string input) {
     visit_url("inventory.php?action=docodpiece");
     if (input == "none") {
-        for slot from 5 to 1 {
-            visit_url("choice.php?whichchoice=1588&option=2&which=" + slot);
+        for slots from 5 to 1 {
+            visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
         }
     } else {
         string [int] slots = split_string(input, ",");
@@ -356,7 +356,7 @@ boolean delay() {
         return true;
     if (have_effect($effect[everything looks green]) == 0)
         return true;
-    if (item_amount($item["I Voted!" sticker]) > 0
+    if (item_amount($item[&quot;I Voted!&quot; sticker]) > 0
         && total_turns_played() % 11 == 1
         && to_int(get_property("_voteFreeFights")) < 3)
         return true;
@@ -403,6 +403,13 @@ void fillPrereqs(int outcomeSlot, string pitchType) {
     }
     if (filled < 2)
         abort("Not enough open slots to fill prereqs for outcome at slot " + outcomeSlot);
+}
+
+int baseballPlayers(){
+    string [int] lineup = split_string(get_property("baseballTeam"), ",");
+    int players;
+    foreach num in lineup { players = num + 1; }
+    return players;
 }
 
 void baseballD() {
