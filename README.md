@@ -83,9 +83,6 @@ Currently the script is inflexible, the following are iotms the scripts no longe
 - Transcendent olfaction
 
 Items to add support for
-- Baseball diamond
-- cosmic bowling ball
-- Crystal ball
 - Lil doctor's bag
 - May fourth lightsaber
 - Folder Holder
