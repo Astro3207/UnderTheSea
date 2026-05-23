@@ -186,12 +186,17 @@ void main(int round, monster mob, string page_text) {
             if ((mob == $monster[giant squid]
                 && !contains_text(get_property("trackedMonsters"), "giant squid"))
                 || (mob == $monster[Mer-kin tippler]
-                && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler"))) {
+                && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")) && $location[The coral corral].turns_spent == 0) {
                 foreach sk in $skills[transcendent olfaction,
                     Gallapagosian Mating Call, MCHUGELARGE SLASH]
                     use_if_have_skill(page_text, sk);
             }
             if (free_monster(mob)) {
+                use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
+                cleanUp();
+            }
+            if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+                use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 cleanUp();
             }
@@ -310,8 +315,14 @@ void main(int round, monster mob, string page_text) {
                             || (!contains_text(get_property("banishedMonsters"), "Mer-kin rustler")
                             && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
                             || (!contains_text(get_property("banishedMonsters"), "sea cow:")
-                            && !contains_text(get_property("banishedMonsters"), "Mer-kin rustler")))
-                            free_run(page_text, true);
+                            && !contains_text(get_property("banishedMonsters"), "Mer-kin rustler"))){
+                                if (mob == $monster[Mer-kin rustler] && get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+                                    use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
+                                    if (last_monster() == $monster[some fish])
+                                        cleanUp();
+                                }
+                                free_run(page_text, true);
+                            }
                     }
                     if (item_amount($item[waffle]) > 0
                         && !contains_text(get_property("_lastCombatActions"), "it11311")) {
@@ -391,7 +402,8 @@ void main(int round, monster mob, string page_text) {
                 if (free_monster(to_monster(get_property("lastCopyableMonster")))
                     && to_int(get_property("_backUpUses")) < 11) {
                     use_skill($skill[Back-Up to your Last Enemy]);
-                    use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
+                    if (get_property("NCtoC") != "true")
+                        use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                     if (to_int(get_property("_clubEmBattlefieldUsed")) < 5)
                         use_skill($skill[Club 'Em Across the Battlefield]);
                     if (free_monster(last_monster())) {
@@ -401,7 +413,7 @@ void main(int round, monster mob, string page_text) {
                     }
                 }
             }
-            if (bcz_gaze_ready()) {
+            if (bcz_gaze_ready() && get_property("NCtoC") != "true") {
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
                 if (to_monster(get_property("lastEncounter")) != $monster[none] && item_amount($item[mer-kin cheatsheet]) < 10)
                     use_skill($skill[BCZ: Refracted Gaze]);
