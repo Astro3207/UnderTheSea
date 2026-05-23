@@ -327,12 +327,13 @@ void leprecondo(string input) {
 // Finds the adventure count at which the universe alignment hits 69.
 // Sets globals uniInt and uniAdv as a side effect and also returns uniAdv.
 
+int [string] sign = {
+    "Mongoose":1, "Wallaby":2, "Vole":3,    "Platypus":4,
+    "Opossum":5,  "Marmot":6,  "Wombat":7,  "Blender":8,
+    "Packrat":9,  "Bad Moon":10
+};
+
 int universe() {
-    int [string] sign = {
-        "Mongoose":1, "Wallaby":2, "Vole":3,    "Platypus":4,
-        "Opossum":5,  "Marmot":6,  "Wombat":7,  "Blender":8,
-        "Packrat":9,  "Bad Moon":10
-    };
     for y from 0 to my_adventures() {
         for x from 1 to 99 {
             if (((x + my_ascensions() + sign[my_sign()])
@@ -376,9 +377,13 @@ void camo() {
     if (chamoixAmount() < 1) {
         string current_clan = get_clan_id();
         try {
-            visit_url("showclan.php?whichclan=2046992052&action=joinclan&confirm=on");
-            if (chamoixAmount() < 10)
-                abort("low on chamois");
+            foreach str in $strings[2046992052,2047010985,2047010683,2047010572,2047010988,2047010986,2047010667]{
+                visit_url("showclan.php?whichclan="+ str +"&action=joinclan&confirm=on");
+                if (chamoixAmount() >= 1)
+                    break;
+                if (str == 2047010667)
+                    abort("out of chamoix");
+            }
             visit_url("clan_slimetube.php?action=chamois");
         } finally {
             visit_url("showclan.php?whichclan=" + current_clan + "&action=joinclan&confirm=on");
@@ -421,6 +426,7 @@ void baseballD() {
     try {
         int bbYR;
         int bbFreeKill;
+        int bbBanish;
 
         // Scan 9→3, take the latest slot for each outcome type
         for x from 9 to 3 {
@@ -432,6 +438,13 @@ void baseballD() {
                 bbFreeKill = x;
                 set_property("pitchNum" + x, "3");
             }
+            // bbBanish only activates if slot 9 is already claimed by another outcome
+            // guaranteeing room for all 3 sets of prereqs
+            if (bbBanish == 0 && $strings[764] contains lineup[x-1]
+                && (bbYR == 9 || bbFreeKill == 9)) {
+                bbBanish = x;
+                set_property("pitchNum" + x, "2");
+            }
         }
 
         if (bbYR == 0 && bbFreeKill == 0) {
@@ -439,19 +452,24 @@ void baseballD() {
             return;
         }
 
-        // Fill prereqs for the later outcome first to avoid slot collisions
-        int [int] outcomeSlots;
-        string [int] outcomePitches;
-        if (bbYR >= bbFreeKill) {
-            outcomeSlots[0] = bbYR;       outcomePitches[0] = "1";
-            outcomeSlots[1] = bbFreeKill; outcomePitches[1] = "3";
-        } else {
-            outcomeSlots[0] = bbFreeKill; outcomePitches[0] = "3";
-            outcomeSlots[1] = bbYR;       outcomePitches[1] = "1";
+        // Build outcome list sorted descending by slot so prereq filling
+        // always works from the highest slot downward, avoiding collisions
+        int [int] rawSlots   = {0: bbYR, 1: bbFreeKill, 2: bbBanish};
+        string [int] rawPitches = {0: "1", 1: "3",        2: "2"};
+
+        // Insertion sort descending — 3 elements so cost is negligible
+        for i from 0 to 2 {
+            for j from 0 to (1 - i) {
+                if (rawSlots[j] < rawSlots[j+1]) {
+                    int tmpS = rawSlots[j];   rawSlots[j]   = rawSlots[j+1]; rawSlots[j+1]   = tmpS;
+                    string tmpP = rawPitches[j]; rawPitches[j] = rawPitches[j+1]; rawPitches[j+1] = tmpP;
+                }
+            }
         }
-        foreach i in outcomeSlots {
-            if (outcomeSlots[i] > 0)
-                fillPrereqs(outcomeSlots[i], outcomePitches[i]);
+
+        foreach i in rawSlots {
+            if (rawSlots[i] > 0)
+                fillPrereqs(rawSlots[i], rawPitches[i]);
         }
 
         // Execute all 9 pitches then confirm
@@ -471,14 +489,26 @@ void baseballD() {
 
 // ─── FINISHER ─────────────────────────────────────────────────────────────────
 // Resets all script overrides and hands control back to garbo
-
+void starter(){
+    set_property("hpAutoRecovery",0.75);
+    set_property("hpAutoRecoveryTarget",0.95);
+    set_property("mpAutoRecovery",0.25);
+    set_property("mpAutoRecoveryTarget",0.3);
+    set_auto_attack(0);
+    set_property("battleAction", "custom combat script");
+    buffer ccs = "consult unlockerCCS.ash \n abort";
+        write_ccs(ccs, "CCCS");
+    set_ccs ("CCCS");
+    set_property("betweenBattleScript","preadventure.ash");
+    set_property("afterAdventureScript","postadventure.ash");
+}
 void finisher() {
     set_property("script", "");
     set_property("subscript", "");
     set_property("afterAdventureScript", "");
     set_property("choiceAdventureScript", "garbo_choice.js");
     set_property("betweenBattleScript", "");
-    foreach slotName in $strings[max, fam, hat, main, off, back, shirt, pants, acc1, acc2, acc3] {
+    foreach slotName in $strings[max, fam, hat, main, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
         set_property(slotName + "Override", "");
     }
 }
