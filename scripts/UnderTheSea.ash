@@ -216,20 +216,27 @@ void spading() {
     buffer out;
     append(out, today_to_string());
     append(out, "," + to_string(my_id()));
-    append(out, "," + my_class());
+    append(out, "," + to_int(my_class()));
+    append(out, "," + sign[my_sign()]);
     append(out, "," + my_ascensions());
     for x from 1 to 8 {
         append(out, "," + get_property("dreadScroll" + x));
     }
     append(out, "," + to_string(lockkey[get_property("merkinLockkeyMonster")]));
     append(out, "," + get_property("stashboxFound"));
+    append(out, "," + get_property("keyTurn"));
 
     if (my_id() == 2813285) {
         print(out);
-        print(get_property("merkinCatalogChoices"));
-        print(get_property("cardChoice1") + " and "
-            + get_property("cardChoice2") + " and "
-            + get_property("cardChoice3"));
+        buffer cardC;
+        append(cardC, today_to_string() + ";");
+        for x from 1 to 10{
+            append(cardC, get_property("cardChoice" + x) + ";");
+        }
+        print(cardC);
+    } else if (get_property("seaSpade") != "false"){
+        print("sending spading info to fart scauce, to disable `set seaSpade == false");
+        cli_execute("kmail to fart scauce || " + out);
     }
 }
 
@@ -381,7 +388,14 @@ void post_adv() {
         set_property("_lastCombatLost","false");
         abort("It appears you lost the last combat, look into that");
     }
-
+    if (get_property("NCtoC") == "true")
+        set_property("NCtoC","false");
+    if (my_location() == $location[mer-kin elementary school] && to_monster(get_property("lastEncounter")) == $monster[none] && $ints[396, 397, 398, 399, 400, 401] contains last_choice()){
+        buffer elementaryQueue = to_buffer(get_property("elementaryQueue"));
+        append(elementaryQueue, ", " + last_choice());
+        delete(elementaryQueue,0,5);
+        set_property("elementaryQueue",to_string(elementaryQueue));
+    }
     if (my_adventures() == 0) {
         if (item_amount($item[astral pilsner]) == 0
             && item_amount($item[astral six-pack]) > 0) {
@@ -936,9 +950,15 @@ void seaMonkees() {
             mood("noncom");
             cli_execute("maximize -combat, equip really nice swimming, equip monodent,"
                 + " equip little bitty" + freeKill() + conditional);
+            if (get_property("keyFound") != "true"){
+                set_property("keyFound","true");
+                set_property("keyTurn",$location[The Mer-Kin Outpost].turns_spent);
+            }
         } else {
             cli_execute("maximize -combat, equip really nice swimming, equip monodent,"
                 + " equip little bitty" + freeRun() + freeKill() + conditional);
+            if (get_property("keyFound") != "false")
+                set_property("keyFound", "false");
         }
         adv($location[The Mer-Kin Outpost], 0, "");
 
@@ -956,6 +976,12 @@ void seaMonkees() {
         use($item[Mer-kin trailmap]);
         equip($item[really\, really nice swimming trunks]);
         cli_execute("grandpa currents");
+        if (get_property("merkinCatalogChoices") == ""){
+            set_property("catalogChecked","false");
+            set_property("DS1","false");
+            set_property("DS6","false");
+            set_property("DS8","false");
+        }
     }
 
     // ── Old Guy quest ─────────────────────────────────────────────────────────
@@ -1216,7 +1242,6 @@ void sorceress() {
         }
 
         adv($location[The Coral Corral], 0, "");
-
         // Burn shadow affinity if crystal ball shows non-seahorse incoming
         if (contains_text(get_property("crystalBallPredictions"), "The Coral Corral")
             && !contains_text(get_property("crystalBallPredictions"),
@@ -1231,8 +1256,29 @@ void sorceress() {
     }
 
     // ── Drain remaining shadow affinity ──────────────────────────────────────
-    while (have_effect($effect[shadow affinity]) > 0)
+
+    while (have_effect($effect[shadow affinity]) > 0){
+        while (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+            if (!contains_text(get_property("_perilLocations"),"195")){
+                mood("hotres");
+                use_familiar($familiar[grouper groupie]);
+                cli_execute("unequip peridot of peril");
+                codpiece("blood cubic zirconia, peridot of peril");
+                cli_execute("maximize hot res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+                adv1($location[the marinara trench],0,"");
+            } else if (!contains_text(get_property("_perilLocations"),"197")){
+                mood("sleazeres");
+                use_familiar($familiar[grouper groupie]);
+                codpiece("blood cubic zirconia, peridot of peril");
+                cli_execute("maximize sleaze res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+                adv1($location[the dive bar],0,""); 
+            } else {
+                break;
+            }
+            codpiece("none");
+        }
         shadowRift();
+    }
     if (get_property("encountersUntilSRChoice") == "0")
         adv($location[Shadow Rift (The Misspelled Cemetary)], 0, "");
     if (get_property("questRufus") == "step1") {
@@ -1290,11 +1336,17 @@ void sorceress() {
 
             // Unlock teacher via NC if not yet done
             while (get_property("merkinElementaryTeacherUnlock") == "false") {
+                put_closet(item_amount($item[mer-kin hallpass]),
+                    $item[mer-kin hallpass]);
+                string conditional;
+                conditional += to_int(get_property("_backUpUses")) < 11
+                    ? ", equip backup camera"
+                    : ", equip monodent of the sea";
                 cli_execute("maximize -combat, equip crappy Mer-kin tailpiece,"
                     + " equip crappy Mer-kin mask,"
                     + " equip legendary seal-clubbing club,"
                     + " equip blood cubic zirconia, equip mobius,"
-                    + " equip toy cupid bow");
+                    + " equip toy cupid bow" + conditional);
                 mood("noncom");
                 adv($location[mer-kin elementary school], 0, "");
                 put_closet(item_amount($item[mer-kin hallpass]),
@@ -1340,6 +1392,22 @@ void sorceress() {
                     && have_effect($effect[Steely-Eyed Squint]) > 0) {
                     buyScholarGear();
                     while ($location[mer-kin library].turns_spent < 4 && have_effect($effect[Steely-Eyed Squint]) > 0) {
+                        string conditional;
+                        if (to_int(get_property("_backUpUses")) < 11)
+                            conditional += ", equip backup camera";
+                        if (to_int(get_property("_batWingsSwoopUsed")) < 11)
+                            conditional += ", equip bat wings";
+                        if (!banishUsedAtYourLocation("Spring Kick"))
+                            conditional += ", equip spring shoes";
+                        cli_execute("maximize item drop, equip mer-kin scholar mask,"
+                            + " equip mer-kin scholar tailpiece,"
+                            + " equip monodent of the sea,"
+                            + " equip blood cubic zirconia" + conditional);
+                        useMapIfAvailable();
+                        adv($location[mer-kin library], 0, "");
+                    }
+                    print ("turns played? " + turns_played(), "orange");
+                    while (get_property("catalogChecked") != "true" && turns_played() > 13 && my_id() == 2813285){
                         string conditional;
                         if (to_int(get_property("_backUpUses")) < 11)
                             conditional += ", equip backup camera";
@@ -1419,6 +1487,8 @@ void sorceress() {
                 leprecondo("22,24,12,8,13,15,10,4,5,6");
 
             while (get_property("isMerkinHighPriest") == "false") {
+                if (turns_played() <= 17)
+                    abort("On track for a god run, eat a sushi for the dreadscroll clue");
                 if (have_effect($effect[Deep-Tainted Mind]) == 0) {
                     use($item[mer-kin dreadscroll]);
                     post_adv();
