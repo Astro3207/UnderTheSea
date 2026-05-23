@@ -37,8 +37,6 @@ void main(int whichchoice, string page) {
         // ── Simple run_choice(1) cases ─────────────────────────────────────
         case 299:
         case 303:
-        case 399:
-        case 400:
         case 403:
         case 701:
         case 1556:
@@ -54,8 +52,36 @@ void main(int whichchoice, string page) {
         case 315: int [int] healer = {0:3, 1:1, 2:2}; stashboxCheck(healer); break;  // healer:   3→1→2
 
         // ── Mer-kin school ────────────────────────────────────────────────
+        case 396:
+        case 397:
+        case 398:
+            if (get_property("elementaryQueue") == "")
+                set_property("elementaryQueue","000, 000, 000, 000, 000");
+            buffer elementaryQueue = to_buffer(get_property("elementaryQueue"));
+            append(elementaryQueue, ", " + last_choice());
+            delete(elementaryQueue,0,5);
+            set_property("elementaryQueue",to_string(elementaryQueue));
+            break;
+        case 399:
+        case 400:
+            elementaryQueue = to_buffer(get_property("elementaryQueue"));
+            append(elementaryQueue, ", " + last_choice());
+            delete(elementaryQueue,0,5);
+            set_property("elementaryQueue",to_string(elementaryQueue));
+            set_property("NCtoC","true");
+            run_choice(1);
+            break;
         case 401:
-            run_choice(have_equipped($item[mer-kin bunwig]) ? 2 : 1);
+            elementaryQueue = to_buffer(get_property("elementaryQueue"));
+            append(elementaryQueue, ", " + last_choice());
+            delete(elementaryQueue,0,5);
+            set_property("elementaryQueue",to_string(elementaryQueue));
+            if (item_amount($item[mer-kin bunwig]) > 0){
+                run_choice(2);
+            } else {
+                set_property("NCtoC","true");
+                run_choice(1);
+            }
             break;
 
         // ── Dread scroll puzzle ───────────────────────────────────────────
@@ -93,14 +119,37 @@ void main(int whichchoice, string page) {
 
         // ── Dread card ────────────────────────────────────────────────────
         case 704:
-            foreach num, choice_text in available_choice_options() {
-                set_property("cardChoice" + num, choice_text);
+            if (get_property("catalogChecked") == "false"){
+                set_property("catalogChecked","true");
+                foreach num, choice_text in available_choice_options() {
+                    set_property("cardChoice" + num, choice_text);
+                }
             }
             int dread = to_int(to_boolean(to_int(get_property("dreadScroll1"))))
                 + to_int(to_boolean(to_int(get_property("dreadScroll6"))))
                 + to_int(to_boolean(to_int(get_property("dreadScroll8"))))
                 + 1;
+            string choice = available_choice_options()[dread];
             run_choice(dread);
+            if (get_property("DS1") == false && get_property("dreadScroll1") != 0){
+                set_property("DS1","true");
+                for x from 1 to 10{
+                    if (get_property("cardChoice" + x) == choice)
+                        set_property("cardChoice" + x, insert(to_buffer(get_property("cardChoice" + x)),0,"1:"));
+                }
+            } else if (get_property("DS6") == false && get_property("dreadScroll6") != 0){
+                set_property("DS6","true");
+                for x from 1 to 10{
+                    if (get_property("cardChoice" + x) == choice)
+                        set_property("cardChoice" + x, insert(to_buffer(get_property("cardChoice" + x)),0,"6:"));
+                }
+            } else if (get_property("DS8") == false && get_property("dreadScroll8") != 0){
+                set_property("DS8","true");
+                for x from 1 to 10{
+                    if (get_property("cardChoice" + x) == choice)
+                        set_property("cardChoice" + x, insert(to_buffer(get_property("cardChoice" + x)),0,"8:"));
+                }
+            }
             break;
 
         case 705:
@@ -165,7 +214,7 @@ void main(int whichchoice, string page) {
             int [location] banderMonster = {
                 $location[An Octopus's Garden]:      740,
                 $location[The Coral Corral]:         772,
-                $location[The Marinara Trench]:      763,
+                $location[The Marinara Trench]:      762,
                 $location[The Dive Bar]:             768,
                 $location[Cyberzone 1]:             2458,
                 $location[the caliginous abyss]:    1373,
