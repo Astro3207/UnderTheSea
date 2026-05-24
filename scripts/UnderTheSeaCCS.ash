@@ -204,14 +204,12 @@ void main(int round, monster mob, string page_text) {
                 && mob != $monster[Mer-kin tippler]
                 && (mob != $monster[Mer-kin miner]
                     || item_amount($item[mer-kin digpick]) == 0)) {
+                if (have_item($item[cosmic bowling ball]))
+                    free_run(page_text, true);
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
             }
             darts();
-            if (have_equipped($item[baseball diamond])
-                || (get_property("_curveballMonster") == "some fish"
-                    && to_int(get_property("_curveballFightsLeft")) > 0))
-                use_skill($skill[Sea *dent: Talk to Some Fish]);
             free_kill(page_text, true);
             cleanUp();
             break;
