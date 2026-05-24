@@ -305,6 +305,8 @@ int mineNum() {
             break;
         }
     }
+    if (num == 0)
+        abort("Generic mining did not find teflon ore, mine manually. TIP: the ores show up in adjacent veins of 5.");
     return num;
 }
 
