@@ -201,7 +201,6 @@ void main(int round, monster mob, string page_text) {
             }
             if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
-                use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 cleanUp();
             }
             if ((mob != $monster[giant squid] || item_amount($item[comb jelly]) == 0)
