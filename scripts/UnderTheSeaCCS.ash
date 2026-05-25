@@ -269,6 +269,8 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             } else {
                 // turns_spent >= 24 and no lockkey monster
+                if (mob == $monster[mer-kin burglar] || mob == $monster[mer-kin raider])
+                    free_run(page_text, true);
                 free_kill(page_text,
                     mob == $monster[mer-kin healer]
                     && item_amount($item[mer-kin prayerbeads]) < 2);
