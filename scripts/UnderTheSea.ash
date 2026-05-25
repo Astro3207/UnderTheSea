@@ -720,6 +720,43 @@ void unlockGuild() {
     }
 }
 
+void curveballBurn(){
+    if (!contains_text(get_property("_perilLocations"),"196") && available_amount($item[mer-kin digpick]) == 0){
+        mood("spookyres");
+        use_familiar($familiar[grouper groupie]);
+        cli_execute("unequip peridot of peril");
+        codpiece("blood cubic zirconia, peridot of peril");
+        cli_execute("maximize item drop, equip really nice, equip eternity codpiece, equip monodent of the sea");
+        adv1($location[Anemone Mine],0,"");
+    } else if (!contains_text(get_property("_perilLocations"),"195")){
+        mood("hotres");
+        use_familiar($familiar[grouper groupie]);
+        cli_execute("unequip peridot of peril");
+        codpiece("blood cubic zirconia, peridot of peril");
+        cli_execute("maximize hot res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+        adv1($location[the marinara trench],0,"");
+    } else if (!contains_text(get_property("_perilLocations"),"197")){
+        mood("sleazeres");
+        use_familiar($familiar[grouper groupie]);
+        codpiece("blood cubic zirconia, peridot of peril");
+        cli_execute("maximize sleaze res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+        adv1($location[the dive bar],0,""); 
+    } else if (!contains_text(get_property("_perilLocations"),"196")){
+        mood("spookyres");
+        use_familiar($familiar[grouper groupie]);
+        cli_execute("unequip peridot of peril");
+        codpiece("blood cubic zirconia, peridot of peril");
+        cli_execute("maximize spooky res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+        adv1($location[Anemone Mine],0,"");
+    } else {
+        cli_execute("unequip peridot of peril");
+        codpiece("blood cubic zirconia, peridot of peril");
+        cli_execute("maximize item drop, equip eternity codpiece, equip monodent of the sea");
+        adv1($location[Anemone Mine],0,"");
+    }
+    codpiece("none");
+}
+
 // ─── BACKUP LASSO ─────────────────────────────────────────────────────────────
 // Contingency if lasso training didn't finish via shadow rift
 
@@ -887,7 +924,6 @@ void seaMonkees() {
                 + " equip toy cupid" + conditional);
             adv(step4Loc[ps], 1, "");
         }
-        pullSequence($item[mer-kin digpick]);
     }
 
     if (get_property("questS02Monkees") == "step5")
@@ -1162,6 +1198,15 @@ void sorceress() {
         use($item[closed-circuit pay phone]);
     }
 
+    if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && item_amount($item[mer-kin digpick]) == 0){
+        curveballBurn();
+        if (item_amount($item[mer-kin digpick]) == 0)
+            pullSequence($item[mer-kin digpick]);
+    }
+    while (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && !have_item($item[platinum yendorian express card])){
+        curveballBurn();
+    }
+
     // ── Teflon ore acquisition ────────────────────────────────────────────────
     if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]) {
         while (to_int(get_property("_unaccompaniedMinerUsed")) < 5
@@ -1261,23 +1306,7 @@ void sorceress() {
 
     while (have_effect($effect[shadow affinity]) > 0){
         while (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
-            if (!contains_text(get_property("_perilLocations"),"195")){
-                mood("hotres");
-                use_familiar($familiar[grouper groupie]);
-                cli_execute("unequip peridot of peril");
-                codpiece("blood cubic zirconia, peridot of peril");
-                cli_execute("maximize hot res, equip really nice, equip eternity codpiece, equip monodent of the sea");
-                adv1($location[the marinara trench],0,"");
-            } else if (!contains_text(get_property("_perilLocations"),"197")){
-                mood("sleazeres");
-                use_familiar($familiar[grouper groupie]);
-                codpiece("blood cubic zirconia, peridot of peril");
-                cli_execute("maximize sleaze res, equip really nice, equip eternity codpiece, equip monodent of the sea");
-                adv1($location[the dive bar],0,""); 
-            } else {
-                break;
-            }
-            codpiece("none");
+            curveballBurn();
         }
         shadowRift();
     }
