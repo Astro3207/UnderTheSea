@@ -1472,6 +1472,11 @@ void sorceress() {
                 }
             }
 
+            cli_execute("uneffect the sonata of sneakiness");
+            if (contains_text(get_property("leprecondoInstalled"), "11")
+                && item_amount($item[Leprecondo]) > 0)
+                leprecondo("22,24,12,8,13,15,10,4,5,6");
+
             // Verify all non-scroll-7 clues are found
             for x from 1 to 8 {
                 if (x == 7) continue;
@@ -1482,11 +1487,6 @@ void sorceress() {
                     abort("Somehow missed dreadScroll" + x + " clue");
                 }
             }
-
-            cli_execute("uneffect the sonata of sneakiness");
-            if (contains_text(get_property("leprecondoInstalled"), "11")
-                && item_amount($item[Leprecondo]) > 0)
-                leprecondo("22,24,12,8,13,15,10,4,5,6");
 
             while (get_property("isMerkinHighPriest") == "false") {
                 if (turns_played() <= 17)
@@ -1549,6 +1549,7 @@ void sorceress() {
             if (item_amount($item[mer-kin prayerbeads]) < 3
                 && !contains_text(get_property("_roninStoragePulls"), "3806"))
                 pullSequence($item[mer-kin prayerbeads]);
+            use_familiar($familiar[grouper groupie]);
             cli_execute("maximize spell damage percent, hot damage, cold damage,"
                 + " spooky damage, sleaze damage, stench damage,"
                 + " equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece,"
@@ -1556,7 +1557,7 @@ void sorceress() {
             equip($slot[acc1], $item[mer-kin prayerbeads]);
 
             // Equip as many prayerbeads as available, pull healing items for gaps
-            int beads = item_amount($item[mer-kin prayerbeads]);
+            int beads = available_amount($item[mer-kin prayerbeads]);
             if (beads >= 3) {
                 equip($slot[acc2], $item[mer-kin prayerbeads]);
                 equip($slot[acc3], $item[mer-kin prayerbeads]);
