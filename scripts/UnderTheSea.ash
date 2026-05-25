@@ -749,10 +749,8 @@ void curveballBurn(){
         cli_execute("maximize spooky res, equip really nice, equip eternity codpiece, equip monodent of the sea");
         adv1($location[Anemone Mine],0,"");
     } else {
-        cli_execute("unequip peridot of peril");
-        codpiece("blood cubic zirconia, peridot of peril");
-        cli_execute("maximize item drop, equip eternity codpiece, equip monodent of the sea");
-        adv1($location[Anemone Mine],0,"");
+        cli_execute("maximize item drop, equip monodent of the sea");
+        adv1($location[The Outskirts of Cobb's Knob],0,"");
     }
     codpiece("none");
 }
