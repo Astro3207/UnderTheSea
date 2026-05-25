@@ -109,6 +109,10 @@ void main(int round, monster mob, string page_text) {
         case $location[The Outskirts of Cobb's Knob]:
         case $location[The Sleazy Back Alley]:
         case $location[The Haunted Pantry]:
+            if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+                use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
+                cleanUp();
+            }
             if (!free_monster(mob))
                 free_run(page_text, false);
             use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
