@@ -8,11 +8,11 @@ Will try and make certain iotms optional on demand, but won't be proactive about
 
 Things to prepare BEFORE ascending:
 - Load up codpiece with unblemished pearl
-- Push the noncombat A Mer-kin Graffiti out of the noncombat queue (trust me, it's worth it)
 - Have all of the underwater maps done
 - Have a damp old wallet (not required but saves a turn)
 - Have black crayon golem and unholy diver in combat lover's locket (optional)
 - Familiars: Grouper gruopie, glover, foul ball
+- Reccomendation for a competitive turn count/looping: Push the noncombat A Mer-kin Graffiti out of the noncombat queue
 
 Highly recommended skills to perm
 
