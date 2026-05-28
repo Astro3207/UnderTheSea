@@ -627,7 +627,7 @@ void initialization() {
         visit_url("inventory.php?action=shower");
 
     // First ascension of the day setup
-    if (get_property("ascensionsToday") == "1") {
+    if (get_property("ascensionsToday") == "1" && have_item($item[TakerSpace letter of Marque])) {
         if (get_workshed() == $item[none])
             use($item[TakerSpace letter of Marque]);
         if ((get_property("_takerSpaceSuppliesDelivered") == "false"
