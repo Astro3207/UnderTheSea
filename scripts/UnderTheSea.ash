@@ -177,6 +177,7 @@ void mood(string mod) {
                 The Magical Mojomuscular Melody,
                 Tubes of Universal Meat, Mariachi Moisture] {
                 if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
+                if (ef == $effect[Ultraheart] && get_property("heartstoneBuffUnlocked") == false) continue;
                 if (have_effect(ef) == 0) cli_execute(ef.default);
             }
             break;
