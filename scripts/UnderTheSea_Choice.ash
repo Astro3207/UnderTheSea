@@ -125,10 +125,14 @@ void main(int whichchoice, string page) {
                     set_property("cardChoice" + num, choice_text);
                 }
             }
-            int dread = to_int(to_boolean(to_int(get_property("dreadScroll1"))))
-                + to_int(to_boolean(to_int(get_property("dreadScroll6"))))
-                + to_int(to_boolean(to_int(get_property("dreadScroll8"))))
-                + 1;
+            int dread;
+            foreach num, choice_text in available_choice_options() {
+                string code = choice_text.substring(0, choice_text.index_of(":"));
+                if (contains_text(get_property("merkinCatalogChoices"), code + ":" + num + ":unknown")) {
+                    dread = num;
+                    break;
+                }
+            }
             string choice = available_choice_options()[dread];
             run_choice(dread);
             if (get_property("DS1") == false && get_property("dreadScroll1") != 0){
