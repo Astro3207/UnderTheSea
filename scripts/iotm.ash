@@ -52,11 +52,10 @@ string LastAdvTxt() {
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
 
 void NCforce() {
-    // Use != "true" rather than == "false" so unset property is handled safely
     if (get_property("noncombatForcerActive") != "true") {
         if (to_int(get_property("_aprilBandTubaUses")) < 3) {
             cli_execute("aprilband play tuba");
-        } else {
+        } else if (have_item($item[Cincho de Mayo])){
             while (to_int(get_property("_cinchUsed")) > 40
                 && to_int(get_property("timesRested")) < total_free_rests()) {
                 cli_execute("unequip hat; equip apriling band helmet; camp rest free");
