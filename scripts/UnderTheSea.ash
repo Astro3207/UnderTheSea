@@ -72,10 +72,9 @@ void useMapIfAvailable() {
     if (get_property("_mapToACandyRichBlockUsed") == "false") {
         if (item_amount($item[map to a candy-rich block]) > 0)
             use($item[map to a candy-rich block]);
-        else
-            abort("not enough maps");
     }
-    candy("fight");
+    if (get_property("_mapToACandyRichBlockUsed") == "true")
+        candy("fight");
 }
 
 // ─── PULL SEQUENCE ────────────────────────────────────────────────────────────
@@ -356,7 +355,8 @@ void shadowRift() {
             if (item_amount($item[sea lasso]) == 0
                 && item_amount($item[sea cowbell]) > 0)
                 abort("need more lassos somehow");
-            use_familiar($familiar[jill-of-all-trades]);
+            if (!use_familiar($familiar[jill-of-all-trades]))
+                use_familiar($familiar[grouper groupie]);
             string conditional = baseballPlayers() < 9
                 && available_amount($item[baseball diamond]) > 0
                 ? if_equip($item[baseball diamond]) : "";
@@ -864,7 +864,7 @@ void seaMonkees() {
     if (get_property("questS02Monkees") == "unstarted") {
         // Get citizen/RWB ray on neptune flytrap
         while (have_effect($effect[Citizen of a Zone]) == 0
-            && have_effect($effect[Everything Looks Red, White and Blue]) == 0) {
+            && have_effect($effect[Everything Looks Red, White and Blue]) == 0 && have_familiar($familiar[patriotic eagle])) {
             use_familiar($familiar[patriotic eagle]);
             cli_execute("maximize item drop, equip really nice swimming trunks,"
                 + " equip peridot of peril, equip Sheriff moustache,"
@@ -918,7 +918,6 @@ void seaMonkees() {
     while (get_property("questS02Monkees") == "step1") {
         if (get_property("noncombatForcerActive") != "true")
             NCforce();
-        use_familiar($familiar[Patriotic eagle]);
         cli_execute("maximize item drop, equip really nice swimming,"
             + " equip mobius, equip little bitty bathy");
         adv($location[The Wreck of the Edgar Fitzsimmons], 0, "");
@@ -995,7 +994,7 @@ void seaMonkees() {
 
         // Familiar choice
         if (get_property("_monsterHabitatsFightsLeft") == "1"
-            && to_int(get_property("_monsterHabitatsRecalled")) == 2)
+            && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_familiar($familiar[patriotic eagle]))
             use_familiar($familiar[patriotic eagle]);
         else
             use_familiar($familiar[Peace Turkey]);
@@ -1086,9 +1085,10 @@ void seaMonkees() {
 
         // Get rusty porthole first via unholy diver
         if (item_amount($item[rusty porthole]) == 0) {
-            if (baseballPlayers() >= 8)
-                use_familiar($familiar[jill-of-all-trades]);
-            else
+            if (baseballPlayers() >= 8){
+                if (!use_familiar($familiar[jill-of-all-trades]))
+                    use_familiar($familiar[grouper groupie]);
+            } else
                 use_familiar($familiar[chest mimic]);
             cli_execute("maximize item, equip blood cubic zirconia,"
                 + " equip toy cupid bow" + if_equip($item[baseball diamond]));
@@ -1103,10 +1103,12 @@ void seaMonkees() {
 
         if (baseballPlayers() >= 9)
             baseballD();
-
-        use_familiar(item_amount($item[rusty rivet]) < 4
-            ? $familiar[chest mimic]
-            : $familiar[Jill-of-all-trades]);
+        if (item_amount($item[rusty rivet]) < 4){
+            use_familiar($familiar[chest mimic]);
+        } else {
+            if (!use_familiar($familiar[jill-of-all-trades]))
+                use_familiar($familiar[grouper groupie]);
+        }
         cli_execute("maximize item, equip blood cubic zirconia, equip toy cupid bow");
         if (have_effect($effect[everything looks yellow]) == 0)
             cli_execute("parka dilophosaur; equip jurassic parka");
@@ -1127,7 +1129,12 @@ void seaMonkees() {
         cli_execute("acquire aerated diving helmet");
 
     // ── Construct banish + habitat recall for cyberzone ───────────────────────
-    if (to_int(get_property("momSeaMonkeeProgress")) < 24) {
+    int initialMomProgress = 24;
+    if (!have_item($item[backup camera]))
+        initialMomProgress += 4;
+    if (!have_item($item[2002 Mr. Store Catalog]))
+        initialMomProgress += 12;
+    if (to_int(get_property("momSeaMonkeeProgress")) < 24 && have_familiar($familiar[patriotic eagle])) {
         if (!contains_text(get_property("banishedPhyla"), "construct")) {
             if (get_property("madnessBakeryAvailable") == "false") {
                 visit_url("shop.php?whichshop=armory&action=talk");
@@ -1165,6 +1172,15 @@ void seaMonkees() {
                 abort("Need 500 moxie here to be safe");
             adv($location[Cyberzone 1], 0, "");
         }
+    }
+    if (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress && !have_familiar($familiar[patriotic eagle])){
+        use_familiar($familiar[grouper groupie]);
+        string conditional;
+        if (!contains_text(get_property("banishedMonsters"),"school of many"))
+            conditional += ", equip monodent";
+        cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear, equip black glass, equip blood cubic zirconia, equip "
+        + divingHelmet() + conditional);
+        adv($location[The Caliginous Abyss], 0, "");
     }
 
     // ── Coral Corral unlock — get sea cowbell ─────────────────────────────────
