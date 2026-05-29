@@ -2,6 +2,7 @@ import iotm.ash;
 
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
 string choiceStorage = get_property("choiceAdventureScript");
+string CCSStorage = get_ccs();
 string seaFit;
 
 // ─── ITEM/OUTFIT UTILITIES ────────────────────────────────────────────────────
@@ -1201,8 +1202,6 @@ void sorceress() {
 
     if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && item_amount($item[mer-kin digpick]) == 0){
         curveballBurn();
-        if (item_amount($item[mer-kin digpick]) == 0)
-            pullSequence($item[mer-kin digpick]);
     }
     while (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && !have_item($item[platinum yendorian express card])){
         curveballBurn();
@@ -1210,6 +1209,8 @@ void sorceress() {
 
     // ── Teflon ore acquisition ────────────────────────────────────────────────
     if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]) {
+        if (item_amount($item[mer-kin digpick]) == 0)
+            pullSequence($item[mer-kin digpick]);
         while (to_int(get_property("_unaccompaniedMinerUsed")) < 5
             && have_skill($skill[Unaccompanied Miner])
             && item_amount($item[teflon ore]) == 0)
@@ -1519,7 +1520,7 @@ void sorceress() {
             }
 
             while (get_property("isMerkinHighPriest") == "false") {
-                if (turns_played() <= 17)
+                if (turns_played() <= 17 && my_id() == 2813285 && get_property("dreadScroll7") == "0")
                     abort("On track for a god run, eat a sushi for the dreadscroll clue");
                 if (have_effect($effect[Deep-Tainted Mind]) == 0) {
                     use($item[mer-kin dreadscroll]);
@@ -1760,5 +1761,6 @@ void main() {
         sorceress();
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
+        set_ccs("CCSStorage");
     }
 }
