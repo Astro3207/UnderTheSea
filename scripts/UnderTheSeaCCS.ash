@@ -150,10 +150,10 @@ void main(int round, monster mob, string page_text) {
 
         case $location[an octopus's garden]:
             if (have_effect($effect[Citizen of a Zone]) == 0)
-                use_skill($skill[%fn, let's pledge allegiance to a Zone]);
+                use_if_have_skill(page_text, $skill[%fn, let's pledge allegiance to a Zone]);
             if (mob == $monster[neptune flytrap]) {
                 if (have_effect($effect[Everything Looks Red, White and Blue]) == 0)
-                    use_skill($skill[%fn, fire a Red, White and Blue Blast]);
+                    use_if_have_skill(page_text,$skill[%fn, fire a Red, White and Blue Blast]);
                 darts();
                 if (have_equipped($item[McHugeLarge left pole])
                     && !contains_text(get_property("trackedMonsters"), "Neptune flytrap")) {
@@ -350,7 +350,7 @@ void main(int round, monster mob, string page_text) {
 
         case $location[The Caliginous Abyss]:
             if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
-                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_item($item[book of facts]))
+                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_item($item[book of facts]) && have_familiar($familiar[patriotic eagle]))
                     throw_item($item[waffle]);
                 run_combat();
             } else if (free_monster(mob)) {
@@ -372,6 +372,7 @@ void main(int round, monster mob, string page_text) {
                 }
                 free_kill(page_text, false);
                 if (mob == $monster[school of many]) {
+                    use_if_have_skill(page_text, $skill[Sea *dent: Throw a Lightning Bolt]);
                     for i from 1 to 4
                         use_skill($skill[garbage nova]);
                 }
