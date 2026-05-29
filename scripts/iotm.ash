@@ -19,6 +19,12 @@ int count_substring(string text, string sub) {
 
 boolean [monster] haveLocketMonster = get_locket_monsters();
 
+// Use a skill if it appears as an option on the current page
+void use_if_have_skill(string page_text, skill sk) {
+    if (contains_text(page_text, to_string(sk)))
+        use_skill(sk);
+}
+
 // Returns true if the item exists anywhere accessible (inventory, equipped, storage, closet)
 boolean have_item(item it) {
     return item_amount(it) > 0
@@ -278,6 +284,36 @@ void codpiece(string input) {
         }
     }
     cli_execute("refresh all");
+}
+
+// Cookbookbat
+void cookbookbat(){
+    if (get_property("_cookbookbatQuestMonster") != "" && get_property("_cookbookbatQuestIngredient") == "Yeast of Boris" && my_familiar() == $familiar[cookbookbat]){
+        set_property("battleAction", "skill saucegeyser");  
+        location CBBLoc = to_location(get_property("_cookbookbatQuestLastLocation"));
+        monster CBBMon = to_monster(get_property("_cookbookbatQuestMonster"));
+        if (!contains_text(get_property("_perilLocations"), to_string(to_int(CBBLoc))) && CBBLoc!= $location[the primordial soup]){
+            equip($slot[acc3],$item[peridot of peril]);
+            set_property("choiceAdventure1557","1&bandersnatch=" + to_int(CBBMon));
+            adv1(CBBLoc,0,"");
+        } else if (have_effect($effect[everything looks green]) == 0 && have_effect($effect[Everything looks Beige]) == 0){
+            equip($slot[acc2],$item[spring shoes]);
+            set_property("battleAction", "skill spring away");
+            visit_url("adventure.php?snarfblat=" + to_int(CBBLoc));
+            if (get_property("lastEncounter") == get_property("_cookbookbatQuestMonster")){
+                set_property("battleAction", "skill saucegeyser");  
+                run_combat();
+            } else {
+                run_choice(-1);
+                set_property("battleAction", "skill saucegeyser");
+                visit_url("inventory.php?action=parachute");
+                visit_url("choice.php?option=1&whichchoice=1543&monid=" + to_int(CBBMon));
+                run_combat();
+                set_property("battleAction", "custom combat script");
+            }
+        }
+    }
+    set_property("battleAction", "custom combat script");
 }
 
 // ─── LEPRECONDO ───────────────────────────────────────────────────────────────
