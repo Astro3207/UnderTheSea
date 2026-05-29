@@ -429,6 +429,11 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Library]:
+            if (free_monster(mob)) {
+                if (bcz_gaze_ready())
+                    use_skill($skill[BCZ: Refracted Gaze]);
+                cleanUp();
+            }
             if (to_int(get_property("merkinVocabularyMastery")) == 100) {
                 while (get_property("dreadScroll5") == "0"
                     && item_amount($item[mer-kin killscroll]) > 0
@@ -459,9 +464,6 @@ void main(int round, monster mob, string page_text) {
                     && to_int(get_property("_backUpUses")) < 11) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
-                } else if (free_monster(mob)) {
-                    if (bcz_gaze_ready())
-                        use_skill($skill[BCZ: Refracted Gaze]);
                 } else {
                     if (bcz_gaze_ready()) {
                         use_skill($skill[Sea *dent: Talk to Some Fish]);
