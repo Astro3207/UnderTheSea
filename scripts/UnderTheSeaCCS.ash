@@ -74,12 +74,6 @@ boolean free_monster(monster mob) {
         suburban security civilian, vandal kid] contains mob;
 }
 
-// Use a skill if it appears as an option on the current page
-void use_if_have_skill(string page_text, skill sk) {
-    if (contains_text(page_text, to_string(sk)))
-        use_skill(sk);
-}
-
 // BCZ refracted gaze helper — checks stat threshold before casting
 boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
@@ -304,6 +298,14 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Do an epic McTwist!]);
                     free_kill(page_text, true);
                     cleanUp();
+                } else {
+                    if (mob == $monster[mer-kin rustler]){
+                        use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
+                        use_skill($skill[BCZ: Refracted Gaze]);
+                        use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
+                    }
+                    free_kill(page_text, true);
+                    cleanUp();
                 }
             } else if (item_amount($item[sea cowbell]) >= 2) {
                 if (mob.phylum == $phylum[plant])
@@ -347,9 +349,9 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Caliginous Abyss]:
-            if (mob == $monster[peanut]
-                && to_int(get_property("lastColosseumRoundWon")) < 15) {
-                throw_item($item[waffle]);
+            if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
+                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_item($item[book of facts]))
+                    throw_item($item[waffle]);
                 run_combat();
             } else if (free_monster(mob)) {
                 cleanUp();
@@ -471,6 +473,8 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Gymnasium]:
+            foreach sk in $skills[Launch spikolodon spikes, MCHUGELARGE avalanche]
+                use_if_have_skill(page_text, sk);
             if (free_monster(mob)) {
                 if (bcz_gaze_ready())
                     use_skill($skill[BCZ: Refracted Gaze]);
