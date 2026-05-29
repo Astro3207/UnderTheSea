@@ -2,7 +2,7 @@ import iotm.ash;
 
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
 string choiceStorage = get_property("choiceAdventureScript");
-string CCSStorage = get_ccs();
+string CCSStorage = get_property("customCombatScript");
 string seaFit;
 
 // ─── ITEM/OUTFIT UTILITIES ────────────────────────────────────────────────────
