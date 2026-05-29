@@ -559,6 +559,27 @@ void adv(location loc) {
     adv(loc, 0, "");
 }
 
+void summon(monster mon){
+    if (haveLocketMonster[mon]) {
+        cli_execute("reminisce " + mon);
+    } else {
+        if (have_item($item[Combat lover's locket]))
+            equip($slot[acc3], $item[Combat lover's locket]);
+        if (faxbot(mon)) {
+            use($item[photocopied monster]);
+            run_combat();
+        } else if ($familiar[chest mimic].experience > 200) {
+            cli_execute("c2t_megg extract " + mon);
+            cli_execute("c2t_megg fight " + mon);
+            run_combat();
+        } else if (item_amount($item[pocket wish]) > 0){
+            cli_execute("genie monster " + mon);
+        } else {
+            abort("Need a method to find " + mon);
+        }
+    }
+}
+
 // ─── INITIALIZATION ───────────────────────────────────────────────────────────
 
 void initialization() {
@@ -648,7 +669,6 @@ void initialization() {
     }
 
     // Gear and consumables
-    equip($item[designer sweatpants]);
 
     if (item_amount($item[antique accordion]) == 0)
         buy($item[antique accordion]);
@@ -716,7 +736,8 @@ void unlockGuild() {
         while (get_property(qprop) == "started") {
             cli_execute("maximize item drop, equip monodent of the sea,"
                 + " equip mobius, equip everfull dart, equip spring shoes,"
-                + " equip toy cupid bow, equip designer sweatpants"
+                + " equip toy cupid bow"
+                + if_equip($item[designer sweatpants])
                 + freeRun() + conditional);
             adv1(questLoc[ps], 0, "");
         }
@@ -790,10 +811,35 @@ void backupLasso() {
     adv(lassoLoc[ps], 1, "");
 }
 
-// ─── SKATE PARK ───────────────────────────────────────────────────────────────
+void gymnasium(){
+    string conditional;
+        if (!contains_text($location[The Skate Park].noncombat_queue,"Holey Rollers")){
+            if (have_item($item[mchugelarge left ski]))
+                conditional += ", equip mchugelarge left ski";
+            else if (have_item($item[jurassic parka]))
+                conditional += "; parka spikolodon";
+        }
+    if (baseballPlayers() < 9
+        && available_amount($item[baseball diamond]) > 0) {
+        conditional += if_equip($item[baseball diamond]);
+    } else if ((my_primestat() == $stat[mysticality]
+        && !contains_text(get_property("trackedMonsters"), "giant squid"))
+        || (my_primestat() == $stat[moxie]
+        && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler"))) {
+        conditional += ", equip McHugeLarge left pole";
+    }
+    cli_execute("maximize combat, equip " + divingHelmet()
+        + ", equip " + tailpiece() + freeRun() + freeKill() + conditional);
+    mood("combat");
+    adv($location[Mer-kin Gymnasium], 0, "");
+}
 
 void skatePark() {
     NCforce();
+    if (get_property("noncombatForcerActive") != "true" && (have_item($item[jurassic parka]) || have_item($item[mchugelarge left ski])))
+        gymnasium();
+    else if (!have_item($item[jurassic parka]) && !have_item($item[mchugelarge left ski]) && have_item($item[allied radio backpack]))
+        cli_execute("alliedradio sniper");
     equip($item[really\, really nice swimming trunks]);
     if (item_amount($item[skate blade]) > 0)
         equip($item[skate blade]);
@@ -935,19 +981,8 @@ void seaMonkees() {
     if (get_property("questS02Monkees") == "step6"
         && get_property("_monsterHabitatsMonster") == "") {
         use_familiar($familiar[peace turkey]);
-        string locketEquip = have_item($item[Combat lover's locket])
-            ? ", equip combat lovers" : "";
-        if (haveLocketMonster[$monster[black crayon golem]]) {
-            cli_execute("maximize item drop, equip legendary seal clubbing club,"
-                + " equip mchugelarge left pole");
-            cli_execute("reminisce black crayon golem");
-        } else {
-            cli_execute("maximize item drop, equip legendary seal clubbing club,"
-                + " equip mchugelarge left pole" + locketEquip);
-            cli_execute("c2t_megg extract black crayon golem");
-            cli_execute("c2t_megg fight black crayon golem");
-            run_combat();
-        }
+        cli_execute("maximize item drop, equip legendary seal clubbing club, equip mchugelarge left pole");
+        summon($monster[black crayon golem]);
     }
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
@@ -978,8 +1013,8 @@ void seaMonkees() {
 
         if (get_property("lastCopyableMonster") == "Black Crayon Golem"
             && to_int(get_property("_backUpUses")) < 7
-            && ($location[The Mer-Kin Outpost].turns_spent < 24
-                || get_property("merkinLockkeyMonster") != ""))
+            && have_item($item[backup camera])
+            && ($location[The Mer-Kin Outpost].turns_spent < 24 || get_property("merkinLockkeyMonster") != ""))
             conditional += ", equip backup camera";
         else if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
             conditional += ", equip blood cubic zirconia";
@@ -1063,22 +1098,7 @@ void seaMonkees() {
                 cli_execute("parka dilophosaur; equip jurassic parka");
 
             // Fight unholy diver — locket first, then fax, then c2t
-            if (haveLocketMonster[$monster[unholy diver]]) {
-                cli_execute("reminisce unholy diver");
-            } else {
-                if (have_item($item[Combat lover's locket]))
-                    equip($slot[acc3], $item[Combat lover's locket]);
-                if (faxbot($monster[unholy diver])) {
-                    use($item[photocopied monster]);
-                    run_combat();
-                } else if ($familiar[chest mimic].experience > 200) {
-                    cli_execute("c2t_megg extract unholy diver");
-                    cli_execute("c2t_megg fight unholy diver");
-                    run_combat();
-                } else {
-                    abort("Need a method to find unholy diver");
-                }
-            }
+            summon($monster[unholy diver]);
         }
 
         if (baseballPlayers() >= 9)
@@ -1123,8 +1143,7 @@ void seaMonkees() {
         while (get_property("_monsterHabitatsMonster") != "eye in the darkness"
             && get_property("_monsterHabitatsMonster") != "slithering thing") {
             if (to_int(get_property("_monsterHabitatsFightsLeft")) > 0)
-                abort("Need at least 1 free habitat recall"
-                    + " and not currently occupied");
+                abort("Need at least 1 free habitat recall and not currently occupied");
             use_familiar($familiar[peace turkey]);
             cli_execute("maximize item drop, equip " + divingHelmet()
                 + ", equip shark jumper, equip scale-mail underwear,"
@@ -1158,10 +1177,14 @@ void seaMonkees() {
         cli_execute("unequip blood cubic zirconia;"
             + " unequip peridot of peril; unequip heartstone");
         codpiece("blood cubic zirconia, heartstone");
+        string conditional;
+        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+            conditional += ", equip backup camera";
+        else
+            conditional += ", equip monodent of the sea";
         cli_execute("maximize item drop, equip shark jumper,"
             + " equip scale-mail underwear, equip " + divingHelmet()
-            + ", equip backup camera, equip pro skateboard,"
-            + " equip The Eternity Codpiece");
+            + ", equip pro skateboard, equip The Eternity Codpiece" + conditional);
         mood("itdrop");
         adv($location[The Coral Corral], 0, "");
         codpiece("none");
@@ -1345,9 +1368,10 @@ void sorceress() {
                     $item[mer-kin hallpass]);
                 use_familiar($familiar[grouper groupie]);
                 string conditional;
-                conditional += to_int(get_property("_backUpUses")) < 11
-                    ? ", equip backup camera"
-                    : ", equip monodent of the sea";
+                if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+                    conditional += ", equip backup camera";
+                else
+                    conditional += ", equip monodent of the sea";
                 if (item_amount($item[mer-kin bunwig]) == 0
                     && !have_equipped($item[mer-kin bunwig]))
                     conditional += ", hat drop";
@@ -1372,9 +1396,10 @@ void sorceress() {
                 put_closet(item_amount($item[mer-kin hallpass]),
                     $item[mer-kin hallpass]);
                 string conditional;
-                conditional += to_int(get_property("_backUpUses")) < 11
-                    ? ", equip backup camera"
-                    : ", equip monodent of the sea";
+                if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+                    conditional += ", equip backup camera";
+                else
+                    conditional += ", equip monodent of the sea";
                 cli_execute("maximize -combat, equip crappy Mer-kin tailpiece,"
                     + " equip crappy Mer-kin mask,"
                     + " equip legendary seal-clubbing club,"
@@ -1426,7 +1451,7 @@ void sorceress() {
                     buyScholarGear();
                     while ($location[mer-kin library].turns_spent < 4 && have_effect($effect[Steely-Eyed Squint]) > 0) {
                         string conditional;
-                        if (to_int(get_property("_backUpUses")) < 11)
+                        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
                             conditional += ", equip backup camera";
                         if (to_int(get_property("_batWingsSwoopUsed")) < 11)
                             conditional += ", equip bat wings";
@@ -1442,7 +1467,7 @@ void sorceress() {
                     print ("turns played? " + turns_played(), "orange");
                     while (get_property("catalogChecked") != "true" && turns_played() > 13 && my_id() == 2813285){
                         string conditional;
-                        if (to_int(get_property("_backUpUses")) < 11)
+                        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
                             conditional += ", equip backup camera";
                         if (to_int(get_property("_batWingsSwoopUsed")) < 11)
                             conditional += ", equip bat wings";
@@ -1534,13 +1559,7 @@ void sorceress() {
                             skatePark();
                         } else if (item_amount($item[Mer-kin thighguard]) == 0
                             || item_amount($item[Mer-kin headguard]) == 0) {
-                            cli_execute("maximize combat,"
-                                + " equip Mer-kin scholar mask,"
-                                + " equip Mer-kin scholar tailpiece"
-                                + freeRun() + freeKill());
-                            mood("combat");
-                            print(numeric_modifier("combat rate"));
-                            adv($location[Mer-kin Gymnasium], 0, "");
+                            gymnasium();
                             if (get_property("_skateBuff1") == "false")
                                 visit_url("sea_skatepark.php?action=state2buff1");
                         } else if (get_property("questS02Monkees") == "step12") {
@@ -1563,8 +1582,7 @@ void sorceress() {
 
         // Skate park war cleanup
         while (get_property("skateParkStatus") == "war"
-            && !contains_text($location[The Skate Park].noncombat_queue,
-                "Holey Rollers"))
+            && !contains_text($location[The Skate Park].noncombat_queue,"Holey Rollers"))
             skatePark();
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
@@ -1636,14 +1654,7 @@ void sorceress() {
     // ── Gladiator gear grind ──────────────────────────────────────────────────
     while (item_amount($item[Mer-kin gladiator mask]) == 0
         && item_amount($item[Mer-kin gladiator tailpiece]) == 0) {
-        cli_execute("maximize combat, equip " + divingHelmet()
-            + ", equip " + tailpiece() + freeRun() + freeKill());
-        mood("combat");
-        if (item_amount($item[Mer-kin thighguard]) == 0
-            || item_amount($item[Mer-kin headguard]) == 0) {
-            print(numeric_modifier("combat rate"));
-            adv($location[Mer-kin Gymnasium], 0, "");
-        }
+        gymnasium();
         if (item_amount($item[Mer-kin thighguard]) > 0
             && item_amount($item[Mer-kin headguard]) > 0) {
             equip($slot[hat], $item[none]);
