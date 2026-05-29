@@ -831,6 +831,8 @@ void gymnasium(){
     cli_execute("maximize combat, equip " + divingHelmet()
         + ", equip " + tailpiece() + freeRun() + freeKill() + conditional);
     mood("combat");
+    if (get_property("noncombatForcerActive") == "true")
+        abort("Sneak active while trying to adventure in gymnasium, get rid of it");
     adv($location[Mer-kin Gymnasium], 0, "");
 }
 
