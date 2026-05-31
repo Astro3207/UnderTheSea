@@ -490,7 +490,7 @@ void baseballD() {
 
         // Scan 9→3, take the latest slot for each outcome type
         for x from 9 to 3 {
-            if (bbYR == 0 && $strings[745,765,768,762,763] contains lineup[x-1]) {
+            if (bbYR == 0 && $strings[745,838,775,773,765,768,762,763] contains lineup[x-1]) {
                 bbYR = x;
                 set_property("pitchNum" + x, "1");
             }
