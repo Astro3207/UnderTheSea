@@ -217,6 +217,7 @@ void main(int whichchoice, string page) {
         case 1557:
             int [location] banderMonster = {
                 $location[An Octopus's Garden]:      740,
+                $location[The Overgrown Lot]:        1752,
                 $location[The Coral Corral]:         772,
                 $location[The Marinara Trench]:      762,
                 $location[Anemone Mine]:             767,
