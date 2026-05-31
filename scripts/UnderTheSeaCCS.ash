@@ -150,10 +150,10 @@ void main(int round, monster mob, string page_text) {
 
         case $location[an octopus's garden]:
             if (have_effect($effect[Citizen of a Zone]) == 0)
-                use_if_have_skill(page_text, $skill[%fn, let's pledge allegiance to a Zone]);
+                use_skill($skill[%fn, let's pledge allegiance to a Zone]);
             if (mob == $monster[neptune flytrap]) {
                 if (have_effect($effect[Everything Looks Red, White and Blue]) == 0)
-                    use_if_have_skill(page_text,$skill[%fn, fire a Red, White and Blue Blast]);
+                    use_skill($skill[%fn, fire a Red, White and Blue Blast]);
                 darts();
                 if (have_equipped($item[McHugeLarge left pole])
                     && !contains_text(get_property("trackedMonsters"), "Neptune flytrap")) {
@@ -538,6 +538,9 @@ void main(int round, monster mob, string page_text) {
         case $monster[unholy diver]:
             if (my_familiar() == $familiar[chest mimic])
                 use_skill($skill[%fn, lay an egg]);
+            if (item_amount($item[spitball]) > 0){
+                throw_item($item[spitball]);
+            }
             free_kill(page_text, true);
             cleanUp();
             break;
