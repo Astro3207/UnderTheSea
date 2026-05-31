@@ -49,6 +49,16 @@ string LastAdvTxt() {
     return substring(lastlog, nowmark);
 }
 
+void pullSequence(item it) {
+    if (pulls_remaining() == 0)
+        abort("Not enough pulls to pull " + it);
+    if (!contains_text(get_property("_roninStoragePulls"), to_int(it))) {
+        if (storage_amount(it) == 0)
+            buy_using_storage(it);
+        take_storage(1, it);
+    }
+}
+
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
 
 void NCforce() {
@@ -63,6 +73,21 @@ void NCforce() {
             if (to_int(get_property("_cinchUsed")) <= 40) {
                 equip($slot[acc3], $item[cincho de mayo]);
                 use_skill($skill[Cincho: Fiesta Exit]);
+            }
+        } else if (!have_item($item[mchugelarge duffel bag]) && !have_item($item[jurassic parka]) && !have_item($item[allied radio backpack])){
+            foreach it in $items[Handheld Allied radio, Clara's bell, stench jelly]{
+                if (!contains_text(get_property("_roninStoragePulls"), to_int(it))){
+                    if (it == $item[Clara's Bell] && storage_amount(it) == 0)
+                        continue;
+                    pullSequence(it);
+                    if (it == $item[Clara's bell])
+                        use (it);
+                    else if (it == $item[Handheld Allied radio])
+                        cli_execute("alliedradio misc sniper");
+                    else if (it == $item[stench jelly])
+                        chew(it);
+                    break;
+                }
             }
         }
     }
