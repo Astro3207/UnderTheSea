@@ -350,8 +350,10 @@ void main(int round, monster mob, string page_text) {
 
         case $location[The Caliginous Abyss]:
             if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
-                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_item($item[book of facts]) && have_familiar($familiar[patriotic eagle]))
+                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]))
                     throw_item($item[waffle]);
+                else 
+                    cleanUp();
                 run_combat();
             } else if (free_monster(mob)) {
                 cleanUp();
