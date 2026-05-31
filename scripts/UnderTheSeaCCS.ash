@@ -168,10 +168,15 @@ void main(int round, monster mob, string page_text) {
             cleanUp();
             break;
         case $location[The Wreck of the Edgar Fitzsimmons]:
-            if (mob == $monster[Mer-kin scavenger])
-                use_if_have_skill($skill[Sea *dent: Throw a Lightning Bolt]);
-            if (mob == $monster[Mine crab])
-                use_skill($skill[Heartstone: %banish]);
+            if (mob != $monster[unholy diver]){
+                free_run(page_text, true);
+                if (mob == $monster[Mer-kin scavenger])
+                    use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
+                if (mob == $monster[Mine crab])
+                    use_skill($skill[Heartstone: %banish]);
+            }
+            darts();
+            free_kill(page_text, true);
             cleanUp();
             break;
         case $location[The Marinara Trench]:
@@ -366,7 +371,7 @@ void main(int round, monster mob, string page_text) {
                     if (item_amount($item[sea cowbell]) < 3){
                         cleanUp();
                     }
-                    use_skill($skill[Sea *dent: Throw a Lightning Bolt])
+                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
                 }
             }
             break;
@@ -375,6 +380,8 @@ void main(int round, monster mob, string page_text) {
             if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
                 if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_item($item[book of facts]) && have_familiar($familiar[patriotic eagle]))
                     throw_item($item[waffle]);
+                else 
+                    cleanUp();
                 run_combat();
             } else if (free_monster(mob)) {
                 cleanUp();
@@ -458,14 +465,14 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             }
             if (to_int(get_property("merkinVocabularyMastery")) == 100) {
+                while (get_property("dreadScroll2") == "0"
+                    && item_amount($item[mer-kin healscroll]) > 0
+                    && current_round() > 0)
+                    throw_item($item[mer-kin healscroll]);
                 while (get_property("dreadScroll5") == "0"
                     && item_amount($item[mer-kin killscroll]) > 0
                     && current_round() > 0)
                     throw_item($item[mer-kin killscroll]);
-                if (get_property("dreadScroll2") == "0"
-                    && item_amount($item[mer-kin healscroll]) > 0
-                    && current_round() > 0)
-                    throw_item($item[mer-kin healscroll]);
                 if (free_monster(mob)) {
                     if (bcz_gaze_ready())
                         use_skill($skill[BCZ: Refracted Gaze]);
