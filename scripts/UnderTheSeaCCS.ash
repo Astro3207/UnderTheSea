@@ -167,7 +167,13 @@ void main(int round, monster mob, string page_text) {
             }
             cleanUp();
             break;
-
+        case $location[The Wreck of the Edgar Fitzsimmons]:
+            if (mob == $monster[Mer-kin scavenger])
+                use_if_have_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+            if (mob == $monster[Mine crab])
+                use_skill($skill[Heartstone: %banish]);
+            cleanUp();
+            break;
         case $location[The Marinara Trench]:
         case $location[The Dive Bar]:
         case $location[Anemone Mine]:
@@ -303,11 +309,13 @@ void main(int round, monster mob, string page_text) {
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
                         use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
+                        if (item_amount($item[pulled yellow taffy]) > 0)
+                            throw_item($item[pulled yellow taffy]);
                     }
                     free_kill(page_text, true);
                     cleanUp();
                 }
-            } else if (item_amount($item[sea cowbell]) >= 2) {
+            } else if (item_amount($item[sea cowbell]) >= 3 && to_int(get_property("lassoTrainingCount")) == 20) {
                 if (mob.phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
                 if (mob == $monster[wild seahorse]) {
@@ -344,6 +352,21 @@ void main(int round, monster mob, string page_text) {
                     free_run(page_text, false);
                     free_kill(page_text, false);
                     cleanUp();
+                }
+            } else {
+                if (mob == $monster[wild seahorse]) {
+                    runaway( );
+                } else if (mob == $monster[mer-kin rustler]){
+                    if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
+                        use_skill($skill[heartstone: %banish]);
+                    } else {
+                        free_run(page_text, true);
+                    }
+                } else if (mob == $monster[sea cow]){
+                    if (item_amount($item[sea cowbell]) < 3){
+                        cleanUp();
+                    }
+                    use_skill($skill[Sea *dent: Throw a Lightning Bolt])
                 }
             }
             break;
