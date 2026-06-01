@@ -435,7 +435,7 @@ import iotm.ash;
             }
         }
 
-        if (get_property("autumnatonQuestLocation") == "") {
+        if (get_property("autumnatonQuestLocation") == "" && item_amount($item[autumn-aton]) > 0) {
             cli_execute($location[Shadow Rift (The Misspelled Cemetary)].turns_spent == 0
                 ? "autumnaton send noob cave"
                 : "autumnaton send Shadow Rift");
