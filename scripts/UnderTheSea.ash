@@ -592,8 +592,9 @@ void initialization() {
         council();
         visit_url("tutorial.php?action=toot");
         council();
-        visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman");
     }
+    if (get_property("questS01OldGuy") == "unstarted")
+        visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman");
 
     // Use/open daily items
     foreach it in $items[letter from King Ralph XI, pork elf goodies sack,
