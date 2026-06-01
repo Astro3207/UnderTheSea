@@ -1739,12 +1739,14 @@ void sorceress() {
     // ── Shub-Jigguwatt ────────────────────────────────────────────────────────
     if (get_property("shubJigguwattDefeated") == "false") {
         use_familiar($familiar[grouper groupie]);
-        cli_execute("maximize damage absorption, mus, equip bat wings, equip mer-kin gladiator mask, equip mer-kin gladiator tailpiece; recover hp");
+        cli_execute("maximize damage absorption, mus, equip mer-kin gladiator mask, equip mer-kin gladiator tailpiece; recover hp"
+            + if_equip($item[bat wings]));
         set_property("hpAutoRecoveryTarget", "1");
         set_property("mpAutoRecovery", "-0.05");
         set_property("mpAutoRecoveryTarget", "-0.05");
         cli_execute("recover hp; cast * empathy");
-        adv($location[Mer-kin Temple (Left Door)], 0, "");
+        cli_execute("uneffect scarysauce");
+        adv($location[Mer-kin Temple (Left Door)]);
     }
 
     // ── Naughty Sorceress intro ───────────────────────────────────────────────
