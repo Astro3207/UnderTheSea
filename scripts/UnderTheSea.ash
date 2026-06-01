@@ -1671,8 +1671,8 @@ void sorceress() {
     }
 
     // ── Gladiator gear grind ──────────────────────────────────────────────────
-    while (item_amount($item[Mer-kin gladiator mask]) == 0
-        && item_amount($item[Mer-kin gladiator tailpiece]) == 0) {
+    while (available_amount($item[Mer-kin gladiator mask]) == 0
+        && available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
         gymnasium();
         if (item_amount($item[Mer-kin thighguard]) > 0
             && item_amount($item[Mer-kin headguard]) > 0) {
