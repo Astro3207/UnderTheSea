@@ -84,7 +84,7 @@ void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
     while (current_round() > 0) {
         int round = current_round();
-        if (has_skill($skill[saucegeyser]))
+        if (have_skill($skill[saucegeyser]))
             use_skill($skill[saucegeyser]);
         else
             use_skill($skill[saucestorm]);
