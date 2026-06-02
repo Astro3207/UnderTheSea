@@ -48,17 +48,35 @@ import iotm.ash;
         return it;
     }
 
+    string swimmingTrunks(){
+        string str;
+        if (my_path().id == 55){
+            str = ", equip really nice swimming";
+        } else if (my_path().id == 0){
+            str = ", equip elf guard scuba";
+        }
+        return str;
+    }
+
+    void equipSwimTrunks(){
+        if (my_path().id == 55){
+            equip($item[really\, really nice swimming trunks]);
+        } else if (my_path().id == 0){
+            equip($item[Elf Guard SCUBA tank]);
+        }
+    }
+
     void buyScholarGear() {
         if (available_amount($item[Mer-kin scholar mask]) == 0
             && !have_equipped($item[Mer-kin scholar mask])) {
             equip($slot[hat], $item[none]);
-            equip($item[really\, really nice swimming trunks]);
+            equipSwimTrunks();
             buy($coinmaster[Grandma Sea Monkey],1,$item[Mer-kin scholar mask]);
         }
         if (available_amount($item[Mer-kin scholar tailpiece]) == 0
             && !have_equipped($item[Mer-kin scholar tailpiece])) {
             equip($slot[pants], $item[none]);
-            equip($item[really\, really nice swimming trunks]);
+            equipSwimTrunks();
             buy($coinmaster[Grandma Sea Monkey],1,$item[Mer-kin scholar tailpiece]);
         }
     }
@@ -326,12 +344,12 @@ import iotm.ash;
 
     void teflon() {
         equip($item[mer-kin digpick]);
-        equip($item[really\, really nice swimming trunks]);
+        equipSwimTrunks();
         use_familiar($familiar[grouper groupie]);
         visit_url("mining.php?mine=3&which=" + mineNum());
         if (my_hp() == 0)
             cli_execute("restore HP");
-        if (have_effect($effect[beaten up]) > 0)
+        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus]))
             use_skill($skill[Tongue of the Walrus]);
     }
 
@@ -365,8 +383,7 @@ import iotm.ash;
             if (have_effect($effect[shadow affinity]) > 0) {
                 if (item_amount($item[sea lasso]) == 0
                     && item_amount($item[sea cowbell]) > 0) {
-                    cli_execute("equip really nice swimming trunks; equip little bitty;"
-                        + " monkeypaw item sea lasso");
+                    cli_execute("equip really nice swimming trunks; equip little bitty; monkeypaw item sea lasso");
                 }
                 if (item_amount($item[sea lasso]) == 0
                     && item_amount($item[sea cowbell]) > 0)
@@ -407,7 +424,12 @@ import iotm.ash;
 
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
-            use_skill($skill[Tongue of the Walrus]);
+            if (have_effect($effect[beaten up]) > 0){
+                if (have_skill($skill[Tongue of the Walrus]))
+                    use_skill($skill[Tongue of the Walrus]);
+                else
+                    cli_execute("campground rest");
+            }
             set_property("_lastCombatLost", "false");
             abort("It appears you lost the last combat, look into that");
         }
@@ -419,19 +441,67 @@ import iotm.ash;
             delete(elementaryQueue,0,5);
             set_property("elementaryQueue",to_string(elementaryQueue));
         }
-        if (my_adventures() == 0) {
-            if (item_amount($item[astral pilsner]) == 0
-                && item_amount($item[astral six-pack]) > 0) {
-                use($item[astral six-pack]);
-                cli_execute("shrug Donho's Bubbly Ballad");
-                use_skill($skill[the ode to booze]);
-                drink($item[astral pilsner]);
-            } else if (item_amount($item[astral pilsner]) > 0) {
-                cli_execute("shrug Donho's Bubbly Ballad");            
-                use_skill($skill[the ode to booze]);
-                drink($item[astral pilsner]);
-            } else {
-                abort("no more easy diet");
+        if (my_path().id == 55){
+            if (my_adventures() == 0) {
+                if (item_amount($item[astral pilsner]) == 0
+                    && item_amount($item[astral six-pack]) > 0) {
+                    use($item[astral six-pack]);
+                    cli_execute("shrug Donho's Bubbly Ballad");
+                    use_skill($skill[the ode to booze]);
+                    drink($item[astral pilsner]);
+                } else if (item_amount($item[astral pilsner]) > 0) {
+                    cli_execute("shrug Donho's Bubbly Ballad");            
+                    use_skill($skill[the ode to booze]);
+                    drink($item[astral pilsner]);
+                } else {
+                    abort("no more easy diet");
+                }
+            }
+            if (have_effect($effect[fishy]) == 0 && have_effect($effect[Driving Waterproofly]) == 0) {
+                if (have_item($item[fishy pipe])
+                    && item_amount($item[closed-circuit pay phone]) > 0
+                    && have_item($item[Monodent of the Sea])
+                    && have_item($item[Platinum Yendorian Express Card])
+                    && (get_property("_shadowAffinityToday") == "false"
+                        || have_effect($effect[shadow affinity]) > 0)
+                    && (to_int(get_property("_bczSweatBulletsCasts")) < 7 || item_amount($item[mer-kin stashbox]) > 0)) {
+                    if (get_property("_fishyPipeUsed") == "false") {
+                        if (item_amount($item[fishy pipe]) == 0)
+                            cli_execute("pull fishy pipe");
+                        use($item[fishy pipe]);
+                    } else if (get_property("_shadowAffinityToday") == "false"
+                        || have_effect($effect[shadow affinity]) > 0) {
+                        if (have_effect($effect[shadow affinity]) == 0)
+                            shadowRift();
+                        while (have_effect($effect[fishy]) == 0 && have_effect($effect[shadow affinity]) > 0)
+                            shadowRift();
+                    }
+                } else if (!contains_text(get_property("_roninStoragePulls"), "10360")) {
+                    pullSequence($item[fish sauce]);
+                    chew($item[fish sauce]);
+                } else if (get_property("dreadScroll7") == "0"
+                    && item_amount($item[mer-kin worktea]) > 0
+                    && item_amount($item[mer-kin dreadscroll]) > 0) {
+                    cli_execute("buy white rice; create 1 beefy nigiri");
+                } else {
+                    abort("Get fishy or Driving Waterproofly manually and rerun");
+                }
+            }
+        } else if (my_path().id == 0){
+            if (item_amount($item[sea lasso]) == 0)
+                cli_execute("acquire sea lasso");
+            if (my_adventures() == 0) {
+                abort("Out of adventures, run consume");
+            }
+            if (have_effect($effect[fishy]) == 0 && have_effect($effect[Driving Waterproofly]) == 0) {
+                if (have_item($item[fishy pipe]) && get_property("_fishyPipeUsed") == "false"){
+                    use($item[fishy pipe]);
+                } else if (my_spleen_use() < spleen_limit()) {
+                    cli_execute("acquire fish sauce");
+                    chew($item[fish sauce]);
+                } else {
+                    abort("get fishy or driving waterproofily");
+                }
             }
         }
 
@@ -461,36 +531,6 @@ import iotm.ash;
             && item_amount($item[inflammable leaf]) > 50)
             use($item[distilled resin]);
 
-        if (have_effect($effect[fishy]) == 0 && have_effect($effect[Driving Waterproofly]) == 0) {
-            if (have_item($item[fishy pipe])
-                && item_amount($item[closed-circuit pay phone]) > 0
-                && have_item($item[Monodent of the Sea])
-                && have_item($item[Platinum Yendorian Express Card])
-                && (get_property("_shadowAffinityToday") == "false"
-                    || have_effect($effect[shadow affinity]) > 0)
-                && (to_int(get_property("_bczSweatBulletsCasts")) < 7 || item_amount($item[mer-kin stashbox]) > 0)) {
-                if (get_property("_fishyPipeUsed") == "false") {
-                    if (item_amount($item[fishy pipe]) == 0)
-                        cli_execute("pull fishy pipe");
-                    use($item[fishy pipe]);
-                } else if (get_property("_shadowAffinityToday") == "false"
-                    || have_effect($effect[shadow affinity]) > 0) {
-                    if (have_effect($effect[shadow affinity]) == 0)
-                        shadowRift();
-                    while (have_effect($effect[fishy]) == 0 && have_effect($effect[shadow affinity]) > 0)
-                        shadowRift();
-                }
-            } else if (!contains_text(get_property("_roninStoragePulls"), "10360")) {
-                pullSequence($item[fish sauce]);
-                chew($item[fish sauce]);
-            } else if (get_property("dreadScroll7") == "0"
-                && item_amount($item[mer-kin worktea]) > 0
-                && item_amount($item[mer-kin dreadscroll]) > 0) {
-                cli_execute("buy white rice; create 1 beefy nigiri");
-            } else {
-                abort("Get fishy or Driving Waterproofly manually and rerun");
-            }
-        }
         if (have_item($item[bat wings])
             && (my_mp() < (my_maxmp() - 1000) || my_mp() < 150)) {
             equip($item[bat wings]);
@@ -534,7 +574,8 @@ import iotm.ash;
             if (my_location() != $location[mer-kin elementary school]
                 && !(my_location() == $location[mer-kin library])) {
                 cli_execute("maximize " + pearlRes[my_primestat()]
-                    + ", equip really nice swimming, equip legendary seal clubbing;"
+                    + swimmingTrunks()
+                    + ", equip legendary seal clubbing;"
                     + " familiar grouper group");
                 adv1(pearlLoc[my_primestat()]);
             }
@@ -562,113 +603,119 @@ import iotm.ash;
         write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
         set_ccs("temp");
         set_property("battleAction", "custom combat script");
-
-        // Tutorial completion
-        if (get_property("questM05Toot") == "started") {
-            council();
-            visit_url("tutorial.php?action=toot");
-            council();
+        if (get_property("questS01OldGuy") == "unstarted")
             visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman");
-        }
-
-        // Use/open daily items
-        foreach it in $items[letter from King Ralph XI, pork elf goodies sack,
-            sushi-rolling mat, 2002 Mr. Store Catalog] {
-            if (it == $item[2002 Mr. Store Catalog]
-                && get_property("_2002MrStoreCreditsCollected") == "true")
-                continue;
-            if (item_amount(it) > 0)
-                use(it, item_amount(it));
-        }
-
-        // Daily skills
-        foreach sk in $skills[Aug. 24th: Waffle Day!, Summon Kokomo Resort Pass] {
-            if (have_skill(sk))
-                use_skill(sk);
-        }
-
-        // Autosell junk gems
-        foreach it in $items[hamethyst, baconstone, porquoise, kokomo resort pass] {
-            autosell(item_amount(it), it);
-        }
-
-        // MAYAM rings
-        if (get_property("_mayamSymbolsUsed") == "" && have_item($item[Mayam Calendar])) {
-            if (!use_familiar($familiar[chest mimic]))
-                use_familiar($familiar[grouper groupie]);
-            cli_execute("mayam rings vessel yam cheese explosion;"
-                + " mayam rings fur lightning eyepatch yam;"
-                + " mayam rings eye meat yam clock");
-        }
-
-        // Leprecondo setup
-        if (get_property("leprecondoInstalled") == "0,0,0,0"
-            && item_amount($item[Leprecondo]) > 0)
-            leprecondo("22,24,12,11,10,4,5,6");
-
-        // Misc daily setup
-        visit_url("campground.php?preaction=leaves");
-
-        if (item_amount($item[S.I.T. Course Completion Certificate]) > 0
-            && get_property("_sitCourseCompleted") == "false")
-            use($item[S.I.T. Course Completion Certificate]);
-
-        if (get_property("_aprilBandInstruments") == "0")
-            cli_execute("aprilband item tuba; aprilband item piccolo;"
-                + " aprilband play piccolo; aprilband play piccolo;"
-                + " aprilband play piccolo");
-
         if (get_property("_photoBoothEquipment") == "0")
             cli_execute("photobooth item sheriff pistol;"
                 + " photobooth item sheriff moustache;"
                 + " photobooth item sheriff badge");
-
-        visit_url("inventory.php?action=skiduffel");
-
-        if (get_property("_aprilShowerGlobsCollected") == "false")
-            visit_url("inventory.php?action=shower");
-
-        // First ascension of the day setup
-        if (get_property("ascensionsToday") == "1" && have_item($item[TakerSpace letter of Marque])) {
-            if (get_workshed() == $item[none])
-                use($item[TakerSpace letter of Marque]);
-            if ((get_property("_takerSpaceSuppliesDelivered") == "false"
-                || get_property("takerSpaceGold") == "1")
-                && get_workshed() == $item[TakerSpace letter of Marque])
-                create(1, $item[anchor bomb]);
+        if (my_path().id == 0){
+            if (my_fullness() > (fullness_limit() - 5))
+                abort("Have at least 5 fullness");
+            if (my_spleen_use() > (spleen_limit() - 5))
+                abort("Have at least 5 spleen");
         }
-
-        // Mr Store 2002 credits — buy in specific order
-        if (get_property("availableMrStore2002Credits") == "3") {
-            foreach it in $items[pro skateboard, Spooky VHS Tape, Spooky VHS Tape] {
-                create(1, it);
+        if (my_path().id == 55){
+            if (get_property("questM05Toot") == "started") {
+                council();
+                visit_url("tutorial.php?action=toot");
+                council();
             }
-        }
 
-        // Gear and consumables
+            // Use/open daily items
+            foreach it in $items[letter from King Ralph XI, pork elf goodies sack,
+                sushi-rolling mat, 2002 Mr. Store Catalog] {
+                if (it == $item[2002 Mr. Store Catalog]
+                    && get_property("_2002MrStoreCreditsCollected") == "true")
+                    continue;
+                if (item_amount(it) > 0)
+                    use(it, item_amount(it));
+            }
 
-        if (item_amount($item[antique accordion]) == 0)
-            buy($item[antique accordion]);
+            // Daily skills
+            foreach sk in $skills[Aug. 24th: Waffle Day!, Summon Kokomo Resort Pass] {
+                if (have_skill(sk))
+                    use_skill(sk);
+            }
 
-        // Workshed activation
-        if (get_property("_workshedItemUsed") == "false") {
-            if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
-                use($item[Asdon Martin keyfob (on ring)]);
-            else if (item_amount($item[portable Mayo Clinic]) > 0)
-                use($item[portable Mayo Clinic]);
-            else if (item_amount($item[model train set]) == 1)
-                use($item[model train set]);
-        }
+            // Autosell junk gems
+            foreach it in $items[hamethyst, baconstone, porquoise, kokomo resort pass] {
+                autosell(item_amount(it), it);
+            }
 
-        // Storage pulls for sea gear
-        foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
-            scale-mail underwear, Congressional Medal of Insanity,
-            Flash Liquidizer Ultra Dousing Accessory] {
-            if (item_amount(it) == 0
-                && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
-                if (storage_amount(it) == 0)
-                    buy_using_storage(it);
-                take_storage(1, it);
+            // MAYAM rings
+            if (get_property("_mayamSymbolsUsed") == "" && have_item($item[Mayam Calendar])) {
+                if (!use_familiar($familiar[chest mimic]))
+                    use_familiar($familiar[grouper groupie]);
+                cli_execute("mayam rings vessel yam cheese explosion;"
+                    + " mayam rings fur lightning eyepatch yam;"
+                    + " mayam rings eye meat yam clock");
+            }
+
+            // Leprecondo setup
+            if (get_property("leprecondoInstalled") == "0,0,0,0"
+                && item_amount($item[Leprecondo]) > 0)
+                leprecondo("22,24,12,11,10,4,5,6");
+
+            // Misc daily setup
+            visit_url("campground.php?preaction=leaves");
+
+            if (item_amount($item[S.I.T. Course Completion Certificate]) > 0
+                && get_property("_sitCourseCompleted") == "false")
+                use($item[S.I.T. Course Completion Certificate]);
+
+            if (get_property("_aprilBandInstruments") == "0")
+                cli_execute("aprilband item tuba; aprilband item piccolo;"
+                    + " aprilband play piccolo; aprilband play piccolo;"
+                    + " aprilband play piccolo");
+
+            visit_url("inventory.php?action=skiduffel");
+
+            if (get_property("_aprilShowerGlobsCollected") == "false")
+                visit_url("inventory.php?action=shower");
+
+            // First ascension of the day setup
+            if (get_property("ascensionsToday") == "1" && have_item($item[TakerSpace letter of Marque])) {
+                if (get_workshed() == $item[none])
+                    use($item[TakerSpace letter of Marque]);
+                if ((get_property("_takerSpaceSuppliesDelivered") == "false"
+                    || get_property("takerSpaceGold") == "1")
+                    && get_workshed() == $item[TakerSpace letter of Marque])
+                    create(1, $item[anchor bomb]);
+            }
+
+            // Mr Store 2002 credits — buy in specific order
+            if (get_property("availableMrStore2002Credits") == "3") {
+                foreach it in $items[pro skateboard, Spooky VHS Tape, Spooky VHS Tape] {
+                    create(1, it);
+                }
+            }
+
+            // Gear and consumables
+
+            if (item_amount($item[antique accordion]) == 0)
+                buy($item[antique accordion]);
+
+            // Workshed activation
+            if (get_property("_workshedItemUsed") == "false") {
+                if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
+                    use($item[Asdon Martin keyfob (on ring)]);
+                else if (item_amount($item[portable Mayo Clinic]) > 0)
+                    use($item[portable Mayo Clinic]);
+                else if (item_amount($item[model train set]) == 1)
+                    use($item[model train set]);
+            }
+
+            // Storage pulls for sea gear
+            foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
+                scale-mail underwear, Congressional Medal of Insanity,
+                Flash Liquidizer Ultra Dousing Accessory] {
+                if (item_amount(it) == 0
+                    && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
+                    if (storage_amount(it) == 0)
+                        buy_using_storage(it);
+                    take_storage(1, it);
+                }
             }
         }
     }
@@ -740,7 +787,7 @@ import iotm.ash;
             gymnasium();
         else if (!have_item($item[jurassic parka]) && !have_item($item[mchugelarge left ski]) && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
-        equip($item[really\, really nice swimming trunks]);
+        equipSwimTrunks();
         if (item_amount($item[skate blade]) > 0)
             equip($item[skate blade]);
         adv($location[The Skate Park]);
@@ -764,6 +811,14 @@ import iotm.ash;
         adv($location[The Caliginous Abyss]);
     }
 
+    boolean libraryReady(){
+        if ((have_item($item[mer-kin scholar mask]) || have_item($item[mer-kin facecowl])) 
+            && (have_item($item[mer-kin scholar tailpiece]) || have_item($item[mer-kin waistrope])) 
+            && ((item_amount($item[mer-kin wordquiz]) * 10) + to_int(get_property("merkinVocabularyMastery"))) >= 90)
+            return true;
+        return false;
+    }
+
 // MISC
 
     void curveballBurn(){
@@ -772,27 +827,27 @@ import iotm.ash;
             use_familiar($familiar[grouper groupie]);
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize item drop, equip really nice, equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize item drop"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar($familiar[grouper groupie]);
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize hot res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize hot res,"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar($familiar[grouper groupie]);
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize sleaze res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize sleaze res,"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar($familiar[grouper groupie]);
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize spooky res, equip really nice, equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize spooky res,"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[Anemone Mine]);
         } else {
             cli_execute("maximize item drop, equip monodent of the sea");
@@ -894,7 +949,7 @@ import iotm.ash;
 void seaMonkees() {
     // ── Guild unlock prerequisite ─────────────────────────────────────────────
     if (get_property("questG03Ego") == "unstarted"
-        && item_amount($item[Closed-circuit pay phone]) > 0) {
+        && item_amount($item[Closed-circuit pay phone]) > 0 && my_path().id == 55) {
         unlockGuild();
         if (get_property("questG03Ego") == "unstarted") {
             visit_url("guild.php?place=ocg");
@@ -908,7 +963,8 @@ void seaMonkees() {
         while (item_amount($item[wriggling flytrap pellet]) == 0 && have_effect($effect[Citizen of a Zone]) == 0
             && have_effect($effect[Everything Looks Red, White and Blue]) == 0 && have_familiar($familiar[patriotic eagle])) {
             use_familiar($familiar[patriotic eagle]);
-            cli_execute("maximize item drop, equip really nice swimming trunks"
+            cli_execute("maximize item drop"
+                + swimmingTrunks()
                 + ", equip peridot of peril, equip Sheriff moustache"
                 + ", equip Sheriff badge, equip Sheriff pistol"
                 + bathysphere()
@@ -920,12 +976,14 @@ void seaMonkees() {
             && to_int(get_property("rwbMonsterCount")) > 0) {
             use_familiar($familiar[grouper groupie]);
             if (to_int(get_property("rwbMonsterCount")) == 1) {
-                cli_execute("maximize item drop, equip really nice swimming trunks"
+                cli_execute("maximize item drop"
+                    + swimmingTrunks()
                     + if_equip($item[McHugeLarge left pole])
                     + if_equip($item[toy cupid bow])
                     + freeKill());
             } else {
-                cli_execute("maximize item drop, equip really nice swimming trunks"
+                cli_execute("maximize item drop"
+                    + swimmingTrunks()
                     + ", equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol"
                     + if_equip($item[toy cupid bow])
                     + baseball_equip());
@@ -938,11 +996,13 @@ void seaMonkees() {
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
                 use_familiar($familiar[grouper groupie]);
                 if (to_int(get_property("_assertYourAuthorityCast")) < 3) {
-                    cli_execute("maximize item drop, equip really nice swimming trunks"
+                    cli_execute("maximize item drop"
+                        + swimmingTrunks()
                         + ", equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol"
                         + if_equip($item[toy cupid bow]));
                 } else {
-                    cli_execute("maximize item drop, equip really nice swimming trunks"
+                    cli_execute("maximize item drop"
+                        + swimmingTrunks()
                         + ", equip " + banishGear($location[An octopus's garden])
                         + if_equip($item[toy cupid bow])
                         + freeKill());
@@ -961,12 +1021,14 @@ void seaMonkees() {
         if (NCForceEstimate() >= 4){
             if (get_property("noncombatForcerActive") != "true")
                 NCforce();
-            cli_execute("maximize item drop, equip really nice swimming"
+            cli_execute("maximize item drop"
+                + swimmingTrunks()
                 + bathysphere()
                 + if_equip($item[M&ouml;bius ring]));
         } else {
             use_familiar("-combat");
-            cli_execute("maximize item drop, equip really nice swimming, equip monodent"
+            cli_execute("maximize item drop, equip monodent"
+                + swimmingTrunks()
                 + bathysphere()
                 + if_equip($item[M&ouml;bius ring]));
         }
@@ -1001,7 +1063,8 @@ void seaMonkees() {
             if (baseballPlayers() >= 9)
                 baseballD();
             mood(pearlRes[my_primestat()]);
-            cli_execute("maximize item drop, -100 combat, equip really nice swimming, equip monodent of the sea"
+            cli_execute("maximize item drop, -100 combat, equip monodent of the sea"
+                + swimmingTrunks()
                 + if_equip($item[Everfull Dart Holster])
                 + if_equip($item[toy cupid bow])
                 + if_equip($item[M&ouml;bius ring])
@@ -1015,7 +1078,7 @@ void seaMonkees() {
 
     // ── Step 6: Black Crayon Golem recall ────────────────────────────────────
     if (get_property("questS02Monkees") == "step6"
-        && get_property("_monsterHabitatsMonster") == "") {
+        && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55) {
         use_familiar("-combat");
         cli_execute("maximize item drop, equip legendary seal clubbing club"
             + if_equip($item[McHugeLarge left pole]));
@@ -1044,6 +1107,8 @@ void seaMonkees() {
             && to_int(get_property("_monsterHabitatsRecalled")) == 2
             && have_item($item[roman candelabra]))
             conditional += ", equip roman candelabra";
+        else if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+            conditional += ", equip sea cowboy hat, equip sea chaps";
         else 
             conditional += baseball_equip();
 
@@ -1061,7 +1126,7 @@ void seaMonkees() {
             pullSequence($item[Elf Guard SCUBA tank]);
             conditional += ", equip shark jumper, equip scale-mail underwear, equip elf guard scuba";
         } else {
-            conditional += ", equip really nice swimming";
+            conditional += swimmingTrunks();
         }
 
         if (get_property("merkinLockkeyMonster") != "") {
@@ -1073,8 +1138,8 @@ void seaMonkees() {
                 set_property("keyTurn",$location[The Mer-Kin Outpost].turns_spent);
             }
         } else {
-            cli_execute("maximize -combat, equip really nice swimming, equip monodent"
-                + bathysphere() + freeRun() + freeKill() + conditional);
+            cli_execute("maximize -combat, equip monodent"
+                + swimmingTrunks() + bathysphere() + freeRun() + freeKill() + conditional);
             if (get_property("keyFound") != "false")
                 set_property("keyFound", "false");
         }
@@ -1084,10 +1149,12 @@ void seaMonkees() {
             && item_amount($item[Grandma's Fuchsia Yarn]) > 0
             && item_amount($item[Grandma's Chartreuse Yarn]) > 0)
             cli_execute("grandpa note");
-        if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
-            baseballD();
-        if (!MomNCyber() && to_int(get_property("_monsterHabitatsRecalled")) == 2 && get_property("_monsterHabitatsFightsLeft") == "0"){
-            recallCaliginous();
+        if (my_path().id == 55){
+            if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
+                baseballD();
+            if (!MomNCyber() && to_int(get_property("_monsterHabitatsRecalled")) == 2 && get_property("_monsterHabitatsFightsLeft") == "0"){
+                recallCaliginous();
+            }
         }
     }
     refresh_status();
@@ -1096,7 +1163,7 @@ void seaMonkees() {
     if (item_amount($item[Mer-kin stashbox]) == 1) {
         use($item[Mer-kin stashbox]);
         use($item[Mer-kin trailmap]);
-        equip($item[really\, really nice swimming trunks]);
+        equipSwimTrunks();
         cli_execute("grandpa currents");
         if (get_property("merkinCatalogChoices") == ""){
             set_property("catalogChecked", "false");
@@ -1110,7 +1177,7 @@ void seaMonkees() {
     while (NCForceEstimate() < 4 && available_amount($item[mer-kin prayerbeads]) < 2){
         use_familiar("-combat");
         mood("noncom");
-        cli_execute("maximize -combat, equip really nice" + bathysphere());
+        cli_execute("maximize -combat"+ swimmingTrunks() + bathysphere());
         adv($location[The Mer-Kin Outpost]);
     }
 
@@ -1199,9 +1266,14 @@ void seaMonkees() {
                 NCforce();
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
             }
-            while (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20 && item_amount($item[rusty rivet]) < 8){
-                mood("itdrop");
-                cli_execute("maximize item, equip monodent, equip peridot of peril, equip really nice");
+            while (item_amount($item[rusty rivet]) < 8){
+                if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
+                    mood("itdrop");
+                    cli_execute("maximize item, equip monodent, equip peridot of peril, equip really nice");
+                } else {
+                    mood("-combat");
+                    cli_execute("maximize -combat, equip monodent, equip peridot of peril, equip really nice");
+                }
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
             }
         }
@@ -1211,51 +1283,53 @@ void seaMonkees() {
     }
 
     // ── Construct banish + habitat recall for cyberzone ───────────────────────
-    int initialMomProgress = 24;
-    if (!have_item($item[backup camera]))
-        initialMomProgress += 4;
-    if (!have_item($item[2002 Mr. Store Catalog]))
-        initialMomProgress += 12;
-    if (to_int(get_property("momSeaMonkeeProgress")) < 24 && have_familiar($familiar[patriotic eagle])) {
-        if (!contains_text(get_property("banishedPhyla"), "construct")) {
-            if (get_property("madnessBakeryAvailable") == "false") {
-                visit_url("shop.php?whichshop=armory&action=talk");
-                run_choice(1);
+    if (my_path().id == 55){
+        int initialMomProgress = 24;
+        if (!have_item($item[backup camera]))
+            initialMomProgress += 4;
+        if (!have_item($item[2002 Mr. Store Catalog]))
+            initialMomProgress += 12;
+        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && have_familiar($familiar[patriotic eagle])) {
+            if (!contains_text(get_property("banishedPhyla"), "construct")) {
+                if (get_property("madnessBakeryAvailable") == "false") {
+                    visit_url("shop.php?whichshop=armory&action=talk");
+                    run_choice(1);
+                }
+                while (!contains_text(get_property("banishedPhyla"), "construct")
+                    && $location[madness bakery].turns_spent < 3) {
+                    use_familiar($familiar[patriotic eagle]);
+                    cli_execute("maximize item drop, equip monodent of the sea");
+                    adv($location[madness bakery]);
+                }
             }
-            while (!contains_text(get_property("banishedPhyla"), "construct")
-                && $location[madness bakery].turns_spent < 3) {
-                use_familiar($familiar[patriotic eagle]);
-                cli_execute("maximize item drop, equip monodent of the sea");
-                adv($location[madness bakery]);
+            while (get_property("_monsterHabitatsMonster") != "eye in the darkness"
+                && get_property("_monsterHabitatsMonster") != "slithering thing" && to_int(get_property("_monsterHabitatsRecalled")) < 3) {
+                recallCaliginous();
+            }
+            while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
+                && to_int(get_property("_cyberFreeFights")) < 10
+                && to_int(get_property("momSeaMonkeeProgress")) < 40) {
+                use_familiar($familiar[glover]);
+                cli_execute("maximize moxie, equip shark jumper"
+                    + ", equip scale-mail underwear, equip monodent");
+                if (my_buffedstat($stat[moxie]) < 500)
+                    abort("Need 500 moxie here to be safe");
+                adv($location[Cyberzone 1]);
             }
         }
-        while (get_property("_monsterHabitatsMonster") != "eye in the darkness"
-            && get_property("_monsterHabitatsMonster") != "slithering thing" && to_int(get_property("_monsterHabitatsRecalled")) < 3) {
-            recallCaliginous();
+        if (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress && !have_familiar($familiar[patriotic eagle])){
+            use_familiar($familiar[grouper groupie]);
+            string conditional;
+            if (!contains_text(get_property("banishedMonsters"), "school of many"))
+                conditional += ", equip monodent";
+            cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear, equip black glass, equip blood cubic zirconia, equip "
+            + divingHelmet() + conditional);
+            adv($location[The Caliginous Abyss]);
         }
-        while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
-            && to_int(get_property("_cyberFreeFights")) < 10
-            && to_int(get_property("momSeaMonkeeProgress")) < 40) {
-            use_familiar($familiar[glover]);
-            cli_execute("maximize moxie, equip shark jumper"
-                + ", equip scale-mail underwear, equip monodent");
-            if (my_buffedstat($stat[moxie]) < 500)
-                abort("Need 500 moxie here to be safe");
-            adv($location[Cyberzone 1]);
-        }
-    }
-    if (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress && !have_familiar($familiar[patriotic eagle])){
-        use_familiar($familiar[grouper groupie]);
-        string conditional;
-        if (!contains_text(get_property("banishedMonsters"), "school of many"))
-            conditional += ", equip monodent";
-        cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear, equip black glass, equip blood cubic zirconia, equip "
-        + divingHelmet() + conditional);
-        adv($location[The Caliginous Abyss]);
     }
 
     // ── Coral Corral unlock — get sea cowbell ─────────────────────────────────
-    if (get_property("corralUnlocked") == "true" && item_amount($item[sea cowbell]) == 0 && get_property("seahorseName") == "") {
+    if (get_property("corralUnlocked") == "true" && item_amount($item[sea cowbell]) == 0 && get_property("seahorseName") == "" && my_path().id == 55) {
         if (have_effect($effect[shadow waters]) == 0)
             shadowRift();
         use_familiar($familiar[grouper groupie]);
@@ -1309,27 +1383,29 @@ void seaMonkees() {
 void sorceress() {
 
     // ── Shadow rift prep ─────────────────────────────────────────────────────
-    if (to_int(get_property("encountersUntilSRChoice")) > 9
-        && get_property("questRufus") == "unstarted"
-        && item_amount($item[Closed-circuit pay phone]) > 0) {
-        mood("itdrop");
-        cli_execute("acquire oversized sparkler");
-        cli_execute("maximize item drop"
-            + if_equip($item[toy cupid bow]));
-        if (item_amount($item[lump of loyal latite]) > 0)
-            use($item[lump of loyal latite]);
-        cli_execute("maximize item drop, equip Flash Liquidizer Ultra Dousing Accessory"
-            + ", equip monodent of the sea"
-            + if_equip($item[bat wings])
-            + if_equip($item[Everfull Dart Holster]));
-        use($item[closed-circuit pay phone]);
-    }
+    if (my_path().id == 55){
+        if (to_int(get_property("encountersUntilSRChoice")) > 9
+            && get_property("questRufus") == "unstarted"
+            && item_amount($item[Closed-circuit pay phone]) > 0) {
+            mood("itdrop");
+            cli_execute("acquire oversized sparkler");
+            cli_execute("maximize item drop"
+                + if_equip($item[toy cupid bow]));
+            if (item_amount($item[lump of loyal latite]) > 0)
+                use($item[lump of loyal latite]);
+            cli_execute("maximize item drop, equip Flash Liquidizer Ultra Dousing Accessory"
+                + ", equip monodent of the sea"
+                + if_equip($item[bat wings])
+                + if_equip($item[Everfull Dart Holster]));
+            use($item[closed-circuit pay phone]);
+        }
 
-    if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && item_amount($item[mer-kin digpick]) == 0){
-        curveballBurn();
-    }
-    while (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && !have_item($item[platinum yendorian express card])){
-        curveballBurn();
+        if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && item_amount($item[mer-kin digpick]) == 0){
+            curveballBurn();
+        }
+        while (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish" && !have_item($item[platinum yendorian express card])){
+            curveballBurn();
+        }
     }
 
     // ── Teflon ore acquisition ────────────────────────────────────────────────
@@ -1346,32 +1422,33 @@ void sorceress() {
             use($item[lodestone]);
         }
     }
+    if (my_path().id == 55){
+        // ── Platinum Yendorian Express Card ───────────────────────────────────────
+        if (get_property("expressCardUsed") == "false"
+            && have_item($item[platinum yendorian express card])) {
+            if (storage_amount($item[Platinum Yendorian Express Card]) > 0
+                && item_amount($item[Platinum Yendorian Express Card]) == 0)
+                take_storage(1, $item[Platinum Yendorian Express Card]);
+            use($item[Platinum Yendorian Express Card]);
+        }
 
-    // ── Platinum Yendorian Express Card ───────────────────────────────────────
-    if (get_property("expressCardUsed") == "false"
-        && have_item($item[platinum yendorian express card])) {
-        if (storage_amount($item[Platinum Yendorian Express Card]) > 0
-            && item_amount($item[Platinum Yendorian Express Card]) == 0)
-            take_storage(1, $item[Platinum Yendorian Express Card]);
-        use($item[Platinum Yendorian Express Card]);
-    }
+        // ── Lasso training via shadow rift ────────────────────────────────────────
+        while (to_int(get_property("lassoTrainingCount")) < 20
+            && (have_effect($effect[shadow affinity]) > 0
+                || get_property("_shadowAffinityToday") == "false"))
+            shadowRift();
 
-    // ── Lasso training via shadow rift ────────────────────────────────────────
-    while (to_int(get_property("lassoTrainingCount")) < 20
-        && (have_effect($effect[shadow affinity]) > 0
-            || get_property("_shadowAffinityToday") == "false"))
-        shadowRift();
-
-    // ── Teflon ore second attempt (post-lodestone) ────────────────────────────
-    if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]) {
-        while (have_effect($effect[Loded]) > 0
-            && item_amount($item[teflon ore]) == 0)
-            teflon();
-        if (item_amount($item[teflon ore]) == 0) {
-            print("Failed to acquire teflon ore — can pull mining dynamite"
-                + " for one more try", "red");
-            while (item_amount($item[teflon ore]) == 0)
+        // ── Teflon ore second attempt (post-lodestone) ────────────────────────────
+        if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]) {
+            while (have_effect($effect[Loded]) > 0
+                && item_amount($item[teflon ore]) == 0)
                 teflon();
+            if (item_amount($item[teflon ore]) == 0) {
+                print("Failed to acquire teflon ore — can pull mining dynamite"
+                    + " for one more try", "red");
+                while (item_amount($item[teflon ore]) == 0)
+                    teflon();
+            }
         }
     }
 
@@ -1383,6 +1460,9 @@ void sorceress() {
 
     // ── Seahorse taming ───────────────────────────────────────────────────────
     while (get_property("seahorseName") == "") {
+        if (my_path().id == 0){
+            cli_execute("acquire 3 sea cowbell, sea lasso");
+        }
         if (item_amount($item[sea cowbell]) < 3
             && !contains_text(get_property("_roninStoragePulls"), "4196"))
             pullSequence($item[sea cowbell]);
@@ -1396,7 +1476,7 @@ void sorceress() {
         }
         if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish")
             conditional += ", equip monodent of the sea";
-        cli_execute("maximize item drop, equip really nice swimming" + conditional);
+        cli_execute("maximize item drop" + swimmingTrunks() + conditional);
 
         if (item_amount($item[sea lasso]) == 0)
             cli_execute("monkeypaw wish sea lasso");
@@ -1455,15 +1535,24 @@ void sorceress() {
                 adv($location[The Mer-Kin Outpost]);
             }
         }
+        equipSwimTrunks();
         cli_execute("unequip sea chaps; unequip aerated diving helmet;"
-            + " equip really nice swimming;"
             + " acquire crappy Mer-kin mask, crappy Mer-kin tailpiece");
+    }
+    string boss;
+    if (my_path().id == 0){
+        boss = user_prompt("Which boss?", $strings[Yogurt,Shub,Dad,Abort]);
+        if (boss == "Abort" || boss == "")
+            abort();
     }
 
     // ── YogUrt preparation ────────────────────────────────────────────────────
-    if (get_property("yogUrtDefeated") == "false") {
+    if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
         if (get_property("isMerkinHighPriest") == "false") {
             // Farm mer-kin cheatsheets and unlock teacher
+            if (my_path().id == 0){
+                cli_execute("acquire 10 mer-kin cheatsheet, 10 mer-kin wordquiz, mer-kin killscroll, mer-kin healscroll, mer-kin knucklebone");
+            }
             while (item_amount($item[mer-kin cheatsheet]) < 9
                 && get_property("merkinVocabularyMastery") == "0") {
                 put_closet(item_amount($item[mer-kin hallpass]),
@@ -1496,7 +1585,7 @@ void sorceress() {
             }
 
             // Unlock teacher via NC if not yet done
-            while (get_property("merkinElementaryTeacherUnlock") == "false") {
+            while (get_property("merkinElementaryTeacherUnlock") == "false" && !libraryReady()) {
                 put_closet(item_amount($item[mer-kin hallpass]),
                     $item[mer-kin hallpass]);
                 string conditional;
@@ -1521,7 +1610,7 @@ void sorceress() {
             }
 
             // Get mer-kin bunwig if missing
-            while (available_amount($item[mer-kin bunwig]) == 0) {
+            while (available_amount($item[mer-kin bunwig]) == 0 && !libraryReady()) {
                 if (contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9){
                     baseballD();
                     continue;
@@ -1656,8 +1745,18 @@ void sorceress() {
             }
 
             while (get_property("isMerkinHighPriest") == "false") {
-                if (turns_played() <= 17 && my_id() == 2813285 && get_property("dreadScroll7") == "0")
-                    abort("On track for a god run, eat a sushi for the dreadscroll clue");
+                if (turns_played() <= 17 && my_id() == 2813285 && get_property("dreadScroll7") == "0"){
+                    if (item_amount($item[mer-kin worktea]) > 0)
+                        cli_execute("buy white rice; create 1 beefy nigiri");
+                    else
+                        abort("On track for a god run, eat a sushi for the dreadscroll clue");
+                }
+                if (my_path().id == 0){
+                    if (get_property("hasSushiMat") == "false"){
+                        use($item[sushi-rolling mat]);
+                    }
+                    cli_execute("acquire mer-kin worktea;acquire white rice;create 1 beefy nigiri");
+                }
                 if (have_effect($effect[Deep-Tainted Mind]) == 0) {
                     use($item[mer-kin dreadscroll]);
                     post_adv();
@@ -1739,139 +1838,157 @@ void sorceress() {
         }
     }
 
-    if (get_property("yogUrtDefeated") == "false")
+    if (get_property("yogUrtDefeated") == "false" && my_path().id == 55)
         abort("Passing over yogUrt too early — rerun script");
 
-    // ── Post-YogUrt skate park / gladiator gear ───────────────────────────────
-    while (get_property("skateParkStatus") == "war"
-        && !contains_text($location[The Skate Park].noncombat_queue,
-            "Holey Rollers"))
-        skatePark();
-    if (get_property("_skateBuff1") == "false")
-        visit_url("sea_skatepark.php?action=state2buff1");
+    if (my_path().id == 55){
+        // ── Post-YogUrt skate park / gladiator gear ───────────────────────────────
+        while (get_property("skateParkStatus") == "war"
+            && !contains_text($location[The Skate Park].noncombat_queue,
+                "Holey Rollers"))
+            skatePark();
+        if (get_property("_skateBuff1") == "false")
+            visit_url("sea_skatepark.php?action=state2buff1");
 
-    // Late pulls
-    if (pulls_remaining() > 0) {
-        if (item_amount($item[crayon shavings]) < 8)
-            pullSequence($item[null-day exploit]);
-        foreach num in $strings[5401, 3679, 3775, 11583, 7014, 11706] {
-            if (!contains_text(get_property("_roninStoragePulls"), num)) {
-                buy_using_storage(to_item(to_int(num)));
-                take_storage(1, to_item(to_int(num)));
-            }
-            if (pulls_remaining() == 0) break;
-        }
-    }
-
-    // ── Gladiator gear grind ──────────────────────────────────────────────────
-    while (available_amount($item[Mer-kin gladiator mask]) == 0
-        && available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
-        gymnasium();
-        if (item_amount($item[Mer-kin thighguard]) > 0
-            && item_amount($item[Mer-kin headguard]) > 0) {
-            equip($slot[hat], $item[none]);
-            equip($slot[pants], $item[none]);
-            equip($item[really\, really nice swimming trunks]);
-            if (item_amount($item[Mer-kin scholar mask]) > 0){
-                visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=131");
-            }
-            if (item_amount($item[Mer-kin scholar tailpiece]) > 0){
-                visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=1619");
-            }
-            foreach it in $items[Mer-kin gladiator mask,Mer-kin gladiator tailpiece]{
-                buy($coinmaster[Grandma Sea Monkey],1,it);
+        // Late pulls
+        if (pulls_remaining() > 0) {
+            if (item_amount($item[crayon shavings]) < 8)
+                pullSequence($item[null-day exploit]);
+            foreach num in $strings[5401, 3679, 3775, 11583, 7014, 11706] {
+                if (!contains_text(get_property("_roninStoragePulls"), num)) {
+                    buy_using_storage(to_item(to_int(num)));
+                    take_storage(1, to_item(to_int(num)));
+                }
+                if (pulls_remaining() == 0) break;
             }
         }
     }
 
-    refresh_status();
-
-    // ── Colosseum ─────────────────────────────────────────────────────────────
-    while (to_int(get_property("lastColosseumRoundWon")) < 15) {
-        string freeFight;
-        if (to_int(get_property("_clubEmTimeUsed")) < 5)
-            freeFight = ", equip legendary seal clubbing club";
-        else if (to_int(get_property("_batWingsFreeFights")) < 5)
-            freeFight = if_equip($item[bat wings]);
-        cli_execute("maximize spell damage percent, mys, equip Mer-kin gladiator tailpiece, equip Mer-kin gladiator mask"
-            + ", equip congressional medal of insanity" + freeFight);
-        if (to_int(get_property("lastColosseumRoundWon")) >= 3
-            && have_effect($effect[Up To 11]) == 0)
-            cli_execute($effect[Up To 11].default);
-        if (to_int(get_property("lastColosseumRoundWon")) >= 12) {
-            if (item_amount($item[crayon shavings]) < 8
-                && item_amount($item[null-day exploit]) > 0
-                && have_effect($effect[null afternoon]) == 0)
-                use($item[null-day exploit]);
-            if (have_familiar($familiar[foul ball])) {
-                use_familiar($familiar[foul ball]);
-                equip($item[little bitty bathysphere]);
-                if (have_item($item[bat wings]))
-                    equip($item[bat wings]);
-            } else if (have_item($item[Unwrapped knock-off retro superhero cape])){
-                cli_execute("retrocape heck kill;"
-                    + " equip unwrapped knock-off retro superhero cape");
+    if (my_path().id == 55 || (my_path().id == 0 && boss == "Shub")){
+        // ── Gladiator gear grind ──────────────────────────────────────────────────
+        while (available_amount($item[Mer-kin gladiator mask]) == 0
+            && available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
+            gymnasium();
+            if (item_amount($item[Mer-kin thighguard]) > 0
+                && item_amount($item[Mer-kin headguard]) > 0) {
+                equip($slot[hat], $item[none]);
+                equip($slot[pants], $item[none]);
+                equipSwimTrunks();
+                if (item_amount($item[Mer-kin scholar mask]) > 0){
+                    visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=131");
+                }
+                if (item_amount($item[Mer-kin scholar tailpiece]) > 0){
+                    visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=1619");
+                }
+                foreach it in $items[Mer-kin gladiator mask,Mer-kin gladiator tailpiece]{
+                    buy($coinmaster[Grandma Sea Monkey],1,it);
+                }
             }
-            mood("colosseum");
         }
-        adv($location[Mer-kin Colosseum]);
-    }
 
-    if (to_int(get_property("lastColosseumRoundWon")) < 15)
-        abort("Skipped over colosseum — rerun script");
+        refresh_status();
 
-    // ── Step 12: Caliginous Abyss ─────────────────────────────────────────────
-    while (get_property("questS02Monkees") == "step12") {
-        cli_execute("maximize item drop, equip shark jumper"
-            + ", equip scale-mail underwear, equip " + divingHelmet()
-            + ", equip black glass, equip blood cubic zirconia"
-            + bathysphere()
-            + if_equip($item[M&ouml;bius ring]));
-        adv($location[The Caliginous Abyss]);
-    }
-
-    // ── Shub-Jigguwatt ────────────────────────────────────────────────────────
-    if (get_property("shubJigguwattDefeated") == "false") {
-        use_familiar($familiar[grouper groupie]);
-        cli_execute("maximize damage absorption, mus, equip mer-kin gladiator mask, equip mer-kin gladiator tailpiece; recover hp"
-            + if_equip($item[bat wings]));
-        set_property("hpAutoRecoveryTarget", "1");
-        set_property("mpAutoRecovery", "-0.05");
-        set_property("mpAutoRecoveryTarget", "-0.05");
-        cli_execute("recover hp; cast * empathy");
-        adv($location[Mer-kin Temple (Left Door)]);
-    }
-
-    // ── Naughty Sorceress intro ───────────────────────────────────────────────
-    if (get_property("questL13Final") == "unstarted") {
-        if (to_int(get_property("_batWingsFreeFights")) < 5) {
-            cli_execute("maximize spell damage percent, mys" + if_equip($item[bat wings]) +";"
-                + " outfit mer-kin gladiator;"
-                + " equip acc3 congressional medal of insanity;");
-        } else {
-            cli_execute("maximize spell damage percent, mys;"
-                + " outfit mer-kin gladiator;"
-                + " equip acc3 congressional medal of insanity;"
-                + " equip unwrapped knock-off retro;"
-                + " retrocape heck kill");
+        // ── Colosseum ─────────────────────────────────────────────────────────────
+        while (to_int(get_property("lastColosseumRoundWon")) < 15) {
+            string freeFight;
+            if (to_int(get_property("_clubEmTimeUsed")) < 5)
+                freeFight = ", equip legendary seal clubbing club";
+            else if (to_int(get_property("_batWingsFreeFights")) < 5)
+                freeFight = if_equip($item[bat wings]);
+            cli_execute("maximize spell damage percent, mys, equip Mer-kin gladiator tailpiece, equip Mer-kin gladiator mask"
+                + ", equip congressional medal of insanity" + freeFight);
+            if (to_int(get_property("lastColosseumRoundWon")) >= 3
+                && have_effect($effect[Up To 11]) == 0)
+                cli_execute($effect[Up To 11].default);
+            if (to_int(get_property("lastColosseumRoundWon")) >= 12) {
+                if (item_amount($item[crayon shavings]) < 8
+                    && item_amount($item[null-day exploit]) > 0
+                    && have_effect($effect[null afternoon]) == 0)
+                    use($item[null-day exploit]);
+                if (have_familiar($familiar[foul ball])) {
+                    use_familiar($familiar[foul ball]);
+                    equip($item[little bitty bathysphere]);
+                    if (have_item($item[bat wings]))
+                        equip($item[bat wings]);
+                } else if (have_item($item[Unwrapped knock-off retro superhero cape])){
+                    cli_execute("retrocape heck kill;"
+                        + " equip unwrapped knock-off retro superhero cape");
+                }
+                mood("colosseum");
+            }
+            adv($location[Mer-kin Colosseum]);
         }
-        codpiece("none");
+
+        if (to_int(get_property("lastColosseumRoundWon")) < 15)
+            abort("Skipped over colosseum — rerun script");
+
+        if (my_path().id == 55){
+            // ── Step 12: Caliginous Abyss ─────────────────────────────────────────────
+            while (get_property("questS02Monkees") == "step12") {
+                cli_execute("maximize item drop, equip shark jumper"
+                    + ", equip scale-mail underwear, equip " + divingHelmet()
+                    + ", equip black glass, equip blood cubic zirconia"
+                    + bathysphere()
+                    + if_equip($item[M&ouml;bius ring]));
+                adv($location[The Caliginous Abyss]);
+            }
+        }
+
+        // ── Shub-Jigguwatt ────────────────────────────────────────────────────────
+        if (get_property("shubJigguwattDefeated") == "false") {
+            if (my_path().id == 0)
+                cli_execute("acquire 8 crayon shaving");
+            use_familiar($familiar[grouper groupie]);
+            cli_execute("maximize damage absorption, mus, equip mer-kin gladiator mask, equip mer-kin gladiator tailpiece; recover hp"
+                + if_equip($item[bat wings]));
+            set_property("hpAutoRecoveryTarget", "1");
+            set_property("mpAutoRecovery", "-0.05");
+            set_property("mpAutoRecoveryTarget", "-0.05");
+            cli_execute("recover hp; cast * empathy");
+            adv($location[Mer-kin Temple (Left Door)]);
+        }
+    }
+
+    if (my_path().id == 55){
+        // ── Naughty Sorceress intro ───────────────────────────────────────────────
+        if (get_property("questL13Final") == "unstarted") {
+            if (to_int(get_property("_batWingsFreeFights")) < 5) {
+                cli_execute("maximize spell damage percent, mys" + if_equip($item[bat wings]) +";"
+                    + " outfit mer-kin gladiator;"
+                    + " equip acc3 congressional medal of insanity;");
+            } else {
+                cli_execute("maximize spell damage percent, mys;"
+                    + " outfit mer-kin gladiator;"
+                    + " equip acc3 congressional medal of insanity;"
+                    + " equip unwrapped knock-off retro;"
+                    + " retrocape heck kill");
+            }
+            codpiece("none");
+            adv($location[Mer-kin Temple (center Door)]);
+            adv($location[Mer-kin Temple (center Door)]);
+        }
+    } else if (my_path().id == 0 && boss == "Dad"){
+        use_familiar($familiar[Tiny Plastic Santa Claus Skeleton]);
+        cli_execute("maximize spell damage percent, equip goggles of loathing, equip stick-knife of loathing, equip scepter of loathing, equip jeans of loathing, equip treads of loathing, equip belt of loathing, equip little bitty bathy");
+        set_property("mpAutoRecoveryTarget", "1");
+        cli_execute("acquire 3 warbear whosit; acquire 3 volcanic ash; recover mp; tempura air");
         adv($location[Mer-kin Temple (center Door)]);
-        adv($location[Mer-kin Temple (center Door)]);
     }
 
-    // ── Post-quest cleanup and spending ──────────────────────────────────────
-    if (get_property("questL13Final") == "finished") {
-        while (item_amount($item[sand penny]) > 30)
-            buy($coinmaster[Wet Crap For Sale], 1, $item[water-logged pill]);
-        while (item_amount($item[sand penny]) > 10)
-            buy($coinmaster[Wet Crap For Sale], 1,
-                $item[waterlogged scroll of healing]);
-        council();
-        council();
-        if (my_id() == 2813285)
-            cli_execute("postloop");
-        spading();
+    if (my_path().id == 55){
+        // ── Post-quest cleanup and spending ──────────────────────────────────────
+        if (get_property("questL13Final") == "finished") {
+            while (item_amount($item[sand penny]) > 30)
+                buy($coinmaster[Wet Crap For Sale], 1, $item[water-logged pill]);
+            while (item_amount($item[sand penny]) > 10)
+                buy($coinmaster[Wet Crap For Sale], 1,
+                    $item[waterlogged scroll of healing]);
+            council();
+            council();
+            if (my_id() == 2813285)
+                cli_execute("postloop");
+            spading();
+        }
     }
 }
 
