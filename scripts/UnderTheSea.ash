@@ -822,6 +822,8 @@ import iotm.ash;
                     }
                 }
                 if (item_amount($item[pocket wish]) > 0) {
+                    cli_execute("maximize item drop, equip legendary seal clubbing club"
+                        + if_equip($item[McHugeLarge left pole]));
                     cli_execute("genie monster " + mon);
                     run_combat();
                 } else
