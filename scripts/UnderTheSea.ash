@@ -64,7 +64,7 @@ import iotm.ash;
     }
 
     string freeKill() {
-        if (have_effect($effect[Everything Looks Red]) == 0 && have_item($item[Everfull Dart Holster])
+        if (have_effect($effect[Everything Looks Red]) == 0 && have_item($item[Everfull Dart Holster]))
             return ", equip everfull dart";
         if (to_int(get_property("_chestXRayUsed")) < 3
             && have_item($item[Lil' Doctor&trade; bag]))
