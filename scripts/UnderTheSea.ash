@@ -64,7 +64,7 @@ import iotm.ash;
     }
 
     string freeKill() {
-        if (have_effect($effect[Everything Looks Red]) == 0)
+        if (have_effect($effect[Everything Looks Red]) == 0 && have_item($item[everfull dart holster)
             return ", equip everfull dart";
         if (to_int(get_property("_chestXRayUsed")) < 3
             && have_item($item[Lil' Doctor&trade; bag]))
@@ -824,7 +824,7 @@ import iotm.ash;
                 if (item_amount($item[pocket wish]) > 0)
                     cli_execute("genie monster " + mon);
                 else
-                    abort("pocket with didn't drop");
+                    abort("pocket wish didn't drop");
             } else {
                 abort("Need a method to find " + mon);
             }
