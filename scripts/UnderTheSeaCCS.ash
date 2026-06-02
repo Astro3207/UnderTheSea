@@ -226,6 +226,8 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Mer-Kin Outpost]:
+            if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+                throw_item($item[sea lasso]);
             if (mob == $monster[time cop]) {
                 darts();
                 cleanUp();
@@ -552,6 +554,31 @@ void main(int round, monster mob, string page_text) {
             use_skill($skill[raise backup dancer]);
             use_skill($skill[raise backup dancer]);
             cleanUp();
+            break;
+
+        case $location[Mer-kin Temple]:
+            if (mob == $monster[Yog-Urt, Elder Goddess of Hatred]){
+                if (my_maxhp() > 311)
+                    abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
+                throw_items($item[crayon shavings], $item[mer-kin healscroll]);
+                throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
+                throw_item($item[sea gel]);
+                if (equipped_amount($item[mer-kin prayerbeads]) < 3)
+                    throw_item($item[New Age healing crystal]);
+                if (equipped_amount($item[mer-kin prayerbeads]) < 2)
+                    throw_item($item[soggy used band-aid]);
+                cleanUp();
+            }
+            if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
+                for i from 1 to 4
+                    throw_items($item[crayon shavings], $item[crayon shavings]);
+                while (current_round() > 0)
+                    attack();
+            }
+            if (mob == $monster[Dad Sea Monkee]){
+                cli_execute("dad");
+                abort("execute spells in the above order, can use shrap instead of toynado and volcanometeor instead of awesome balls of fire");
+            }
             break;
     }
 
