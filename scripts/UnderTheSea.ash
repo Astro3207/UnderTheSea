@@ -228,7 +228,7 @@ import iotm.ash;
             "Mer-kin healer":  315
         };
         buffer out;
-        append(out, today_to_string());
+        append(out, daycount());
         append(out, "," + to_string(my_id()));
         append(out, "," + to_int(my_class()));
         append(out, "," + sign[my_sign()]);
