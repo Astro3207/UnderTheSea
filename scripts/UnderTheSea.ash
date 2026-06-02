@@ -821,9 +821,10 @@ import iotm.ash;
                         adv($location[The Overgrown Lot]);
                     }
                 }
-                if (item_amount($item[pocket wish]) > 0)
+                if (item_amount($item[pocket wish]) > 0) {
                     cli_execute("genie monster " + mon);
-                else
+                    run_combat();
+                } else
                     abort("pocket wish didn't drop");
             } else {
                 abort("Need a method to find " + mon);
