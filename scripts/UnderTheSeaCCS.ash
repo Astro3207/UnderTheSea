@@ -437,14 +437,14 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             }
             if (to_int(get_property("merkinVocabularyMastery")) == 100) {
+                while (get_property("dreadScroll2") == "0"
+                    && item_amount($item[mer-kin healscroll]) > 0
+                    && current_round() > 0)
+                    throw_item($item[mer-kin healscroll]);
                 while (get_property("dreadScroll5") == "0"
                     && item_amount($item[mer-kin killscroll]) > 0
                     && current_round() > 0)
                     throw_item($item[mer-kin killscroll]);
-                if (get_property("dreadScroll2") == "0"
-                    && item_amount($item[mer-kin healscroll]) > 0
-                    && current_round() > 0)
-                    throw_item($item[mer-kin healscroll]);
                 if (free_monster(mob)) {
                     if (bcz_gaze_ready())
                         use_skill($skill[BCZ: Refracted Gaze]);
