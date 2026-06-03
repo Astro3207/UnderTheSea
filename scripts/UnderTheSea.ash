@@ -1200,7 +1200,7 @@ void seaMonkees() {
                 + ", equip pro skateboard, equip The Eternity Codpiece, equip backup camera");
             mood("itdrop");
             adv($location[The Coral Corral]);
-        } else if (have_skill($skill[steely-eyed squint])){
+        } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
             pullSequence($item[software glitch]);
             cli_execute("maximize item drop"
                 + ", equip " + divingHelmet()
@@ -1216,12 +1216,12 @@ void seaMonkees() {
                 + ", equip pro skateboard, equip The Eternity Codpiece, equip monodent"
                 + if_equip($item[baseball diamond]));
             adv($location[The Coral Corral]);
-            while (!have_item($item[cursed monkey's paw]) && (item_amount($item[sea lasso]) < 6 || item_amount($item[sea cowbell]) < 3 )){
-                mood("itdrop");
-                adv($location[The Coral Corral]);
-                if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
-                    baseballD();
-            }
+        }
+        while (!have_item($item[cursed monkey's paw]) && (item_amount($item[sea lasso]) < 6 || item_amount($item[sea cowbell]) < 3 )){
+            mood("itdrop");
+            adv($location[The Coral Corral]);
+            if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
+                baseballD();
         }
         codpiece("none");
     }
