@@ -1282,7 +1282,7 @@ void seaMonkees() {
                     cli_execute("maximize item, equip monodent, equip peridot of peril, equip really nice, equip congressional medal of insanity" + conditional);
                 } else {
                     mood("-combat");
-                    cli_execute("maximize -combat, equip monodent, equip peridot of peril, equip really nice, equip congressional medal of insanity");
+                    cli_execute("maximize -combat, equip monodent, equip really nice");
                 }
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
             }
