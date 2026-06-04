@@ -69,7 +69,7 @@ void free_run(string ptext, boolean banish) {
 
 // Returns true if this monster provides a free fight
 boolean free_monster(monster mob) {
-    return $monsters[black crayon golem, time cop,
+    return $monsters[black crayon golem, time cop,sausage goblin,
         kid who is too old to be Trick-or-Treating,
         suburban security civilian, vandal kid] contains mob;
 }
@@ -255,7 +255,8 @@ void main(int round, monster mob, string page_text) {
                 if (get_property("_monsterHabitatsFightsLeft") == "0"
                     && to_int(get_property("_monsterHabitatsRecalled")) >= 2
                     && to_int(get_property("_backUpUses")) < 7
-                    && get_property("lastCopyableMonster") == "Black Crayon Golem") {
+                    && get_property("lastCopyableMonster") == "Black Crayon Golem"
+                    && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
@@ -321,6 +322,14 @@ void main(int round, monster mob, string page_text) {
                         use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
                         if (item_amount($item[pulled yellow taffy]) > 0)
                             throw_item($item[pulled yellow taffy]);
+                    } else if (item_amount($item[software glitch]) > 0){
+                        throw_item($item[software glitch]);
+                        if (last_monster() == $monster[Bugged bugbear]){
+                            use_skill($skill[BCZ: Refracted Gaze]);
+                            use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
+                        } else {
+                            abort("Software glitch failed");
+                        }
                     }
                     free_kill(page_text, true);
                     cleanUp();
@@ -441,7 +450,8 @@ void main(int round, monster mob, string page_text) {
                         use_skill($skill[spring kick]);
                 }
                 if (free_monster(to_monster(get_property("lastCopyableMonster")))
-                    && to_int(get_property("_backUpUses")) < 11) {
+                    && to_int(get_property("_backUpUses")) < 11
+                    && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     if (get_property("NCtoC") != "true")
                         use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
@@ -496,7 +506,8 @@ void main(int round, monster mob, string page_text) {
                 }
             } else {
                 if (free_monster(to_monster(get_property("lastCopyableMonster")))
-                    && to_int(get_property("_backUpUses")) < 11) {
+                    && to_int(get_property("_backUpUses")) < 11
+                    && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                 } else {
