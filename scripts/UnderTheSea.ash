@@ -903,7 +903,7 @@ import iotm.ash;
     }
 
     boolean MomNCyber(){
-        if (have_familiar($familiar[patriotic eagle]) && have_item($item[server room key]) && have_skill($skill[Overclock(10)]) && have_skill($item[Just the Facts]))
+        if (have_familiar($familiar[patriotic eagle]) && have_item($item[server room key]) && have_skill($skill[Overclock(10)]) && have_skill($skill[Just the Facts]))
             return true;
         return false;
     }
