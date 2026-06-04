@@ -240,7 +240,7 @@ void main(int round, monster mob, string page_text) {
                     && to_int(get_property("_monsterHabitatsRecalled")) >= 2
                     && to_int(get_property("_backUpUses")) < 7
                     && get_property("lastCopyableMonster") == "Black Crayon Golem"
-                    && have_equipped($item[back-up camera])) {
+                    && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
@@ -418,7 +418,7 @@ void main(int round, monster mob, string page_text) {
                 }
                 if (free_monster(to_monster(get_property("lastCopyableMonster")))
                     && to_int(get_property("_backUpUses")) < 11
-                    && have_equipped($item[back-up camera])) {
+                    && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     if (get_property("NCtoC") != "true")
                         use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
@@ -474,7 +474,7 @@ void main(int round, monster mob, string page_text) {
             } else {
                 if (free_monster(to_monster(get_property("lastCopyableMonster")))
                     && to_int(get_property("_backUpUses")) < 11
-                    && have_equipped($item[back-up camera])) {
+                    && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                 } else {
