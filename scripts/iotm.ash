@@ -29,8 +29,7 @@ void use_if_have_skill(string page_text, skill sk) {
 boolean have_item(item it) {
     return item_amount(it) > 0
         || have_equipped(it)
-        || storage_amount(it) > 0
-        || closet_amount(it) > 0;
+        || storage_amount(it) > 0;
 }
 
 // Returns the number of chamois available in the clan slime tube
@@ -217,10 +216,7 @@ skill combatBan() {
 
 // ─── EVERFULL DART ────────────────────────────────────────────────────────────
 
-// Returns true if bullseye perks are fully stacked or adventures are low
 boolean bullseyeReady() {
-    if (my_adventures() < 20)
-        return true;
     string perks = get_property("everfullDartPerks");
     return (contains_text(perks, "You are less impressed by bullseyes")
             && contains_text(perks, "Bullseyes do not impress you much"))
@@ -412,7 +408,7 @@ int universe() {
 // ─── DELAY CHECKER ────────────────────────────────────────────────────────────
 // Returns true if there are free fight resources available to burn for delay.
 
-boolean delay() {
+boolean free_Run() {
     if (to_int(get_property("_snokebombUsed")) < 3)
         return true;
     if (have_effect($effect[everything looks green]) == 0)
@@ -421,12 +417,32 @@ boolean delay() {
         && total_turns_played() % 11 == 1
         && to_int(get_property("_voteFreeFights")) < 3)
         return true;
+    if (item_amount($item[cosmic bowling ball]) > 0)
+        return true;
+    return false;
+}
+
+boolean free_Kill(){
+    if (have_effect($effect[everything looks red]) == 0 && bullseyeReady())
+        return true;
+    if (have_effect($effect[everything looks yellow]) == 0)
+        return true;
+    return false;
+}
+
+boolean wanderer() {
     if (total_turns_played() >= to_int(get_property("clubEmNextWeekMonsterTurn")) + 8
         && get_property("clubEmNextWeekMonster") != "")
         return true;
     // Fixed: was incorrectly checking clubEmNextWeekMonster for the VHS tape condition
     if (total_turns_played() >= to_int(get_property("spookyVHSTapeMonsterTurn")) + 8
         && get_property("spookyVHSTapeMonster") != "")
+        return true;
+    return false;
+}
+
+boolean delay(){
+    if (wanderer() || free_Run())
         return true;
     return false;
 }
@@ -455,7 +471,13 @@ void camo() {
 
 // ─── BASEBALL ─────────────────────────────────────────────────────────────────
 
-// Fills 2 prereq slots immediately before a given outcome slot
+int baseballPlayers(){
+    string [int] lineup = split_string(get_property("baseballTeam"), ",");
+    int players;
+    foreach num in lineup { players = num + 1; }
+    return players;
+}
+
 void fillPrereqs(int outcomeSlot, string pitchType) {
     int filled = 0;
     int before = outcomeSlot - 1;
@@ -469,14 +491,6 @@ void fillPrereqs(int outcomeSlot, string pitchType) {
     if (filled < 2)
         abort("Not enough open slots to fill prereqs for outcome at slot " + outcomeSlot);
 }
-
-int baseballPlayers(){
-    string [int] lineup = split_string(get_property("baseballTeam"), ",");
-    int players;
-    foreach num in lineup { players = num + 1; }
-    return players;
-}
-
 void baseballD() {
     string [int] lineup = split_string(get_property("baseballTeam"), ",");
     int players;
@@ -484,55 +498,52 @@ void baseballD() {
     if (players != 9) return;
 
     try {
-        int bbYR;
-        int bbFreeKill;
-        int bbBanish;
+        int YRPitchNum;
+        int FKPitchNum;
+        int BanishPitchNum;
 
         // Scan 9→3, take the latest slot for each outcome type
         for x from 9 to 3 {
-            if (bbYR == 0 && $strings[745,838,775,773,765,768,762,763] contains lineup[x-1]) {
-                bbYR = x;
+            if (YRPitchNum == 0 && $strings[745,838,775,773,765,768,762,763] contains lineup[x-1]) {
+                YRPitchNum = x;
                 set_property("pitchNum" + x, "1");
             }
-            if (bbFreeKill == 0 && $strings[2499] contains lineup[x-1]) {
-                bbFreeKill = x;
+            if (FKPitchNum == 0 && $strings[2499] contains lineup[x-1]) {
+                FKPitchNum = x;
                 set_property("pitchNum" + x, "3");
             }
-            // bbBanish only activates if slot 9 is already claimed by another outcome
-            // guaranteeing room for all 3 sets of prereqs
-            if (bbBanish == 0 && $strings[764] contains lineup[x-1]
-                && (bbYR == 9 || bbFreeKill == 9)) {
-                bbBanish = x;
+            // Banish (third pitch) only activates if slot 9 is already claimed by another outcome
+            if (BanishPitchNum == 0 && $strings[764] contains lineup[x-1]
+                && (YRPitchNum == 9 || FKPitchNum == 9)) {
+                BanishPitchNum = x;
                 set_property("pitchNum" + x, "2");
             }
         }
 
-        if (bbYR == 0 && bbFreeKill == 0) {
+        if (YRPitchNum == 0 && FKPitchNum == 0) {
             print("No yellow ray or free kill pitchers in lineup, skipping.", "red");
             return;
         }
 
-        // Build outcome list sorted descending by slot so prereq filling
-        // always works from the highest slot downward, avoiding collisions
-        int [int] rawSlots   = {0: bbYR, 1: bbFreeKill, 2: bbBanish};
-        string [int] rawPitches = {0: "1", 1: "3",        2: "2"};
+        // Assigning other pitches
+        int [int] pitchOrder   = {1: YRPitchNum, 2: BanishPitchNum, 3: FKPitchNum};
+        string [int] pitchChoice = {1: "1", 2: "2",        3: "3"};
 
-        // Insertion sort descending — 3 elements so cost is negligible
-        for i from 0 to 2 {
-            for j from 0 to (1 - i) {
-                if (rawSlots[j] < rawSlots[j+1]) {
-                    int tmpS = rawSlots[j];   rawSlots[j]   = rawSlots[j+1]; rawSlots[j+1]   = tmpS;
-                    string tmpP = rawPitches[j]; rawPitches[j] = rawPitches[j+1]; rawPitches[j+1] = tmpP;
+        //Ordering pitches from latest to earliest
+        for i from 1 to 3 {
+            for j from 1 to (3 - i) {
+                if (pitchOrder[j] < pitchOrder[j+1]) {
+                    int tmpS = pitchOrder[j];   pitchOrder[j]   = pitchOrder[j+1]; pitchOrder[j+1]   = tmpS;
+                    string tmpP = pitchChoice[j]; pitchChoice[j] = pitchChoice[j+1]; pitchChoice[j+1] = tmpP;
                 }
             }
         }
 
-        foreach i in rawSlots {
-            if (rawSlots[i] > 0)
-                fillPrereqs(rawSlots[i], rawPitches[i]);
+        foreach i in pitchOrder {
+            if (pitchOrder[i] > 0)
+                fillPrereqs(pitchOrder[i], pitchChoice[i]);
         }
 
-        // Execute all 9 pitches then confirm
         visit_url("inventory.php?pwd&action=pball&pwd=" + my_hash() + "&action=pball", false);
         for x from 1 to 9 {
             string pitch = get_property("pitchNum" + x);
