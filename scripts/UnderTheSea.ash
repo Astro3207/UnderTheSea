@@ -834,20 +834,20 @@ import iotm.ash;
             use_familiar($familiar[grouper groupie]);
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize hot res,"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize hot res"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar($familiar[grouper groupie]);
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize sleaze res,"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize sleaze res"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar($familiar[grouper groupie]);
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            cli_execute("maximize spooky res,"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
+            cli_execute("maximize spooky res"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[Anemone Mine]);
         } else {
             cli_execute("maximize item drop, equip monodent of the sea");
@@ -1342,22 +1342,28 @@ void seaMonkees() {
                 + ", equip pro skateboard, equip The Eternity Codpiece, equip backup camera");
             mood("itdrop");
             adv($location[The Coral Corral]);
+        } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
+            pullSequence($item[software glitch]);
+            cli_execute("maximize item drop"
+                + ", equip " + divingHelmet()
+                + ", equip pro skateboard, equip The Eternity Codpiece");
+            mood("itdrop");
+            adv($location[The Coral Corral]);
         } else {
             mood("itdrop");
-            if (!have_skill($skill[steely-eyed squint]))
-                pullSequence($item[pulled yellow taffy]);
+            pullSequence($item[pulled yellow taffy]);
             if (!have_item($item[spring shoes]) && !have_item($item[heartstone]) && !have_item($item[stuffed yam stinkbomb]) && !have_item($item[handful of split pea soup]))
                 pullSequence($item[stuffed yam stinkbomb]);
             cli_execute("maximize item drop, equip " + divingHelmet()
                 + ", equip pro skateboard, equip The Eternity Codpiece, equip monodent"
                 + baseball_equip());
             adv($location[The Coral Corral]);
-            while (!have_item($item[cursed monkey's paw]) && (item_amount($item[sea lasso]) < 6 || item_amount($item[sea cowbell]) < 3 )){
-                mood("itdrop");
-                adv($location[The Coral Corral]);
-                if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
-                    baseballD();
-            }
+        }
+        while (!have_item($item[cursed monkey's paw]) && (item_amount($item[sea lasso]) < 6 || item_amount($item[sea cowbell]) < 3 )){
+            mood("itdrop");
+            adv($location[The Coral Corral]);
+            if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
+                baseballD();
         }
         codpiece("none");
     }
