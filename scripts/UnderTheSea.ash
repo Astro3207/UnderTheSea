@@ -257,6 +257,7 @@ import iotm.ash;
         append(out, "," + to_string(lockkey[get_property("merkinLockkeyMonster")]));
         append(out, "," + get_property("stashboxFound"));
         append(out, "," + get_property("keyTurn"));
+        append(out, "," + get_property("ascensionTime"));
 
         if (my_id() == 2813285) {
             print(out);
@@ -603,12 +604,16 @@ import iotm.ash;
         write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
         set_ccs("temp");
         set_property("battleAction", "custom combat script");
-        if (get_property("questS01OldGuy") == "unstarted")
+        if (get_property("questS01OldGuy") == "unstarted"){
+            set_property("ascensionTime",time_to_string( ));
             visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman");
+        }
         if (get_property("_photoBoothEquipment") == "0")
             cli_execute("photobooth item sheriff pistol;"
                 + " photobooth item sheriff moustache;"
                 + " photobooth item sheriff badge");
+        if (to_int(get_property("_photoBoothEquipment")) < 3)
+            abort("It seems that your clan may have an incomplete photobooth, join BAFH and rerun");
         if (my_path().id == 0){
             if (my_fullness() > (fullness_limit() - 5))
                 abort("Have at least 5 fullness");
@@ -862,6 +867,8 @@ import iotm.ash;
         } else {
             if (have_item($item[Combat lover's locket]))
                 equip($slot[acc3], $item[Combat lover's locket]);
+            if (get_property("_photocopyUsed") == "false")
+                faxbot(mon);
             if (faxbot(mon)) {
                 use($item[photocopied monster]);
                 run_combat();
@@ -1268,11 +1275,14 @@ void seaMonkees() {
             }
             while (item_amount($item[rusty rivet]) < 8){
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
+                    string conditional;
+                    if (get_property("heartstoneBanishUnlocked") == "true")
+                        conditional += ", equip heartstone";
                     mood("itdrop");
-                    cli_execute("maximize item, equip monodent, equip peridot of peril, equip really nice");
+                    cli_execute("maximize item, equip monodent, equip peridot of peril, equip really nice, equip congressional medal of insanity" + conditional);
                 } else {
                     mood("-combat");
-                    cli_execute("maximize -combat, equip monodent, equip peridot of peril, equip really nice");
+                    cli_execute("maximize -combat, equip monodent, equip peridot of peril, equip really nice, equip congressional medal of insanity");
                 }
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
             }
