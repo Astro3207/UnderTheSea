@@ -84,7 +84,10 @@ void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
     while (current_round() > 0) {
         int round = current_round();
-        use_skill($skill[saucegeyser]);
+        if (have_skill($skill[saucegeyser]))
+            use_skill($skill[saucegeyser]);
+        else
+            use_skill($skill[saucestorm]);
         if (round == current_round()) {
             loopCount += 1;
             if (loopCount > 3)
@@ -167,7 +170,18 @@ void main(int round, monster mob, string page_text) {
             }
             cleanUp();
             break;
-
+        case $location[The Wreck of the Edgar Fitzsimmons]:
+            if (mob != $monster[unholy diver]){
+                free_run(page_text, true);
+                if (mob == $monster[Mer-kin scavenger])
+                    use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
+                if (mob == $monster[Mine crab])
+                    use_skill($skill[Heartstone: %banish]);
+            }
+            darts();
+            free_kill(page_text, true);
+            cleanUp();
+            break;
         case $location[The Marinara Trench]:
         case $location[The Dive Bar]:
         case $location[Anemone Mine]:
@@ -212,6 +226,8 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Mer-Kin Outpost]:
+            if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+                throw_item($item[sea lasso]);
             if (mob == $monster[time cop]) {
                 darts();
                 cleanUp();
@@ -304,6 +320,8 @@ void main(int round, monster mob, string page_text) {
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
                         use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
+                        if (item_amount($item[pulled yellow taffy]) > 0)
+                            throw_item($item[pulled yellow taffy]);
                     } else if (item_amount($item[software glitch]) > 0){
                         throw_item($item[software glitch]);
                         if (last_monster() == $monster[Bugged bugbear]){
@@ -316,7 +334,7 @@ void main(int round, monster mob, string page_text) {
                     free_kill(page_text, true);
                     cleanUp();
                 }
-            } else if (item_amount($item[sea cowbell]) >= 2) {
+            } else if (item_amount($item[sea cowbell]) >= 3 && to_int(get_property("lassoTrainingCount")) == 20) {
                 if (mob.phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
                 if (mob == $monster[wild seahorse]) {
@@ -354,12 +372,27 @@ void main(int round, monster mob, string page_text) {
                     free_kill(page_text, false);
                     cleanUp();
                 }
+            } else {
+                if (mob == $monster[wild seahorse]) {
+                    runaway( );
+                } else if (mob == $monster[mer-kin rustler]){
+                    if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
+                        use_skill($skill[heartstone: %banish]);
+                    } else {
+                        free_run(page_text, true);
+                    }
+                } else if (mob == $monster[sea cow]){
+                    if (item_amount($item[sea cowbell]) < 3){
+                        cleanUp();
+                    }
+                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+                }
             }
             break;
 
         case $location[The Caliginous Abyss]:
             if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
-                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]))
+                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_item($item[book of facts]) && have_familiar($familiar[patriotic eagle]))
                     throw_item($item[waffle]);
                 else 
                     cleanUp();
@@ -532,6 +565,31 @@ void main(int round, monster mob, string page_text) {
             use_skill($skill[raise backup dancer]);
             use_skill($skill[raise backup dancer]);
             cleanUp();
+            break;
+
+        case $location[Mer-kin Temple]:
+            if (mob == $monster[Yog-Urt, Elder Goddess of Hatred]){
+                if (my_maxhp() > 311)
+                    abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
+                throw_items($item[crayon shavings], $item[mer-kin healscroll]);
+                throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
+                throw_item($item[sea gel]);
+                if (equipped_amount($item[mer-kin prayerbeads]) < 3)
+                    throw_item($item[New Age healing crystal]);
+                if (equipped_amount($item[mer-kin prayerbeads]) < 2)
+                    throw_item($item[soggy used band-aid]);
+                cleanUp();
+            }
+            if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
+                for i from 1 to 4
+                    throw_items($item[crayon shavings], $item[crayon shavings]);
+                while (current_round() > 0)
+                    attack();
+            }
+            if (mob == $monster[Dad Sea Monkee]){
+                cli_execute("dad");
+                abort("execute spells in the above order, can use shrap instead of toynado and volcanometeor instead of awesome balls of fire");
+            }
             break;
     }
 
