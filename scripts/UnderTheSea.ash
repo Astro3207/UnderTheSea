@@ -258,6 +258,7 @@ import iotm.ash;
         append(out, "," + get_property("stashboxFound"));
         append(out, "," + get_property("keyTurn"));
         append(out, "," + get_property("ascensionTime"));
+        append(out, "," + get_property("seahorseName"));
 
         if (my_id() == 2813285) {
             print(out);
