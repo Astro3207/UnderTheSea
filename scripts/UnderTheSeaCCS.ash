@@ -195,6 +195,10 @@ void main(int round, monster mob, string page_text) {
                 }
                 cleanUp();
             }
+            if (mob == $monster[mer-kin miner]){
+                steal();
+                use_if_have_skill(page_text,$skill[swoop like a bat]);
+            }
             if ((mob == $monster[giant squid]
                 && !contains_text(get_property("trackedMonsters"), "giant squid"))
                 || (mob == $monster[Mer-kin tippler]
@@ -354,14 +358,21 @@ void main(int round, monster mob, string page_text) {
                                         cleanUp();
                                 }
                                 free_run(page_text, true);
+                                if (mob == $monster[mer-kin rustler]){
+                                    if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
+                                        use_skill($skill[heartstone: %banish]);
+                                    } 
+                                } else if (mob == $monster[sea cowboy]){
+                                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+                                } else if (mob == $monster[sea cow]){
+                                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+                                }
                             }
                     }
                     if (item_amount($item[waffle]) > 0
                         && !contains_text(get_property("_lastCombatActions"), "it11311")) {
                         throw_item($item[waffle]);
                         run_combat();
-                    } else if (item_amount($item[waffle]) == 0) {
-                        abort("Ran out of waffles — banish 2 of 3 coral corral monsters, pull a waffle, and rerun");
                     }
                     if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
@@ -387,6 +398,7 @@ void main(int round, monster mob, string page_text) {
                     }
                     use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
                 }
+                cleanUp();
             }
             break;
 
@@ -411,15 +423,13 @@ void main(int round, monster mob, string page_text) {
                     && get_property("corralUnlocked") == "true") {
                     if ($monsters[slithering thing, eye in the darkness] contains mob)
                         use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
-                    else
-                        abort("Hit an odd mob at caliginous abyss — should not have happened with peridot");
                 }
-                free_kill(page_text, false);
                 if (mob == $monster[school of many]) {
                     use_if_have_skill(page_text, $skill[Sea *dent: Throw a Lightning Bolt]);
                     for i from 1 to 4
                         use_skill($skill[garbage nova]);
                 }
+                free_kill(page_text, false);
                 cleanUp();
             }
             break;
