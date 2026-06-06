@@ -865,6 +865,8 @@ import iotm.ash;
         visit_url("monkeycastle.php?who=1");
         if (available_amount($item[black glass]) == 0) 
             buy($coinmaster[Big Brother], 1, $item[black glass]);
+        if (available_amount($item[damp old boot]) == 0) 
+            buy($coinmaster[Big Brother], 1, $item[damp old boot]);
         visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman"
             + "&preaction=pickreward&whichreward=6313");
     }
@@ -1209,10 +1211,8 @@ void seaMonkees() {
         if (my_path().id == 55){
             if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
                 baseballD();
-            if (available_amount($item[black glass]) == 0 && lassoShadow() == true) {
+            if (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 && get_property("_monsterHabitatsFightsLeft") == "0"){
                 oldGuy();
-            }
-            if (!MomNCyber() && to_int(get_property("_monsterHabitatsRecalled")) == 2 && get_property("_monsterHabitatsFightsLeft") == "0" && have_item($item[black glass])){
                 pullSequence($item[Elf Guard SCUBA tank]);
                 recallCaliginous();
             }
