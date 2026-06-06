@@ -589,6 +589,9 @@ void main(int round, monster mob, string page_text) {
                 if (equipped_amount($item[mer-kin prayerbeads]) < 2)
                     throw_item($item[soggy used band-aid]);
                 cleanUp();
+                attack();
+                attack();
+                attack();
             }
             if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
                 for i from 1 to 4
