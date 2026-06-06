@@ -229,12 +229,14 @@ void main(int whichchoice, string page) {
             int [location] banderMonster = {
                 $location[An Octopus's Garden]:      740,
                 $location[The Wreck of the Edgar Fitzsimmons]:      745,
+                $location[The Sleazy Back Alley]:        159,
                 $location[The Overgrown Lot]:        1752,
                 $location[The Coral Corral]:         772,
                 $location[The Marinara Trench]:      762,
                 $location[Anemone Mine]:             767,
                 $location[The Dive Bar]:             768,
                 $location[Cyberzone 1]:             2458,
+                $location[Mer-kin Library]:        840,
                 $location[the caliginous abyss]:    1373,
                 $location[mer-kin elementary school]: 838
             };
