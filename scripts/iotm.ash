@@ -193,7 +193,7 @@ boolean banishUsedAtYourLocation(string banisher) {
 item banishGear(location loc) {
     item it;
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
-        if (appearance_rates(loc)[banished(banMap[ite].pref)] > 0) {
+        if (appearance_rates(loc)[banished(banMap[ite].pref)] > 0 && have_item(ite)) {
             it = ite;
             break;
         }
@@ -215,13 +215,19 @@ skill combatBan() {
 }
 
 // ─── EVERFULL DART ────────────────────────────────────────────────────────────
-
+string perks = get_property("everfullDartPerks");
 boolean bullseyeReady() {
-    string perks = get_property("everfullDartPerks");
+    return (count_substring(perks, "25% Better bullseye targeting") >= 2);
+}
+
+boolean everfullReady(){
+    if (!bullseyeReady())
+        return false;
     return (contains_text(perks, "You are less impressed by bullseyes")
             && contains_text(perks, "Bullseyes do not impress you much"))
         || count_substring(perks, "Bullseyes do not impress you much") >= 2
         || count_substring(perks, "You are less impressed by bullseyes") >= 2;
+    return true;
 }
 
 void darts() {
@@ -306,36 +312,6 @@ void codpiece(string input) {
     cli_execute("refresh all");
 }
 
-// Cookbookbat
-void cookbookbat(){
-    if (get_property("_cookbookbatQuestMonster") != "" && get_property("_cookbookbatQuestIngredient") == "Yeast of Boris" && my_familiar() == $familiar[cookbookbat]){
-        set_property("battleAction", "skill saucegeyser");  
-        location CBBLoc = to_location(get_property("_cookbookbatQuestLastLocation"));
-        monster CBBMon = to_monster(get_property("_cookbookbatQuestMonster"));
-        if (!contains_text(get_property("_perilLocations"), to_string(to_int(CBBLoc))) && CBBLoc!= $location[the primordial soup]){
-            equip($slot[acc3],$item[peridot of peril]);
-            set_property("choiceAdventure1557","1&bandersnatch=" + to_int(CBBMon));
-            adv1(CBBLoc,0,"");
-        } else if (have_effect($effect[everything looks green]) == 0 && have_effect($effect[Everything looks Beige]) == 0){
-            equip($slot[acc2],$item[spring shoes]);
-            set_property("battleAction", "skill spring away");
-            visit_url("adventure.php?snarfblat=" + to_int(CBBLoc));
-            if (get_property("lastEncounter") == get_property("_cookbookbatQuestMonster")){
-                set_property("battleAction", "skill saucegeyser");  
-                run_combat();
-            } else {
-                run_choice(-1);
-                set_property("battleAction", "skill saucegeyser");
-                visit_url("inventory.php?action=parachute");
-                visit_url("choice.php?option=1&whichchoice=1543&monid=" + to_int(CBBMon));
-                run_combat();
-                set_property("battleAction", "custom combat script");
-            }
-        }
-    }
-    set_property("battleAction", "custom combat script");
-}
-
 // ─── LEPRECONDO ───────────────────────────────────────────────────────────────
 
 string [int] lepRoomToNum = {
@@ -413,12 +389,6 @@ boolean free_Run() {
         return true;
     if (have_effect($effect[everything looks green]) == 0)
         return true;
-    if (item_amount($item[&quot;I Voted!&quot; sticker]) > 0
-        && total_turns_played() % 11 == 1
-        && to_int(get_property("_voteFreeFights")) < 3)
-        return true;
-    if (item_amount($item[cosmic bowling ball]) > 0)
-        return true;
     return false;
 }
 
@@ -437,6 +407,10 @@ boolean wanderer() {
     // Fixed: was incorrectly checking clubEmNextWeekMonster for the VHS tape condition
     if (total_turns_played() >= to_int(get_property("spookyVHSTapeMonsterTurn")) + 8
         && get_property("spookyVHSTapeMonster") != "")
+        return true;
+        if (item_amount($item[&quot;I Voted!&quot; sticker]) > 0
+        && total_turns_played() % 11 == 1
+        && to_int(get_property("_voteFreeFights")) < 3)
         return true;
     return false;
 }
