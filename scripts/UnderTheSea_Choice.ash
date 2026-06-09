@@ -230,6 +230,7 @@ void main(int whichchoice, string page) {
                 $location[An Octopus's Garden]:      740,
                 $location[The Wreck of the Edgar Fitzsimmons]:      745,
                 $location[The Sleazy Back Alley]:        159,
+                $location[The Haunted Pantry]:        145,
                 $location[The Overgrown Lot]:        1752,
                 $location[The Coral Corral]:         772,
                 $location[The Marinara Trench]:      762,
