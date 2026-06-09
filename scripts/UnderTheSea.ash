@@ -114,6 +114,13 @@ import iotm.ash;
         return my_familiar().underwater ? "" : ", equip little bitty";
     }
 
+    void blackGlass(){
+        cli_execute("equip really nice; familiar grouper groupie");
+        visit_url("monkeycastle.php?who=1");
+        if (available_amount($item[black glass]) == 0) 
+            buy($coinmaster[Big Brother], 1, $item[black glass]);
+    }
+
 // ─── CANDY RICH BLOCK MAP ─────────────────────────────────────────────────────
 
     void useMapIfAvailable() {
@@ -470,24 +477,10 @@ import iotm.ash;
                 }
             }
             if (have_effect($effect[fishy]) == 0 && have_effect($effect[Driving Waterproofly]) == 0) {
-                if (have_item($item[fishy pipe])
-                    && item_amount($item[closed-circuit pay phone]) > 0
-                    && have_item($item[Monodent of the Sea])
-                    && have_item($item[Platinum Yendorian Express Card])
-                    && (get_property("_shadowAffinityToday") == "false"
-                        || have_effect($effect[shadow affinity]) > 0)
-                    && (to_int(get_property("_bczSweatBulletsCasts")) < 7 || item_amount($item[mer-kin stashbox]) > 0)) {
-                    if (get_property("_fishyPipeUsed") == "false") {
+                if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false"){
                         if (item_amount($item[fishy pipe]) == 0)
                             cli_execute("pull fishy pipe");
                         use($item[fishy pipe]);
-                    } else if ((get_property("_shadowAffinityToday") == "false" || have_effect($effect[shadow affinity]) > 0)
-                        && lowShiny == false) {
-                        if (have_effect($effect[shadow affinity]) == 0)
-                            shadowRift();
-                        while (have_effect($effect[fishy]) == 0 && have_effect($effect[shadow affinity]) > 0)
-                            shadowRift();
-                    }
                 } else if (!contains_text(get_property("_roninStoragePulls"), "10360")) {
                     pullSequence($item[fish sauce]);
                     chew($item[fish sauce]);
@@ -635,6 +628,8 @@ import iotm.ash;
             if (my_spleen_use() > (spleen_limit() - 5))
                 abort("Have at least 5 spleen");
         }
+        if (available_amount($item[black glass]) == 0 && item_amount($item[sand dollar]) > 13)
+            blackGlass();
         if (my_path().id == 55){
             if (get_property("questM05Toot") == "started") {
                 council();
@@ -862,9 +857,7 @@ import iotm.ash;
                 adv($location[The Mer-Kin Outpost]);
             }
         }
-        visit_url("monkeycastle.php?who=1");
-        if (available_amount($item[black glass]) == 0) 
-            buy($coinmaster[Big Brother], 1, $item[black glass]);
+        blackGlass();
         if (available_amount($item[damp old boot]) == 0) 
             buy($coinmaster[Big Brother], 1, $item[damp old boot]);
         visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman"
@@ -1200,14 +1193,14 @@ void seaMonkees() {
             cli_execute("maximize -combat, equip monodent"
                 + swimmingTrunks() + bathysphere() + freeRun() + freeKill() + conditional);
             if (get_property("keyFound") != "false")
-                set_property("keyFound", "false");
+                set_property("kFeyFound", "false");
         }
         adv($location[The Mer-Kin Outpost]);
 
         if (item_amount($item[Grandma's Note]) > 0
             && item_amount($item[Grandma's Fuchsia Yarn]) > 0
             && item_amount($item[Grandma's Chartreuse Yarn]) > 0)
-            cli_execute("grandpa note");
+            cli_execute("equip really nice; familiar grouper groupie; grandpa note");
         if (my_path().id == 55){
             if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
                 baseballD();
@@ -2042,7 +2035,7 @@ void sorceress() {
                 cli_execute("maximize spell damage percent, mys;"
                     + " outfit mer-kin gladiator;"
                     + " equip acc3 congressional medal of insanity;"
-                    + " equip unwrapped knock-off retro;"
+                    + if_equip($item[unwrapped knock-off retro superhero cape])
                     + " retrocape heck kill");
             }
             codpiece("none");
