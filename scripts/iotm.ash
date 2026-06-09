@@ -293,8 +293,15 @@ void trainset() {
 void codpiece(string input) {
     visit_url("inventory.php?action=docodpiece");
     if (input == "none") {
-        for slots from 5 to 1 {
-            visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
+        string verify = visit_url("inventory.php?action=docodpiece");
+        if (!contains_text(verify, " mounted in slot #"))
+            return;
+        for slots from 1 to 5 {
+            if (contains_text(verify," Empty slot #" + slots )){
+                continue;
+            } else { 
+                visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
+            }
         }
     } else {
         string [int] slots = split_string(input, ",");
@@ -309,7 +316,7 @@ void codpiece(string input) {
                 abort("Codpiece slot incorrect");
         }
     }
-    cli_execute("refresh all");
+    cli_execute("refresh inv");
 }
 
 // ─── LEPRECONDO ───────────────────────────────────────────────────────────────
