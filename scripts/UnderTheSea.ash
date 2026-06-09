@@ -41,8 +41,8 @@ import iotm.ash;
 
     item tailpiece() {
         item it;
-        foreach ite in $items[teflon swim fins, crappy Mer-kin tailpiece,
-            Mer-kin scholar tailpiece, Mer-kin gladiator tailpiece] {
+        foreach ite in $items[crappy Mer-kin tailpiece,
+            Mer-kin scholar tailpiece, Mer-kin gladiator tailpiece, teflon swim fins] {
             if (item_amount(ite) > 0 || have_equipped(ite))
                 it = ite;
         }
@@ -1742,19 +1742,6 @@ void sorceress() {
                         adv($location[mer-kin library]);
                     }
                     print ("turns played? " + turns_played(), "orange");
-                    while (get_property("catalogChecked") != "true" && turns_played() > 13 && my_id() == 2813285){
-                        string conditional;
-                        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
-                            conditional += ", equip backup camera";
-                        if (!banishUsedAtYourLocation("Spring Kick"))
-                            conditional += if_equip($item[spring shoes]);
-                        cli_execute("maximize item drop, equip mer-kin scholar mask"
-                            + ", equip mer-kin scholar tailpiece"
-                            + ", equip monodent of the sea"
-                            + ", equip blood cubic zirconia" + conditional);
-                        useMapIfAvailable();
-                        adv($location[mer-kin library]);
-                    }
                 }
             }
 
