@@ -1877,7 +1877,7 @@ void sorceress() {
             use_familiar($familiar[grouper groupie]);
             cli_execute("maximize spell damage percent, hot damage, cold damage"
                 + ", spooky damage, sleaze damage, stench damage"
-                + ", equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece"
+                + ", equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece, -equip tiny yam cannon"
                 + if_equip($item[bat wings])
                 + if_equip($item[toy cupid bow]));
             equip($slot[acc1], $item[mer-kin prayerbeads]);
