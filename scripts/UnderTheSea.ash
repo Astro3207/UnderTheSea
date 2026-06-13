@@ -1653,7 +1653,7 @@ void sorceress() {
                 string conditional;
                 if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
                     conditional += ", equip backup camera";
-                else
+                else if (have_skill($skill[Double-Fisted Skull Smashing]))
                     conditional += ", equip monodent of the sea";
                 if (item_amount($item[mer-kin bunwig]) == 0
                     && !have_equipped($item[mer-kin bunwig]))
@@ -1683,7 +1683,7 @@ void sorceress() {
                 string conditional;
                 if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
                     conditional += ", equip backup camera";
-                else
+                else if (have_skill($skill[Double-Fisted Skull Smashing]))
                     conditional += ", equip monodent of the sea";
                 if (to_int(get_property("_clubEmBattlefieldUsed")) < 5)
                     conditional += if_equip($item[legendary seal-clubbing club]);
