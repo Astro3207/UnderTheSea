@@ -1019,7 +1019,10 @@ import iotm.ash;
     void farmPrayerbeads(){
         mood("-combat");
         use_familiar("-combat");
-        cli_execute("maximize -combat, equip really nice" + bathysphere());
+        string conditional;
+        if (lowShiny == true)
+            conditional += ", equip congressional medal";
+        cli_execute("maximize -combat, equip really nice" + bathysphere() + conditional);
         adv($location[the mer-kin outpost]);
     }
 
