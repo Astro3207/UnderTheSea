@@ -93,6 +93,21 @@ void cleanUp() {
             if (loopCount > 3)
                 abort("May be stuck in an infinite saucegeyser loop");
         }
+        if (my_mp() < 24)
+            break;
+    }
+}
+
+void attackCleanUp() {
+    int loopCount = 0;
+    while (current_round() > 0) {
+        int round = current_round();
+        attack();
+        if (round == current_round()) {
+            loopCount += 1;
+            if (loopCount > 3)
+                abort("May be stuck in an infinite attack loop");
+        }
     }
 }
 
@@ -145,7 +160,7 @@ void main(int round, monster mob, string page_text) {
             }
             if (mob == $monster[tumbleweed])
                 abort("Unexpected mob encountered in shadow rift");
-            if (get_property("_curveballFightsLeft").to_int() == 0 || get_property("seahorseName") != "")
+            if (get_property("_curveballFightsLeft").to_int() == 0 || get_property("seahorseName") != "" || !can_still_steal() || mob != $monster[shadow slab])
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             darts();
             cleanUp();
@@ -217,8 +232,7 @@ void main(int round, monster mob, string page_text) {
             }
             if ((mob != $monster[giant squid] || item_amount($item[comb jelly]) == 0)
                 && mob != $monster[Mer-kin tippler]
-                && (mob != $monster[Mer-kin miner]
-                    || item_amount($item[mer-kin digpick]) == 0)) {
+                && (mob != $monster[Mer-kin miner] || item_amount($item[mer-kin digpick]) > 0)) {
                 if (have_item($item[cosmic bowling ball]))
                     free_run(page_text, true);
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
@@ -297,7 +311,9 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The skate park]:
-            abort("Hit a combat in skate park — that isn't supposed to happen");
+            attack();
+            attack();
+            cleanUp();
             break;
 
         case $location[cyberzone 1]:
@@ -419,8 +435,7 @@ void main(int round, monster mob, string page_text) {
                         school of many] contains mob)
                     throw_item($item[spooky VHS tape]);
                 if (get_property("_monsterHabitatsRecalled") != "3"
-                    && get_property("_monsterHabitatsFightsLeft") == "0"
-                    && get_property("corralUnlocked") == "true") {
+                    && get_property("_monsterHabitatsFightsLeft") == "0") {
                     if ($monsters[slithering thing, eye in the darkness] contains mob)
                         use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
                 }
@@ -562,6 +577,7 @@ void main(int round, monster mob, string page_text) {
             if (equipped_amount($item[mer-kin prayerbeads]) < 2)
                 throw_item($item[soggy used band-aid]);
             cleanUp();
+            attackCleanUp();
             break;
 
         case $location[Mer-kin Temple (Left Door)]:
