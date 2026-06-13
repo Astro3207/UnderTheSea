@@ -197,7 +197,13 @@ void main(int whichchoice, string page) {
             break;
 
         case 1500:
-            run_choice(have_effect($effect[Shadow Waters]) == 0 ? 2 : 3);
+            if (have_effect($effect[Shadow Waters]) == 0){
+                run_choice(2);
+            } else if (get_property("_shadowForestLooted") == "false"){
+                run_choice(3);
+            } else {
+                run_choice(2);
+            }
             break;
 
         // ── Everfull dart perk picker ─────────────────────────────────────
