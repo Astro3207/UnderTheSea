@@ -1056,6 +1056,28 @@ import iotm.ash;
             $item[mer-kin hallpass]);
     }
 
+void combatScrollHint(){
+    if (get_property("dreadScroll5") == "0"){
+        while (item_amount($item[mer-kin killscroll]) == 0){
+            if (lowShiny == false && pulls_remaining() > 0)
+                pullSequence($item[mer-kin killscroll]);
+            else
+                farmPrayerbeads();
+        }
+    }
+    if (get_property("dreadScroll2") == "0"){
+        while (item_amount($item[mer-kin healscroll]) == 0){
+            if (lowShiny == false && pulls_remaining() > 0)
+                pullSequence($item[mer-kin healscroll]);
+            else
+                farmPrayerbeads();
+        }
+    }
+    if (get_property("dreadScroll5") == "0" || get_property("dreadScroll2") == "0"){
+        gymnasium();
+    }
+}
+
 // ─── SEA MONKEES ──────────────────────────────────────────────────────────────
 
 void seaMonkees() {
@@ -1821,21 +1843,29 @@ void sorceress() {
                     farmPrayerbeads();
                 }
             }
-            cli_execute("uneffect the sonata of sneakiness");
-            if (contains_text(get_property("leprecondoInstalled"), "11")
-                && item_amount($item[Leprecondo]) > 0)
-                leprecondo("22,24,12,8,13,15,10,4,5,6");
 
             // Verify all non-scroll-7 clues are found
             for x from 1 to 8 {
                 if (x == 7) continue;
                 // Fixed: was comparing string to int, and had capital X bug on x==5
                 if (get_property("dreadScroll" + x) == "0") {
-                    if (x == 2) print("Missed the healscroll hint", "red");
-                    if (x == 5) print("Missed the killscroll hint", "red");
-                    abort("Somehow missed dreadScroll" + x + " clue");
+                    if (x == 2) {
+                        print("Missed the healscroll hint", "red");
+                        combatScrollHint();
+                    } else if (x == 5) {
+                        print("Missed the killscroll hint", "red");
+                        combatScrollHint();
+                        continue;
+                    } else {
+                        abort("Missed dreadscroll " + x + " hint");
+                    }
                 }
             }
+
+            cli_execute("uneffect the sonata of sneakiness");
+            if (contains_text(get_property("leprecondoInstalled"), "11")
+                && item_amount($item[Leprecondo]) > 0)
+                leprecondo("22,24,12,8,13,15,10,4,5,6");
 
             while (get_property("isMerkinHighPriest") == "false") {
                 if (turns_played() <= 17 && my_id() == 2813285 && get_property("dreadScroll7") == "0"){
