@@ -56,7 +56,13 @@ void main(int whichchoice, string page) {
         case 314: int [int] raider = {0:1, 1:2, 2:3}; stashboxCheck(raider); break;  // raider:   1→2→3
         case 315: 
             if (get_property("intenseCurrents") == "true"){
-                run_choice(3);
+                if (available_amount($item[mer-kin prayerbeads]) < 3) {
+                    run_choice(3);
+                } else if (available_amount($item[mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"){
+                    run_choice(1);
+                } else if (available_amount($item[mer-kin healscroll]) == 0 && get_property("dreadScroll2") == "0") {
+                    run_choice(2);
+                }
             } else {
                 int [int] healer = {0:3, 1:1, 2:2}; stashboxCheck(healer); 
             }
