@@ -547,6 +547,14 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Gymnasium]:
+            while (get_property("dreadScroll2") == "0"
+                && item_amount($item[mer-kin healscroll]) > 0
+                && current_round() > 0)
+                throw_item($item[mer-kin healscroll]);
+            while (get_property("dreadScroll5") == "0"
+                && item_amount($item[mer-kin killscroll]) > 0
+                && current_round() > 0)
+                throw_item($item[mer-kin killscroll]);
             foreach sk in $skills[Launch spikolodon spikes, MCHUGELARGE avalanche]
                 use_if_have_skill(page_text, sk);
             if (free_monster(mob)) {
