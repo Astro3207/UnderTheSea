@@ -1023,6 +1023,36 @@ import iotm.ash;
         adv($location[the mer-kin outpost]);
     }
 
+    void getCheatsheet(){
+        put_closet(item_amount($item[mer-kin hallpass]),
+            $item[mer-kin hallpass]);
+        use_familiar($familiar[grouper groupie]);
+        string conditional;
+        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+            conditional += ", equip backup camera";
+        else if (have_skill($skill[Double-Fisted Skull Smashing]))
+            conditional += ", equip monodent of the sea";
+        if (item_amount($item[mer-kin bunwig]) == 0
+            && !have_equipped($item[mer-kin bunwig]))
+            conditional += ", hat drop";
+        string squintEquip = have_effect($effect[Steely-Eyed Squint]) > 0
+            ? "blood cubic zirc" : "blood cubic zirconia";
+        cli_execute("maximize item drop, equip " + divingHelmet()
+            + ", equip " + tailpiece()
+            + ", equip legendary seal-clubbing club"
+            + ", equip " + squintEquip
+            + if_equip($item[M&ouml;bius ring])
+            + if_equip($item[toy cupid bow])
+            + conditional);
+        if (get_property("merkinElementaryTeacherUnlock") == "false")
+            mood("noncom");
+        mood("itdrop");
+        useMapIfAvailable();
+        adv($location[mer-kin elementary school]);
+        put_closet(item_amount($item[mer-kin hallpass]),
+            $item[mer-kin hallpass]);
+    }
+
 // ─── SEA MONKEES ──────────────────────────────────────────────────────────────
 
 void seaMonkees() {
@@ -1232,7 +1262,8 @@ void seaMonkees() {
                 baseballD();
             if (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40){
                 oldGuy();
-                pullSequence($item[Elf Guard SCUBA tank]);
+                if (available_amount($item[Elf Guard SCUBA tank]) == 0)
+                    pullSequence($item[Elf Guard SCUBA tank]);
                 recallCaliginous();
             }
         }
@@ -1645,35 +1676,8 @@ void sorceress() {
             if (my_path().id == 0){
                 cli_execute("acquire 10 mer-kin cheatsheet, 10 mer-kin wordquiz, mer-kin killscroll, mer-kin healscroll, mer-kin knucklebone");
             }
-            while (item_amount($item[mer-kin cheatsheet]) < 9
-                && get_property("merkinVocabularyMastery") == "0") {
-                put_closet(item_amount($item[mer-kin hallpass]),
-                    $item[mer-kin hallpass]);
-                use_familiar($familiar[grouper groupie]);
-                string conditional;
-                if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
-                    conditional += ", equip backup camera";
-                else if (have_skill($skill[Double-Fisted Skull Smashing]))
-                    conditional += ", equip monodent of the sea";
-                if (item_amount($item[mer-kin bunwig]) == 0
-                    && !have_equipped($item[mer-kin bunwig]))
-                    conditional += ", hat drop";
-                string squintEquip = have_effect($effect[Steely-Eyed Squint]) > 0
-                    ? "blood cubic zirc" : "blood cubic zirconia";
-                cli_execute("maximize item drop, equip " + divingHelmet()
-                    + ", equip " + tailpiece()
-                    + ", equip legendary seal-clubbing club"
-                    + ", equip " + squintEquip
-                    + if_equip($item[M&ouml;bius ring])
-                    + if_equip($item[toy cupid bow])
-                    + conditional);
-                if (get_property("merkinElementaryTeacherUnlock") == "false")
-                    mood("noncom");
-                mood("itdrop");
-                useMapIfAvailable();
-                adv($location[mer-kin elementary school]);
-                put_closet(item_amount($item[mer-kin hallpass]),
-                    $item[mer-kin hallpass]);
+            while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0") {
+                getCheatsheet();
             }
 
             // Unlock teacher via NC if not yet done
@@ -1727,11 +1731,14 @@ void sorceress() {
             // Vocabulary mastery grind
             while (to_int(get_property("merkinVocabularyMastery")) < 100) {
                 if (item_amount($item[mer-kin wordquiz]) > 0) {
-                    if (item_amount($item[mer-kin cheatsheet]) == 0)
+                    if (item_amount($item[mer-kin cheatsheet]) == 0 && pulls_remaining() > 0){
                         pullSequence($item[mer-kin cheatsheet]);
+                    } else if (item_amount($item[mer-kin cheatsheet]) == 0 && pulls_remaining() == 0){
+                        while (item_amount($item[mer-kin cheatsheet]) == 0)
+                            getCheatsheet();
+                    }
                     use($item[mer-kin wordquiz]);
-                } else if (to_int(get_property("merkinVocabularyMastery")) == 90
-                    && item_amount($item[mer-kin wordquiz]) == 0) {
+                } else if (to_int(get_property("merkinVocabularyMastery")) == 90 && item_amount($item[mer-kin wordquiz]) == 0 && pulls_remaining() > 0) {
                     pullSequence($item[mer-kin wordquiz]);
                 } else {
                     cli_execute("maximize item drop, equip " + divingHelmet()
