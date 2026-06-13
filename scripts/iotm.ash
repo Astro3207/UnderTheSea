@@ -50,7 +50,7 @@ string LastAdvTxt() {
 
 void pullSequence(item it) {
     if (pulls_remaining() == 0)
-        abort("Not enough pulls to pull " + it);
+        return;
     if (!contains_text(get_property("_roninStoragePulls"), to_int(it))) {
         if (storage_amount(it) == 0)
             buy_using_storage(it);
@@ -78,6 +78,8 @@ void NCforce() {
                 if (!contains_text(get_property("_roninStoragePulls"), to_int(it))){
                     if (it == $item[Clara's Bell] && storage_amount(it) == 0)
                         continue;
+                    if (pulls_remaining() == 0)
+                        return;
                     pullSequence(it);
                     if (it == $item[Clara's bell])
                         use (it);
@@ -553,6 +555,7 @@ void starter(){
     set_ccs ("CCCS");
     set_property("betweenBattleScript","preadventure.ash");
     set_property("afterAdventureScript","postadventure.ash");
+    set_property("choiceAdventureScript", "generalChoice.ash");
 }
 void finisher() {
     set_property("script", "");
