@@ -369,6 +369,8 @@ import iotm.ash;
             cli_execute("restore HP");
         if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus]))
             use_skill($skill[Tongue of the Walrus]);
+        else if (have_effect($effect[beaten up]) > 0)
+            cli_execute("rest");
     }
 
 // ─── SHADOW RIFT ──────────────────────────────────────────────────────────────
