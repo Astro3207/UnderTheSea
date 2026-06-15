@@ -607,8 +607,15 @@ import iotm.ash;
             }
         }
 
-        float hpTar = min(1, 500 / to_float(my_maxhp()));
         float mpTar = min(1, 250 / to_float(my_maxmp()));
+        float hpTar;
+        if (my_location() == $location[mer-kin colosseum]){
+            hpTar = 1;
+        } else if (my_location() == $location[mer-kin gymnasium]){
+            hpTar = min(1, 800 / to_float(my_maxhp()));
+        } else {
+            hpTar = min(1, 500 / to_float(my_maxhp()));
+        }
         set_property("hpAutoRecovery",       hpTar * 0.75);
         set_property("hpAutoRecoveryTarget", hpTar);
         set_property("mpAutoRecovery",       mpTar * 0.5);
@@ -744,7 +751,7 @@ import iotm.ash;
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
                 scale-mail underwear, Congressional Medal of Insanity,
                 Flash Liquidizer Ultra Dousing Accessory] {
-                if (item_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
+                if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
                     if ($items[sea lasso] contains it && lowShiny == true)
                         continue;
                     if (storage_amount(it) == 0)
