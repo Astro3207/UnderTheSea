@@ -592,8 +592,10 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Left Door)]:
-            for i from 1 to 4
-                throw_items($item[crayon shavings], $item[crayon shavings]);
+            if (have_effect($effect[null afternoon]) == 0){
+                for i from 1 to 4
+                    throw_items($item[crayon shavings], $item[crayon shavings]);
+            }
             while (current_round() > 0)
                 attack();
             break;
