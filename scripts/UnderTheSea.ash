@@ -2068,6 +2068,12 @@ void sorceress() {
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 cli_execute("acquire 8 crayon shaving");
+            else if (item_amount($item[crayon shavings]) < 8 && have_effect($effect[null afternoon]) == 0)
+                abort("Less than 8 crayon shavings, pull null-day exploit and use it and rerun");
+            foreach ef in $effects[scarysauce]{
+                if (have_effect(ef) > 0)
+                    cli_execute("uneffect ef");
+            }
             use_familiar($familiar[grouper groupie]);
             cli_execute("maximize damage absorption, mus, equip mer-kin gladiator mask, equip mer-kin gladiator tailpiece; recover hp"
                 + if_equip($item[bat wings]));
