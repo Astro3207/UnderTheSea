@@ -586,11 +586,12 @@ import iotm.ash;
                     + ", equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol"
                     + bathysphere());
             } else {
-                cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear"
-                    + ", equip " + divingHelmet()
-                    + ", equip black glass, equip blood cubic zirconia"
-                    + ", equip peridot"
-                    + bathysphere());
+                use_familiar($familiar[grouper groupie]);
+                string conditional;
+                if (!contains_text(get_property("banishedMonsters"), "school of many"))
+                    conditional += ", equip monodent";
+                cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear, equip black glass, equip blood cubic zirconia, equip peridot, equip "
+                + divingHelmet() + bathysphere() + conditional);
             }
             adv1($location[The Caliginous Abyss]);
         }
@@ -881,16 +882,23 @@ import iotm.ash;
             adv($location[The Caliginous Abyss]);
     }
 
+    void getSandDollar(){
+        if (item_amount($item[mer-kin thingpouch]) > 0) {
+            use(item_amount($item[mer-kin thingpouch]), $item[mer-kin thingpouch]);
+        } else if (item_amount($item[sand penny]) >= 100){
+            buy($coinmaster[Wet Crap For Sale], 1, $item[water-logged pill]);
+        } else if (storage_amount($item[damp old wallet]) > 0 && !contains_text(get_property("_roninStoragePulls"), "6313")) {
+            pullSequence($item[damp old wallet]);
+            use($item[damp old wallet]);
+        } else {
+            use($item[11-leaf clover]);
+            adv($location[The Mer-Kin Outpost]);
+        }
+    }
+
     void oldGuy(){
-        use(item_amount($item[mer-kin thingpouch]), $item[mer-kin thingpouch]);
-        if (item_amount($item[sand dollar]) < 50) {
-            if (storage_amount($item[damp old wallet]) > 0) {
-                pullSequence($item[damp old wallet]);
-                use($item[damp old wallet]);
-            } else {
-                use($item[11-leaf clover]);
-                adv($location[The Mer-Kin Outpost]);
-            }
+        while (item_amount($item[sand dollar]) < 50) {
+            getSandDollar();
         }
         blackGlass();
         if (available_amount($item[damp old boot]) == 0 && get_property("questS01OldGuy") == "started") 
@@ -1068,7 +1076,9 @@ import iotm.ash;
 void combatScrollHint(){
     if (get_property("dreadScroll5") == "0"){
         while (item_amount($item[mer-kin killscroll]) == 0){
-            if (lowShiny == false && pulls_remaining() > 0)
+            if (item_amount($item[mer-kin thingpouch]) > 0)
+                use(item_amount($item[mer-kin thingpouch]), $item[mer-kin thingpouch]);
+            else if (lowShiny == false && pulls_remaining() > 0)
                 pullSequence($item[mer-kin killscroll]);
             else
                 farmPrayerbeads();
@@ -1693,6 +1703,8 @@ void sorceress() {
     // ── Buy crappy disguise if no tailpiece ───────────────────────────────────
     if (tailpiece() == $item[none]) {
         equipSwimTrunks();
+        while (item_amount($item[sand dollar]) < 10)
+            getSandDollar();
         cli_execute("unequip sea chaps; unequip aerated diving helmet;"
             + " acquire crappy Mer-kin mask, crappy Mer-kin tailpiece");
     }
@@ -1908,15 +1920,7 @@ void sorceress() {
                             if (get_property("_skateBuff1") == "false")
                                 visit_url("sea_skatepark.php?action=state2buff1");
                         } else if (get_property("questS02Monkees") == "step12") {
-                            cli_execute("maximize item drop"
-                                + ", equip shark jumper"
-                                + ", equip scale-mail underwear, equip "
-                                + divingHelmet()
-                                + ", equip black glass"
-                                + ", equip blood cubic zirconia"
-                                + bathysphere()
-                                + if_equip($item[M&ouml;bius ring]));
-                            adv($location[The Caliginous Abyss]);
+                            finishCaliginous();
                         } else {
                             abort("Hit a 1-in-40 situation — spend 1 non-free"
                                 + " turn somewhere and rerun script");
