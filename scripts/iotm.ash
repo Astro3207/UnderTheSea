@@ -97,54 +97,16 @@ void NCforce() {
 // ─── TRICK OR TREAT ───────────────────────────────────────────────────────────
 
 void candy(string action) {
-    int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
-    visit_url("place.php?whichplace=town&action=town_trickortreat");
-    visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
-    run_combat();
-}
-
-// ─── CYBERZONE FREE FIGHTS ────────────────────────────────────────────────────
-
-void cyberzone() {
-    while (to_int(get_property("_cyberFreeFights")) < 10) {
-        maximize("item drop", false);
-
-        if (!contains_text(get_property("banishedPhyla"), "construct")) {
-            adv1($location[cyberzone 1], 0, "");
-            continue;
-        }
-
-        // Scout zones we haven't identified yet
-        if (get_property("_cyberZone1Hacker") == "") {
-            adv1($location[cyberzone 1], 0, "");
-            set_property("_cyberZone1Hacker", last_monster());
-            continue;
-        }
-        if (get_property("_cyberZone2Hacker") == ""
-            && get_property("_cyberZone1Hacker") != "greyhat hacker") {
-            adv1($location[cyberzone 2], 0, "");
-            set_property("_cyberZone2Hacker", last_monster());
-            continue;
-        }
-        if (get_property("_cyberZone3Hacker") == ""
-            && get_property("_cyberZone1Hacker") != "greyhat hacker"
-            && get_property("_cyberZone2Hacker") != "greyhat hacker") {
-            adv1($location[cyberzone 3], 0, "");
-            set_property("_cyberZone3Hacker", last_monster());
-            continue;
-        }
-
-        // Adventure in whichever zone has the target hacker
-        location [monster] hackerZone = {
-            to_monster(get_property("_cyberZone1Hacker")): $location[cyberzone 1],
-            to_monster(get_property("_cyberZone2Hacker")): $location[cyberzone 2],
-            to_monster(get_property("_cyberZone3Hacker")): $location[cyberzone 3]
-        };
-        foreach mon in $monsters[greyhat hacker, bluehat hacker, greenhat hacker, redhat hacker, purplehat hacker] {
-            if (hackerZone contains mon) {
-                adv1(hackerZone[mon], 0, "");
-                break;
-            }
+    if (action == "fight"){
+        int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
+        visit_url("place.php?whichplace=town&action=town_trickortreat");
+        visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
+        run_combat();
+    } else if (action == "treat"){
+        while(contains_text(get_property("_trickOrTreatBlock"),"L")){
+            int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "L");
+            visit_url("place.php?whichplace=town&action=town_trickortreat");
+            visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
         }
     }
 }
@@ -219,7 +181,8 @@ skill combatBan() {
 // ─── EVERFULL DART ────────────────────────────────────────────────────────────
 string perks = get_property("everfullDartPerks");
 boolean bullseyeReady() {
-    return (count_substring(perks, "25% Better bullseye targeting") >= 2);
+    int n = count_substring(perks, "25% Better bullseye targeting") + count_substring(perks, "25% better chance to hit bullseyes") + count_substring(perks, "25% More Accurate bullseye targeting");
+    return (n >= 2);
 }
 
 boolean everfullReady(){
