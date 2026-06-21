@@ -2101,9 +2101,10 @@ void sorceress() {
             } else {
                 cli_execute("maximize spell damage percent, mys;"
                     + " outfit mer-kin gladiator;"
-                    + " equip acc3 congressional medal of insanity;"
-                    + if_equip($item[unwrapped knock-off retro superhero cape])
-                    + " retrocape heck kill");
+                    + " equip acc3 congressional medal of insanity;");
+                if (have_item($item[Unwrapped knock-off retro superhero cape])){
+                    cli_execute("retrocape heck kill; equip unwrapped knock-off retro superhero cape");
+                }
             }
             codpiece("none");
             adv($location[Mer-kin Temple (center Door)]);
