@@ -757,8 +757,11 @@ import iotm.ash;
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
                     if ($items[sea lasso] contains it && lowShiny == true)
                         continue;
-                    if (storage_amount(it) == 0)
+                    if (storage_amount(it) == 0){
+                        if (it == $item[Congressional Medal of Insanity])
+                            abort("Get yer own CMOI, ya filthy animal!");
                         buy_using_storage(it);
+                    }
                     take_storage(1, it);
                 }
             }
