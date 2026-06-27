@@ -264,30 +264,17 @@ import iotm.ash;
         buffer out;
         append(out, daycount());
         append(out, "," + to_string(my_id()));
-        append(out, "," + to_int(my_class()));
-        append(out, "," + sign[my_sign()]);
-        append(out, "," + my_ascensions());
         for x from 1 to 8 {
             append(out, "," + get_property("dreadScroll" + x));
         }
-        append(out, "," + to_string(lockkey[get_property("merkinLockkeyMonster")]));
-        append(out, "," + get_property("stashboxFound"));
-        append(out, "," + get_property("keyTurn"));
-        append(out, "," + get_property("ascensionTime"));
+
+        for x from 819 to 827
+            append(out, "," + get_property("lastBangPotion" + x));
+
         append(out, "," + get_property("seahorseName"));
 
-        if (my_id() == 2813285) {
-            print(out);
-            buffer cardC;
-            append(cardC, today_to_string() + ";");
-            for x from 1 to 10{
-                append(cardC, get_property("cardChoice" + x) + ";");
-            }
-            print(cardC);
-        } else if (get_property("seaSpade") != "false"){
-            print("sending spading info to fart scauce, to disable `set seaSpade == false");
-            cli_execute("kmail to fart scauce || " + out);
-        }
+        print("sending spading info to fart scauce, to disable `set seaSpade == false");
+        cli_execute("kmail to fart scauce || " + out);
     }
 
 // ─── MINING ───────────────────────────────────────────────────────────────────
@@ -639,6 +626,9 @@ import iotm.ash;
         write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
         set_ccs("temp");
         set_property("battleAction", "custom combat script");
+        if (get_property("DoDSpading") == ""){
+            set_property("DoDSpading",user_confirm("Select yes if you want to contribute DoD spading, once it is done, it should save 6-15 adventures per ascension. Will cost ~2400 meat per ascension. Note that this is a one time popup and you can change your choice using the preference DoDSpading"));
+        }
         if ((!have_item($item[2002 Mr. Store Catalog]) && !have_item($item[cursed monkey's paw]) && !have_item($item[august scepter])) || pulls_remaining( ) == 0)
             lowShiny = true;
         if (get_property("questS01OldGuy") == "unstarted"){
@@ -723,16 +713,6 @@ import iotm.ash;
             if (get_property("_aprilShowerGlobsCollected") == "false")
                 visit_url("inventory.php?action=shower");
 
-            // First ascension of the day setup
-            if (get_property("ascensionsToday") == "1" && have_item($item[TakerSpace letter of Marque])) {
-                if (get_workshed() == $item[none])
-                    use($item[TakerSpace letter of Marque]);
-                if ((get_property("_takerSpaceSuppliesDelivered") == "false"
-                    || get_property("takerSpaceGold") == "1")
-                    && get_workshed() == $item[TakerSpace letter of Marque])
-                    create(1, $item[anchor bomb]);
-            }
-
             // Mr Store 2002 credits — buy in specific order
             if (get_property("availableMrStore2002Credits") == "3") {
                 foreach it in $items[pro skateboard, Spooky VHS Tape, Spooky VHS Tape] {
@@ -748,6 +728,13 @@ import iotm.ash;
                     use($item[portable Mayo Clinic]);
                 else if (item_amount($item[model train set]) == 1)
                     use($item[model train set]);
+                else if (have_item($item[TakerSpace letter of Marque])) {
+                    use($item[TakerSpace letter of Marque]);
+                    if ((get_property("_takerSpaceSuppliesDelivered") == "false"
+                        || get_property("takerSpaceGold") == "1")
+                        && get_workshed() == $item[TakerSpace letter of Marque])
+                        create(1, $item[anchor bomb]);
+                }
             }
 
             // Storage pulls for sea gear
@@ -763,6 +750,22 @@ import iotm.ash;
                         buy_using_storage(it);
                     }
                     take_storage(1, it);
+                }
+            }
+
+            //DoD Spading
+            if (get_property("DoDSpading") == true && get_property("lastBangPotion827") == ""){
+                foreach it in $items[ten-leaf clover,large box] {
+                    if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
+                        if (storage_amount(it) == 0){
+                            buy_using_storage(it);
+                        }
+                        take_storage(1, it);
+                    }
+                    if (available_amount($item[large box]) > 0)
+                        create($item[blessed large box]);
+                    if (available_amount($item[blessed large box]) > 0)
+                        use($item[blessed large box]);
                 }
             }
         }
