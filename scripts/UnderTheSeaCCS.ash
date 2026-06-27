@@ -114,13 +114,33 @@ void attackCleanUp() {
     }
 }
 
+item bangA(){
+    foreach it in $items[milky potion, swirly potion, bubbly potion, smoky potion, cloudy potion, effervescent potion, fizzy potion, dark potion, murky potion]{
+        if (available_amount(it) > 0)
+            return it;
+    }
+    return $item[none];
+}
+
+item bangB(){
+    foreach it in $items[milky potion, swirly potion, bubbly potion, smoky potion, cloudy potion, effervescent potion, fizzy potion, dark potion, murky potion]{
+        if (available_amount(it) > 0 && it != bangA())
+            return it;
+    }
+    return $item[none];
+}
+
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
-
+    while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 25){
+        if (have_skill($skill[Ambidextrous Funkslinging]))
+            throw_items(bangA(),bangB());
+        else
+            throw_item(bangA());
+    }
     // ── Location-based combat logic ───────────────────────────────────────────
     switch (my_location()) {
-
         case $location[The Outskirts of Cobb's Knob]:
         case $location[The Sleazy Back Alley]:
         case $location[The Haunted Pantry]:
