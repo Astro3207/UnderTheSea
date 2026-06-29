@@ -99,6 +99,7 @@ void NCforce() {
 void candy(string action) {
     if (action == "fight"){
         int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
+        set_property("choiceAdventure804","3&whichhouse=" + houseToVisit);
         visit_url("place.php?whichplace=town&action=town_trickortreat");
         visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
         run_combat();
