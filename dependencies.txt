@@ -1,1 +1,2 @@
 github C2Talon/c2t_megg
+github VeeArrKoL/seedfinder
