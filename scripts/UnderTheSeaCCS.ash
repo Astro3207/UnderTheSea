@@ -527,7 +527,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[BCZ: Refracted Gaze]);
                 cleanUp();
             }
-            if (to_int(get_property("merkinVocabularyMastery")) == 100) {
+            if (to_int(get_property("merkinVocabularyMastery")) >= 90) {
                 while (get_property("dreadScroll2") == "0"
                     && item_amount($item[mer-kin healscroll]) > 0
                     && current_round() > 0)
