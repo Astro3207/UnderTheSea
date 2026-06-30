@@ -1,4 +1,5 @@
 import iotm.ash;
+import <seedfinder/seedfinder.ash>;
 
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
     string choiceStorage = get_property("choiceAdventureScript");
@@ -253,6 +254,14 @@ import iotm.ash;
         }
     }
 
+int seedPoss(){
+    SeedData[int] possibleSeeds=find_seeds();
+    int n;
+    foreach idx, seed in possibleSeeds 
+        n += 1;
+    return n;
+}
+
 // ─── SPADING ──────────────────────────────────────────────────────────────────
 
     void spading() {
@@ -272,6 +281,12 @@ import iotm.ash;
             append(out, "," + get_property("lastBangPotion" + x));
 
         append(out, "," + get_property("seahorseName"));
+
+        if (seedPoss() <= 1){
+            SeedData[int] possibleSeeds=find_seeds();
+            foreach idx, seed in possibleSeeds 
+                append(out, "," + possibleSeeds[idx].seed);
+        }
 
         print("sending spading info to fart scauce, to disable `set seaSpade == false");
         cli_execute("kmail to fart scauce || " + out);
@@ -442,6 +457,20 @@ import iotm.ash;
         }
     }
 
+    void dreadSeedCheck(){
+        if (seedPoss() <= 1){
+            for x from 1 to 8{
+                if (get_property("dreadScroll" + x) == 0){
+                    SeedData[int] possibleSeeds=find_seeds();
+                    foreach idx, seed in possibleSeeds 
+                        set_property("dreadScroll" + x,possibleSeeds[idx].dreadscroll[x-1]);
+                }
+            }
+        } else {
+            print(seedPoss() + " possible seeds right now");
+        }
+    }
+
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
             if (have_effect($effect[beaten up]) > 0){
@@ -453,6 +482,8 @@ import iotm.ash;
             set_property("_lastCombatLost", "false");
             abort("It appears you lost the last combat, look into that");
         }
+        if (have_effect($effect[really quite poisoned]) > 0)
+            cli_execute("uneffect really quite poisoned");
         if (get_property("NCtoC") == "true")
             set_property("NCtoC", "false");
         if (my_location() == $location[mer-kin elementary school] && to_monster(get_property("lastEncounter")) == $monster[none] && $ints[396, 397, 398, 399, 400, 401] contains last_choice()){
@@ -465,6 +496,9 @@ import iotm.ash;
             foreach it in $items[dull fish scale, rough fish scale]{
                 autosell( item_amount(it), it );
             }
+        }
+        if (get_property("isMerkinHighPriest") == "false" && get_property("seahorseName") != ""){
+            dreadSeedCheck();
         }
         if (my_path().id == 55){
             if (my_adventures() == 0) {
@@ -530,9 +564,7 @@ import iotm.ash;
             < min(3, to_int(get_property("skillLevel144")))
             && uniAdv <= my_adventures()) {
             if (universe() == my_adventures()) {
-                visit_url("runskillz.php?action=Skillz&whichskill=144&targetplayer=0&quantity=1");
-                visit_url("choice.php?whichchoice=1103&pwd=f94a0e2782ada4ea59a0957eaa4219de"
-                    + "&option=1&num=" + uniInt);
+                cli_execute("numberology 69");
             }
         }
 
@@ -643,7 +675,7 @@ import iotm.ash;
             abort("It seems that your clan may have an incomplete photobooth, join BAFH and rerun");
         if (my_path().id == 0){
             if (my_fullness() > (fullness_limit() - 5))
-                abort("Have at least 5 fullness");
+                abort("Have at least 4 fullness");
             if (my_spleen_use() > (spleen_limit() - 5))
                 abort("Have at least 5 spleen");
         }
@@ -721,7 +753,7 @@ import iotm.ash;
             }
 
             // Workshed activation
-            if (get_property("_workshedItemUsed") == "false") {
+            if (get_property("_workshedItemUsed") == "false" && get_workshed() == $item[none]) {
                 if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
                     use($item[Asdon Martin keyfob (on ring)]);
                 else if (item_amount($item[portable Mayo Clinic]) > 0)
@@ -840,6 +872,7 @@ import iotm.ash;
             cli_execute("alliedradio sniper");
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
+            cli_execute("unequip peridot");
             if (item_amount($item[skate blade]) > 0)
                 equip($item[skate blade]);
         } else {
@@ -1781,7 +1814,7 @@ void sorceress() {
                 $item[mer-kin hallpass]);
 
             // Vocabulary mastery grind
-            while (to_int(get_property("merkinVocabularyMastery")) < 100) {
+            while (to_int(get_property("merkinVocabularyMastery")) < 90) {
                 if (item_amount($item[mer-kin wordquiz]) > 0) {
                     if (item_amount($item[mer-kin cheatsheet]) == 0 && pulls_remaining() > 0){
                         pullSequence($item[mer-kin cheatsheet]);
@@ -1790,8 +1823,6 @@ void sorceress() {
                             getCheatsheet();
                     }
                     use($item[mer-kin wordquiz]);
-                } else if (to_int(get_property("merkinVocabularyMastery")) == 90 && item_amount($item[mer-kin wordquiz]) == 0 && pulls_remaining() > 0) {
-                    pullSequence($item[mer-kin wordquiz]);
                 } else {
                     cli_execute("maximize item drop, equip " + divingHelmet()
                         + ", equip " + tailpiece() 
@@ -1823,6 +1854,10 @@ void sorceress() {
 
             buyScholarGear();
 
+            if (available_amount($item[mer-kin dreadscroll]) > 0){
+                dreadSeedCheck();
+            }
+
             // Dread scroll acquisition
             while (get_property("dreadScroll1") == "0"
                 || get_property("dreadScroll6") == "0"
@@ -1847,24 +1882,27 @@ void sorceress() {
                 }
                 mood("itdrop");
                 adv($location[mer-kin library]);
-            }
+                if (available_amount($item[mer-kin dreadscroll]) > 0){
+                    // Scroll 3 via deep dark visions
+                    if (get_property("dreadScroll3") == "0") {
+                        cli_execute("maximize 50 spooky res, hp");
+                        while (get_property("dreadScroll3") == "0") {
+                            restore_hp(1000);
+                            use_skill($skill[deep dark visions]);
+                        }
+                        dreadSeedCheck();
+                    }
 
-            // Knucklebone for scroll 4
-            if (get_property("dreadScroll4") == "0") {
-                if (item_amount($item[mer-kin knucklebone]) == 0)
-                    pullSequence($item[mer-kin knucklebone]);
-                use($item[Mer-kin knucklebone]);
-            }
-
-            // Scroll 3 via deep dark visions
-            // Fixed: was comparing string to int with == 0
-            if (get_property("dreadScroll3") == "0") {
-                cli_execute("maximize 50 spooky res, hp");
-                while (get_property("dreadScroll3") == "0") {
-                    restore_hp(1000);
-                    use_skill($skill[deep dark visions]);
+                    // Knucklebone for scroll 4
+                    if (get_property("dreadScroll4") == "0") {
+                        if (item_amount($item[mer-kin knucklebone]) == 0)
+                            pullSequence($item[mer-kin knucklebone]);
+                        use($item[Mer-kin knucklebone]);
+                    }
+                    dreadSeedCheck();
                 }
             }
+
             if (available_amount($item[mer-kin prayerbeads]) < 3 && lowShiny == true){
                 while (available_amount($item[mer-kin prayerbeads]) < 3){
                     farmPrayerbeads();
@@ -1942,6 +1980,12 @@ void sorceress() {
             skatePark();
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
+
+        if (available_amount($item[mer-kin prayerbeads]) < 3 && lowShiny == true){
+            while (available_amount($item[mer-kin prayerbeads]) < 3){
+                farmPrayerbeads();
+            }
+        }
 
         // Healscroll pull
         if (item_amount($item[mer-kin healscroll]) == 0)
