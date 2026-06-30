@@ -101,7 +101,7 @@ void candy(string action) {
         int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
         set_property("choiceAdventure804","3&whichhouse=" + houseToVisit);
         visit_url("place.php?whichplace=town&action=town_trickortreat");
-        visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
+        run_choice(-1);
         run_combat();
     } else if (action == "treat"){
         while(contains_text(get_property("_trickOrTreatBlock"),"L")){
@@ -110,6 +110,21 @@ void candy(string action) {
             visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
         }
     }
+}
+
+int [string] clan_to_ID {
+    "Hyrule" : 72876,
+    "Dread and Final" : 2047010985,
+    "Dread Mart" : 2047010683,
+    "Dread Outlet Bargain Market" : 2047010572,
+    "Dreadleys" : 2047010988,
+    "DreadNugget" : 2047010986,
+    "Dreadway" : 2047010667,
+    "Fart Sauce Annex" : 2047010939
+};
+
+void whitelist(string clan){
+    visit_url("showclan.php?whichclan="+clan_to_ID[clan]+"&action=joinclan&confirm=on");
 }
 
 // ─── BANISH UTILITIES ─────────────────────────────────────────────────────────
