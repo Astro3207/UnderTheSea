@@ -101,7 +101,7 @@ void candy(string action) {
         int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
         set_property("choiceAdventure804","3&whichhouse=" + houseToVisit);
         visit_url("place.php?whichplace=town&action=town_trickortreat");
-        run_choice(-1);
+         visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
         run_combat();
     } else if (action == "treat"){
         while(contains_text(get_property("_trickOrTreatBlock"),"L")){
