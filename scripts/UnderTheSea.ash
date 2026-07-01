@@ -916,8 +916,8 @@ int seedPoss(){
             string conditional;
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += ", equip monodent";
-            cli_execute("maximize item drop, equip shark jumper, equip scale-mail underwear, equip black glass, equip blood cubic zirconia, equip "
-            + divingHelmet() + bathysphere() + if_equip($item[M&ouml;bius ring]) + conditional);
+            cli_execute("maximize mys, equip shark jumper, equip scale-mail underwear, equip black glass, equip blood cubic zirconia, equip congressional, equip "
+            + divingHelmet() + bathysphere() + conditional);
             adv($location[The Caliginous Abyss]);
     }
 
