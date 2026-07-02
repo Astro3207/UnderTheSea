@@ -93,12 +93,7 @@ void main(int whichchoice, string page) {
             append(elementaryQueue, ", " + last_choice());
             delete(elementaryQueue,0,5);
             set_property("elementaryQueue",to_string(elementaryQueue));
-            if (item_amount($item[mer-kin bunwig]) > 0){
-                run_choice(2);
-            } else {
-                set_property("NCtoC","true");
-                run_choice(1);
-            }
+            run_choice(2);
             break;
 
         // ── Dread scroll puzzle ───────────────────────────────────────────
