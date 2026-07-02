@@ -547,11 +547,9 @@ import <seedfinder/seedfinder.ash>;
                     && item_amount($item[mer-kin dreadscroll]) > 0) {
                     cli_execute("buy white rice");
                     eatSushi();
-                } else if (lowShiny == true){
+                } else {
                     cli_execute("buy white rice");
                     eatSushi();
-                } else {
-                    abort("Get fishy or Driving Waterproofly manually and rerun");
                 }
             }
         } else if (my_path().id == 0){
@@ -975,7 +973,7 @@ import <seedfinder/seedfinder.ash>;
             ? if_equip($item[spring shoes]) : "";
         if (lowShiny == true)
             conditional += ", equip congressional medal of insanity";
-                if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
             conditional += ", equip backup camera";
         if (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0)
             conditional += ", equip monodent of the sea";
@@ -2066,6 +2064,11 @@ void sorceress() {
 
             // Equip as many prayerbeads as available, pull healing items for gaps
             int beads = available_amount($item[mer-kin prayerbeads]);
+            if (3-beads > pulls_remaining( )){
+                while (available_amount($item[mer-kin prayerbeads]) < 3){
+                    farmPrayerbeads();
+                }
+            }
             if (beads >= 3) {
                 equip($slot[acc2], $item[mer-kin prayerbeads]);
                 equip($slot[acc3], $item[mer-kin prayerbeads]);
