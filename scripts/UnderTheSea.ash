@@ -1920,6 +1920,8 @@ void sorceress() {
                     adv($location[mer-kin elementary school]);
                     put_closet(item_amount($item[mer-kin hallpass]),
                         $item[mer-kin hallpass]);
+                    if ((available_amount($item[Mer-kin facecowl]) > 0 && available_amount($item[Mer-kin waistrope]) > 0))
+                        break;
                 }
                 take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
                 cli_execute("uneffect the sonata of sneakiness");
