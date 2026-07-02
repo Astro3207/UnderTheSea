@@ -483,13 +483,7 @@ void main(int round, monster mob, string page_text) {
             } else if (mob == $monster[Mer-kin teacher]
                 || mob == $monster[Mer-kin punisher]
                 || mob == $monster[Mer-kin monitor]) {
-                if (mob == $monster[Mer-kin monitor]) {
-                    if (have_equipped($item[bat wings])
-                        && to_int(get_property("_batWingsSwoopUsed")) < 11)
-                        use_skill($skill[swoop like a bat]);
-                    if (item_amount($item[Septapus summoning charm]) > 0)
-                        throw_item($item[Septapus summoning charm]);
-                } else if (have_equipped($item[spring shoes])
+                if (have_equipped($item[spring shoes])
                     && !banishUsedAtYourLocation("Spring Kick")) {
                     if ((mob == $monster[mer-kin teacher]
                         && item_amount($item[mer-kin bunwig]) > 0)
@@ -559,7 +553,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                 } else {
-                    if (bcz_gaze_ready()) {
+                    if (bcz_gaze_ready() && (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0)) {
                         use_skill($skill[Sea *dent: Talk to Some Fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
                     }
