@@ -365,6 +365,8 @@ void main(int round, monster mob, string page_text) {
                         use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
                         if (item_amount($item[pulled yellow taffy]) > 0)
                             throw_item($item[pulled yellow taffy]);
+                    } else if (last_monster() == $monster[wild seahorse]){
+                        runaway( );
                     } else if (item_amount($item[software glitch]) > 0){
                         throw_item($item[software glitch]);
                         if (last_monster() == $monster[Bugged bugbear]){
