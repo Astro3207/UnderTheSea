@@ -99,15 +99,14 @@ void NCforce() {
 void candy(string action) {
     if (action == "fight"){
         int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
-        set_property("choiceAdventure804","3&whichhouse=" + houseToVisit);
         visit_url("place.php?whichplace=town&action=town_trickortreat");
-         visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
+        visit_url("choice.php?whichchoice=80&pwd=" + my_hash() + "&option=3&whichhouse=" + houseToVisit);
         run_combat();
     } else if (action == "treat"){
         while(contains_text(get_property("_trickOrTreatBlock"),"L")){
             int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "L");
             visit_url("place.php?whichplace=town&action=town_trickortreat");
-            visit_url("choice.php?whichchoice=804&option=3&whichhouse=" + houseToVisit);
+            visit_url("choice.php?whichchoice=804&pwd=" + my_hash() + "&option=3&whichhouse=" + houseToVisit);
         }
     }
 }
