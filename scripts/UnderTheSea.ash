@@ -177,30 +177,26 @@ import <seedfinder/seedfinder.ash>;
                             && item_amount($item[ultra-soft ferns]) == 0) continue;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
-                        if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
+                        if (ef == $effect[Apriling Band Patrol Beat] && total_turns_played() < to_int(get_property("nextAprilBandTurn"))) continue;
+                        if (to_skill(ef) != $skill[none] || !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
                 }
-                if (have_effect($effect[Apriling Band Patrol Beat]) == 0
-                    && total_turns_played() >= to_int(get_property("nextAprilBandTurn")))
-                    cli_execute("aprilband effect nc");
                 break;
             case "combat":
                 foreach ef in $effects[Carlweather's Cantata of Confrontation,
-                    Fresh Breath, Musk of the Moose, Crunchy Steps,
+                    Fresh Breath, Musk of the Moose, Crunchy Steps, Apriling Band Battle Cadence,
                     Towering Muscles, Attracting Snakes, Bloodbathed] {
                     if (have_effect(ef) == 0) {
                         if (ef == $effect[Crunchy Steps]
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
                             && get_property("yogUrtDefeated") == "false") continue;
+                        if (ef == $effect[Apriling Band Battle Cadence] && total_turns_played() < to_int(get_property("nextAprilBandTurn"))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
                 }
-                if (have_effect($effect[Apriling Band Battle Cadence]) == 0
-                    && total_turns_played() >= to_int(get_property("nextAprilBandTurn")))
-                    cli_execute("aprilband effect c");
                 break;
             case "hotres":
             case "spookyres":
