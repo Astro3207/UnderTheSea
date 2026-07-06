@@ -1910,7 +1910,7 @@ void sorceress() {
                         use($item[Mer-kin knucklebone]);
                         dreadSeedCheck();
                     }
-                    if (get_property("dreadScroll4") == "0" && to_int(get_property("merkinVocabularyMastery")) < 90) {
+                    if (get_property("dreadScroll7") == "0" && to_int(get_property("merkinVocabularyMastery")) < 90) {
                         if (available_amount($item[mer-kin worktea]) == 0)
                             pullSequence($item[mer-kin worktea]);
                         cli_execute("buy white rice");
