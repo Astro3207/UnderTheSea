@@ -955,10 +955,7 @@ import <seedfinder/seedfinder.ash>;
 
     void merkinLib(){
         use_familiar($familiar[grouper groupie]);
-        string conditional = !contains_text(
-            get_property("banishedMonsters"),
-            "Mer-kin alphabetizer:Spring Kick")
-            ? if_equip($item[spring shoes]) : "";
+        string conditional;
         if (lowShiny == true)
             conditional += ", equip congressional medal of insanity";
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
