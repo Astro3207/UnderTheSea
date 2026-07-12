@@ -138,8 +138,6 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[greatest american pants]);
         if (available_amount($item[V for vivala mask]) > 0 && get_property("_vmaskBanisherUsed") == false)
             return if_equip($item[V for vivala mask]);
-        if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
-            return if_equip($item[latte lovers member's mug]);
         return freeKill();
     }
 
