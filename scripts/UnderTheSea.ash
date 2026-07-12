@@ -182,7 +182,7 @@ import <seedfinder/seedfinder.ash>;
             else if (have_effect($effect[driving waterproofly]) > 0)
                 use_familiar($familiar[jill-of-all-trades]);
             else
-                use_familiar($familiar[grouper groupie]);
+                use_familiar("itdrop");
         }
         return;
     }
@@ -390,7 +390,7 @@ import <seedfinder/seedfinder.ash>;
     void teflon() {
         equip($item[mer-kin digpick]);
         equipSwimTrunks();
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
         visit_url("mining.php?mine=3&which=" + mineNum());
         if (my_hp() == 0)
             cli_execute("restore HP");
@@ -434,7 +434,7 @@ import <seedfinder/seedfinder.ash>;
                     && item_amount($item[sea cowbell]) > 0)
                     abort("need more lassos somehow");
                 if (!use_familiar($familiar[jill-of-all-trades]))
-                    use_familiar($familiar[grouper groupie]);
+                    use_familiar("itdrop");
                 string conditional = baseball_equip();
                 if (to_int(get_property("lassoTrainingCount")) < 20
                     && item_amount($item[sea cowbell]) > 0) {
@@ -652,7 +652,7 @@ import <seedfinder/seedfinder.ash>;
                     + ", equip Sheriff moustache, equip Sheriff badge, equip Sheriff pistol"
                     + bathysphere($item[toy cupid bow]));
             } else {
-                use_familiar($familiar[grouper groupie]);
+                use_familiar("itdrop");
                 string conditional;
                 if (!contains_text(get_property("banishedMonsters"), "school of many"))
                     conditional += ", equip monodent";
@@ -760,7 +760,7 @@ import <seedfinder/seedfinder.ash>;
             // MAYAM rings
             if (get_property("_mayamSymbolsUsed") == "" && have_item($item[Mayam Calendar])) {
                 if (!use_familiar($familiar[chest mimic]))
-                    use_familiar($familiar[grouper groupie]);
+                    use_familiar("itdrop");
                 cli_execute("mayam rings vessel yam cheese explosion;"
                     + " mayam rings fur lightning eyepatch yam;"
                     + " mayam rings eye meat yam clock");
@@ -889,8 +889,12 @@ import <seedfinder/seedfinder.ash>;
                 visit_url("guild.php?place=challenge");
             if (doSWord() == true)
                 use_familiar($familiar[Sword of S Words]);
+            else if (have_familiar($familiar[red-nosed snapper]))
+                use_familiar("itdrop");
             else
                 use_familiar("-combat");
+            if (my_familiar() == $familiar[red-nosed snapper])
+                cli_execute("snapper fish");
             mood("itdrop");
             while (get_property(qprop) == "started") {
                 cli_execute("maximize item drop, equip monodent of the sea"
@@ -973,7 +977,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     void finishCaliginous(){
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
         string conditional;
         if (!contains_text(get_property("banishedMonsters"), "school of many"))
             conditional += ", equip monodent";
@@ -1008,7 +1012,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     void merkinLib(){
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
         string conditional;
         if (lowShiny == true)
             conditional += ", equip congressional medal of insanity";
@@ -1034,27 +1038,27 @@ import <seedfinder/seedfinder.ash>;
     void curveballBurn(){
         if (!contains_text(get_property("_perilLocations"), "196") && available_amount($item[mer-kin digpick]) == 0){
             mood("spookyres");
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
             cli_execute("maximize item drop"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
             cli_execute("maximize hot res"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             codpiece("blood cubic zirconia, peridot of peril");
             cli_execute("maximize sleaze res"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
             cli_execute("maximize spooky res"+ swimmingTrunks() + ", equip eternity codpiece, equip monodent of the sea");
@@ -1168,7 +1172,7 @@ import <seedfinder/seedfinder.ash>;
     void getCheatsheet(){
         put_closet(item_amount($item[mer-kin hallpass]),
             $item[mer-kin hallpass]);
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
         string conditional;
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
             conditional += ", equip backup camera";
@@ -1253,7 +1257,7 @@ void seaMonkees() {
         // Collect pellet while RWB is active
         while (item_amount($item[wriggling flytrap pellet]) == 0
             && to_int(get_property("rwbMonsterCount")) > 0) {
-                use_familiar($familiar[grouper groupie]);
+                use_familiar("itdrop");
 
             if (to_int(get_property("rwbMonsterCount")) == 1) {
                 cli_execute("maximize item drop" + swimmingTrunks() + if_equip($item[McHugeLarge left pole])
@@ -1268,7 +1272,7 @@ void seaMonkees() {
         if (item_amount($item[wriggling flytrap pellet]) == 0) {
             print("Pellet failed to drop 3x, initiating banishes", "red");
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
-                use_familiar($familiar[grouper groupie]);
+                use_familiar("itdrop");
                 string conditional;
                 if (highSociety())
                     conditional += ", equip monodent";
@@ -1324,7 +1328,7 @@ void seaMonkees() {
                 use_familiar($familiar[Sword of S Words]);
                 mood("itdrop");
             } else {
-                use_familiar($familiar[grouper groupie]);
+                use_familiar("itdrop");
             }
             if (baseballPlayers() < 9 && available_amount($item[baseball diamond]) > 0) {
                 conditional += baseball_equip();
@@ -1350,7 +1354,12 @@ void seaMonkees() {
 
     // ── Step 6: Black Crayon Golem recall ────────────────────────────────────
     if (get_property("questS02Monkees") == "step6" && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55 && !highSociety()) {
-        use_familiar("-combat");
+        if (have_familiar($familiar[red-nosed snapper]))
+            use_familiar("itdrop");
+        else
+            use_familiar("-combat");
+        if (my_familiar() == $familiar[red-nosed snapper])
+            cli_execute("snapper construct");
         cli_execute("maximize item drop, equip legendary seal clubbing club"
             + if_equip($item[McHugeLarge left pole]) + bathysphere($item[toy cupid bow]));
         summon($monster[black crayon golem]);
@@ -1369,7 +1378,7 @@ void seaMonkees() {
         else if (doSWord() == true && $location[The Mer-Kin Outpost].turns_spent < 26 && (get_property("_monsterHabitatsFightsLeft") == "0" || available_amount($item[crayon shavings]) > 9)){
             use_familiar($familiar[Sword of S Words]);
             mood("itdrop");
-        } else if (highSociety() && item_amount($item[pristine fish scale]) < 6)
+        } else if ((highSociety() && item_amount($item[pristine fish scale]) < 6) || have_familiar($familiar[red-nosed snapper]))
             use_familiar("itdrop");
         else
             use_familiar("-combat");
@@ -1454,10 +1463,10 @@ void seaMonkees() {
             if (item_amount($item[rusty porthole]) == 0) {
                 if (baseballPlayers() >= 8){
                     if (!use_familiar($familiar[jill-of-all-trades]))
-                        use_familiar($familiar[grouper groupie]);
+                        use_familiar("itdrop");
                 } else {
                     if (!use_familiar($familiar[chest mimic]))
-                        use_familiar($familiar[grouper groupie]);
+                        use_familiar("itdrop");
                 }
                 cli_execute("maximize item" + if_equip($item[blood cubic zirconia])
                     + if_equip($item[toy cupid bow])
@@ -1477,10 +1486,10 @@ void seaMonkees() {
                 baseballD();
             if (item_amount($item[rusty rivet]) < 4){
                 if (!use_familiar($familiar[chest mimic]))
-                    use_familiar($familiar[grouper groupie]);
+                    use_familiar("itdrop");
             } else {
                 if (!use_familiar($familiar[jill-of-all-trades]))
-                    use_familiar($familiar[grouper groupie]);
+                    use_familiar("itdrop");
             }
             cli_execute("maximize item" + if_equip($item[blood cubic zirconia])
             + if_equip($item[toy cupid bow]));
@@ -1499,7 +1508,7 @@ void seaMonkees() {
                 && !contains_text(get_property("_roninStoragePulls"), "3604"))
                 pullSequence($item[rusty rivet]);
         } else if (lassoShadow() == true){
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             if (NCForceEstimate() >= 7){
                 NCforce();
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
@@ -1538,6 +1547,9 @@ void seaMonkees() {
             initialMomProgress += 12;
         if (available_amount($item[black glass]) == 0) 
             buy($coinmaster[Big Brother], 1, $item[black glass]);
+        use_familiar("itdrop");
+        if (my_familiar() == $familiar[red-nosed snapper])
+            cli_execute("snapper horror");
         if (highSociety() && to_int(get_property("momSeaMonkeeProgress")) < 36){
             if (get_property("swordOfSWordsMonster") != "775"){
                 use_familiar($familiar[sword of s words]);
@@ -1607,7 +1619,9 @@ void seaMonkees() {
     if (get_property("corralUnlocked") == "true" && item_amount($item[sea cowbell]) == 0 && get_property("seahorseName") == "" && my_path().id == 55) {
         if (have_effect($effect[shadow waters]) == 0 && lowShiny == false)
             shadowRift();
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
+        if (my_familiar() == $familiar[red-nosed snapper])
+            cli_execute("snapper mer-kin");
         cli_execute("unequip blood cubic zirconia; unequip peridot of peril; unequip heartstone");
         codpiece("blood cubic zirconia, heartstone");
         if (get_property("_steelyEyedSquintUsed") == false)
@@ -1767,7 +1781,7 @@ void sorceress() {
             && !contains_text(get_property("_roninStoragePulls"), "4196"))
             pullSequence($item[sea cowbell]);
 
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
         string conditional;
         if (!contains_text(get_property("_perilLocations"), "199"))
             conditional += ", equip peridot of peril";
@@ -1973,7 +1987,7 @@ void sorceress() {
                         pullSequence($item[mer-kin hallpass]);
                     mood("combat");
                     mood("itdrop");
-                    use_familiar($familiar[grouper groupie]);
+                    use_familiar("itdrop");
                     cli_execute("maximize item drop, equip " + divingHelmet() + ", equip " + tailpiece() + ", equip monodent of the sea"
                         + if_equip($item[Blood Cubic Zirconia]) + if_equip($item[M&ouml;bius ring]) + if_equip($item[toy cupid bow]));
                     adv($location[mer-kin elementary school]);
@@ -2110,7 +2124,7 @@ void sorceress() {
             if (available_amount($item[mer-kin prayerbeads]) < 3
                 && !contains_text(get_property("_roninStoragePulls"), "3806"))
                 pullSequence($item[mer-kin prayerbeads]);
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             cli_execute("maximize spell damage percent, hot damage, cold damage"
                 + ", spooky damage, sleaze damage, stench damage"
                 + ", equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece, -equip tiny yam cannon"
@@ -2243,9 +2257,9 @@ void sorceress() {
                 abort("Less than 8 crayon shavings, pull null-day exploit and use it and rerun");
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
-                    cli_execute("uneffect ef");
+                    cli_execute("uneffect" + ef);
             }
-            use_familiar($familiar[grouper groupie]);
+            use_familiar("itdrop");
             cli_execute("maximize damage absorption, mus, equip mer-kin gladiator mask, equip mer-kin gladiator tailpiece; recover hp"
                 + if_equip($item[bat wings]));
             set_property("hpAutoRecoveryTarget", "1");
