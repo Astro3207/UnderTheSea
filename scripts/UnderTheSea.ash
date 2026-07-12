@@ -2118,7 +2118,7 @@ void sorceress() {
 
         // YogUrt fight
         if (get_property("yogUrtDefeated") == "false") {
-            cli_execute("acquire mer-kin mouthsoap, waterlogged scroll of healing, 2 sea gel; cast cannel");
+            cli_execute("acquire mer-kin mouthsoap, waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
             if (available_amount($item[mer-kin prayerbeads]) < 3
                 && !contains_text(get_property("_roninStoragePulls"), "3806"))
                 pullSequence($item[mer-kin prayerbeads]);
