@@ -172,6 +172,9 @@ void main(int whichchoice, string page) {
             run_choice(4);
             break;
 
+        case 804:
+            run_choice(2);
+            break;
         // ── Underwater zone run_choice(2) cases ───────────────────────────
         case 1469:
         case 1470:
@@ -239,7 +242,7 @@ void main(int whichchoice, string page) {
                 $location[The Sleazy Back Alley]:        159,
                 $location[The Haunted Pantry]:        145,
                 $location[The Overgrown Lot]:        1752,
-                $location[The Coral Corral]:         772,
+                $location[The Coral Corral]:         775,
                 $location[The Marinara Trench]:      762,
                 $location[Anemone Mine]:             765,
                 $location[The Dive Bar]:             768,
