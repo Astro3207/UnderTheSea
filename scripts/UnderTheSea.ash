@@ -2132,7 +2132,7 @@ void sorceress() {
 
             // Equip as many prayerbeads as available, pull healing items for gaps
             if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
-                while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
+                while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 2){
                   farmPrayerbeads();
                 }
             }  
