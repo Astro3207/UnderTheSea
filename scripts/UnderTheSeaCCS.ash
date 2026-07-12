@@ -199,7 +199,7 @@ void main(int round, monster mob, string page_text) {
             }
             if (mob == $monster[tumbleweed])
                 abort("Unexpected mob encountered in shadow rift");
-            if (get_property("_curveballFightsLeft").to_int() == 0 || get_property("seahorseName") != "" || !can_still_steal() || mob != $monster[shadow slab])
+            if (!can_still_steal() || available_amount($item[pristine fish scale]) < 6)
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             darts();
             cleanUp();
@@ -642,7 +642,10 @@ void main(int round, monster mob, string page_text) {
                 throw_item($item[mer-kin healscroll]);
             if (equipped_amount($item[mer-kin prayerbeads]) < 2)
                 throw_item($item[New Age healing crystal]);
-            throw_item($item[sea gel]);
+            if (have_skill($skill[saucy salve]))
+                use_skill($skill[saucy salve])
+            if (have_skill($skill[saucy salve]))
+                use_skill($skill[saucy salve])
             cleanUp();
             attackCleanUp();
             break;
