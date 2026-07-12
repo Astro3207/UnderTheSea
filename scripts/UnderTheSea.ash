@@ -899,7 +899,6 @@ import <seedfinder/seedfinder.ash>;
                     + if_equip($item[spring shoes])
                     + if_equip($item[toy cupid bow])
                     + if_equip($item[designer sweatpants])
-                    + bathysphere($item[toy cupid bow])
                     + conditional);
                 adv1(questLoc[ps]);
             }
@@ -1073,10 +1072,7 @@ import <seedfinder/seedfinder.ash>;
         } else {
             if (have_item($item[Combat lover's locket]))
                 equip($slot[acc3], $item[Combat lover's locket]);
-            if (get_property("_photocopyUsed") == "false"){
-                if (item_amount($item[photocopied monster]) == 0){
-                    while (!faxbot(mon)){}
-                }
+            if (get_property("_photocopyUsed") == "false" && (faxbot(mon) || faxbot(mon) || faxbot(mon))){
                 use($item[photocopied monster]);
                 run_combat();
             } else if ($familiar[chest mimic].experience > 200) {
