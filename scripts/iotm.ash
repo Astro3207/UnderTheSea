@@ -151,8 +151,7 @@ location [int] monster_found_in(monster m) {
 
 // Returns the monster currently banished by a given banisher string
 monster banished(string banisher) {
-    matcher m = create_matcher(
-        ":([A-Za-z'-]+(?: [A-Za-z'-]+){0,3}):" + banisher,
+    matcher m = create_matcher("([^:]+):\\Q" + banisher,
         get_property("banishedMonsters")
     );
     return m.find() ? to_monster(m.group(1)) : $monster[none];
@@ -336,10 +335,10 @@ void leprecondo(string input) {
         }
     }
     cli_execute("leprecondo furnish "
-        + lepRoomToNum[lepRoom[0]] + ","
-        + lepRoomToNum[lepRoom[1]] + ","
+        + lepRoomToNum[lepRoom[3]] + ","
         + lepRoomToNum[lepRoom[2]] + ","
-        + lepRoomToNum[lepRoom[3]]);
+        + lepRoomToNum[lepRoom[1]] + ","
+        + lepRoomToNum[lepRoom[0]]);
 }
 
 // ─── UNIVERSE CALCULATOR ──────────────────────────────────────────────────────
