@@ -643,9 +643,9 @@ void main(int round, monster mob, string page_text) {
             if (equipped_amount($item[mer-kin prayerbeads]) < 2)
                 throw_item($item[New Age healing crystal]);
             if (have_skill($skill[saucy salve]))
-                use_skill($skill[saucy salve])
+                use_skill($skill[saucy salve]);
             if (have_skill($skill[saucy salve]))
-                use_skill($skill[saucy salve])
+                use_skill($skill[saucy salve]);
             cleanUp();
             attackCleanUp();
             break;
