@@ -2,9 +2,21 @@ import iotm.ash;
 
 // ─── COMBAT HELPERS ───────────────────────────────────────────────────────────
 
+boolean highSociety(){
+    boolean bool;
+    if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
+        bool = true;
+    return bool;
+}
+
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
 void free_kill(string ptext, boolean drop) {
+    if (highSociety()){
+        if (contains_text(ptext, "Darts: Aim for the Bullseye"))
+            use_skill($skill[Darts: Aim for the Bullseye]);
+        return;
+    }
     if (get_property("_curveballMonster") == last_monster()
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
@@ -39,11 +51,13 @@ void free_run(string ptext, boolean banish) {
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
 
-    foreach freeskill in $skills[spring away, Bowl a Curveball, snokebomb] {
+    if (have_equipped($item[greatest american pants]) && to_int(get_property("_navelRunaways")) < 3)
+        runaway();
+
+    foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Feel Hatred, snokebomb] {
         if (!contains_text(ptext, to_string(freeskill))) continue;
-        if (!banish && $skills[snokebomb, Bowl a Curveball] contains freeskill) continue;
-        if (banish && banishUsedAtYourLocation("snokebomb")
-            && freeskill == $skill[snokebomb]) continue;
+        if (!banish && $skills[snokebomb, Bowl a Curveball, Feel Hatred, Throw Latte on Opponent] contains freeskill) continue;
+        if (banish && banishUsedAtYourLocation("snokebomb") && freeskill == $skill[snokebomb]) continue;
         if ($locations[The Outskirts of Cobb's Knob, The Sleazy Back Alley,
             The Haunted Pantry] contains my_location()
             && freeskill == $skill[snokebomb])
@@ -53,7 +67,7 @@ void free_run(string ptext, boolean banish) {
         use_skill(freeskill);
     }
 
-    foreach freecombat in $items[peppermint parasol, anchor bomb,
+    foreach freecombat in $items[glob of Blank-Out,peppermint parasol, anchor bomb,
         stuffed yam stinkbomb, handful of split pea soup,
         mer-kin pinkslip, ink bladder] {
         if (item_amount(freecombat) == 0) continue;
@@ -133,12 +147,14 @@ item bangB(){
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
-    while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 25){
+    while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 25 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());
         else
             throw_item(bangA());
     }
+    if (highSociety() && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 2)
+        throw_item($item[sea lasso]);
     // ── Location-based combat logic ───────────────────────────────────────────
     switch (my_location()) {
         case $location[The Outskirts of Cobb's Knob]:
@@ -203,13 +219,24 @@ void main(int round, monster mob, string page_text) {
                         use_if_have_skill(page_text, sk);
                 }
                 free_kill(page_text, true);
+                cleanUp();
             } else if (!free_monster(mob)) {
-                free_run(page_text, true);
+                if (have_equipped($item[spring shoes]) && !banishUsedAtYourLocation("Spring Kick") && highSociety()) {
+                    use_skill($skill[spring kick]);
+                    use_skill($skill[Sea *dent: Talk to Some Fish]);
+                } else {
+                    free_run(page_text, true);
+                }
             }
             cleanUp();
             break;
         case $location[The Wreck of the Edgar Fitzsimmons]:
             if (mob != $monster[unholy diver]){
+                if (have_equipped($item[spring shoes]) && highSociety()){
+                    use_skill($skill[spring kick]);
+                    use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    cleanUp();
+                }
                 free_run(page_text, true);
                 if (mob == $monster[Mer-kin scavenger])
                     use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
@@ -226,12 +253,6 @@ void main(int round, monster mob, string page_text) {
             // Fixed: was checking sea cowboy hat twice, second should be sea chaps
             if (have_equipped($item[sea cowboy hat]) && have_equipped($item[sea chaps])) {
                 throw_item($item[sea lasso]);
-                if (!free_monster(mob)) {
-                    if (item_amount($item[pristine fish scale]) < 6)
-                        use_skill($skill[Sea *dent: Talk to Some Fish]);
-                    free_kill(page_text, true);
-                }
-                cleanUp();
             }
             if (mob == $monster[mer-kin miner]){
                 steal();
@@ -259,10 +280,12 @@ void main(int round, monster mob, string page_text) {
                 if (have_item($item[cosmic bowling ball]))
                     free_run(page_text, true);
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
-                use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
+                darts();
+                free_kill(page_text, true);
+                cleanUp();
+            } else {
+                free_run(page_text, true);
             }
-            darts();
-            free_kill(page_text, true);
             cleanUp();
             break;
 
@@ -301,15 +324,17 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
+                if (my_familiar() != $familiar[sword of s words] && highSociety() && available_amount($item[pristine fish scale]) < 6){
+                    use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    cleanUp();
+                }
                 if (mob == $monster[mer-kin healer]
                     && item_amount($item[mer-kin prayerbeads]) < 2) {
-                    if (have_equipped($item[baseball diamond])
-                        || (get_property("_curveballMonster") == "some fish"
+                    if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish"
                             && to_int(get_property("_curveballFightsLeft")) > 0))
                         use_skill($skill[Sea *dent: Talk to Some Fish]);
                     free_kill(page_text, true);
-                    if (to_int(get_property("_backUpUses")) < 7
-                        && have_equipped($item[backup camera])) {
+                    if (to_int(get_property("_backUpUses")) < 7 && have_equipped($item[backup camera])) {
                         use_skill($skill[Back-Up to your Last Enemy]);
                         run_combat();
                     }
@@ -317,6 +342,8 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 } else if (mob == $monster[Mer-kin burglar]
                     || mob == $monster[Mer-kin raider]) {
+                    if (highSociety() && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
+                        use_skill($skill[sea *dent: throw a lightning bolt]);
                     free_run(page_text, true);
                 }
                 if (!free_monster(mob))
@@ -350,7 +377,14 @@ void main(int round, monster mob, string page_text) {
 
         case $location[The Coral Corral]:
             if (item_amount($item[sea cowbell]) == 0) {
-                if (have_equipped($item[backup camera])) {
+                if (highSociety()){
+                    if (mob == $monster[sea cow]){
+                        use_skill($skill[%fn, kill a lot of these guys]);
+                        cleanUp();
+                    } else{
+                        abort("Was supposed to hit sea cow");
+                    }
+                } else if (have_equipped($item[backup camera])) {
                     if (mob == $monster[mer-kin rustler])
                         use_skill($skill[spring kick]);
                     use_skill($skill[Back-Up to your Last Enemy]);
@@ -444,8 +478,10 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Caliginous Abyss]:
+            if (highSociety() && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
+                throw_item($item[sea lasso]);
             if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
-                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]))
+                if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]) && available_amount($item[waffle]) > 2)
                     throw_item($item[waffle]);
                 else 
                     cleanUp();
@@ -459,8 +495,7 @@ void main(int round, monster mob, string page_text) {
                     && $monsters[slithering thing, eye in the darkness,
                         school of many] contains mob)
                     throw_item($item[spooky VHS tape]);
-                if (get_property("_monsterHabitatsRecalled") != "3"
-                    && get_property("_monsterHabitatsFightsLeft") == "0") {
+                if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && !highSociety()) {
                     if ($monsters[slithering thing, eye in the darkness] contains mob)
                         use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
                 }
@@ -547,6 +582,7 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                     }
                     free_kill(page_text, true);
+                    cleanUp();
                 }
             } else {
                 if (free_monster(to_monster(get_property("lastCopyableMonster")))
@@ -560,6 +596,7 @@ void main(int round, monster mob, string page_text) {
                         use_skill($skill[BCZ: Refracted Gaze]);
                     }
                     free_kill(page_text, true);
+                    cleanUp();
                 }
             }
             cleanUp();
@@ -596,13 +633,16 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Temple (Right Door)]:
             if (my_maxhp() > 311)
                 abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
-            throw_items($item[crayon shavings], $item[mer-kin healscroll]);
+            if (item_amount($item[crayon shavings]) == 0)
+                throw_items($item[table tennis ball], $item[sea gel]);
+            else
+                throw_items($item[crayon shavings], $item[sea gel]);
             throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
-            throw_item($item[sea gel]);
             if (equipped_amount($item[mer-kin prayerbeads]) < 3)
-                throw_item($item[New Age healing crystal]);
+                throw_item($item[mer-kin healscroll]);
             if (equipped_amount($item[mer-kin prayerbeads]) < 2)
-                throw_item($item[soggy used band-aid]);
+                throw_item($item[New Age healing crystal]);
+            throw_item($item[sea gel]);
             cleanUp();
             attackCleanUp();
             break;
@@ -626,7 +666,10 @@ void main(int round, monster mob, string page_text) {
             if (mob == $monster[Yog-Urt, Elder Goddess of Hatred]){
                 if (my_maxhp() > 311)
                     abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
-                throw_items($item[crayon shavings], $item[mer-kin healscroll]);
+                if (available_amount($item[crayon shavings]) >= 9)
+                    throw_items($item[crayon shavings], $item[mer-kin healscroll]);
+                else 
+                    throw_items($item[table tennis ball], $item[mer-kin healscroll]);
                 throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
                 throw_item($item[sea gel]);
                 if (equipped_amount($item[mer-kin prayerbeads]) < 3)
@@ -670,6 +713,11 @@ void main(int round, monster mob, string page_text) {
             if (item_amount($item[spitball]) > 0){
                 throw_item($item[spitball]);
             }
+            free_kill(page_text, true);
+            cleanUp();
+            break;
+        case $monster[sea cowboy]:
+            use_skill($skill[%fn, kill a lot of these guys]);
             free_kill(page_text, true);
             cleanUp();
             break;
