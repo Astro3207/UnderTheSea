@@ -182,7 +182,7 @@ import <seedfinder/seedfinder.ash>;
             else if (have_effect($effect[driving waterproofly]) > 0)
                 use_familiar($familiar[jill-of-all-trades]);
             else
-                use_familiar("itdrop");
+                use_familiar($familiar[grouper groupie]);
         }
         return;
     }
@@ -1243,7 +1243,6 @@ void seaMonkees() {
         }
     }
     post_adv();
-
     // ── Step: Flytrap pellet ──────────────────────────────────────────────────
     if (get_property("questS02Monkees") == "unstarted") {
         // Get citizen/RWB ray on neptune flytrap
@@ -1257,8 +1256,7 @@ void seaMonkees() {
         // Collect pellet while RWB is active
         while (item_amount($item[wriggling flytrap pellet]) == 0
             && to_int(get_property("rwbMonsterCount")) > 0) {
-                use_familiar("itdrop");
-
+            use_familiar("itdrop");
             if (to_int(get_property("rwbMonsterCount")) == 1) {
                 cli_execute("maximize item drop" + swimmingTrunks() + if_equip($item[McHugeLarge left pole])
                     + bathysphere($item[toy cupid bow]) + freeKill());
@@ -2323,6 +2321,6 @@ void main() {
         sorceress();
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
-        set_ccs("CCSStorage");
+        set_ccs(CCSStorage);
     }
 }
