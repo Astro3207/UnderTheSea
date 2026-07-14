@@ -227,7 +227,7 @@ import <seedfinder/seedfinder.ash>;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
                         if (ef == $effect[Apriling Band Patrol Beat] && total_turns_played() < to_int(get_property("nextAprilBandTurn"))) continue;
-                        if (to_skill(ef) != $skill[none] || !have_skill(to_skill(ef))) continue;
+                        if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
                 }
@@ -1357,11 +1357,12 @@ void seaMonkees() {
                     && have_item($item[McHugeLarge left pole])) {
                 conditional += ", equip McHugeLarge left pole";
             }
-            if (baseballPlayers() >= 9)
+            if (baseballPlayers() >= 9 && to_int(get_property("_baseballInnings")) <= 2)
                 baseballD();
             if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
                 conditional += if_equip($item[blood cubic zirconia]);
             mood(pearlRes[my_primestat()]);
+            mood("noncom");
             cli_execute("maximize item drop, -100 combat, equip monodent of the sea"
                 + swimmingTrunks() + freeRun()
                 + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
@@ -1445,7 +1446,7 @@ void seaMonkees() {
                 baseballD();
             while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 
                 && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40
-                && contains_text("step9,step10",get_property("questS02Monkees"))){
+                && contains_text("step9,step10,step11,step12",get_property("questS02Monkees"))){
                 if (available_amount($item[black glass]) == 0)
                     oldGuy();
                 if (available_amount($item[Elf Guard SCUBA tank]) == 0)
