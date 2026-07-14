@@ -197,6 +197,7 @@ import <seedfinder/seedfinder.ash>;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
             }
+            print("Item drop is " + numerics_modifier("item drop"));
         }
 
         switch (mod) {
@@ -230,6 +231,7 @@ import <seedfinder/seedfinder.ash>;
                         cli_execute(ef.default);
                     }
                 }
+                print("Combat rate is " + numerics_modifier("Combat Rate"));
                 break;
             case "combat":
                 foreach ef in $effects[Carlweather's Cantata of Confrontation,
@@ -245,6 +247,7 @@ import <seedfinder/seedfinder.ash>;
                         cli_execute(ef.default);
                     }
                 }
+                print("Combat rate is " + numerics_modifier("Combat Rate"));
                 break;
             case "hotres":
             case "spookyres":
