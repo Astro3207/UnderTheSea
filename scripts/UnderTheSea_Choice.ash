@@ -248,6 +248,7 @@ void main(int whichchoice, string page) {
                 $location[The Dive Bar]:             768,
                 $location[Cyberzone 1]:             2458,
                 $location[Mer-kin Library]:        840,
+                $location[the mer-kin outpost]:     773,
                 $location[the caliginous abyss]:    1373,
                 $location[mer-kin elementary school]: 838
             };
