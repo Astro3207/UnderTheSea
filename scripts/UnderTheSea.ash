@@ -138,6 +138,8 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[greatest american pants]);
         if (available_amount($item[V for vivala mask]) > 0 && get_property("_vmaskBanisherUsed") == false)
             return if_equip($item[V for vivala mask]);
+//        if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
+//            return if_equip($item[latte lovers member's mug]);
         return freeKill();
     }
 
@@ -475,11 +477,15 @@ import <seedfinder/seedfinder.ash>;
     }
 
     int count_summons(){
-        int n = 1;
-        if (available_amount($item[combat lover's locket]) > 0)
-            n += 3;
+        int n;
+        if (get_property("_photocopyUsed") == "false")
+            n += 1;
+        if (available_amount($item[combat lover's locket]) > 0){
+            string [int] lockets = split_string(get_property("_locketMonstersFought"), ",");
+            n += count(lockets);
+        }
         if (have_familiar($familiar[chest mimic]))
-            n += floor($familiar[chest mimic].experience/100);
+            n += floor($familiar[chest mimic].experience/200);
         return n;
     }
 
@@ -928,11 +934,23 @@ import <seedfinder/seedfinder.ash>;
         adv($location[Mer-kin Gymnasium]);
     }
 
+    boolean parkaForceAvailable(){
+        if (have_item($item[jurassic parka]) && to_int(get_property("_spikolodonSpikeUses")) < 5)
+            return true;
+        return false;
+    }
+
+    boolean leftSkiAvailable(){
+        if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
+            return true;
+        return false;
+    }
+
     void skatePark() {
         NCforce();
-        if (get_property("noncombatForcerActive") != "true" && (have_item($item[jurassic parka]) || have_item($item[mchugelarge left ski])))
+        if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium();
-        else if (!have_item($item[jurassic parka]) && !have_item($item[mchugelarge left ski]) && have_item($item[allied radio backpack]))
+        else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
         if (pulls_remaining( ) > reservedPulls())
             pullSequence($item[skate blade]);
@@ -1228,7 +1246,7 @@ import <seedfinder/seedfinder.ash>;
 
 void seaMonkees() {
     //Use Sword of S Words to get sea lasso
-    if (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3 && to_float(get_property("swordOfSWordsMonster")) < 10){
+    if (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3 && to_float(get_property("swordOfSWordsMonster")) < 10 && highSociety()){
         use_familiar($familiar[Sword of S Words]);
         mood("itdrop");
         cli_execute("maximize item drop" + baseball_equip()+ freeKill()+"; recover hp");        
@@ -1422,7 +1440,9 @@ void seaMonkees() {
         if (my_path().id == 55){
             if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
                 baseballD();
-            while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40){
+            while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 
+                && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40
+                && contains_text("step9,step10",get_property("questS02Monkees"))){
                 if (available_amount($item[black glass]) == 0)
                     oldGuy();
                 if (available_amount($item[Elf Guard SCUBA tank]) == 0)
@@ -1454,7 +1474,7 @@ void seaMonkees() {
     }
     // ── Diving helmet acquisition for mid to high shiny ───────────────────────────────
     if (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat]) {
-        if (have_item($item[Cursed monkey's paw]) && count_summons() >= 2 && !highSociety()){
+        if (have_item($item[Cursed monkey's paw]) && count_summons() >= 1 && !highSociety()){
             mood("itdrop");
             if (have_effect($effect[shadow waters]) == 0)
                 shadowRift();
@@ -2317,11 +2337,13 @@ void sorceress() {
 void main() {
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+        print("Starting UnderTheSea");
         initialization();
         seaMonkees();
         sorceress();
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
         set_ccs(CCSStorage);
+        print("Ending UnderTheSea");
     }
 }
