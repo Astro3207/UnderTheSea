@@ -197,7 +197,7 @@ import <seedfinder/seedfinder.ash>;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
             }
-            print("Item drop is " + numerics_modifier("item drop"));
+            print("Item drop is " + numeric_modifier("item drop"));
         }
 
         switch (mod) {
@@ -231,7 +231,7 @@ import <seedfinder/seedfinder.ash>;
                         cli_execute(ef.default);
                     }
                 }
-                print("Combat rate is " + numerics_modifier("Combat Rate"));
+                print("Combat rate is " + numeric_modifier("Combat Rate"));
                 break;
             case "combat":
                 foreach ef in $effects[Carlweather's Cantata of Confrontation,
@@ -247,7 +247,7 @@ import <seedfinder/seedfinder.ash>;
                         cli_execute(ef.default);
                     }
                 }
-                print("Combat rate is " + numerics_modifier("Combat Rate"));
+                print("Combat rate is " + numeric_modifier("Combat Rate"));
                 break;
             case "hotres":
             case "spookyres":
@@ -926,11 +926,11 @@ import <seedfinder/seedfinder.ash>;
                 if (have_item($item[mchugelarge left ski]))
                     conditional += ", equip mchugelarge left ski";
                 else if (have_item($item[jurassic parka]))
-                    conditional += "; parka spikolodon";
+                    conditional += "equip jurassic parka; parka spikolodon";
             }
         conditional += baseball_equip();
         cli_execute("maximize combat, equip " + divingHelmet()
-            + ", equip " + tailpiece() + conditional + freeRun() + freeKill());
+            + ", equip " + tailpiece() + freeRun() + freeKill() + conditional);
         mood("combat");
         if (get_property("noncombatForcerActive") == "true")
             abort("Sneak active while trying to adventure in gymnasium, get rid of it");
