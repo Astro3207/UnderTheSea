@@ -926,7 +926,7 @@ import <seedfinder/seedfinder.ash>;
                 if (have_item($item[mchugelarge left ski]))
                     conditional += ", equip mchugelarge left ski";
                 else if (have_item($item[jurassic parka]))
-                    conditional += "equip jurassic parka; parka spikolodon";
+                    conditional += ", equip jurassic parka; parka spikolodon";
             }
         conditional += baseball_equip();
         cli_execute("maximize combat, equip " + divingHelmet()
