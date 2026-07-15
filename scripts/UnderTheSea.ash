@@ -566,13 +566,16 @@ import <seedfinder/seedfinder.ash>;
                     abort("no more easy diet");
                 }
             }
-            if (have_effect($effect[fishy]) == 0 && have_effect($effect[Driving Waterproofly]) == 0) {
+            if (have_effect($effect[Driving Waterproofly]) == 0) {
                 if (get_workshed() == $item[Asdon Martin keyfob (on ring)]){
                     if (get_fuel() >= 37)
                         cli_execute("asdonmartin drive Waterproofly");
                     else
                         abort("Asdon Martin owners, fuel car manually until I can get some guidance on which foods are best");
-                } else if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false" && lowShiny == false){
+                }
+            }
+            if (have_effect($effect[fishy]) == 0) {
+                if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false" && lowShiny == false){
                         if (item_amount($item[fishy pipe]) == 0)
                             cli_execute("pull fishy pipe");
                         use($item[fishy pipe]);
