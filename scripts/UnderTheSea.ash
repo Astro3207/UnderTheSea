@@ -2147,13 +2147,6 @@ void sorceress() {
             if (available_amount($item[mer-kin prayerbeads]) < 3
                 && !contains_text(get_property("_roninStoragePulls"), "3806"))
                 pullSequence($item[mer-kin prayerbeads]);
-            use_familiar("itdrop");
-            cli_execute("maximize spell damage percent, hot damage, cold damage"
-                + ", spooky damage, sleaze damage, stench damage"
-                + ", equip Mer-kin scholar mask, equip Mer-kin scholar tailpiece, -equip tiny yam cannon"
-                + if_equip($item[bat wings])
-                + if_equip($item[toy cupid bow]));
-            equip($slot[acc1], $item[mer-kin prayerbeads]);
 
             // Equip as many prayerbeads as available, pull healing items for gaps
             if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
@@ -2161,6 +2154,12 @@ void sorceress() {
                   farmPrayerbeads();
                 }
             }  
+
+            use_familiar("itdrop");
+            tempEquipment("moxie, hot damage, cold damage, spooky damage, sleaze damage, stench damage, -equip tiny yam cannon",
+                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + if_equip($item[bat wings])+ bathysphere($item[toy cupid bow]));
+            equip($slot[acc1], $item[mer-kin prayerbeads]);
+
             if (available_amount($item[mer-kin prayerbeads]) >= 3) {
                 equip($slot[acc2], $item[mer-kin prayerbeads]);
                 equip($slot[acc3], $item[mer-kin prayerbeads]);
@@ -2168,8 +2167,18 @@ void sorceress() {
                 if (available_amount($item[mer-kin prayerbeads]) >= 2)
                     equip($slot[acc2], $item[mer-kin prayerbeads]);
                 else {
-                    if (item_amount($item[New Age healing crystal]) == 0)
+                    if (item_amount($item[New Age healing crystal]) == 0 && contains_text(get_property("_roninStoragePulls"),"8425"))
                         pullSequence($item[New Age healing crystal]);
+                    else if (item_amount($item[soggy used band-aid]) == 0 && contains_text(get_property("_roninStoragePulls"),"5678"))
+                        pullSequence($item[soggy used band-aid]);
+                    else {
+                        while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
+                            farmPrayerbeads();
+                        }
+                        equip($slot[acc1], $item[mer-kin prayerbeads]);
+                        equip($slot[acc2], $item[mer-kin prayerbeads]);
+                        equip($slot[acc3], $item[mer-kin prayerbeads]);
+                    }
                 }
             }
             if (have_effect($effect[gummiheart]) > 0)
