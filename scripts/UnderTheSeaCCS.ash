@@ -1,13 +1,5 @@
 import iotm.ash;
-
-// ─── COMBAT HELPERS ───────────────────────────────────────────────────────────
-
-boolean highSociety(){
-    boolean bool;
-    if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
-        bool = true;
-    return bool;
-}
+import underthesea.ash;
 
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
@@ -185,7 +177,7 @@ void main(int round, monster mob, string page_text) {
             if (my_primestat() == $stat[moxie]) steal();
             if (get_property("_seadentWaveUsed") == "true"
                 && to_int(get_property("lassoTrainingCount")) < 20
-                && item_amount($item[sea cowbell]) > 0)
+                && item_amount($item[sea lasso]) > 0)
                 throw_item($item[sea lasso]);
             if (mob == $monster[shadow slab]) {
                 if (item_amount($item[Septapus summoning charm]) > 0)
@@ -376,7 +368,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Coral Corral]:
-            if (item_amount($item[sea cowbell]) == 0) {
+            if (($location[the coral corral].turns_spent == 0 || last_monster() == $monster[wild seahorse])) {
                 if (highSociety()){
                     if (mob == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
@@ -394,6 +386,7 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 } else {
                     if (mob == $monster[mer-kin rustler]){
+                        use_if_have_skill(page_text, $skill[spring kick]);
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
                         use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
@@ -462,16 +455,23 @@ void main(int round, monster mob, string page_text) {
                 if (mob == $monster[wild seahorse]) {
                     runaway( );
                 } else if (mob == $monster[mer-kin rustler]){
-                    if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
-                        use_skill($skill[heartstone: %banish]);
+                    if (combatBan() != $skill[none]){
+                        use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
                     }
-                } else if (mob == $monster[sea cow]){
-                    if (item_amount($item[sea cowbell]) < 3){
-                        cleanUp();
+                } else if (mob == $monster[sea cow] && doneWithSeaCow()){
+                    if (combatBan() != $skill[none]){
+                        use_skill(combatBan());
+                    } else {
+                        free_run(page_text, true);
                     }
-                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+                } else if (mob == $monster[sea cowboy] && doneWithCowboy()){
+                    if (combatBan() != $skill[none]){
+                        use_skill(combatBan());
+                    } else {
+                        free_run(page_text, true);
+                    }
                 }
                 cleanUp();
             }
