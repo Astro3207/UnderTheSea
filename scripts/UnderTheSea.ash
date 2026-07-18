@@ -1,7 +1,8 @@
 import iotm.ash;
 import <seedfinder/seedfinder.ash>;
 
-// ─── GLOBALS ──────────────────────────────────────────────────────────────────
+// ─── GLOBALS ──────────────────────────────────────────────────────────────────   
+    familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
     string seaFit,boss,modes;
@@ -210,6 +211,8 @@ import <seedfinder/seedfinder.ash>;
 // ─── MOOD ─────────────────────────────────────────────────────────────────────
 
     void use_familiar(string mod){
+        if (chosenFamiliar != $familiar[none])
+            use_familiar(chosenFamiliar);
         if (mod == "-combat"){
             foreach fam in $familiars[peace turkey, disgeist, grouper groupie]{
                 if (have_familiar(fam)){
@@ -601,6 +604,10 @@ import <seedfinder/seedfinder.ash>;
             }
             if (have_effect($effect[Driving Waterproofly]) == 0) {
                 if (get_workshed() == $item[Asdon Martin keyfob (on ring)]){
+                    if (get_fuel() == 0 && !contains_text(get_property("_roninStoragePulls"),"7372")){
+                        pullSequence($item[pie man was not meant to eat]);
+                        cli_execute("asdonmartin fuel 1 pie man was not meant to eat");
+                    }
                     if (get_fuel() >= 37)
                         cli_execute("asdonmartin drive Waterproofly");
                     else
