@@ -171,6 +171,8 @@ boolean banishUsedAtYourLocation(string banisher) {
 item banishGear(location loc) {
     item it;
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
+        if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
+            continue;
         if (appearance_rates(loc)[banished(banMap[ite].pref)] > 0 && have_item(ite)) {
             it = ite;
             break;
@@ -184,6 +186,8 @@ item banishGear(location loc) {
 // whose target is no longer appearing at your location
 skill combatBan() {
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
+        if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
+            continue;
         if (have_equipped(ite)
             && appearance_rates(my_location())[banished(banMap[ite].pref)] == 0) {
             return banMap[ite].banSkill;
