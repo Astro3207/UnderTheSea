@@ -200,7 +200,10 @@ import <seedfinder/seedfinder.ash>;
         foreach slo in equipmentSelection{
             if (available_amount(equipmentSelection[slo]) == 0)
                 abort("Missing " + equipmentSelection[slo]);
-            maximizerString += ", equip " + equipmentSelection[slo];
+            if (equipmentSelection[slo] == $item[really, really nice swimming trunks])
+                maximizerString += ", equip really nice swimming trunks";
+            else
+                maximizerString += ", equip " + equipmentSelection[slo];
         }
         if (!maximize(maximizerString, false))
             abort("Maximizer failed");
