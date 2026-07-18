@@ -232,6 +232,10 @@ void main(int whichchoice, string page) {
             int encounter = to_int(get_property("_mobiusStripEncounters"));
             if (mobiusKeywords contains encounter)
                 pickChoice(mobiusKeywords[encounter]);
+            else{
+                if (!pickChoice("investment tips"))
+                    pickChoice("from your future self");
+            }
             break;
 
         // ── Peridot monsters ───────────────────────────────────────
