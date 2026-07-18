@@ -179,10 +179,6 @@ import <seedfinder/seedfinder.ash>;
         string [int] itemMap = split_string(itemInput, ",");
         item [slot] equipmentSelection;
         foreach str in itemMap{
-            // Empty split element (bare/leading/doubled comma in the item-string) → $item[none]; skip it,
-            // else loop 2 aborts "Missing none". A $item[none] element is only ever a parse artifact.
-            if (to_item(itemMap[str]) == $item[none])
-                continue;
             if (equipmentSelection[to_slot(to_item(itemMap[str]))] == $item[none]){
                 equipmentSelection[to_slot(to_item(itemMap[str]))] = to_item(itemMap[str]); 
                 continue;
@@ -482,20 +478,17 @@ import <seedfinder/seedfinder.ash>;
             if (get_property("questRufus") == "unstarted")
                 use($item[closed-circuit pay phone]);
             if (have_effect($effect[shadow affinity]) > 0) {
-                if (item_amount($item[sea lasso]) == 0
-                    && item_amount($item[sea cowbell]) > 0) {
+                if (item_amount($item[sea lasso]) == 0) {
                     equip($item[really, really nice swimming trunks]);
                     equip($item[little bitty bathysphere]);
                     cli_execute("monkeypaw item sea lasso");
                 }
-                if (item_amount($item[sea lasso]) == 0
-                    && item_amount($item[sea cowbell]) > 0)
+                if (item_amount($item[sea lasso]) == 0)
                     abort("need more lassos somehow");
                 if (!use_familiar($familiar[jill-of-all-trades]))
                     use_familiar("itdrop");
                 
-                if (to_int(get_property("lassoTrainingCount")) < 20
-                    && item_amount($item[sea cowbell]) > 0) {
+                if (to_int(get_property("lassoTrainingCount")) < 20) {
                     tempEquipment("item drop","Flash Liquidizer Ultra Dousing Accessory,monodent of the sea,sea cowboy hat,sea chaps,"
                     + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
                 } else {
@@ -1093,6 +1086,35 @@ import <seedfinder/seedfinder.ash>;
         adv($location[mer-kin library]);
     }
 
+    boolean doneWithCowboy(){
+        boolean bool = true;
+        if (to_int(get_property("lassoTrainingCount")) + (3*item_amount($item[sea lasso])) < 20)
+            bool = false;
+        return bool;
+    }
+
+    boolean doneWithSeaCow(){
+        boolean bool = true;
+        if (item_amount($item[sea leather]) + available_amount($item[sea chaps]) + available_amount($item[sea cowboy hat]) < 2)
+            bool = false;
+        if (item_amount($item[sea cowbell]) < 3)
+            bool = false;
+        return bool;
+    }
+
+    void getMissingCorralItems(){
+        mood("itdrop");
+        string conditional;
+        if (!contains_text(get_property("banishedMonsters"),"Mer-kin rustler")
+            || (doneWithCowboy() && !contains_text(get_property("banishedMonsters"),"sea cowboy"))
+            || (doneWithSeaCow() && !contains_text(get_property("banishedMonsters"),"sea cow:")))
+            conditional += if_equip(banishGear($location[The Coral Corral]));
+        tempEquipment("item drop", "really nice swimming trunks," + conditional);
+        adv($location[The Coral Corral]);
+        if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
+            baseballD();
+    }
+
 // Other Utilities Part 2
     void curveballBurn(){
         if (!contains_text(get_property("_perilLocations"), "196") && available_amount($item[mer-kin digpick]) == 0){
@@ -1100,27 +1122,27 @@ import <seedfinder/seedfinder.ash>;
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + "eternity codpiece,monodent of the sea");
+            tempEquipment("spooky res", swimmingTrunks() + "the eternity codpiece,monodent of the sea");
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("hot res", swimmingTrunks() + "eternity codpiece,monodent of the sea");
+            tempEquipment("hot res", swimmingTrunks() + "the eternity codpiece,monodent of the sea");
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar("itdrop");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("sleaze res", swimmingTrunks() + "eternity codpiece,monodent of the sea");
+            tempEquipment("sleaze res", swimmingTrunks() + "the eternity codpiece,monodent of the sea");
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + "eternity codpiece,monodent of the sea");
+            tempEquipment("spooky res", swimmingTrunks() + "the eternity codpiece,monodent of the sea");
             adv1($location[Anemone Mine]);
         } else {
             tempEquipment("item drop","monodent of the sea");
@@ -1192,13 +1214,12 @@ import <seedfinder/seedfinder.ash>;
     void backupLasso() {
         if (!contains_text(get_property("_roninStoragePulls"), "11453"))
             cli_execute("pull elf guard scuba");
-        if (item_amount($item[sea lasso]) == 0 && item_amount($item[sea cowbell]) > 0){
+        if (item_amount($item[sea lasso]) == 0){
             equip($item[really, really nice swimming trunks]);
             equip($item[little bitty bathysphere]);
             cli_execute("monkeypaw item sea lasso");
         }
-        if (item_amount($item[sea lasso]) == 0
-            && item_amount($item[sea cowbell]) > 0)
+        if (item_amount($item[sea lasso]) == 0)
             abort("need more lassos somehow");
 
         string [stat] resType = {
@@ -1662,8 +1683,8 @@ void seaMonkees() {
         }
     }
 
-    // ── Coral Corral unlock — get sea cowbell ─────────────────────────────────
-    if (get_property("corralUnlocked") == "true" && item_amount($item[sea cowbell]) == 0 && get_property("seahorseName") == "" && my_path().id == 55) {
+    // ── Attempt at 1 turn coral corral
+    if (get_property("corralUnlocked") == "true" && ($location[the coral corral].turns_spent == 0 || last_monster() == $monster[wild seahorse]) && get_property("seahorseName") == "" && my_path().id == 55) {
         if (have_effect($effect[shadow waters]) == 0 && lowShiny == false)
             shadowRift();
         use_familiar("itdrop");
@@ -1697,11 +1718,7 @@ void seaMonkees() {
     }
     if (item_amount($item[sea lasso]) < 5 && to_int(get_property("lassoTrainingCount")) < 20){
         while (!have_item($item[cursed monkey's paw]) && item_amount($item[sea lasso]) < 6){
-            mood("itdrop");
-            tempEquipment("item drop", "really nice swimming trunks");
-            adv($location[The Coral Corral]);
-            if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
-                baseballD();
+            getMissingCorralItems();
         }
         codpiece("none");
     }
@@ -1709,20 +1726,27 @@ void seaMonkees() {
     // ── Diving helmet acquisition for non-monkey paw owners and shadow rift owners ───────────────────────────────
 
     // ── Craft sea cowboy hat and chaps ────────────────────────────────────────
-    if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]) {
-        codpiece("none");
-        if (item_amount($item[sea leather]) < 2 && available_amount($item[sea cowboy hat]) == 0)
-            abort("Not enough sea leather for sea cowboy hat");
-        else if (available_amount($item[sea cowboy hat]) == 0)
-            create($item[sea cowboy hat]);
-        if (item_amount($item[sea leather]) < 1 && available_amount($item[sea chaps]) == 0)
-            abort("Not enough sea leather for sea chaps");
-        create($item[sea chaps]);
+    if (my_path().id == 0){
+        retrieve_item($item[sea chaps]);
+        retrieve_item($item[sea cowboy hat]);
     } else {
-        if (item_amount($item[sea leather]) < 1 && available_amount($item[sea cowboy hat]) == 0)
-            abort("Not enough sea leather for sea cowboy hat");
-        else if (available_amount($item[sea cowboy hat]) == 0)
+        if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]) {
+            while (item_amount($item[sea leather]) < 1)
+                getMissingCorralItems();
+            create($item[sea chaps]);
+        }
+        if (available_amount($item[sea cowboy hat]) == 0) {
+            while (item_amount($item[sea leather]) < 1)
+                getMissingCorralItems();
             create($item[sea cowboy hat]);
+        }
+        int wantCowbell = 1;
+        if (available_amount($item[cursed monkey's paw]) == 0)
+            wantCowbell += 1;
+        if (get_property("seahorseName") == "" && item_amount($item[sea cowbell]) < wantCowbell){
+            while (item_amount($item[sea cowbell]) < wantCowbell)
+                getMissingCorralItems();
+        }
     }
 }
 // ─── SORCERESS ────────────────────────────────────────────────────────────────
