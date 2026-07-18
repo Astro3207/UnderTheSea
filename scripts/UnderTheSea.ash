@@ -2357,6 +2357,5 @@ void main() {
         set_property("choiceAdventureScript", choiceStorage);
         set_ccs(CCSStorage);
         print("Ending UnderTheSea");
-        print("If you're seeing this and had an abort, sorry, I just made a big change but my account is not in a state to be able to debug. DM me and I'll try to fix it... Or you can reinstall the previous one until fixed","red");
     }
 }
