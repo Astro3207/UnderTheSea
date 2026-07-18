@@ -17,7 +17,5 @@ Things to prepare BEFORE ascending:
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
 
 Items to add support for
-- Lil doctor's bag
 - May fourth lightsaber
 - Folder Holder
-- Asdon martin
