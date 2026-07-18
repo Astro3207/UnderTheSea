@@ -167,6 +167,14 @@ import <seedfinder/seedfinder.ash>;
             buy($coinmaster[Big Brother], 1, $item[black glass]);
     }
 
+    boolean badMaxString(string str){
+        foreach c in $strings[\,,0,1,2,3,4,5,6,7,8,9] {
+            if (contains_text(str, c))
+                return true;
+        }
+        return false;
+    }
+
     void tempEquipment(string maximizerInput, string itemInput){
         string [int] itemMap = split_string(itemInput, ",");
         item [slot] equipmentSelection;
@@ -200,8 +208,8 @@ import <seedfinder/seedfinder.ash>;
         foreach slo in equipmentSelection{
             if (available_amount(equipmentSelection[slo]) == 0)
                 abort("Missing " + equipmentSelection[slo]);
-            if (equipmentSelection[slo] == $item[really, really nice swimming trunks])
-                maximizerString += ", equip really nice swimming trunks";
+            if (badMaxString(to_string(equipmentSelection[slo])))
+                maximizerString += ", equip [" + to_int(equipmentSelection[slo]) + "]";
             else
                 maximizerString += ", equip " + equipmentSelection[slo];
         }
