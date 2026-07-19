@@ -20,8 +20,7 @@ void free_kill(string ptext, boolean drop) {
             && my_location() != $location[mer-kin colosseum])
             continue;
         if (freeskill == $skill[BCZ: Sweat Bullets]
-            && to_int(get_property("_bczSweatBulletsCasts")) >= 9
-            && my_location() == $location[The Mer-Kin Outpost])
+            && (my_basestat($stat[submoxie]) - 22500) < BCZcost("SweatBulletsCasts"))
             continue;
         if (contains_text(ptext, to_string(freeskill)))
             use_skill(freeskill);
@@ -198,13 +197,13 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[an octopus's garden]:
-            if (have_effect($effect[Citizen of a Zone]) == 0)
+            if (have_effect($effect[Citizen of a Zone]) == 0 && my_familiar() == $familiar[patriotic eagle])
                 use_skill($skill[%fn, let's pledge allegiance to a Zone]);
             if (mob == $monster[neptune flytrap]) {
-                if (have_effect($effect[Everything Looks Red, White and Blue]) == 0)
+                if (have_effect($effect[Everything Looks Red, White and Blue]) == 0 && my_familiar() == $familiar[patriotic eagle])
                     use_skill($skill[%fn, fire a Red, White and Blue Blast]);
                 darts();
-                if (have_equipped($item[McHugeLarge left pole])
+                if ((have_equipped($item[McHugeLarge left pole]) || available_amount($item[mchugelarge left pole]) == 0)
                     && !contains_text(get_property("trackedMonsters"), "Neptune flytrap")) {
                     foreach sk in $skills[transcendent olfaction,
                         Gallapagosian Mating Call, MCHUGELARGE SLASH]
@@ -368,7 +367,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Coral Corral]:
-            if (($location[the coral corral].turns_spent == 0 || last_monster() == $monster[wild seahorse])) {
+            if ($location[the coral corral].turns_spent == 0 || (last_monster() == $monster[wild seahorse] && to_int(get_property("lassoTrainingCount")) < 20)) {
                 if (highSociety()){
                     if (mob == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
