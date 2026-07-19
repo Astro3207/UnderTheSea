@@ -367,7 +367,11 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Coral Corral]:
-            if ($location[the coral corral].turns_spent == 0 || (last_monster() == $monster[wild seahorse] && (to_int(get_property("lassoTrainingCount")) < 20 || item_amount($item[sea cowbell]) < 3))) {
+            if (last_monster() == $monster[wild seahorse] && item_amount($item[sea cowbell]) >= 3 && to_int(get_property("lassoTrainingCount")) == 20){
+                throw_items($item[sea cowbell], $item[sea cowbell]);
+                throw_items($item[sea cowbell], $item[sea lasso]);
+            }
+            if ($location[the coral corral].turns_spent == 0 || get_property("_lastCombatWon") == false) {
                 if (highSociety()){
                     if (mob == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
@@ -408,48 +412,43 @@ void main(int round, monster mob, string page_text) {
             } else if (item_amount($item[sea cowbell]) >= 3 && to_int(get_property("lassoTrainingCount")) == 20) {
                 if (mob.phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
-                if (mob == $monster[wild seahorse]) {
-                    throw_items($item[sea cowbell], $item[sea cowbell]);
-                    throw_items($item[sea cowbell], $item[sea lasso]);
-                } else {
-                    if (get_property("seahorseName") == "") {
-                        if ((!contains_text(get_property("banishedMonsters"), "sea cow:")
-                            && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
-                            || (!contains_text(get_property("banishedMonsters"), "Mer-kin rustler")
-                            && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
-                            || (!contains_text(get_property("banishedMonsters"), "sea cow:")
-                            && !contains_text(get_property("banishedMonsters"), "Mer-kin rustler"))){
-                                if (mob == $monster[Mer-kin rustler] && get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
-                                    use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
-                                    if (last_monster() == $monster[some fish])
-                                        cleanUp();
-                                }
-                                free_run(page_text, true);
-                                if (mob == $monster[mer-kin rustler]){
-                                    if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
-                                        use_skill($skill[heartstone: %banish]);
-                                    } 
-                                } else if (mob == $monster[sea cowboy]){
-                                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
-                                } else if (mob == $monster[sea cow]){
-                                    use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
-                                }
+                if (get_property("seahorseName") == "") {
+                    if ((!contains_text(get_property("banishedMonsters"), "sea cow:")
+                        && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
+                        || (!contains_text(get_property("banishedMonsters"), "Mer-kin rustler")
+                        && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
+                        || (!contains_text(get_property("banishedMonsters"), "sea cow:")
+                        && !contains_text(get_property("banishedMonsters"), "Mer-kin rustler"))){
+                            if (mob == $monster[Mer-kin rustler] && get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+                                use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
+                                if (last_monster() == $monster[some fish])
+                                    cleanUp();
                             }
-                    }
-                    if (item_amount($item[waffle]) > 0
-                        && !contains_text(get_property("_lastCombatActions"), "it11311")) {
-                        throw_item($item[waffle]);
-                        run_combat();
-                    }
-                    if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
-                        use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
-                        if (last_monster() == $monster[some fish])
-                            cleanUp();
-                    }
-                    free_run(page_text, false);
-                    free_kill(page_text, false);
-                    cleanUp();
+                            free_run(page_text, true);
+                            if (mob == $monster[mer-kin rustler]){
+                                if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
+                                    use_skill($skill[heartstone: %banish]);
+                                } 
+                            } else if (mob == $monster[sea cowboy]){
+                                use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+                            } else if (mob == $monster[sea cow]){
+                                use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
+                            }
+                        }
                 }
+                if (item_amount($item[waffle]) > 0
+                    && !contains_text(get_property("_lastCombatActions"), "it11311")) {
+                    throw_item($item[waffle]);
+                    run_combat();
+                }
+                if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+                    use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
+                    if (last_monster() == $monster[some fish])
+                        cleanUp();
+                }
+                free_run(page_text, false);
+                free_kill(page_text, false);
+                cleanUp();
             } else {
                 if (mob == $monster[wild seahorse]) {
                     runaway( );
