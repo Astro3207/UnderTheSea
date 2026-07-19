@@ -1582,7 +1582,7 @@ void seaMonkees() {
                 tempEquipment("-combat", swimmingTrunks() + bathysphere($item[toy cupid bow]));
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
             }
-            while (item_amount($item[rusty rivet]) < 8){
+            while (item_amount($item[rusty rivet]) < 8 || available_amount($item[rusty broken diving helmet]) == 0 || item_amount($item[rusty porthole]) == 0){
                 string conditional;
                     if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0){
                         conditional += "shark jumper,scale-mail underwear,elf guard scuba tank,";
