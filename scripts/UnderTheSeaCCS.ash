@@ -367,7 +367,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Coral Corral]:
-            if ($location[the coral corral].turns_spent == 0 || (last_monster() == $monster[wild seahorse] && to_int(get_property("lassoTrainingCount")) < 20)) {
+            if ($location[the coral corral].turns_spent == 0 || (last_monster() == $monster[wild seahorse] && (to_int(get_property("lassoTrainingCount")) < 20 || item_amount($item[sea cowbell]) < 3))) {
                 if (highSociety()){
                     if (mob == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
