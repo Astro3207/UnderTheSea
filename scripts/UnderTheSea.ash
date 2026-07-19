@@ -708,7 +708,7 @@ import <seedfinder/seedfinder.ash>;
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += "monodent of the sea,";
             tempEquipment("item drop",if_equip(divingHelmet()) + "shark jumper,scale-mail underwear,black glass,"+ if_equip($item[peridot of peril]) 
-                + free_kill() + bathysphere($item[toy cupid bow]) + conditional);
+                + freeKill() + bathysphere($item[toy cupid bow]) + conditional);
             adv1($location[The Caliginous Abyss]);
         }
 
