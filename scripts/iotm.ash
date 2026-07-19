@@ -173,7 +173,7 @@ item banishGear(location loc) {
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
-        if (appearance_rates(loc)[banished(banMap[ite].pref)] > 0 && have_item(ite)) {
+        if (appearance_rates(loc)[banished(banMap[ite].pref)] == 0 && have_item(ite)) {
             it = ite;
             break;
         }
