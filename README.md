@@ -11,7 +11,7 @@ Things to prepare BEFORE ascending:
 - Have all of the underwater maps done
 - Have a damp old wallet (not required but saves a turn)
 - Have black crayon golem and unholy diver in combat lover's locket (optional)
-- Familiars: Gruoper gruopie, glover, foul ball
+- Familiars: Grouper groupie, glover, foul ball
 - Reccomendation for a competitive turn count/looping: Push the noncombat A Mer-kin Graffiti out of the noncombat queue
 
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
