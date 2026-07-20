@@ -171,6 +171,8 @@ import <seedfinder/seedfinder.ash>;
         string [int] itemMap = split_string(itemInput, ",");
         item [slot] equipmentSelection;
         foreach str in itemMap{
+            if (to_item(itemMap[str]) == $item[none])
+                print("String to item mismatch, item is " + itemMap[str] + ", notify fart scauce","red");
             if (equipmentSelection[to_slot(to_item(itemMap[str]))] == $item[none]){
                 equipmentSelection[to_slot(to_item(itemMap[str]))] = to_item(itemMap[str]); 
                 continue;
@@ -1353,7 +1355,7 @@ void seaMonkees() {
                     tempEquipment("item drop", swimmingTrunks()
                         + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]));
                 } else {
-                    tempEquipment("item drop", swimmingTrunks() + banishGear($location[An octopus's garden])
+                    tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
                         + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
                 }
                 adv($location[An octopus's garden]);
