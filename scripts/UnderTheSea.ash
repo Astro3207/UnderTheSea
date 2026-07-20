@@ -160,7 +160,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     void blackGlass(){
-        use_familiar($familiar[grouper groupie]);
+        use_familiar("itdrop");
         equip($item[really, really nice swimming trunks]);
         visit_url("monkeycastle.php?who=1");
         if (available_amount($item[black glass]) == 0) 
