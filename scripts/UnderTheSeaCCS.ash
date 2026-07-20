@@ -633,9 +633,12 @@ void main(int round, monster mob, string page_text) {
                 abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
             if (item_amount($item[crayon shavings]) == 0)
                 throw_items($item[table tennis ball], $item[sea gel]);
-            else
+            else if (have_effect($effect[null afternoon]) == 0)
                 throw_items($item[crayon shavings], $item[sea gel]);
-            throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
+            if (have_effect($effect[null afternoon]) == 0)
+                throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
+            else
+                throw_item($item[waterlogged scroll of healing]);
             if (equipped_amount($item[mer-kin prayerbeads]) < 3)
                 throw_item($item[mer-kin healscroll]);
             if (equipped_amount($item[mer-kin prayerbeads]) < 2)
