@@ -159,14 +159,6 @@ import <seedfinder/seedfinder.ash>;
         return "";
     }
 
-    void blackGlass(){
-        use_familiar("itdrop");
-        equip($item[really, really nice swimming trunks]);
-        visit_url("monkeycastle.php?who=1");
-        if (available_amount($item[black glass]) == 0) 
-            buy($coinmaster[Big Brother], 1, $item[black glass]);
-    }
-
     boolean badMaxString(string str){
         foreach c in $strings[\,,0,1,2,3,4,5,6,7,8,9] {
             if (contains_text(str, c))
@@ -294,6 +286,8 @@ import <seedfinder/seedfinder.ash>;
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
                             && get_property("yogUrtDefeated") == "false") continue;
+                        if (ef == $effect[Bloodbathed]
+                            && lowShiny == true) continue;
                         if (ef == $effect[Apriling Band Battle Cadence] && total_turns_played() < to_int(get_property("nextAprilBandTurn"))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
@@ -354,6 +348,14 @@ import <seedfinder/seedfinder.ash>;
     }
 
 // ─── Other Utilies ───────────────────────────────────────────────────────────────────
+
+    void blackGlass(){
+        use_familiar("itdrop");
+        equip($item[really, really nice swimming trunks]);
+        visit_url("monkeycastle.php?who=1");
+        if (available_amount($item[black glass]) == 0) 
+            buy($coinmaster[Big Brother], 1, $item[black glass]);
+    }
 
     void useMapIfAvailable() {
         if (highSociety())
