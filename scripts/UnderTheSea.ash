@@ -1083,6 +1083,8 @@ import <seedfinder/seedfinder.ash>;
             || (doneWithCowboy() && !contains_text(get_property("banishedMonsters"),"sea cowboy"))
             || (doneWithSeaCow() && !contains_text(get_property("banishedMonsters"),"sea cow:")))
             conditional += if_equip(banishGear($location[The Coral Corral]));
+        if (lowShiny)
+            conditional += "congressional medal of insanity,";
         tempEquipment("item drop", "really nice swimming trunks," + conditional);
         
         mood("itdrop");
@@ -1874,6 +1876,10 @@ void sorceress() {
         while (item_amount($item[sea cowbell]) < wantCowbell)
             getMissingCorralItems();
     }
+    if (get_property("seahorseName") == "" && item_amount($item[sea lasso]) == 0){
+        while (item_amount($item[sea lasso]) == 0)
+            getMissingCorralItems();
+    }
 
     // ── Seahorse taming ───────────────────────────────────────────────────────
     while (get_property("seahorseName") == "") {
@@ -2322,27 +2328,27 @@ void sorceress() {
                 freeFight = "legendary seal-clubbing club,";
             else if (to_int(get_property("_batWingsFreeFights")) < 5)
                 freeFight = if_equip($item[bat wings]);
-            tempEquipment("spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
-                + "congressional medal of insanity," + freeFight);
+            else if (have_item($item[Unwrapped knock-off retro superhero cape])){
+                freeFight = "unwrapped knock-off retro superhero cape,";
+                modes = "retrocape heck kill";
+            }
+
             if (to_int(get_property("lastColosseumRoundWon")) >= 3
                 && have_effect($effect[Up To 11]) == 0)
                 cli_execute($effect[Up To 11].default);
-            if (to_int(get_property("lastColosseumRoundWon")) >= 12) {
+            if (to_int(get_property("lastColosseumRoundWon")) >= 6) {
                 if (item_amount($item[crayon shavings]) < 8
                     && item_amount($item[null-day exploit]) > 0
                     && have_effect($effect[null afternoon]) == 0)
                     use($item[null-day exploit]);
                 if (have_familiar($familiar[foul ball])) {
                     use_familiar($familiar[foul ball]);
-                    equip($item[little bitty bathysphere]);
-                    if (have_item($item[bat wings]))
-                        equip($item[bat wings]);
-                } else if (have_item($item[Unwrapped knock-off retro superhero cape])){
-                    cli_execute("retrocape heck kill;"
-                        + " equip unwrapped knock-off retro superhero cape");
                 }
                 mood("colosseum");
             }
+            float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/numeric_modifier("spell damage percent");
+            tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
+                + "congressional medal of insanity," + freeFight);
             adv($location[Mer-kin Colosseum]);
             if (get_property("lastEncounter") == "Been There, Won That")
                 set_property("lastColosseumRoundWon","15");
