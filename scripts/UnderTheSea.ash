@@ -1139,6 +1139,7 @@ import <seedfinder/seedfinder.ash>;
                     tempEquipment("item drop","Flash Liquidizer Ultra Dousing Accessory,monodent of the sea,"
                     + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
                 }
+                mood("itdrop");
                 adv1($location[Shadow Rift (The Misspelled Cemetary)]);
                 if (get_property("_seadentWaveUsed") == "false"
                     && have_effect($effect[shadow affinity]) > 0) {
