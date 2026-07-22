@@ -408,68 +408,6 @@ import <seedfinder/seedfinder.ash>;
         return to_string(buf);
     }
 
-    int mineNum() {
-        int num, x_coor, y_coor;
-        string itzmine = visit_url("mining.php?mine=3");
-        matcher mining_spot = create_matcher(
-            "Promising Chunk of Wall \\((\\d+),(\\d+)\\)", itzmine);
-
-        // Try preferred spots first
-        foreach str in $strings[(3\,6),(3\,5),(3\,4),(3\,3),(3\,2),(2\,2),(4\,2),(5\,2)] {
-            if (!contains_text(itzmine, "Open Cavern " + str)) {
-                matcher open_spot = create_matcher("(\\d),(\\d)", str);
-                if (open_spot.find()) {
-                    x_coor = to_int(open_spot.group(1));
-                    y_coor = to_int(open_spot.group(2));
-                    num = (8 * y_coor) + x_coor;
-                    break;
-                }
-            }
-        }
-
-        // Fall back to promising chunks not near bad ore
-        if (num == 0) {
-            while (mining_spot.find()) {
-                x_coor = to_int(mining_spot.group(1));
-                y_coor = to_int(mining_spot.group(2));
-                if (y_coor >= 4
-                    || contains_text(adjacentCaverns(x_coor, y_coor), "velcroore")
-                    || contains_text(adjacentCaverns(x_coor, y_coor), "vinylore"))
-                    continue;
-                num = (8 * y_coor) + x_coor;
-                break;
-            }
-        }
-
-        // Last resort: any promising chunk not too deep
-        if (num == 0) {
-            while (mining_spot.find()) {
-                x_coor = to_int(mining_spot.group(1));
-                y_coor = to_int(mining_spot.group(2));
-                print(x_coor + ", " + y_coor);
-                if (y_coor >= 4) continue;
-                num = (8 * y_coor) + x_coor;
-                break;
-            }
-        }
-        if (num == 0)
-            abort("Generic mining did not find teflon ore, mine manually. TIP: the ores show up in adjacent veins of 5.");
-        return num;
-    }
-
-    void teflon() {
-        equip($item[mer-kin digpick]);
-        equipSwimTrunks();
-        use_familiar("itdrop");
-        visit_url("mining.php?mine=3&which=" + mineNum());
-        if (my_hp() == 0)
-            cli_execute("restore HP");
-        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus]))
-            use_skill($skill[Tongue of the Walrus]);
-        else if (have_effect($effect[beaten up]) > 0)
-            cli_execute("rest");
-    }
-
     boolean doSWord(){
         boolean bool;
         if (have_familiar($familiar[Sword of S Words]) && to_int(get_property("swordOfSWordsMonster")) > 0 && highSociety()){
@@ -926,6 +864,69 @@ import <seedfinder/seedfinder.ash>;
             }
             visit_url("guild.php?place=challenge");
         }
+    }
+
+    int mineNum() {
+        int num, x_coor, y_coor;
+        string itzmine = visit_url("mining.php?mine=3");
+        matcher mining_spot = create_matcher(
+            "Promising Chunk of Wall \\((\\d+),(\\d+)\\)", itzmine);
+
+        // Try preferred spots first
+        foreach str in $strings[(3\,6),(3\,5),(3\,4),(3\,3),(3\,2),(2\,2),(4\,2),(5\,2)] {
+            if (!contains_text(itzmine, "Open Cavern " + str)) {
+                matcher open_spot = create_matcher("(\\d),(\\d)", str);
+                if (open_spot.find()) {
+                    x_coor = to_int(open_spot.group(1));
+                    y_coor = to_int(open_spot.group(2));
+                    num = (8 * y_coor) + x_coor;
+                    break;
+                }
+            }
+        }
+
+        // Fall back to promising chunks not near bad ore
+        if (num == 0) {
+            while (mining_spot.find()) {
+                x_coor = to_int(mining_spot.group(1));
+                y_coor = to_int(mining_spot.group(2));
+                if (y_coor >= 4
+                    || contains_text(adjacentCaverns(x_coor, y_coor), "velcroore")
+                    || contains_text(adjacentCaverns(x_coor, y_coor), "vinylore"))
+                    continue;
+                num = (8 * y_coor) + x_coor;
+                break;
+            }
+        }
+
+        // Last resort: any promising chunk not too deep
+        if (num == 0) {
+            while (mining_spot.find()) {
+                x_coor = to_int(mining_spot.group(1));
+                y_coor = to_int(mining_spot.group(2));
+                print(x_coor + ", " + y_coor);
+                if (y_coor >= 4) continue;
+                num = (8 * y_coor) + x_coor;
+                break;
+            }
+        }
+        if (num == 0)
+            abort("Generic mining did not find teflon ore, mine manually. TIP: the ores show up in adjacent veins of 5.");
+        return num;
+    }
+
+    void teflon() {
+        equip($item[mer-kin digpick]);
+        equipSwimTrunks();
+        use_familiar("itdrop");
+        visit_url("mining.php?mine=3&which=" + mineNum());
+        if (my_hp() == 0)
+            cli_execute("restore HP");
+        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus]))
+            use_skill($skill[Tongue of the Walrus]);
+        else if (have_effect($effect[beaten up]) > 0)
+            cli_execute("rest");
+        post_adv();
     }
 
     void gymnasium(){
