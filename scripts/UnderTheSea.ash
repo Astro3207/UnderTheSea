@@ -104,6 +104,8 @@ import <seedfinder/seedfinder.ash>;
         boolean bool;
         if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
             bool = true;
+        if (item_amount($item[closed-circuit pay phone]) == 0)
+            bool = true;
         return bool;
     }
 
@@ -994,7 +996,7 @@ import <seedfinder/seedfinder.ash>;
         use_familiar("-combat");
         tempEquipment("item drop", if_equip(divingHelmet()) + "shark jumper,scale-mail underwear,black glass,peridot of peril,monodent of the sea,"
             + bathysphere($item[none]) + freeKill());
-        if (have_effect($effect[jelly combed]) == 0) {
+        if (have_effect($effect[jelly combed]) == 0 && !contains_text(get_property("_roninStoragePulls"), "6393")) {
             pullSequence($item[comb jelly]);
             use($item[comb jelly]);
         }
@@ -1673,7 +1675,7 @@ void seaMonkees() {
                     use_familiar($familiar[sword of s words]);
                 else 
                     use_familiar("itdrop");
-                if (have_effect($effect[jelly combed]) == 0) {
+                if (have_effect($effect[jelly combed]) == 0 && !contains_text(get_property("_roninStoragePulls"), "6393")) {
                     pullSequence($item[comb jelly]);
                     use($item[comb jelly]);
                 }
