@@ -1693,7 +1693,7 @@ void seaMonkees() {
                 adv($location[The Caliginous Abyss]);
             }
         }
-        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && have_familiar($familiar[patriotic eagle])) {
+        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && have_familiar($familiar[patriotic eagle]) && have_item($item[server room key]) {
             if (!contains_text(get_property("banishedPhyla"), "construct")) {
                 if (get_property("madnessBakeryAvailable") == "false") {
                     visit_url("shop.php?whichshop=armory&action=talk");
@@ -1720,7 +1720,7 @@ void seaMonkees() {
                 adv($location[Cyberzone 1]);
             }
         }
-        if (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress && (!have_familiar($familiar[patriotic eagle]) || have_item($item[server room key]))){
+        if (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress && (!have_familiar($familiar[patriotic eagle]) || !have_item($item[server room key]))){
             finishCaliginous();
         }
     }
