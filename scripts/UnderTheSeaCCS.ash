@@ -144,7 +144,7 @@ void main(int round, monster mob, string page_text) {
         else
             throw_item(bangA());
     }
-    if (highSociety() && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 2)
+    if (highSociety() && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
         throw_item($item[sea lasso]);
     // ── Location-based combat logic ───────────────────────────────────────────
     switch (my_location()) {
@@ -223,16 +223,15 @@ void main(int round, monster mob, string page_text) {
             break;
         case $location[The Wreck of the Edgar Fitzsimmons]:
             if (mob != $monster[unholy diver]){
-                if (have_equipped($item[spring shoes]) && highSociety()){
+                free_run(page_text, true);
+                if (mob == $monster[Mer-kin scavenger]){
                     use_skill($skill[spring kick]);
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
-                    cleanUp();
                 }
-                free_run(page_text, true);
-                if (mob == $monster[Mer-kin scavenger])
-                    use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
-                if (mob == $monster[Mine crab])
+                if (mob == $monster[Mine crab]){
                     use_skill($skill[Heartstone: %banish]);
+                    use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
+                }
             }
             darts();
             free_kill(page_text, true);
@@ -371,13 +370,11 @@ void main(int round, monster mob, string page_text) {
                 throw_items($item[sea cowbell], $item[sea cowbell]);
                 throw_items($item[sea cowbell], $item[sea lasso]);
             }
-            if ($location[the coral corral].turns_spent == 0 || get_property("_lastCombatWon") == false) {
-                if (highSociety()){
+            if ($location[the coral corral].turns_spent <= 1 || get_property("_lastCombatWon") == false) {
+                if (highSociety() && get_property("swordOfSWordsMonster") != "775"){
                     if (mob == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
                         cleanUp();
-                    } else{
-                        abort("Was supposed to hit sea cow");
                     }
                 } else if (have_equipped($item[backup camera])) {
                     if (mob == $monster[mer-kin rustler])
