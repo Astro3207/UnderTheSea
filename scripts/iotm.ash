@@ -197,6 +197,8 @@ skill combatBan() {
             continue;
         if (have_equipped(ite)
             && appearance_rates(my_location())[banished(banMap[ite].pref)] == 0) {
+            print("Banish item being considered " + ite + " parsed banished monster is " + banished(banMap[ite].pref) + " and the calculated appearance rate at current location is " + appearance_rates(my_location())[banished(banMap[ite].pref)]);
+            cli_execute("get banishedMonsters");
             return banMap[ite].banSkill;
         }
     }
@@ -296,6 +298,10 @@ void codpiece(string input) {
     } else {
         string [int] slots = split_string(input, ",");
         foreach num in slots {
+            if (available_amount(to_item(slots[num])) == 0 ){
+                slots[num] = "";
+                continue;
+            }
             visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
                 + "&iid=" + to_int(to_item(slots[num])));
         }
