@@ -4,7 +4,7 @@ import underthesea.ash;
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
 void free_kill(string ptext, boolean drop) {
-    if (highSociety()){
+    if (highShiny()){
         if (contains_text(ptext, "Darts: Aim for the Bullseye"))
             use_skill($skill[Darts: Aim for the Bullseye]);
         return;
@@ -17,7 +17,7 @@ void free_kill(string ptext, boolean drop) {
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
         BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
         if (freeskill == $skill[Club 'Em Back in Time]
-            && my_location() != $location[mer-kin colosseum])
+            && (my_location() != $location[mer-kin colosseum] || lowShiny))
             continue;
         if (freeskill == $skill[BCZ: Sweat Bullets]
             && (my_basestat($stat[submoxie]) - 22500) < BCZcost("SweatBulletsCasts"))
@@ -144,10 +144,13 @@ void main(int round, monster mob, string page_text) {
         else
             throw_item(bangA());
     }
-    if (highSociety() && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
+    if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
         throw_item($item[sea lasso]);
     // ── Location-based combat logic ───────────────────────────────────────────
     switch (my_location()) {
+        case $location[The Skeleton Store]:
+            cleanUp();
+            break;
         case $location[The Outskirts of Cobb's Knob]:
         case $location[The Sleazy Back Alley]:
         case $location[The Haunted Pantry]:
@@ -202,6 +205,8 @@ void main(int round, monster mob, string page_text) {
             if (mob == $monster[neptune flytrap]) {
                 if (have_effect($effect[Everything Looks Red, White and Blue]) == 0 && my_familiar() == $familiar[patriotic eagle])
                     use_skill($skill[%fn, fire a Red, White and Blue Blast]);
+                if (my_familiar() == $familiar[sword of s words])
+                    use_skill($skill[%fn, kill a lot of these guys]);
                 darts();
                 if ((have_equipped($item[McHugeLarge left pole]) || available_amount($item[mchugelarge left pole]) == 0)
                     && !contains_text(get_property("trackedMonsters"), "Neptune flytrap")) {
@@ -212,7 +217,7 @@ void main(int round, monster mob, string page_text) {
                 free_kill(page_text, true);
                 cleanUp();
             } else if (!free_monster(mob)) {
-                if (have_equipped($item[spring shoes]) && !banishUsedAtYourLocation("Spring Kick") && highSociety()) {
+                if (have_equipped($item[spring shoes]) && !banishUsedAtYourLocation("Spring Kick") && highShiny()) {
                     use_skill($skill[spring kick]);
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                 } else {
@@ -314,7 +319,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && highSociety() && available_amount($item[pristine fish scale]) < 6){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     cleanUp();
                 }
@@ -332,7 +337,7 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 } else if (mob == $monster[Mer-kin burglar]
                     || mob == $monster[Mer-kin raider]) {
-                    if (highSociety() && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
+                    if ((highShiny() || !have_item($item[closed-circuit pay phone])) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
                         use_skill($skill[sea *dent: throw a lightning bolt]);
                     free_run(page_text, true);
                 }
@@ -370,8 +375,8 @@ void main(int round, monster mob, string page_text) {
                 throw_items($item[sea cowbell], $item[sea cowbell]);
                 throw_items($item[sea cowbell], $item[sea lasso]);
             }
-            if ($location[the coral corral].turns_spent <= 1 || get_property("_lastCombatWon") == false) {
-                if (highSociety() && get_property("swordOfSWordsMonster") != "775"){
+            if (($location[the coral corral].turns_spent <= 1 && item_amount($item[sea leather]) == 0 && available_amount($item[sea cowboy hat]) == 0) || get_property("_lastCombatWon") == false) {
+                if (highShiny() && get_property("swordOfSWordsMonster") != "775"){
                     if (mob == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
                         cleanUp();
@@ -468,12 +473,14 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                     }
                 }
+                if (have_equipped($item[legendary seal-clubbing club]))
+                    use_skill($skill[Club 'Em Across the Battlefield]);
                 cleanUp();
             }
             break;
 
         case $location[The Caliginous Abyss]:
-            if (highSociety() && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
+            if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
                 throw_item($item[sea lasso]);
             if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
                 if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]) && available_amount($item[waffle]) > 2)
@@ -490,7 +497,7 @@ void main(int round, monster mob, string page_text) {
                     && $monsters[slithering thing, eye in the darkness,
                         school of many] contains mob)
                     throw_item($item[spooky VHS tape]);
-                if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && !highSociety()) {
+                if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && !highShiny() && (have_item($item[server room key]) || $location[The Mer-Kin Outpost].turns_spent < 29)) {
                     if ($monsters[slithering thing, eye in the darkness] contains mob)
                         use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
                 }
