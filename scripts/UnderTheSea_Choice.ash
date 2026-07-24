@@ -175,6 +175,10 @@ void main(int whichchoice, string page) {
         case 804:
             run_choice(2);
             break;
+
+        case 1059:
+            run_choice(1);
+            break;
         // ── Underwater zone run_choice(2) cases ───────────────────────────
         case 1469:
         case 1470:
@@ -198,6 +202,11 @@ void main(int whichchoice, string page) {
 
         case 1497:
             run_choice(2);
+            break;
+
+        case 1483:
+            run_choice(1);
+            run_choice(3);
             break;
 
         case 1500:
@@ -254,7 +263,8 @@ void main(int whichchoice, string page) {
                 $location[Mer-kin Library]:        840,
                 $location[the mer-kin outpost]:     773,
                 $location[the caliginous abyss]:    1373,
-                $location[mer-kin elementary school]: 838
+                $location[mer-kin elementary school]: 838,
+                $location[Madness Bakery]: 1750
             };
             location here = my_location();
             if (banderMonster contains here) {
@@ -262,14 +272,11 @@ void main(int whichchoice, string page) {
                 if (here == $location[The Coral Corral]) run_choice(2);
             }
             break;
-
-        // ── Jelly ─────────────────────────────────────────────────────────
-        case 1589:
-            if (my_location() == $location[The Marinara Trench]) {
-                abort();
-            } else {
-                run_choice(1, "victim=852");
-            }
+        case 1596:
+            run_choice(3);
+            break;
+        case 1599:
+            run_choice(5);
             break;
     }
 }
