@@ -2295,8 +2295,7 @@ void sorceress() {
                 pullSequence($item[null-day exploit]);
             foreach num in $strings[5401, 3679, 3775, 11583, 7014, 11706] {
                 if (!contains_text(get_property("_roninStoragePulls"), num)) {
-                    buy_using_storage(to_item(to_int(num)));
-                    take_storage(1, to_item(to_int(num)));
+                    pullSequence(to_item(num));
                 }
                 if (pulls_remaining() == 0) break;
             }
