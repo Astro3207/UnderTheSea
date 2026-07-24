@@ -48,14 +48,18 @@ string LastAdvTxt() {
     return substring(lastlog, nowmark);
 }
 
-void pullSequence(item it) {
+boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
-        return;
+        return false;
     if (!contains_text(get_property("_roninStoragePulls"), to_int(it))) {
-        if (storage_amount(it) == 0)
+        if (storage_amount(it) == 0){
+            if (mall_price(it) > to_int(get_property("autoBuyPriceLimit")))
+                abort("Price of " + it + " exeeds autoBuyPriceLimit");
             buy_using_storage(it);
-        take_storage(1, it);
+        }
+        return take_storage(1, it);
     }
+    return false;
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
@@ -166,7 +170,7 @@ boolean banishUsedAtYourLocation(string banisher) {
     return false;
 }
 
-// Equips the appropriate banish gear for a location and sets the slot override property.
+// Equips the appropriate banish gear for a location (that hasn't been used yet) and sets the slot override property.
 // NOTE: has the side effect of setting an Override property — callers should be aware.
 item banishGear(location loc) {
     item it;
@@ -179,6 +183,7 @@ item banishGear(location loc) {
         }
     }
     set_property(to_string(to_slot(it)) + "Override", ", equip " + it);
+    print(to_string(to_slot(it)) + "Override");
     return it;
 }
 
@@ -544,7 +549,7 @@ void finisher() {
     set_property("afterAdventureScript", "");
     set_property("choiceAdventureScript", "garbo_choice.js");
     set_property("betweenBattleScript", "");
-    foreach slotName in $strings[max, fam, hat, main, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
+    foreach slotName in $strings[max, fam, hat, main, weapon, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
         set_property(slotName + "Override", "");
     }
 }
