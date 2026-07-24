@@ -53,8 +53,10 @@ boolean pullSequence(item it) {
         return false;
     if (!contains_text(get_property("_roninStoragePulls"), to_int(it))) {
         if (storage_amount(it) == 0){
-            if (mall_price(it) > to_int(get_property("autoBuyPriceLimit")))
-                abort("Price of " + it + " exeeds autoBuyPriceLimit");
+            if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))){
+                if (!user_confirm("Price of " + it + " exeeds autoBuyPriceLimit, skip?"))
+                    abort("Price of " + it + " exeeds autoBuyPriceLimit");
+            }
             buy_using_storage(it);
         }
         return take_storage(1, it);
