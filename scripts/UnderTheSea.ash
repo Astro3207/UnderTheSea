@@ -1940,7 +1940,7 @@ void sorceress() {
         }
 
         // ── Lasso training via shadow rift ────────────────────────────────────────
-        while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false"))
+        while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
             shadowRift();
 
         if ((my_turncount( ) > 25 || !have_item($item[Miniature crystal ball])) && !highShiny() && have_item($item[closed-circuit pay phone])){
