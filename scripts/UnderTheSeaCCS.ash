@@ -276,10 +276,9 @@ void main(int round, monster mob, string page_text) {
                 steal();
                 use_if_have_skill(page_text,$skill[swoop like a bat]);
             }
-            if ((mob == $monster[giant squid]
-                && !contains_text(get_property("trackedMonsters"), "giant squid"))
-                || (mob == $monster[Mer-kin tippler]
-                && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")) && $location[The coral corral].turns_spent == 0) {
+            if ((mob == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
+                || (mob == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")) 
+                && $location[The coral corral].turns_spent == 0) {
                 foreach sk in $skills[transcendent olfaction,
                     Gallapagosian Mating Call, MCHUGELARGE SLASH]
                     use_if_have_skill(page_text, sk);
@@ -292,17 +291,17 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 cleanUp();
             }
-            if ((mob != $monster[giant squid] || item_amount($item[comb jelly]) == 0)
+            if ((mob != $monster[giant squid] || item_amount($item[comb jelly]) > 0)
                 && mob != $monster[Mer-kin tippler]
                 && (mob != $monster[Mer-kin miner] || item_amount($item[mer-kin digpick]) > 0)) {
                 if (have_item($item[cosmic bowling ball]))
                     free_run(page_text, true);
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 darts();
-                free_kill(page_text, true);
+                free_run(page_text, true);
                 cleanUp();
             } else {
-                free_run(page_text, true);
+                free_kill(page_text, true);
             }
             cleanUp();
             break;
@@ -539,7 +538,7 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Elementary School]:
             if (free_monster(mob)) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
-                if (to_int(get_property("_clubEmBattlefieldUsed")) < 5){
+                if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 } else {
                     cleanUp();
@@ -561,7 +560,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     if (get_property("NCtoC") != "true")
                         use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
-                    if (to_int(get_property("_clubEmBattlefieldUsed")) < 5)
+                    if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true")
                         use_skill($skill[Club 'Em Across the Battlefield]);
                     if (free_monster(last_monster())) {
                         cleanUp();
