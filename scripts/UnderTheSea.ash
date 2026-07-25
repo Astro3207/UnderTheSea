@@ -537,7 +537,7 @@ import <seedfinder/seedfinder.ash>;
             abort("It appears you lost the last combat, look into that");
         }
         modes = "";
-        if (get_property("dolphinItem") == "Mer-kin prayerbeads" && have_item($item[durable dolphin whistle]) && lowShiny)
+        if ((get_property("dolphinItem") == "Mer-kin prayerbeads" || get_property("dolphinItem") == "rusty rivet") && have_item($item[durable dolphin whistle]) && lowShiny)
             use($item[durable dolphin whistle]);
         if (have_effect($effect[really quite poisoned]) > 0)
             cli_execute("uneffect really quite poisoned");
@@ -1846,7 +1846,8 @@ void seaMonkees() {
             adv($location[The Coral Corral]);
         } else {
             pullSequence($item[pulled yellow taffy]);
-            if (!have_item($item[spring shoes]) && !have_item($item[heartstone]) && available_amount($item[stuffed yam stinkbomb]) == 0 && available_amount($item[handful of split pea soup]) == 0)
+            pullSequence($item[software glitch]);
+            if (!have_item($item[spring shoes]) && !have_item($item[heartstone]) && available_amount($item[stuffed yam stinkbomb]) == 0 && available_amount($item[handful of split pea soup]) == 0 && !lowShiny)
                 pullSequence($item[stuffed yam stinkbomb]);
             tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard,The Eternity Codpiece,monodent of the sea," + baseball_equip());
             mood("itdrop");
@@ -2512,8 +2513,10 @@ void sorceress() {
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
-            else if (item_amount($item[crayon shavings]) < 8 && have_effect($effect[null afternoon]) == 0)
-                abort("Less than 8 crayon shavings, pull null-day exploit and use it and rerun");
+            else if (item_amount($item[crayon shavings]) < 8 && have_effect($effect[null afternoon]) == 0){
+                if (item_amount($item[null-day exploit]) > 0)
+                    use($item[null-day exploit]);
+            }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
                     cli_execute("uneffect" + ef);
