@@ -662,10 +662,10 @@ void main(int round, monster mob, string page_text) {
                 abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
             throw_items(yogDeleveler(),yogHealing());
             throw_items(yogDeleveler(),yogHealing());
-            if (equipped_amount(yogHealing()) < 3)
-                throw_item($item[mer-kin healscroll]);
-            if (equipped_amount(yogHealing()) < 2)
-                throw_item($item[New Age healing crystal]);
+            if (equipped_amount($item[mer-kin prayerbeads]) < 3)
+                throw_item(yogHealing());
+            if (equipped_amount($item[mer-kin prayerbeads]) < 2)
+                throw_item(yogHealing());
             throw_items($item[Doc Galaktik's Homeopathic Elixir],$item[Doc Galaktik's Pungent Unguent]);
             cleanUp();
             attackCleanUp();
