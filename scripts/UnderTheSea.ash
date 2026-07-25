@@ -711,7 +711,7 @@ import <seedfinder/seedfinder.ash>;
         } else if (my_location() == $location[mer-kin gymnasium]){
             hpTar = min(1, 800 / to_float(my_maxhp()));
         } else {
-            hpTar = min(1, 500 / to_float(my_maxhp()));
+            hpTar = min(1, 550 / to_float(my_maxhp()));
         }
         string hpAutoRecovery = to_float(round(hpTar * 0.75 * 10000))/10000;
         string hpAutoRecoveryTarget = to_float(round(hpTar * 10000))/10000;
