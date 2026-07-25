@@ -119,6 +119,26 @@ void attackCleanUp() {
     }
 }
 
+item yogDeleveler(){
+    if (my_buffedstat($stat[moxie]) + 10 > monster_attack( ) )
+        return $item[none];
+    foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,Mer-kin mouthsoap,sea cowbell]{
+        if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
+            return it;
+    }
+    abort("Missing delever... oops");
+    return $item[none];
+}
+
+item yogHealing(){
+    foreach it in $items[sea gel,waterlogged scroll of healing,mer-kin healscroll,soggy used band-aid,New Age healing crystal]{
+        if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
+            return it;
+    }
+    abort("Missing healing... oops");
+    return $item[none];
+}
+
 item bangA(){
     foreach it in $items[milky potion, swirly potion, bubbly potion, smoky potion, cloudy potion, effervescent potion, fizzy potion, dark potion, murky potion]{
         if (available_amount(it) > 0)
@@ -635,17 +655,11 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Temple (Right Door)]:
             if (my_maxhp() > 311)
                 abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
-            if (item_amount($item[crayon shavings]) == 0)
-                throw_items($item[table tennis ball], $item[sea gel]);
-            else if (have_effect($effect[null afternoon]) == 0)
-                throw_items($item[crayon shavings], $item[sea gel]);
-            if (have_effect($effect[null afternoon]) == 0)
-                throw_items($item[Mer-kin mouthsoap], $item[waterlogged scroll of healing]);
-            else
-                throw_item($item[waterlogged scroll of healing]);
-            if (equipped_amount($item[mer-kin prayerbeads]) < 3)
+            throw_items(yogDeleveler(),yogHealing());
+            throw_items(yogDeleveler(),yogHealing());
+            if (equipped_amount(yogHealing()) < 3)
                 throw_item($item[mer-kin healscroll]);
-            if (equipped_amount($item[mer-kin prayerbeads]) < 2)
+            if (equipped_amount(yogHealing()) < 2)
                 throw_item($item[New Age healing crystal]);
             throw_items($item[Doc Galaktik's Homeopathic Elixir],$item[Doc Galaktik's Pungent Unguent]);
             cleanUp();
@@ -724,6 +738,9 @@ void main(int round, monster mob, string page_text) {
         case $monster[sea cowboy]:
             use_skill($skill[%fn, kill a lot of these guys]);
             free_kill(page_text, true);
+            cleanUp();
+            break;
+        case $monster[rotten dolphin thief]:
             cleanUp();
             break;
         case $monster[kid who is too old to be Trick-or-Treating]:
