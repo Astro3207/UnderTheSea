@@ -264,6 +264,7 @@ void main(int whichchoice, string page) {
                 $location[the mer-kin outpost]:     773,
                 $location[the caliginous abyss]:    1373,
                 $location[mer-kin elementary school]: 838,
+                $location[The Outskirts of Cobb's Knob]: 152,
                 $location[Madness Bakery]: 1750
             };
             location here = my_location();
