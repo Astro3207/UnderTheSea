@@ -267,6 +267,7 @@ void main(int whichchoice, string page) {
                 $location[The Outskirts of Cobb's Knob]: 152,
                 $location[Madness Bakery]: 1750
             };
+            set_property("NCtoC","true");
             location here = my_location();
             if (banderMonster contains here) {
                 run_choice(1, "bandersnatch=" + banderMonster[here]);
