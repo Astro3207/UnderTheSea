@@ -487,6 +487,15 @@ import <seedfinder/seedfinder.ash>;
         return;
     }
 
+    int delevelers(){
+        int n;
+        foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,Mer-kin mouthsoap,sea cowbell]{
+            if (item_amount(it) > 0)
+                n += 1;
+        }
+        return n;
+    }
+
 // ─── POST ADVENTURE ───────────────────────────────────────────────────────────
     void eatSushi(){
         string [item] sushi_map = {
@@ -733,8 +742,9 @@ import <seedfinder/seedfinder.ash>;
                 if (!user_confirm("Chosen familiar is not +item, would make some RNG worse. Continue?"))
                     abort();
             }
-
         }
+        if (get_property("autoSatisfyWithNPCs") == "false")
+            abort("set autoSatisfyWithNPCs = true, the script isn't going to work if it's false");
         write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
         set_ccs("temp");
         set_property("battleAction", "custom combat script");
@@ -1549,7 +1559,7 @@ void seaMonkees() {
         cli_execute("grandpa grandma");
 
     // ── Step 6: Black Crayon Golem recall ────────────────────────────────────
-    if (get_property("questS02Monkees") == "step6" && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55 && !highShiny() && have_item($item[book of facts])) {
+    if (get_property("questS02Monkees") == "step6" && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55 && !highShiny() && have_skill($skill[just the facts])) {
         if (have_familiar($familiar[red-nosed snapper]))
             use_familiar("itdrop");
         else
@@ -1792,7 +1802,7 @@ void seaMonkees() {
                 }
             }
             while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
-                && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_item($item[book of facts])) {
+                && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
                 recallCaliginous();
             }
             while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
@@ -2348,9 +2358,12 @@ void sorceress() {
         // YogUrt fight
         if (get_property("yogUrtDefeated") == "false") {
             cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
-            if (available_amount($item[mer-kin mouthsoap]) == 0 && !contains_text(get_property("_roninStoragePulls"), "10641")){
+            if (delevelers() < 2 && !contains_text(get_property("_roninStoragePulls"), "10641") && pulls_remaining() > 0){
                 pullSequence($item[null-day exploit]);
                 use($item[null-day exploit]);
+            } else if (delevelers() < 2){
+                while (delevelers() < 2)
+                    getMissingCorralItems();
             }
             if (available_amount($item[mer-kin prayerbeads]) < 3
                 && !contains_text(get_property("_roninStoragePulls"), "3806"))
