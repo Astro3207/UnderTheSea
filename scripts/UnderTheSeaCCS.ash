@@ -250,7 +250,10 @@ void main(int round, monster mob, string page_text) {
             if (mob != $monster[unholy diver]){
                 free_run(page_text, true);
                 if (mob == $monster[Mer-kin scavenger]){
-                    use_skill($skill[spring kick]);
+                    if (have_equipped($item[spring shoes]))
+                        use_skill($skill[spring kick]);
+                    else 
+                        use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                 }
                 if (mob == $monster[Mine crab]){
@@ -424,6 +427,8 @@ void main(int round, monster mob, string page_text) {
                         if (last_monster() == $monster[Bugged bugbear]){
                             use_skill($skill[BCZ: Refracted Gaze]);
                             use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
+                            if (item_amount($item[pulled yellow taffy]) > 0)
+                                throw_item($item[pulled yellow taffy]);
                         } else {
                             abort("Software glitch failed");
                         }
