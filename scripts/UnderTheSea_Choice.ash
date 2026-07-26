@@ -179,6 +179,23 @@ void main(int whichchoice, string page) {
         case 1059:
             run_choice(1);
             break;
+
+        // ── Fourth of May Cosplay Saber ───────────────────────────────────
+        // 1386 is the once-daily upgrade. Option 4 is the Empathy Chip
+        // (+10 familiar weight), which feeds Glover in Cyberzone 1 during the
+        // Mom rescue. Option 3 (+3 all elemental resistance) only speeds up
+        // farming unblemished pearls, and those come in via the codpiece.
+        case 1386:
+            run_choice(4);
+            break;
+
+        // 1387 is Using the Force. Option 3, "you will drop your things and
+        // walk away", hands over the monster's non-conditional drops without
+        // spending a turn.
+        case 1387:
+            run_choice(3);
+            break;
+
         // ── Underwater zone run_choice(2) cases ───────────────────────────
         case 1469:
         case 1470:

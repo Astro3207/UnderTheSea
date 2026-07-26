@@ -104,6 +104,31 @@ import <seedfinder/seedfinder.ash>;
             return to_string(it) + ",";
     }
 
+    // Equip the saber only where a turn-free exit actually buys us something.
+    // Takes the target location explicitly because callers set equipment up
+    // before adv(), so my_location() is still the previous zone here.
+    string saberEquip(location loc) {
+        if (saberReady() && saberZone(loc))
+            return if_equip($item[Fourth of May Cosplay Saber]);
+        return "";
+    }
+
+    // Lucky! for the hermit-clover adventures. The august scepter grants it free
+    // (5 scepter casts per day, and we only spend one on Waffle Day), so reach
+    // for that before burning one of the three purchasable 11-leaf clovers.
+    void getLucky() {
+        if (have_effect($effect[Lucky!]) > 0)
+            return;
+        if (have_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day])
+            && get_property("_aug2Cast") == "false"
+            && to_int(get_property("_augSkillsCast")) < 5) {
+            use_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day]);
+            if (have_effect($effect[Lucky!]) > 0)
+                return;
+        }
+        use($item[11-leaf clover]);
+    }
+
     boolean highShiny(){
         boolean bool;
         if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
@@ -795,6 +820,14 @@ import <seedfinder/seedfinder.ash>;
                     use_skill(sk);
             }
 
+            // One free saber upgrade per day. Choice 1386 is answered in
+            // UnderTheSea_Choice.ash; we take the familiar weight option, since
+            // the elemental resistance one only matters for farming unblemished
+            // pearls and those are smuggled in via the codpiece.
+            if (have_item($item[Fourth of May Cosplay Saber])
+                && get_property("_saberMod") == "0")
+                visit_url("main.php?action=may4");
+
             // Autosell junk gems
             foreach it in $items[hamethyst, baconstone, porquoise, kokomo resort pass] {
                 if (it == $item[porquoise] && have_item($item[portable pantogram]))
@@ -1100,7 +1133,7 @@ import <seedfinder/seedfinder.ash>;
         } else if (storage_amount($item[damp old wallet]) > 0 && pullSequence($item[damp old wallet])) {
             use($item[damp old wallet]);
         } else {
-            use($item[11-leaf clover]);
+            getLucky();
             adv($location[The Mer-Kin Outpost]);
         }
     }
@@ -1126,6 +1159,7 @@ import <seedfinder/seedfinder.ash>;
             conditional += "backup camera,";
         if (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0)
             conditional += "monodent of the sea,";
+        conditional += saberEquip($location[mer-kin library]);
         if (item_amount($item[mer-kin dreadscroll]) == 0) {
             tempEquipment("item drop", "mer-kin scholar mask,mer-kin scholar tailpiece,"
                 + if_equip($item[blood cubic zirconia]) + conditional);
@@ -1164,6 +1198,7 @@ import <seedfinder/seedfinder.ash>;
             conditional += if_equip(banishGear($location[The Coral Corral]));
         if (lowShiny)
             conditional += "congressional medal of insanity,";
+        conditional += saberEquip($location[The Coral Corral]);
         tempEquipment("item drop", "really nice swimming trunks," + if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
             set_property("choiceAdventure1589","1&victim=775");
@@ -1388,6 +1423,7 @@ import <seedfinder/seedfinder.ash>;
         if (item_amount($item[mer-kin bunwig]) == 0
             && !have_equipped($item[mer-kin bunwig]))
             conditionalMax += ", hat drop";
+        conditional += saberEquip($location[mer-kin elementary school]);
         tempEquipment("item drop" + conditionalMax, if_equip(divingHelmet()) + if_equip(tailpiece()) + if_equip($item[blood cubic zirconia]) + if_equip($item[legendary seal-clubbing club])
             + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
         set_property("choiceAdventure1589","1&victim=852");
@@ -1734,6 +1770,7 @@ void seaMonkees() {
                     } else {
                         conditional += swimmingTrunks();
                     }
+                conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                     if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                         conditional += "spring shoes,";
@@ -2084,7 +2121,7 @@ void sorceress() {
         if (available_amount($item[crappy Mer-kin mask]) == 0){
             if (available_amount($item[pristine fish scale]) < 3){
                 if (to_int(get_property("_cloversPurchased")) < 3) {
-                    use($item[11-leaf clover]);
+                    getLucky();
                     equip ($slot[acc3],$item[black glass]);
                 } else
                     abort("get a total of pristine fish scale, out of hermitage clovers");
@@ -2095,7 +2132,7 @@ void sorceress() {
         if (available_amount($item[crappy Mer-kin tailpiece]) == 0){
             if (available_amount($item[pristine fish scale]) < 3){
                 if (to_int(get_property("_cloversPurchased")) < 3){
-                    use($item[11-leaf clover]);
+                    getLucky();
                     equip ($slot[acc3],$item[black glass]);
                 } else
                     abort("get a total of pristine fish scale, out of hermitage clovers");
