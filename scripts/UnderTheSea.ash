@@ -1182,6 +1182,7 @@ import <seedfinder/seedfinder.ash>;
         if (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0)
             conditional += "monodent of the sea,";
         conditional += saberEquip($location[mer-kin library]);
+        conditional += cloakeEquip($location[mer-kin library]);
         if (item_amount($item[mer-kin dreadscroll]) == 0) {
             tempEquipment("item drop", "mer-kin scholar mask,mer-kin scholar tailpiece,"
                 + if_equip($item[blood cubic zirconia]) + conditional);
@@ -1221,6 +1222,7 @@ import <seedfinder/seedfinder.ash>;
         if (lowShiny)
             conditional += "congressional medal of insanity,";
         conditional += saberEquip($location[The Coral Corral]);
+        conditional += cloakeEquip($location[The Coral Corral]);
         tempEquipment("item drop", "really nice swimming trunks," + if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
             set_property("choiceAdventure1589","1&victim=775");
@@ -1233,6 +1235,7 @@ import <seedfinder/seedfinder.ash>;
         // leather x2 are all in hand, so it is the third-best use of a charge.
         mapMonster($location[The Coral Corral]);
         adv($location[The Coral Corral]);
+        timeSpinnerRefight($location[The Coral Corral]);
         if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
             baseballD();
     }
@@ -1439,6 +1442,7 @@ import <seedfinder/seedfinder.ash>;
             && !have_equipped($item[mer-kin bunwig]))
             conditionalMax += ", hat drop";
         conditional += saberEquip($location[mer-kin elementary school]);
+        conditional += cloakeEquip($location[mer-kin elementary school]);
         tempEquipment("item drop" + conditionalMax, if_equip(divingHelmet()) + if_equip(tailpiece()) + if_equip($item[blood cubic zirconia]) + if_equip($item[legendary seal-clubbing club])
             + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
         set_property("choiceAdventure1589","1&victim=852");
@@ -1544,9 +1548,10 @@ void seaMonkees() {
                 string conditional;
                 if (highShiny())
                     conditional += "monodent of the sea,";
+                conditional += cloakeEquip($location[An octopus's garden]);
                 if (to_int(get_property("_assertYourAuthorityCast")) < 3) {
                     tempEquipment("item drop", swimmingTrunks()
-                        + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]));
+                        + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]) + conditional);
                 } else {
                     tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
                         + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
@@ -1556,6 +1561,7 @@ void seaMonkees() {
                 // is 1 of 4. Worth a map charge to stop the bleeding.
                 mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
+                timeSpinnerRefight($location[An octopus's garden]);
             }
         }
         if (item_amount($item[wriggling flytrap pellet]) > 0)
@@ -1633,6 +1639,9 @@ void seaMonkees() {
     }
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
+    // Fetch the Silence blessing here rather than at startup: it only lasts 33
+    // turns, and this noncombat hunt is the one block long enough to spend them.
+    godLobster();
     while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || contains_text("step6,step7,step8",get_property("questS02Monkees"))) {
         if ($location[The Mer-Kin Outpost].turns_spent < 5)
             set_property("stashboxChecked", "0");
@@ -1790,6 +1799,7 @@ void seaMonkees() {
                         conditional += swimmingTrunks();
                     }
                 conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                     if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                         conditional += "spring shoes,";
@@ -1805,6 +1815,9 @@ void seaMonkees() {
                 // need 8 rivets plus a porthole plus a broken helmet.
                 mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
+                // Just fought the diver, so it is queued and can be refought
+                // for one turn instead of rolling 1-in-5 for it again.
+                timeSpinnerRefight($location[The Wreck of the Edgar Fitzsimmons]);
             }
         }
         if (to_slot(divingHelmet()) != $slot[hat])

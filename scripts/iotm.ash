@@ -32,6 +32,31 @@ boolean have_item(item it) {
         || storage_amount(it) > 0;
 }
 
+// ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
+// Which monster we are actually trying to reach in each zone. Three separate
+// monster-pickers read this table -- the Peridot of Peril (choice 1557), Map the
+// Monsters (choice 1435) and the Time-Spinner (choice 1196) -- so keeping one
+// copy here means they can never disagree about the target. It lives in iotm.ash
+// rather than in the choice script because the main script needs it too.
+int [location] wantedMonster = {
+    $location[An Octopus's Garden]:                 740,   // Neptune flytrap
+    $location[The Wreck of the Edgar Fitzsimmons]:  745,   // unholy diver
+    $location[The Sleazy Back Alley]:               159,
+    $location[The Haunted Pantry]:                  145,
+    $location[The Overgrown Lot]:                   1752,
+    $location[The Coral Corral]:                    775,   // sea cow
+    $location[The Marinara Trench]:                 762,
+    $location[Anemone Mine]:                        765,
+    $location[The Dive Bar]:                        768,
+    $location[Cyberzone 1]:                         2458,
+    $location[Mer-kin Library]:                     840,   // Mer-kin researcher
+    $location[the mer-kin outpost]:                 773,
+    $location[the caliginous abyss]:                1373,
+    $location[mer-kin elementary school]:           838,   // Mer-kin teacher
+    $location[The Outskirts of Cobb's Knob]:        152,
+    $location[Madness Bakery]:                      1750
+};
+
 // ─── FOURTH OF MAY COSPLAY SABER ──────────────────────────────────────────────
 // The saber is handed to you automatically at the start of a run, so there is
 // nothing to pull or buy. "Use the Force" leaves combat without spending an
@@ -161,6 +186,175 @@ void pillKeeper(string pill) {
     if (get_property("_freePillKeeperUsed") != "false")
         return;
     cli_execute("pillkeeper " + pill);
+}
+
+// ─── VAMPYRIC CLOAKE ──────────────────────────────────────────────────────────
+// Handed to you automatically at the start of a run, so there is nothing to pull.
+// Two separate wins, and the passive one is easy to overlook:
+//
+//   1. The cloake itself is a back item worth a flat +15% Item Drops. The
+//      maximizer will normally find that on its own, but the back slot has to
+//      actually stay free for it, and we want it pinned anyway for reason 2.
+//   2. "Become a Bat" grants Bat-Adjacent Form, +50% Item Drops, for one
+//      adventure. It is an in-combat skill, so it costs no turn, and the three
+//      cloake forms share 10 uses per day.
+//
+// Only one form may be used per combat (they stack only in free fights), and we
+// never want the other two -- Wolfish Form is +muscle/+meat and Misty Form is
+// elemental resistance, neither of which shortens a farming loop -- so all 10
+// charges go to Become a Bat.
+//
+// The form is granted mid-combat and item drops are rolled when the combat ends,
+// so the +50% applies to the fight it is cast in. That is the one link in this
+// chain taken from how every other mid-combat +item effect behaves rather than
+// from a direct spade, so if drops ever look wrong, check here first.
+
+boolean cloakeReady() {
+    return have_item($item[vampyric cloake])
+        && to_int(get_property("_vampyreCloakeFormUses")) < 10;
+}
+
+// Only the zones we grind purely for a drop count. Anywhere gated on turns spent
+// or on finding a noncombat, a bigger item bonus buys nothing, and there are
+// only 10 charges to spread across the run.
+boolean cloakeZone(location loc) {
+    return $locations[The Wreck of the Edgar Fitzsimmons, An Octopus's Garden,
+        The Coral Corral, Mer-kin Library, Mer-kin Elementary School] contains loc;
+}
+
+// Pins the cloake into the back slot so the skill is actually available in
+// combat. Callers set gear up before adv(), so the target zone is passed in
+// explicitly -- my_location() is still the previous zone at that point.
+string cloakeEquip(location loc) {
+    if (cloakeReady() && cloakeZone(loc))
+        return "vampyric cloake,";
+    return "";
+}
+
+// Cast from the CCS at the top of every round. Cheap to call repeatedly: once
+// the form is up, have_effect() short-circuits it, which also enforces the
+// one-form-per-combat rule for free.
+void becomeBat(string page_text) {
+    if (!cloakeReady() || !cloakeZone(my_location()))
+        return;
+    if (have_effect($effect[Bat-Adjacent Form]) > 0)
+        return;
+    if (!have_equipped($item[vampyric cloake]))
+        return;
+    if (!contains_text(page_text, "Become a Bat"))
+        return;
+    use_skill($skill[Become a Bat]);
+}
+
+// ─── GOD LOBSTER ──────────────────────────────────────────────────────────────
+// Three free fights a day. Worth being blunt about the size of this one: the
+// fights cost no adventure, but they also advance no quest, so on their own they
+// save nothing. Everything here rides on one reward.
+//
+// Winning offers regalia, a blessing, or experience. The blessing depends on
+// which piece of regalia the God Lobster is wearing, and exactly one of the six
+// is turn-relevant: with God Lobster's Ring equipped you get Silence of the God
+// Lobster, -5% combat frequency for 33 adventures.
+//
+// -5% across the Outpost block is worth roughly a turn, so this is a small win,
+// not a large one -- the script already fields around twenty noncombat forces.
+// It is included because the fights are free and the downside is zero: with no
+// Ring in hand we simply take regalia instead and work toward one, which costs
+// nothing and leaves the account better set up for the next run.
+//
+// The other five blessings are all dead ends here: Wisdom is MP, Intuition is
+// stats per fight, Carapace is resistance, Taste is stat gains from food, and
+// Color is actively harmful -- it raises combat frequency.
+
+boolean godLobsterReady() {
+    return have_familiar($familiar[God Lobster])
+        && to_int(get_property("_godLobsterFights")) < 3;
+}
+
+// Called once, immediately before the Outpost hunt, so a Silence blessing covers
+// the block it was fetched for rather than expiring on the way there.
+void godLobster() {
+    if (!godLobsterReady())
+        return;
+    familiar previous = my_familiar();
+    // Bounded by attempt count as well as by the daily counter: if a fight ever
+    // fails to register, we back out rather than spin here forever.
+    int attempts;
+    while (godLobsterReady() && attempts < 3) {
+        attempts += 1;
+        int before = to_int(get_property("_godLobsterFights"));
+        use_familiar($familiar[God Lobster]);
+        // The Ring is what turns the blessing into Silence. Without it we are
+        // only here to collect regalia, and the choice handler picks that up.
+        if (available_amount($item[God Lobster's Ring]) > 0)
+            equip($slot[familiar], $item[God Lobster's Ring]);
+        visit_url("main.php?fightgodlobster=1");
+        run_combat();
+        if (to_int(get_property("_godLobsterFights")) == before) {
+            print("God Lobster fight did not register, skipping", "red");
+            break;
+        }
+        // Stop after the blessing lands; the remaining fights are worth more
+        // banked for a later day than spent on stats we have no gate on.
+        if (have_effect($effect[Silence of the God Lobster]) > 0)
+            break;
+    }
+    use_familiar(previous);
+}
+
+// ─── TIME-SPINNER ─────────────────────────────────────────────────────────────
+// Also handed to you automatically at the start of a run. 10 minutes a day, and
+// "Travel to a Recent Fight" costs 3 of them, so 3 uses.
+//
+// It is NOT a free fight -- the refight costs an adventure. What it buys is
+// certainty: instead of spending a turn on a 1-in-4 or 1-in-5 roll for the
+// monster we want, we spend a turn on that monster directly. At Fitzsimmons the
+// unholy diver is 1 of 5, so each use replaces about five random turns with one.
+// That makes it the same trade as Map the Monsters, just paid for with a turn,
+// and it stacks on top of the three Map charges rather than competing with them.
+//
+// The monster has to be in the zone's combat queue, which means it must have
+// been encountered in the last five combats there. Rather than guess, we only
+// fire immediately after winning against the target in that very zone, which
+// guarantees it is queued.
+//
+// mafia's own "timespinner" CLI command only covers food and pranks, so the
+// choice chain is walked by hand: 1195 -> Travel to a Recent Fight -> 1196,
+// where the monster is submitted as monid.
+
+boolean timeSpinnerReady() {
+    return have_item($item[Time-Spinner])
+        && to_int(get_property("_timeSpinnerMinutesUsed")) <= 7
+        && my_adventures() > 0;
+}
+
+void timeSpinnerRefight(location loc) {
+    if (!timeSpinnerReady() || !(wantedMonster contains loc))
+        return;
+    // Only worth a turn where the target is genuinely rare; these are the same
+    // zones Map the Monsters spends its charges on.
+    if (!mapZone(loc))
+        return;
+    if (my_location() != loc || last_monster().id != wantedMonster[loc])
+        return;
+
+    visit_url("inv_use.php?whichitem=" + to_int($item[Time-Spinner]) + "&pwd=" + my_hash());
+    int travel;
+    int backOut;
+    foreach num, optionText in available_choice_options() {
+        if (contains_text(optionText, "Travel to a Recent Fight"))
+            travel = num;
+        if (contains_text(optionText, "Maybe Later"))
+            backOut = num;
+    }
+    // Never leave the run parked inside a choice we could not read.
+    if (travel == 0) {
+        if (backOut > 0)
+            run_choice(backOut);
+        return;
+    }
+    run_choice(travel);
+    run_choice(1, "monid=" + wantedMonster[loc]);
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
