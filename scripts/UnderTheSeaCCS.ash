@@ -680,8 +680,12 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Center Door)]:
-            use_skill($skill[raise backup dancer]);
-            use_skill($skill[raise backup dancer]);
+            // Raise Backup Dancer is a Pastamancer skill; it is only a damage boost
+            // here, so skip it rather than erroring out on accounts without it.
+            if (have_skill($skill[raise backup dancer])) {
+                use_skill($skill[raise backup dancer]);
+                use_skill($skill[raise backup dancer]);
+            }
             cleanUp();
             break;
 
