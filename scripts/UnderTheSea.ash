@@ -1,7 +1,19 @@
 import iotm.ash;
 import <seedfinder/seedfinder.ash>;
 
-// ─── GLOBALS ──────────────────────────────────────────────────────────────────   
+// ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
+// These replace what used to be hardcoded checks against the original author's
+// character id. Set them once with the mafia CLI; both default to off.
+//
+//   set uts_godRunGuard = true
+//       Abort at <=17 turns played if the dreadscroll 7 clue is still unknown,
+//       so you can eat a sushi for it instead of burning the record attempt.
+//       Only worth enabling if you are actually chasing a top turncount.
+//
+//   set uts_postloopCommand = postloop
+//       CLI command to run once the loop finishes. Leave empty to skip.
+//
+// ─── GLOBALS ──────────────────────────────────────────────────────────────────
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
@@ -826,7 +838,7 @@ import <seedfinder/seedfinder.ash>;
                 && get_property("_sitCourseCompleted") == "false")
                 use($item[S.I.T. Course Completion Certificate]);
 
-            if (get_property("_aprilBandInstruments") == "0"){
+            if (get_property("_aprilBandInstruments") == "0" && have_item($item[Apriling band helmet])){
                 cli_execute("aprilband item tuba");
                 if (have_familiar($familiar[chest mimic])){
                     use_familiar($familiar[chest mimic]);
@@ -834,9 +846,11 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
 
-            visit_url("inventory.php?action=skiduffel");
+            if (have_item($item[McHugeLarge duffel bag]))
+                visit_url("inventory.php?action=skiduffel");
 
-            if (get_property("_aprilShowerGlobsCollected") == "false")
+            if (get_property("_aprilShowerGlobsCollected") == "false"
+                && have_item($item[April Shower Thoughts shield]))
                 visit_url("inventory.php?action=shower");
 
             // Mr Store 2002 credits — buy in specific order
@@ -2305,7 +2319,7 @@ void sorceress() {
             }
 
             while (get_property("isMerkinHighPriest") == "false") {
-                if (turns_played() <= 17 && my_id() == 2813285 && get_property("dreadScroll7") == "0"){
+                if (turns_played() <= 17 && get_property("uts_godRunGuard") == "true" && get_property("dreadScroll7") == "0"){
                     if (item_amount($item[mer-kin worktea]) > 0){
                         retrieve_item($item[white rice]);
                         eatSushi();
@@ -2573,8 +2587,8 @@ void sorceress() {
                     $item[waterlogged scroll of healing]);
             council();
             council();
-            if (my_id() == 2813285)
-                cli_execute("postloop");
+            if (get_property("uts_postloopCommand") != "")
+                cli_execute(get_property("uts_postloopCommand"));
         }
     }
 }
