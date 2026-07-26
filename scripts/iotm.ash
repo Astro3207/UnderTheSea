@@ -32,6 +32,28 @@ boolean have_item(item it) {
         || storage_amount(it) > 0;
 }
 
+// ─── FOURTH OF MAY COSPLAY SABER ──────────────────────────────────────────────
+// The saber is handed to you automatically at the start of a run, so there is
+// nothing to pull or buy. "Use the Force" leaves combat without spending an
+// adventure and hands over the monster's non-conditional drops.
+//
+// That makes it a drop-farming tool, NOT a general free kill:
+//   - it forfeits the combat win, so it never advances a quest counter, and
+//   - it does not burn a turn, so it cannot advance a turns_spent gate.
+// The Mer-kin Outpost is the trap: the lockkey needs ~25 turns actually spent
+// there, so forcing your way out would stall that loop forever. Anywhere we are
+// looping purely on an item count, it is a straight turn saving.
+
+boolean saberReady() {
+    return have_item($item[Fourth of May Cosplay Saber])
+        && to_int(get_property("_saberForceUses")) < 5;
+}
+
+// False in zones that gate progress on turns spent rather than on drops.
+boolean saberZone(location loc) {
+    return !($locations[The Mer-Kin Outpost] contains loc);
+}
+
 // Returns the number of chamois available in the clan slime tube
 int chamoixAmount() {
     matcher m = create_matcher("There are (\\d+) chamoi", visit_url("clan_slimetube.php?action=bucket"));
