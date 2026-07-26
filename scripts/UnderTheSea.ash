@@ -820,6 +820,14 @@ import <seedfinder/seedfinder.ash>;
                     use_skill(sk);
             }
 
+            // The one free pill of the day. Fidoxene lasts 30 turns, which is
+            // most of a run, and every farming familiar the script reaches for
+            // is weight-scaled, so it is the default. If we are actually short
+            // of noncombat forces, leave the pill unspent so NCforce() can take
+            // Sneakisol instead when it needs it.
+            if (NCForceEstimate() >= 4)
+                pillKeeper("fidoxene");
+
             // One free saber upgrade per day. Choice 1386 is answered in
             // UnderTheSea_Choice.ash; we take the familiar weight option, since
             // the elemental resistance one only matters for farming unblemished
@@ -1207,6 +1215,9 @@ import <seedfinder/seedfinder.ash>;
         else
 
         mood("itdrop");
+        // sea cow is 1 of 3 here and this loop runs until lasso, cowbell x3 and
+        // leather x2 are all in hand, so it is the third-best use of a charge.
+        mapMonster($location[The Coral Corral]);
         adv($location[The Coral Corral]);
         if (contains_text(get_property("baseballTeam"),"775") && baseballPlayers() == 9 && item_amount($item[sea cowbell]) <3)
             baseballD();
@@ -1347,18 +1358,8 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
-    int NCForceEstimate(){
-        int force = 2;
-        if (have_item($item[Apriling band tuba]))
-            force += 3;
-        if (have_item($item[McHugeLarge left ski]))
-            force += 3;
-        if (have_item($item[Cincho de Mayo]))
-            force += 7;
-        if (have_item($item[Jurassic Parka]))
-            force += 5;
-        return force;
-    }
+    // NCForceEstimate() now lives in iotm.ash so initialization() can consult it
+    // when deciding whether to reserve the free pill for Sneakisol.
 
     boolean MomNCyber(){
         if (have_familiar($familiar[patriotic eagle]) && have_item($item[server room key]) && have_skill($skill[Overclock(10)]) && have_skill($skill[Just the Facts]))
@@ -1536,6 +1537,10 @@ void seaMonkees() {
                     tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
                         + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
                 }
+                // Reached only after the pellet has already failed to drop three
+                // times, so the Peridot charge here is long gone and the flytrap
+                // is 1 of 4. Worth a map charge to stop the bleeding.
+                mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
             }
         }
@@ -1782,6 +1787,9 @@ void seaMonkees() {
                     tempEquipment("-combat", "monodent of the sea," + conditional);
                     mood("-combat");
                 }
+                // Longest odds in the run: unholy diver is 1 of 5 here, and we
+                // need 8 rivets plus a porthole plus a broken helmet.
+                mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
                 adv($location[The Wreck of the Edgar Fitzsimmons]);
             }
         }

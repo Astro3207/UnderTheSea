@@ -1,5 +1,28 @@
 import iotm;
 
+// ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
+// Shared by both monster-pickers: the Peridot of Peril (choice 1557) and Map the
+// Monsters (choice 1435). Keeping one table means the two can never disagree
+// about which monster we are actually trying to reach in a zone.
+int [location] wantedMonster = {
+    $location[An Octopus's Garden]:                 740,   // Neptune flytrap
+    $location[The Wreck of the Edgar Fitzsimmons]:  745,   // unholy diver
+    $location[The Sleazy Back Alley]:               159,
+    $location[The Haunted Pantry]:                  145,
+    $location[The Overgrown Lot]:                   1752,
+    $location[The Coral Corral]:                    775,   // sea cow
+    $location[The Marinara Trench]:                 762,
+    $location[Anemone Mine]:                        765,
+    $location[The Dive Bar]:                        768,
+    $location[Cyberzone 1]:                         2458,
+    $location[Mer-kin Library]:                     840,   // Mer-kin researcher
+    $location[the mer-kin outpost]:                 773,
+    $location[the caliginous abyss]:                1373,
+    $location[mer-kin elementary school]:           838,   // Mer-kin teacher
+    $location[The Outskirts of Cobb's Knob]:        152,
+    $location[Madness Bakery]:                      1750
+};
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
 // Try each stashbox option in the given priority order, skipping already-checked ones.
@@ -265,32 +288,28 @@ void main(int whichchoice, string page) {
             break;
 
         // ── Peridot monsters ───────────────────────────────────────
+        // The same table drives Map the Monsters (1435) below, so the two
+        // monster-pickers can never disagree about what we want in a zone.
         case 1557:
-            int [location] banderMonster = {
-                $location[An Octopus's Garden]:      740,
-                $location[The Wreck of the Edgar Fitzsimmons]:      745,
-                $location[The Sleazy Back Alley]:        159,
-                $location[The Haunted Pantry]:        145,
-                $location[The Overgrown Lot]:        1752,
-                $location[The Coral Corral]:         775,
-                $location[The Marinara Trench]:      762,
-                $location[Anemone Mine]:             765,
-                $location[The Dive Bar]:             768,
-                $location[Cyberzone 1]:             2458,
-                $location[Mer-kin Library]:        840,
-                $location[the mer-kin outpost]:     773,
-                $location[the caliginous abyss]:    1373,
-                $location[mer-kin elementary school]: 838,
-                $location[The Outskirts of Cobb's Knob]: 152,
-                $location[Madness Bakery]: 1750
-            };
             set_property("NCtoC","true");
             location here = my_location();
-            if (banderMonster contains here) {
-                run_choice(1, "bandersnatch=" + banderMonster[here]);
+            if (wantedMonster contains here) {
+                run_choice(1, "bandersnatch=" + wantedMonster[here]);
                 if (here == $location[The Coral Corral]) run_choice(2);
             }
             break;
+
+        // ── Map the Monsters ───────────────────────────────────────
+        // "Leading Yourself Right to Them". Same intent as the Peridot, but a
+        // different parameter name. Only cast in zones we have a preference
+        // for, so the lookup should always hit; if it somehow does not, fall
+        // through and let mafia resolve rather than pick a monster at random.
+        case 1435:
+            location mapHere = my_location();
+            if (wantedMonster contains mapHere)
+                run_choice(1, "heyscriptswhatsupwinkwink=" + wantedMonster[mapHere]);
+            break;
+
         case 1596:
             run_choice(3);
             break;
