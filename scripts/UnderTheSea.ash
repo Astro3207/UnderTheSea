@@ -2550,7 +2550,7 @@ void sorceress() {
                 }
                 mood("colosseum");
             }
-            float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/numeric_modifier("spell damage percent");
+            float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
             tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
                 + "congressional medal of insanity," + freeFight + bathysphere($item[none]));
             adv($location[Mer-kin Colosseum]);
