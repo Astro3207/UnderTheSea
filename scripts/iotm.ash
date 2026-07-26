@@ -167,6 +167,42 @@ int NCForceEstimate(){
     return force;
 }
 
+// ─── SOURCE TERMINAL ──────────────────────────────────────────────────────────
+// The terminal is a campground fixture, so it survives ascension and there is
+// nothing to install or pull in-run.
+//
+// Only enhance is routed in. items.enh is a flat +item drops buff lasting 25
+// turns, or 100 on a fully chipped terminal, with up to 3 casts a day. It costs
+// no turn and carries no risk, and it shortens every drop-farming loop in the
+// script, so it is called wherever we are already setting up for +item.
+//
+// Digitize is deliberately NOT used, despite being the obvious candidate:
+//
+//   - It does not create a free fight. It creates a wandering monster, and that
+//     wanderer costs an adventure when it lands.
+//   - Copies arrive 7 turns after the cast, then +27, +57. Recasting resets the
+//     counter, so 3 casts is roughly 3 copies at 7-turn spacing, and none of it
+//     can be aimed at a particular zone.
+//   - The only long contiguous block in this route is the Mer-kin Outpost, and
+//     that block is spent hunting NONCOMBATS: the stashbox (choices 313/314/315),
+//     prayerbeads and the lockkey. A wandering combat there displaces exactly
+//     what we are looking for.
+//   - Wanderers outrank forced noncombats, so a mistimed copy can waste a Cincho
+//     charge on top of the turn.
+//
+// Map the Monsters already supplies 3 precisely aimed encounters with none of
+// that downside, which makes digitize a strictly worse version of the same idea.
+
+void sourceEnhance() {
+    if (get_campground()[$item[Source terminal]] == 0)
+        return;
+    if (have_effect($effect[items.enh]) > 0)
+        return;
+    if (to_int(get_property("_sourceTerminalEnhanceUses")) >= 3)
+        return;
+    cli_execute("terminal enhance items.enh");
+}
+
 // ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
 // The first pill each day is free; every one after costs 3 spleen, which we need
 // for fish sauce to stay Fishy, so only ever take the free one.

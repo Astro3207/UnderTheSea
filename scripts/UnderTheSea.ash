@@ -313,6 +313,10 @@ import <seedfinder/seedfinder.ash>;
                     $effect[donho's bubbly ballad], $effect[the ballad of richie thingfinder]
                 };
                 applyEffects(itdrop);
+                // Free +item from the Source Terminal. Guarded internally, so
+                // calling it on every itdrop setup just tops the buff back up
+                // when it lapses and is a no-op the rest of the time.
+                sourceEnhance();
                 break;
             case "superitdrop":
                 effect [int] superitdrop = {$effect[Hustlin'], $effect[Steely-Eyed Squint],
@@ -831,6 +835,10 @@ import <seedfinder/seedfinder.ash>;
                 if (have_skill(sk))
                     use_skill(sk);
             }
+
+            // Open the run with +item up rather than waiting for the first
+            // farming loop to ask for it.
+            sourceEnhance();
 
             // The one free pill of the day. Fidoxene lasts 30 turns, which is
             // most of a run, and every farming familiar the script reaches for
