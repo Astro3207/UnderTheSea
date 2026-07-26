@@ -33,6 +33,16 @@ void free_kill(string ptext, boolean drop) {
             && to_int(get_property("_shadowBricksUsed")) == 13) continue;
         throw_item(freecombat);
     }
+
+    // Last resort. Use the Force is not a kill: it forfeits the win and any
+    // conditional drops, so every real free kill above is strictly better and
+    // gets first refusal. It only runs if the fight is somehow still going and
+    // the saber was deliberately equipped for this zone by saberEquip().
+    if (current_round() > 0
+        && saberReady()
+        && have_equipped($item[Fourth of May Cosplay Saber])
+        && contains_text(ptext, "Use the Force"))
+        use_skill($skill[Use the Force]);
 }
 
 // Attempt a free run using available skills/items.
