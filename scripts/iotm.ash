@@ -86,6 +86,83 @@ boolean pullSequence(item it) {
     return false;
 }
 
+// ─── MAP THE MONSTERS ─────────────────────────────────────────────────────────
+// Comprehensive Cartography gives 3 casts a day. Each turns the next fight in a
+// zone into a monster of your choosing -- the same job as the Peridot of Peril,
+// answered in UnderTheSea_Choice.ash from the same wantedMonster table.
+//
+// The Peridot is once per zone per day, so these are the extra charges for when
+// you still need more of a drop after the Peridot there is spent. Charges are
+// scarce, so they go to the longest odds first. Chance of drawing the monster we
+// actually want, per combats.txt:
+//
+//     The Wreck of the Edgar Fitzsimmons   unholy diver       1 in 5
+//     An Octopus's Garden                  Neptune flytrap    1 in 4
+//     The Coral Corral                     sea cow            1 in 3
+//
+// The Mer-kin Outpost is left out for the same reason the saber is: the lockkey
+// needs ~25 turns actually spent there, so skipping to a chosen monster and
+// shortening the zone saves nothing.
+
+boolean mapReady() {
+    return have_skill($skill[Map the Monsters])
+        && to_int(get_property("_monstersMapped")) < 3
+        && get_property("mappingMonsters") == "false";
+}
+
+boolean mapZone(location loc) {
+    return $locations[The Wreck of the Edgar Fitzsimmons,
+        An Octopus's Garden, The Coral Corral] contains loc;
+}
+
+// Only cast once the Peridot's charge for this zone is gone, so the two do not
+// both spend themselves picking the same monster.
+void mapMonster(location loc) {
+    if (!mapReady() || !mapZone(loc))
+        return;
+    if (available_amount($item[peridot of peril]) > 0
+        && !contains_text(get_property("_perilLocations"), to_string(to_int(loc))))
+        return;
+    use_skill($skill[Map the Monsters]);
+}
+
+// Roughly how many noncombat forces this account can field. Deliberately does
+// NOT count the Pill Keeper: this is the number we use to decide whether the
+// free pill needs reserving for Sneakisol, so counting it would be circular.
+int NCForceEstimate(){
+    int force = 2;
+    if (have_item($item[Apriling band tuba]))
+        force += 3;
+    if (have_item($item[McHugeLarge left ski]))
+        force += 3;
+    if (have_item($item[Cincho de Mayo]))
+        force += 7;
+    if (have_item($item[Jurassic Parka]))
+        force += 5;
+    return force;
+}
+
+// ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
+// The first pill each day is free; every one after costs 3 spleen, which we need
+// for fish sauce to stay Fishy, so only ever take the free one.
+//
+// Fidoxene is the default. Familiars start an ascension at very low weight and
+// the script leans on Grouper Groupie (underwater,item0) for +item nearly
+// everywhere, so 30 turns of "every familiar is at least 20 lbs" cuts farming
+// turns directly. Chest Mimic and Jill-of-All-Trades are item0 as well.
+//
+// Explodinall is deliberately not used. It reads like a forced-drop effect, but
+// it is a yellow ray: it grants Everything Looks Yellow for 29 turns, which
+// collides with the Jurassic Parka dilophosaur ray the script already fires at
+// the unholy diver, so it would cost more than it gives.
+void pillKeeper(string pill) {
+    if (!have_item($item[Eight Days a Week Pill Keeper]))
+        return;
+    if (get_property("_freePillKeeperUsed") != "false")
+        return;
+    cli_execute("pillkeeper " + pill);
+}
+
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
 
 void NCforce() {
@@ -101,6 +178,12 @@ void NCforce() {
                 equip($slot[acc3], $item[cincho de mayo]);
                 use_skill($skill[Cincho: Fiesta Exit]);
             }
+        } else if (have_item($item[Eight Days a Week Pill Keeper])
+            && get_property("_freePillKeeperUsed") == "false") {
+            // Sneakisol has Clara's bell's noncombat-forcing behaviour and is
+            // free, so it comes before anything that costs a pull. If the free
+            // pill already went on Fidoxene this call is a no-op.
+            pillKeeper("sneakisol");
         } else if (!have_item($item[mchugelarge duffel bag]) && !have_item($item[jurassic parka]) && !have_item($item[allied radio backpack])){
             foreach it in $items[Handheld Allied radio, Clara's bell, stench jelly]{
                 if (!contains_text(get_property("_roninStoragePulls"), to_int(it))){
