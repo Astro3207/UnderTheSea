@@ -42,7 +42,14 @@ skipped, and the route falls back to slower alternatives.
 
 ## Options
 
-Set once in the gCLI; both default to off:
+Two ways to run it, both typed into the gCLI:
+
+| Command | What it does |
+|---|---|
+| `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
+| `UnderTheSea sim` | Checklist only — prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
+
+Preferences, set once in the gCLI; both default to off:
 
 | Preference | What it does |
 |---|---|
