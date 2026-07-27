@@ -203,9 +203,8 @@ void main(int whichchoice, string page) {
 
         // ── Fourth of May Cosplay Saber ───────────────────────────────────
         // 1386 is the once-daily upgrade. Option 4 is the Empathy Chip
-        // (+10 familiar weight), which feeds Glover in Cyberzone 1 during the
-        // Mom rescue. Option 3 (+3 all elemental resistance) only speeds up
-        // farming unblemished pearls, and those come in via the codpiece.
+        // (+10 familiar weight), which feeds Glover in Cyberzone 1 during
+        // the Mom rescue.
         case 1386:
             run_choice(4);
             break;
