@@ -2231,7 +2231,7 @@ void sorceress() {
         while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
             shadowRift();
 
-        if ((my_turncount( ) > 25 || !have_item($item[Miniature crystal ball])) && !highShiny() && have_item($item[closed-circuit pay phone])){
+        if ((my_turncount( ) > 25 || !have_item_anywhere($item[Miniature crystal ball])) && !highShiny() && have_item($item[closed-circuit pay phone])){
             while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false"))
                 shadowRift();
         }
@@ -2295,7 +2295,7 @@ void sorceress() {
             pullSequence($item[waffle]);
             conditional += "monodent of the sea,";
             conditional += if_equip($item[heartstone]);
-        } else if (have_item($item[Miniature crystal ball])){
+        } else if (have_item_anywhere($item[Miniature crystal ball])){
             conditional += "Miniature crystal ball,";
         }
         if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish")
@@ -2323,10 +2323,10 @@ void sorceress() {
         // Burn shadow affinity if crystal ball shows non-seahorse incoming
         if (contains_text(get_property("crystalBallPredictions"), "The Coral Corral")
             && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse")
-            && have_effect($effect[shadow affinity]) > 0 && available_amount($item[miniature crystal ball]) > 0)
+            && have_effect($effect[shadow affinity]) > 0 && have_item_anywhere($item[miniature crystal ball]))
             shadowRift();
         while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0
-            && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
+            && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && have_item_anywhere($item[miniature crystal ball]))
             shadowRift();
     }
 

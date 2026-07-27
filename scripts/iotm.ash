@@ -38,6 +38,19 @@ boolean have_item(item it) {
         || storage_amount(it) > 0;
 }
 
+// have_item() cannot see gear equipped on terrarium familiars -- the
+// miniature crystal ball usually lives on one, and the checklist called it
+// missing while the owner was looking right at it.
+boolean have_item_anywhere(item it) {
+    if (have_item(it))
+        return true;
+    foreach fam in $familiars[] {
+        if (have_familiar(fam) && familiar_equipped_equipment(fam) == it)
+            return true;
+    }
+    return false;
+}
+
 // A function, not a global set by initialization(): the CCS runs in its own
 // interpreter where initialization() never executes, so a global was stuck at
 // its default (false) for every combat decision that read it.
@@ -1657,12 +1670,17 @@ void iotmChecklist() {
     int total;
     foreach it in iotmItems {
         total += 1;
-        if (have_item(it)) { owned += 1; print("✓ " + it, "blue"); }
+        if (have_item_anywhere(it)) { owned += 1; print("✓ " + it, "blue"); }
         else print("✗ " + it, "red");
     }
     foreach sk in iotmSkills {
         total += 1;
-        if (have_skill(sk)) { owned += 1; print("✓ " + sk, "blue"); }
+        // have_skill() has been seen reporting Macrometeorite absent at
+        // initialization on a day the CCS cast it in combat; the owned guide
+        // is accepted as the second signal.
+        boolean has = have_skill(sk)
+            || (sk == $skill[Macrometeorite] && have_item($item[Pocket Meteor Guide]));
+        if (has) { owned += 1; print("✓ " + sk, "blue"); }
         else print("✗ " + sk, "red");
     }
     foreach fam in iotmFamiliars {
