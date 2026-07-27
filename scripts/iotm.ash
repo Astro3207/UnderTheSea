@@ -582,6 +582,10 @@ void censer() {
 // it is a yellow ray: it grants Everything Looks Yellow for 29 turns, which
 // collides with the Jurassic Parka dilophosaur ray the script already fires at
 // the unholy diver, so it would cost more than it gives.
+// `pill` must be a mafia pillkeeper KEYWORD, per the command's own usage
+// string: [free] explode | extend | noncombat | element | stat | familiar |
+// lucky | random. Pill names are not accepted -- "fidoxene" opened choice
+// 1395 and then submitted nothing valid, killing the run.
 void pillKeeper(string pill) {
     if (!have_item($item[Eight Days a Week Pill Keeper]))
         return;
@@ -1167,7 +1171,7 @@ void NCforce() {
             // Sneakisol has Clara's bell's noncombat-forcing behaviour and is
             // free, so it comes before anything that costs a pull. If the free
             // pill already went on Fidoxene this call is a no-op.
-            pillKeeper("sneakisol");
+            pillKeeper("free noncombat");
         } else if (!have_item($item[mchugelarge duffel bag]) && !have_item($item[jurassic parka]) && !have_item($item[allied radio backpack])){
             foreach it in $items[Handheld Allied radio, Clara's bell, stench jelly]{
                 if (!contains_text(get_property("_roninStoragePulls"), to_int(it))){
