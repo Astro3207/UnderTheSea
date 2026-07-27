@@ -203,6 +203,88 @@ void sourceEnhance() {
     cli_execute("terminal enhance items.enh");
 }
 
+// duplicate.edu is the other educate file worth routing in, and unlike digitize
+// it costs nothing to slot. Duplicate turns a monster into two, and each copy
+// rolls the whole drop table separately, so one cast is worth exactly one extra
+// encounter of that monster -- for no turn at all.
+//
+// Slotting it displaces nothing. The two active educate slots hold extract.edu
+// and digitize.edu, and this script casts neither: Extract only farms Source
+// essence, which we have no use for in-run, and digitize was rejected outright
+// for the reasons above.
+//
+// It is spent on the unholy diver. That is the rarest monster we still farm, at
+// 1 in 5, and it carries four separate rusty rivet slots at 20/15/10/5% on top
+// of the porthole and the broken helmet, so it has by far the fattest drop table
+// in the run. One extra roll of it is worth roughly the five turns it would take
+// to meet another diver.
+//
+// A cast against an uncopyable monster does not consume the daily use, so a
+// misfire costs only MP and a round.
+
+boolean duplicateEducated() {
+    return get_property("sourceTerminalEducate1") == "duplicate.edu"
+        || get_property("sourceTerminalEducate2") == "duplicate.edu";
+}
+
+boolean duplicateReady() {
+    if (get_campground()[$item[Source terminal]] == 0)
+        return false;
+    if (to_int(get_property("_sourceTerminalDuplicateUses")) >= 1)
+        return false;
+    return contains_text(get_property("sourceTerminalEducateKnown"), "duplicate.edu");
+}
+
+void sourceEducate() {
+    if (!duplicateReady() || duplicateEducated())
+        return;
+    cli_execute("terminal educate duplicate.edu");
+}
+
+// Called from the CCS. Doubling the diver doubles its HP, attack, defence and
+// attacks per round as well as its drops, so it goes out early in the fight
+// rather than being saved for last.
+void duplicateMonster(monster mob, string page_text) {
+    if (!duplicateReady() || !duplicateEducated())
+        return;
+    if (mob != $monster[unholy diver])
+        return;
+    // Nothing left to gain once the rivets are in hand.
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    if (!contains_text(page_text, "Duplicate"))
+        return;
+    use_skill($skill[Duplicate]);
+}
+
+// ─── SEPT-EMBER CENSER ────────────────────────────────────────────────────────
+// Seven embers a day. They bank across days rather than resetting at rollover,
+// but only once the censer has actually been stoked -- they do not accrue on
+// their own, so the run has to go and claim them.
+//
+// One shop item is already a consumer in this script: the CCS throws a Septapus
+// summoning charm at the shadow slab, and the charm makes seven pickpocket
+// attempts. A pickpocket takes an item outside the drop roll entirely, which
+// makes it immune to the 100%-per-slot cap that blunts every +item buff we
+// stack, so it is the one thing on these shelves that reliably shortens a loop.
+//
+// Nothing else there earns its embers on the turn axis: wheel of camembert and
+// head of emberg lettuce buy adventures, the jacket, bembershoot and hat of
+// remembering are resistance and MP, and structural ember and the miniature
+// Embering Hulk are crafting and a fight we have no use for.
+void censer() {
+    if (!have_item($item[Sept-Ember Censer]))
+        return;
+    if (get_property("_septEmberBalanceChecked") == "false")
+        visit_url("shop.php?whichshop=september");
+    int wanted = 3 - item_amount($item[Septapus summoning charm]);
+    int afford = to_int(get_property("availableSeptEmbers")) / 2;
+    if (afford < wanted)
+        wanted = afford;
+    if (wanted > 0)
+        buy($coinmaster[Sept-Ember Censer], wanted, $item[Septapus summoning charm]);
+}
+
 // ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
 // The first pill each day is free; every one after costs 3 spleen, which we need
 // for fish sauce to stay Fishy, so only ever take the free one.

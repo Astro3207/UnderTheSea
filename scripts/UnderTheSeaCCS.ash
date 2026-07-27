@@ -170,6 +170,8 @@ item bangB(){
 void main(int round, monster mob, string page_text) {
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
+    // One extra roll of the diver's drop table, once a day, for no turn.
+    duplicateMonster(mob, page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());

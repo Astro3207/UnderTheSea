@@ -840,6 +840,11 @@ import <seedfinder/seedfinder.ash>;
             // farming loop to ask for it.
             sourceEnhance();
 
+            // Slot duplicate.edu now so the skill is in hand by the time we
+            // reach Fitzsimmons, and claim the day's embers.
+            sourceEducate();
+            censer();
+
             // The one free pill of the day. Fidoxene lasts 30 turns, which is
             // most of a run, and every farming familiar the script reaches for
             // is weight-scaled, so it is the default. If we are actually short
