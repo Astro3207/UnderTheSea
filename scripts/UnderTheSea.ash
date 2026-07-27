@@ -2946,6 +2946,7 @@ void main(string command) {
         // startup and nothing else -- no pulls, no turns, no combat.
         iotmChecklist();
         pullChecklist();
+        simEstimate();
         return;
     }
     if (command != "")

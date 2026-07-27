@@ -1653,6 +1653,10 @@ void baseballD() {
 // absent. Purely informational; every use in the script is ownership-guarded
 // regardless.
 
+// Ownership record from the last iotmChecklist() run, keyed by printed name.
+// simEstimate() below reads it to model a turn count for the owned kit.
+boolean [string] simOwned;
+
 void iotmChecklist() {
     boolean [item] iotmItems = $items[monodent of the sea,
         The Eternity Codpiece,
@@ -1678,11 +1682,12 @@ void iotmChecklist() {
         Tiny Plastic Santa Claus Skeleton];
 
     print("IOTM check — supported IOTMs:");
+    clear(simOwned);
     int owned;
     int total;
     foreach it in iotmItems {
         total += 1;
-        if (have_item_anywhere(it)) { owned += 1; print("✓ " + it, "blue"); }
+        if (have_item_anywhere(it)) { owned += 1; simOwned[to_string(it)] = true; print("✓ " + it, "blue"); }
         else print("✗ " + it, "red");
     }
     foreach sk in iotmSkills {
@@ -1692,12 +1697,12 @@ void iotmChecklist() {
         // is accepted as the second signal.
         boolean has = have_skill(sk)
             || (sk == $skill[Macrometeorite] && have_item($item[Pocket Meteor Guide]));
-        if (has) { owned += 1; print("✓ " + sk, "blue"); }
+        if (has) { owned += 1; simOwned[to_string(sk)] = true; print("✓ " + sk, "blue"); }
         else print("✗ " + sk, "red");
     }
     foreach fam in iotmFamiliars {
         total += 1;
-        if (have_familiar(fam)) { owned += 1; print("✓ " + fam, "blue"); }
+        if (have_familiar(fam)) { owned += 1; simOwned[to_string(fam)] = true; print("✓ " + fam, "blue"); }
         else print("✗ " + fam, "red");
     }
     total += 1;
@@ -1706,12 +1711,12 @@ void iotmChecklist() {
         || have_item($item[model train set])
         || have_item($item[portable Mayo Clinic])
         || have_item($item[TakerSpace letter of Marque])) {
-        owned += 1; print("✓ a workshed", "blue");
+        owned += 1; simOwned["a workshed"] = true; print("✓ a workshed", "blue");
     } else
         print("✗ a workshed", "red");
     total += 1;
     if (get_campground() contains $item[Source terminal]) {
-        owned += 1; print("✓ Source Terminal", "blue");
+        owned += 1; simOwned["Source Terminal"] = true; print("✓ Source Terminal", "blue");
     } else
         print("✗ Source Terminal", "red");
     print("IOTM check: " + owned + " of " + total + " supported IOTMs owned.");
@@ -1750,6 +1755,130 @@ void pullChecklist() {
         else
             print("✗ " + it + " — NOT mall-buyable, acquire before it's needed", "red");
     }
+}
+
+// ─── SIM MODEL ────────────────────────────────────────────────────────────────
+// The turn model behind "UnderTheSea sim": start from a kit-less baseline and
+// credit each owned IOTM, skill and familiar with the turns it saves a run,
+// discounting later credits -- savings overlap, so the tenth item is worth
+// less than the first. Calibrated so a full kit models at ~33 turns
+// (leaderboard pace) and an empty kit at the ~91-turn baseline. The weights
+// are the midpoints of the per-item estimates modeled against a measured
+// 47-turn reference run.
+
+void simEstimate() {
+    float BASELINE = 91.0;
+    float FLOOR = 31.0;
+    float [string] worth;
+    // Route carriers
+    worth[to_string($item[closed-circuit pay phone])] = 6.5;
+    worth[to_string($item[Fourth of May Cosplay Saber])] = 5.0;
+    worth[to_string($item[tearaway pants])] = 3.5;
+    worth[to_string($item[2002 Mr. Store Catalog])] = 3.0;
+    worth[to_string($item[cursed monkey's paw])] = 3.0;
+    worth[to_string($item[The Eternity Codpiece])] = 2.5;
+    worth[to_string($item[Jurassic Parka])] = 2.5;
+    worth[to_string($item[McHugeLarge duffel bag])] = 2.5;
+    worth[to_string($item[Apriling band helmet])] = 2.5;
+    worth[to_string($skill[Just the Facts])] = 2.5;
+    // Multi-turn drivers
+    worth[to_string($item[august scepter])] = 1.5;
+    worth[to_string($item[Peridot of Peril])] = 1.5;
+    worth[to_string($item[blood cubic zirconia])] = 1.5;
+    worth[to_string($item[baseball diamond])] = 1.5;
+    worth[to_string($item[backup camera])] = 1.5;
+    worth[to_string($item[bat wings])] = 1.5;
+    worth[to_string($item[server room key])] = 1.5;
+    worth[to_string($item[Time-Spinner])] = 1.5;
+    worth[to_string($item[Lil' Doctor&trade; bag])] = 1.5;
+    worth[to_string($skill[Map the Monsters])] = 1.5;
+    worth[to_string($skill[Macrometeorite])] = 1.5;
+    worth[to_string($skill[Feel Nostalgic])] = 1.5;
+    worth["a workshed"] = 1.5;
+    worth["Source Terminal"] = 1.5;
+    // About a turn each
+    worth[to_string($item[Heartstone])] = 1.0;
+    worth[to_string($item[spring shoes])] = 1.0;
+    worth[to_string($item[Everfull Dart Holster])] = 1.0;
+    worth[to_string($item[Mayam Calendar])] = 1.0;
+    worth[to_string($item[Cincho de Mayo])] = 1.0;
+    worth[to_string($item[January's Garbage Tote])] = 1.0;
+    worth[to_string($item[combat lover's locket])] = 1.0;
+    worth[to_string($item[Kremlin's Greatest Briefcase])] = 1.0;
+    worth[to_string($item[Eight Days a Week Pill Keeper])] = 1.0;
+    worth[to_string($item[Sept-Ember Censer])] = 1.0;
+    worth[to_string($item[vampyric cloake])] = 1.0;
+    worth[to_string($item[miniature crystal ball])] = 1.0;
+    worth[to_string($item[autumn-aton])] = 1.0;
+    // The tail
+    worth[to_string($item[Leprecondo])] = 0.5;
+    worth[to_string($item[April Shower Thoughts shield])] = 0.5;
+    worth[to_string($item[Powerful Glove])] = 0.5;
+    worth[to_string($item[mumming trunk])] = 0.5;
+    worth[to_string($item[Cargo Cultist Shorts])] = 0.5;
+    worth[to_string($item[Unwrapped knock-off retro superhero cape])] = 0.5;
+    worth[to_string($item[roman candelabra])] = 0.5;
+    worth[to_string($item[latte lovers member's mug])] = 0.5;
+    worth[to_string($item[V for Vivala mask])] = 0.5;
+    worth[to_string($item[designer sweatpants])] = 0.5;
+    worth[to_string($item[cosmic bowling ball])] = 0.5;
+    // Familiars
+    worth[to_string($familiar[Grouper Groupie])] = 2.5;
+    worth[to_string($familiar[Red-Nosed Snapper])] = 1.5;
+    worth[to_string($familiar[Jill-of-All-Trades])] = 1.5;
+    worth[to_string($familiar[Chest Mimic])] = 1.5;
+    worth[to_string($familiar[Patriotic Eagle])] = 1.5;
+    worth[to_string($familiar[Sword of S Words])] = 1.5;
+    worth[to_string($familiar[Pocket Professor])] = 1.5;
+    worth[to_string($familiar[Space Jellyfish])] = 1.0;
+    worth[to_string($familiar[Glover])] = 1.0;
+    worth[to_string($familiar[Peace Turkey])] = 1.0;
+    worth[to_string($familiar[Disgeist])] = 1.0;
+    worth[to_string($familiar[Foul Ball])] = 0.5;
+    worth[to_string($familiar[Jumpsuited Hound Dog])] = 0.5;
+
+    float [int] have;
+    float [string] missing;
+    foreach name, saving in worth {
+        if (simOwned contains name)
+            have[count(have)] = saving;
+        else
+            missing[name] = saving;
+    }
+
+    // Biggest savings count in full; the deeper the kit, the more the next
+    // item's job is already covered by something else.
+    sort have by -value;
+    float saved;
+    int rank;
+    foreach i in have {
+        if (rank < 5) saved += have[i];
+        else if (rank < 10) saved += 0.75 * have[i];
+        else saved += 0.5 * have[i];
+        rank += 1;
+    }
+    int est = to_int(BASELINE - saved + 0.5);
+    if (est < to_int(FLOOR)) est = to_int(FLOOR);
+
+    print("Modeled run length for this kit: ~" + est + " turns.", "blue");
+    print("(Baseline " + to_int(BASELINE) + " with no IOTMs at all; a full kit models at ~33."
+        + " Savings overlap, so treat this as a planning number, not a promise.)");
+    if (!(simOwned contains to_string($item[monodent of the sea])))
+        print("No Monodent of the Sea: the estimate assumes you acquire one -- the route aborts without it.", "red");
+
+    string upgrades;
+    for pass from 1 to 3 {
+        string best;
+        float bestWorth;
+        foreach name, saving in missing {
+            if (saving > bestWorth) { bestWorth = saving; best = name; }
+        }
+        if (best == "") break;
+        upgrades += (upgrades == "" ? "" : ", ") + best + " (~" + bestWorth + ")";
+        remove missing[best];
+    }
+    if (upgrades != "")
+        print("Biggest missing savings: " + upgrades, "red");
 }
 
 // ─── FINISHER ─────────────────────────────────────────────────────────────────

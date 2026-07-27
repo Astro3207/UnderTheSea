@@ -26,16 +26,18 @@ Three more are "optional" in name only — the script will start without
 them, but the route is built around them and you should treat them as part
 of this list:
 
-- **A Monodent of the Sea.** The underwater weapon the route lives in:
-  lightning-bolt banishes shape the corral and outpost pools, and most
-  farming outfits are hard-wired around it with no fallback — expect an
-  abort mid-run if you start without one.
+- **A Monodent of the Sea.** The underwater weapon most farming outfits
+  are hard-wired around, with no fallback — expect an abort mid-run if you
+  start without one. Its banishes keep the seahorse and lockkey hunts
+  short.
 - **A Congressional Medal of Insanity** in storage. Worn through most of
   the route when present and skipped at real cost when absent; the script
   won't buy one for you.
 - **The Eternity Codpiece**, loaded with unblemished pearls before
-  ascending. The smuggled pearls keep the resistance phases cheap, and
-  socketed gems keep their skills without spending accessory slots.
+  ascending. The Nautical Seaceress demands five unblemished pearls and
+  the path makes them unpullable — pearls carried across ascension in the
+  codpiece skip most of that farming, and socketed gems keep their skills
+  without spending accessory slots.
 
 Everything else in the script is ownership-guarded: an IOTM you don't own is
 skipped, and the route falls back to slower alternatives.
@@ -47,7 +49,7 @@ Two ways to run it, both typed into the gCLI:
 | Command | What it does |
 |---|---|
 | `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
-| `UnderTheSea sim` | Checklist only — prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
+| `UnderTheSea sim` | Checklist only — prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit (with the biggest missing savings called out), and exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
 
 Preferences, set once in the gCLI; both default to off:
 
@@ -87,16 +89,7 @@ The script sorts your account into a resource tier and routes accordingly:
 ## IOTMs the script uses
 
 None are strictly required — every use is guarded — but turn count scales
-with what you own. The full supported list lives in the script itself: run
-
-    UnderTheSea sim
-
-in the gCLI to print the ownership checklists without starting a run —
-every supported IOTM, skill and familiar your account has or is missing,
-plus the Hagnk's pull report: what is already stocked, what will be
-mall-bought when the route needs it, and — in red — what cannot be bought
-and should be acquired ahead of time. The same checklists print at the
-start of every run.
+with what you own.
 
 ### The most important ones
 
@@ -104,14 +97,14 @@ These carry the route; missing one changes how whole phases play out:
 
 | IOTM | Why it matters |
 |---|---|
-| monodent of the sea | The underwater weapon the route lives in: lightning-bolt banishes shape the corral and outpost pools, and it anchors most farming outfits |
-| closed-circuit pay phone | Eleven free shadow fights a day carry the whole lasso-training block; several route branches key on owning it |
-| 2002 Mr. Store Catalog | Spooky VHS copies, the pro skateboard's McTwist, software glitch — the corral opener and Mom-rescue copies come from here |
-| cursed monkey's paw | Wishes replace whole corral farming loops (lasso, cowbell); selects the summon-based diver plan |
-| august scepter | Waffles re-roll monsters in place; Aug. 2nd is a free Lucky!; the script's resource tiering keys on the catalog/paw/scepter trio |
-| Fourth of May Cosplay Saber | Use the Force: deterministic diver, sea cow, prayerbead and scroll drops via the Force budget ladder |
-| book of facts | Just the Facts wishes and Monster Habitats copy chains for the Mom rescue |
-| patriotic eagle (hatchling) | RWB blast forces the flytrap pellet; phylum screech banishes constructs; Cyberzone partner |
+| monodent of the sea | The underwater weapon most outfits are built around; its banishes clear unwanted monsters out of The Coral Corral and The Mer-kin Outpost, keeping the sea-cow, seahorse and lockkey hunts short |
+| closed-circuit pay phone | Free shadow-rift fights each day carry the sea lasso training you need before you can tame the seahorse into the Mer-kin Deepcity — skill progress without spending underwater turns |
+| Fourth of May Cosplay Saber | Use the Force turns hunted monsters into guaranteed drops: the unholy diver, the sea cow's cowbells for taming the seahorse, and Mer-kin prayerbeads (each one equipped is one fewer healing item needed against Yog-Urt) |
+| cursed monkey's paw | Wishes materialize scarce quest items — sea lassos and sea cowbells for the seahorse taming — instead of farming sea cowboys and sea cows for them |
+| 2002 Mr. Store Catalog | Its store credits buy copy and drop-forcing tools mid-run that shortcut opening The Coral Corral and finding Mom in The Caliginous Abyss |
+| book of facts | Just the Facts wishes and Monster Habitats copy chains cut the adventures needed to find Mom in The Caliginous Abyss |
+| august scepter | Waffles swap a fight for a fresh monster — another shot at the sea cow or seahorse you actually need; Aug. 2 grants a free Lucky! adventure |
+| patriotic eagle (hatchling) | Its red-white-and-blue blast guarantees the wriggling flytrap pellet that frees Little Brother from An Octopus's Garden |
 
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
 
