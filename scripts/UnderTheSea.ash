@@ -1901,11 +1901,17 @@ void seaMonkees() {
                 }
                 tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]) + if_equip($item[baseball diamond]));
                 print("Item drop rate is " + numeric_modifier("item drop"));
-                // Squint is not cast here: diver #1 is Forced or yellow-rayed
-                // and forced drops ignore item bonuses, so the once-a-day
-                // squint is saved for the corral attempt.
-                if (!diverForceReady())
+                // Forced and yellow-rayed drops ignore item bonuses, so the
+                // once-a-day squint only fires when neither covers this
+                // fight: saberless and rayless, the roll is probabilistic
+                // and doubling the bonus pays most on this table.
+                if (!diverForceReady()) {
                     yellowRayPrep();
+                    if (have_effect($effect[everything looks yellow]) > 0
+                        || (!have_item($item[jurassic parka])
+                            && !have_item($item[April Shower Thoughts shield])))
+                        mood("superitdrop");
+                }
                 summon($monster[unholy diver]);
             }
 
