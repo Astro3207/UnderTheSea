@@ -2800,9 +2800,17 @@ void sorceress() {
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
-            else if (item_amount($item[crayon shavings]) < 8 && have_effect($effect[null afternoon]) == 0){
+            else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
+                // Two pairs is the whole need now. Exploit first; failing
+                // that, the monkey's paw can wish the gap closed -- by this
+                // point in the run the wishes have no other claimant.
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
+                while (item_amount($item[crayon shavings]) < 4
+                    && have_effect($effect[null afternoon]) == 0
+                    && available_amount($item[cursed monkey's paw]) > 0
+                    && to_int(get_property("_monkeyPawWishesUsed")) < 5)
+                    cli_execute("monkeypaw item crayon shavings");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
