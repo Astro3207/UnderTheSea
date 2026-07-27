@@ -132,9 +132,6 @@ boolean saberZone(location loc) {
 // guaranteed 4 rivets + porthole + helmet, independent of item bonus.
 // (Its c-flagged drops, glowing syringe and unholy water, are not forced; we
 // want neither.)
-//
-// Duplicate is not part of this plan: doubling pays only on a WIN, and a
-// Forced fight is never won. duplicateMonster() owns the day's cast.
 
 // The rivet hunt is live while nothing that fills the diving-helmet slot is
 // owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
@@ -456,15 +453,10 @@ int NCForceEstimate(){
 // The terminal is a campground fixture, so it survives ascension and there is
 // nothing to install or pull in-run.
 //
-// Only enhance is routed in. items.enh is a flat +item drops buff lasting 25
+// items.enh is a flat +item drops buff lasting 25
 // turns, or 100 on a fully chipped terminal, with up to 3 casts a day. It costs
 // no turn and carries no risk, and it shortens every drop-farming loop in the
 // script, so it is called wherever we are already setting up for +item.
-//
-// Digitize is deliberately NOT used: its wanderers cost an adventure, arrive
-// on their own schedule, cannot be aimed at a zone, displace the noncombats
-// the outpost block hunts, and outrank forced noncombats. Map the Monsters
-// does the same job aimed and free.
 
 void sourceEnhance() {
     if (get_campground()[$item[Source terminal]] == 0)
@@ -561,10 +553,6 @@ void censer() {
 // everywhere, so 30 turns of "every familiar is at least 20 lbs" cuts farming
 // turns directly. Chest Mimic and Jill-of-All-Trades are item0 as well.
 //
-// Explodinall is deliberately not used. It reads like a forced-drop effect, but
-// it is a yellow ray: it grants Everything Looks Yellow for 29 turns, which
-// collides with the Jurassic Parka dilophosaur ray the script already fires at
-// the unholy diver, so it would cost more than it gives.
 // `pill` must be a mafia pillkeeper KEYWORD ([free] explode | extend |
 // noncombat | element | stat | familiar | lucky | random); the command does
 // not accept pill names.
@@ -578,23 +566,11 @@ void pillKeeper(string pill) {
 }
 
 // ─── VAMPYRIC CLOAKE ──────────────────────────────────────────────────────────
-// Handed to you automatically at the start of a run, so there is nothing to pull.
-// Two separate wins, and the passive one is easy to overlook:
-//
-//   1. The cloake itself is a back item worth a flat +15% Item Drops. The
-//      maximizer will normally find that on its own, but the back slot has to
-//      actually stay free for it, and we want it pinned anyway for reason 2.
-//   2. "Become a Bat" grants Bat-Adjacent Form, +50% Item Drops, for one
-//      adventure. It is an in-combat skill, so it costs no turn, and the three
-//      cloake forms share 10 uses per day.
-//
-// Only one form may be used per combat (they stack only in free fights), and we
-// never want the other two -- Wolfish Form is +muscle/+meat and Misty Form is
-// elemental resistance, neither of which shortens a farming loop -- so all 10
-// charges go to Become a Bat.
-//
-// Drops are rolled when the combat ends, so the +50% applies to the fight it
-// is cast in.
+// Handed to you automatically at the start of a run. The cloake is pinned to
+// the back slot (+15% item, and the slot must stay free for the skill), and
+// "Become a Bat" adds +50% item for the current fight -- one form per
+// combat, 10 uses a day, all spent on the bat. Drops are rolled when the
+// combat ends, so the +50% applies to the fight it is cast in.
 
 boolean cloakeReady() {
     return have_item($item[vampyric cloake])
@@ -924,8 +900,7 @@ boolean replaceEnemy(monster mob, string page_text) {
 // Feel Nostalgic appends the last copyable monster's whole drop table to the
 // current fight at original rates; three casts a day, no equipment slot. The
 // fight must be WON, and casting it on the monster being copied does
-// nothing. Feel Envy would force drops outright but does not work
-// underwater, so it is absent.
+// nothing.
 void feelNostalgic(monster mob, string page_text) {
     if (!have_skill($skill[Feel Nostalgic]))
         return;
@@ -956,9 +931,9 @@ void feelNostalgic(monster mob, string page_text) {
 }
 
 // ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
-// The bag grants three skills, three uses each, and the script was only ever
-// spending one of them. freeKill() already equips the bag for Chest X-Ray, so
-// the other two ride along in the same accessory slot for nothing.
+// The bag grants three skills, three uses each; freeKill() already equips it
+// for Chest X-Ray, so Otoscope and Reflex Hammer ride the same accessory
+// slot.
 //
 // Otoscope is +200% item drops for that combat. It goes on the diver, whose four
 // rivet slots make it the fattest table in the run, and it pairs with the Chest
@@ -1020,14 +995,8 @@ void mummery() {
 // rather than for the run, so this is a permanent spend and worth being fussy
 // about.
 //
-// Pocket 494 is Vinegavotte, +20% item drops for 50 turns. It beats the
-// bigger-looking numbers because duration outweighs magnitude at the item bonus
-// this script already stacks: Finding Stuff is +30% but runs only 20 turns,
-// which does not cover enough of the farming to make the difference back.
-//
-// The -combat pockets are deliberately left alone. Combat frequency has hard
-// diminishing returns past 25 points and this script is already near -50 raw, so
-// Barely Visible's -10 would buy about two effective points. See NCforce().
+// Pocket 494 is Vinegavotte, +20% item drops for 50 turns -- duration
+// outweighs magnitude at the bonus this script already stacks.
 void cargoPocket() {
     if (!have_item($item[Cargo Cultist Shorts]))
         return;
@@ -1051,9 +1020,6 @@ void cargoPocket() {
 // a day, or 22 once the crank is unlocked, and the script stops cleanly when
 // they run out, so there is nothing to guard past not asking for a buff we
 // already have.
-//
-// The case can also hold a -combat enchantment. It is deliberately not set, for
-// the same reason the -combat pockets are skipped.
 void briefcase() {
     if (!have_item($item[Kremlin's Greatest Briefcase]))
         return;
@@ -1070,20 +1036,9 @@ void briefcase() {
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
-// Why this script forces noncombats instead of just stacking more -combat:
-//
-// Combat frequency has hard diminishing returns. The first 25 points of a
-// modifier count in full; beyond that, every further 5 points contribute only 1.
-// A raw -30 lands at -26, and a raw -50 lands at -30.
-//
-// The mood("-combat") list already casts roughly -50 raw before the maximizer
-// adds any gear, so it is deep in the 5:1 band. Another -5 or -10 raw from any
-// source is worth one or two effective points, which is why cheap-looking
-// -combat buffs are not worth routing in here.
-//
-// A forced noncombat -- a "sneak" -- bypasses the roll entirely and is not
-// subject to any of this, so forcing is strictly better than buffing once the
-// stack is this deep. That is what NCForceEstimate() is counting.
+// Spend a noncombat forcer ("sneak"): the next adventure is guaranteed a
+// noncombat, bypassing the -combat roll and its diminishing returns.
+// Cheapest charge first; NCForceEstimate() counts what remains.
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {

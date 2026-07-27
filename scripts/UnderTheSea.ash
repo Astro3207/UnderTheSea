@@ -912,14 +912,6 @@ import <seedfinder/seedfinder.ash>;
             garbageTote();
             censer();
 
-            // The free pill is NOT taken here. Sneakisol must fire right
-            // before the noncombat it is meant to force, so NCforce() takes it
-            // at the moment of need; and Fidoxene's 30 turns are worth more
-            // over the weight-sensitive farming stretch (outpost beads through
-            // the corral and into elementary) than over turns 0-30, where the
-            // Force plans make the big drops deterministic anyway. See the
-            // pillKeeper() calls at the outpost and corral phases.
-
             // One free saber upgrade per day. Choice 1386 is answered in
             // UnderTheSea_Choice.ash; we take the familiar weight option, since
             // the elemental resistance one only matters for farming unblemished

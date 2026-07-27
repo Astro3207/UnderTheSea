@@ -245,9 +245,6 @@ void main(int round, monster mob, string page_text) {
     }
     // Chain another free diver off this one.
     lectureOnRelativity(mob, page_text);
-    // feelNostalgic() is NOT called here: its payout needs the fight to be won,
-    // so it fires inside the Fitzsimmons branch after free_run() has had its
-    // chance, not at the top where a later runaway would waste the charge.
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());
