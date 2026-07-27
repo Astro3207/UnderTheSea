@@ -637,6 +637,18 @@ void main(int round, monster mob, string page_text) {
                     }
                 }
             }
+            // During the sheet grind, a teacher or punisher that survived its
+            // banish attempt is worth re-rolling into a fresh 1-in-3 draw at
+            // the monitor rather than killing for nothing. Never the golem
+            // stat-fights, and forced-victim fights are already monitors.
+            if (cheatsheetsNeeded() && mob != $monster[Mer-kin monitor]
+                && !free_monster(mob) && current_round() > 0
+                && rerollEnemy(page_text))
+                return;
+            // Kill path from here on -- the safe spot for a Feel Nostalgic
+            // charge on the monitor's cheatsheet table.
+            if (current_round() > 0)
+                feelNostalgic(mob, page_text);
             if (bcz_gaze_ready() && get_property("NCtoC") != "true") {
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
                 if (to_monster(get_property("lastEncounter")) != $monster[none] && item_amount($item[mer-kin cheatsheet]) < 10)

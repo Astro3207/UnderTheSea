@@ -968,10 +968,12 @@ void feelNostalgic(monster mob, string page_text) {
     if (saberForcesFree() > 0 && have_equipped($item[Fourth of May Cosplay Saber]))
         return;
     // Worth a charge only while the copied table still owes us something:
-    // the diver's rivets, or the sea cow's leather and cowbells.
+    // the diver's rivets, the sea cow's leather and cowbells, or the
+    // monitor's cheatsheet (~capped at itdrop bonuses) during the grind.
     string copied = get_property("lastCopyableMonster");
     boolean wanted = (copied == "unholy diver" && item_amount($item[rusty rivet]) < 8)
-        || (copied == "sea cow" && seaCowNeeded());
+        || (copied == "sea cow" && seaCowNeeded())
+        || (copied == "Mer-kin monitor" && cheatsheetsNeeded());
     if (!wanted)
         return;
     // Casting it on the monster we are nostalgic for does nothing.
