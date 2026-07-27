@@ -598,15 +598,9 @@ void becomeBat(string page_text) {
 }
 
 // ─── TIME-SPINNER ─────────────────────────────────────────────────────────────
-// Also handed to you automatically at the start of a run. 10 minutes a day, and
-// "Travel to a Recent Fight" costs 3 of them, so 3 uses.
-//
-// Not a free fight -- the refight costs its adventure; it buys a guaranteed
-// encounter where the target is a rare draw. The monster must be in the
-// zone's recent-combat queue, so it only fires straight after fighting the
-// target there. mafia's "timespinner" CLI covers only food and pranks, so
-// the choice chain (1195 -> Travel to a Recent Fight -> 1196, monid submit)
-// is walked by hand.
+// "Travel to a Recent Fight": 3 uses a day, one adventure each. mafia's
+// "timespinner" CLI covers only food and pranks, so the choice chain
+// (1195 -> 1196, monid submit) is walked by hand.
 
 boolean timeSpinnerReady() {
     return have_item($item[Time-Spinner])
@@ -923,10 +917,8 @@ void feelNostalgic(monster mob, string page_text) {
 // for Chest X-Ray, so Otoscope and Reflex Hammer ride the same accessory
 // slot.
 //
-// Otoscope is +200% item drops for that combat. It goes on the diver, whose four
-// rivet slots make it the fattest table in the run, and it pairs with the Chest
-// X-Ray that free_kill() is about to fire: boost the drops first, then take the
-// kill for free. Cast early so the fight cannot end before it lands.
+// Otoscope is +200% item drops for that combat; cast early, before free_kill()
+// can end the fight.
 //
 // Reflex Hammer, the third skill, is a free runaway plus a 30-turn banish, and
 // is wired into free_run() with the other banishes rather than here.
