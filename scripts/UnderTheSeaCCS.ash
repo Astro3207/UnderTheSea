@@ -180,6 +180,8 @@ void main(int round, monster mob, string page_text) {
     extractJelly(mob, page_text);
     // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
     replaceEnemy(mob, page_text);
+    // Chain another free diver off this one.
+    lectureOnRelativity(mob, page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());
