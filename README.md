@@ -1,7 +1,7 @@
 # UnderTheSea
-11,037 Leagues Under the Sea loop. Fork of [Astro3207/UnderTheSea](https://github.com/Astro3207/UnderTheSea).
+11,037 Leagues Under the Sea loop.
 
-`git checkout tottington/UnderTheSea`
+`git checkout Astro3207/UnderTheSea`
 
 Installing through mafia's `git checkout` also installs
 [seedfinder](https://github.com/VeeArrKoL/seedfinder) from `dependencies.txt`.
@@ -26,6 +26,31 @@ list before starting a run:
 
 Everything else in the script is ownership-guarded: an IOTM you don't own is
 skipped, and the route falls back to slower alternatives.
+
+## Options
+
+Set once in the gCLI; both default to off:
+
+| Preference | What it does |
+|---|---|
+| `set uts_godRunGuard = true` | Abort at ≤17 turns played if the dreadscroll 7 clue is still unknown, so you can eat a sushi for it instead of burning a record attempt. Only worth enabling if you are chasing a top turncount. |
+| `set uts_postloopCommand = <command>` | CLI command to run once the loop finishes (e.g. a farming script). Leave empty to skip. |
+
+## High shiny, low shiny
+
+The script sorts your account into a resource tier and routes accordingly:
+
+- **Low shiny** — you own none of the 2002 Mr. Store Catalog, cursed monkey's
+  paw or august scepter. The script assumes pulls are precious and farms
+  drops it would otherwise pull or wish for, and leans harder on the
+  Congressional Medal of Insanity for +item.
+- **High shiny** — an Asdon Martin workshed plus
+  `garbo_valueOfFreeFight > valueOfAdventure`: your free fights are worth
+  more to aftercore meat farming than to the run, so the script *conserves*
+  free kills, copies and maps for after the loop instead of spending them
+  in-run, taking a slightly longer run for more profitable days.
+- **Neither** (mid shiny) — every daily resource gets spent on making the run
+  as short as possible.
 
 ## Things to prepare BEFORE ascending
 
@@ -99,41 +124,40 @@ exceeding it.
 | Louder Than Bomb | Banishing free run |
 | anchor bomb | Banishing free run (TakerSpace) |
 
-### Reserved slots
-
-`reservedPulls()` holds a slot for each item that costs real turns to farm if
-the pull gets spent elsewhere first: a free-runaway source (parasol / navel
-ring / GAPs), Mer-kin pinkslip (~15 turns, the Dive Bar is never visited
-otherwise), Mer-kin prayerbeads (~15 turns of outpost), sea cowbell (~10
-turns of corral), ink bladder and comb jelly (~4 turns of Marinara Trench
-each), and a null-day exploit while crayon shavings are short.
-
 ## IOTMs the script uses
 
 None are strictly required — every use is guarded — but turn count scales
 with what you own.
 
+### The most important ones
+
+These carry the route. Missing one of them doesn't stop the run, but it
+changes how whole phases play out:
+
+| IOTM | Why it matters |
+|---|---|
+| monodent of the sea | The underwater weapon the route lives in: lightning-bolt banishes shape the corral and outpost pools, and it anchors most farming outfits |
+| closed-circuit pay phone | Eleven free shadow fights a day carry the whole lasso-training block; several route branches key on owning it |
+| 2002 Mr. Store Catalog | Spooky VHS copies, the pro skateboard's McTwist, software glitch — the corral opener and Mom-rescue copies come from here |
+| cursed monkey's paw | Wishes replace whole corral farming loops (lasso, cowbell); selects the summon-based diver plan |
+| august scepter | Waffles re-roll monsters in place; Aug. 2nd is a free Lucky!; the script's resource tiering keys on the catalog/paw/scepter trio |
+| Fourth of May Cosplay Saber | Use the Force: deterministic diver, sea cow, prayerbead and scroll drops via the Force budget ladder |
+| book of facts | Just the Facts wishes and Monster Habitats copy chains for the Mom rescue |
+| patriotic eagle (hatchling) | RWB blast forces the flytrap pellet; phylum screech banishes constructs; Cyberzone partner |
+
 ### Route drivers (each worth multiple turns)
 
 | IOTM | Why it's used |
 |---|---|
-| closed-circuit pay phone | Eleven free shadow fights a day carry lasso training; Shadow Waters buff |
-| cursed monkey's paw | Wishes replace whole corral farming loops (lasso, cowbell) |
-| 2002 Mr. Store Catalog | Spooky VHS copies, the pro skateboard's McTwist, software glitch |
-| august scepter | Waffles re-roll monsters in place; Aug. 2nd is a free Lucky!; Aug. 24th waffle stock |
-| book of facts | Just the Facts wishes and Monster Habitats copy chains for the Mom rescue |
-| patriotic eagle (hatchling) | RWB blast forces the flytrap pellet; phylum screech banishes constructs |
 | CyberRealm keycode | Cyberzone 1 free fights drive Mom-rescue progress |
 | Peridot of Peril | One forced encounter per zone per day, aimed by `zoneTarget()` |
 | Comprehensive Cartography | Three more forced encounters (Map the Monsters), same targeting |
-| Fourth of May Cosplay Saber | Use the Force: deterministic diver, sea cow, prayerbead and scroll drops via the Force budget ladder |
 | blood cubic zirconia | Sweat Bullets free kills; Refracted Gaze substat farming on free fights |
 | baseball diamond | Team pitches: yellow ray, free kill and banish outcomes |
 | Heartstone | %banish skill plus the Ultraheart colosseum buff |
 | backup camera | Copies: golem stat-chains and lockkey-monster repeats |
 | Jurassic Parka | Dilophosaur yellow ray; spikolodon spikes force noncombats |
 | spring shoes | Spring Kick banish and Spring Away free runs |
-| monodent of the sea | Lightning-bolt banish in an underwater-legal weapon |
 | Everfull Dart Holster | Bullseye free kills once the perk set supports them |
 | Mayam Calendar | Daily ring resources claimed at initialization |
 | Leprecondo | Passive furniture buffs, need-ordered install |
