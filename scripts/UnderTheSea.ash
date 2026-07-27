@@ -282,6 +282,10 @@ import <seedfinder/seedfinder.ash>;
                 fam = $familiar[Red-Nosed Snapper];
             else if (have_effect($effect[driving waterproofly]) > 0)
                 fam = $familiar[jill-of-all-trades];
+            // Underwater the jellyfish is a full Fairy, so this costs nothing
+            // against Grouper Groupie and adds Extract Jelly on top.
+            else if (jellyfishReady())
+                fam = $familiar[Space Jellyfish];
         }
         if (fam == $familiar[none]){
             fam = $familiar[grouper groupie];
@@ -852,6 +856,7 @@ import <seedfinder/seedfinder.ash>;
             // reach Fitzsimmons, and claim the day's embers.
             sourceEducate();
             cargoPocket();
+            garbageTote();
             censer();
 
             // The one free pill of the day. Fidoxene lasts 30 turns, which is
@@ -1819,6 +1824,8 @@ void seaMonkees() {
                     }
                 conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
                 conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                     if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                         conditional += "spring shoes,";

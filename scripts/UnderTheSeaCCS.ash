@@ -176,6 +176,10 @@ void main(int round, monster mob, string page_text) {
     otoscope(mob, page_text);
     // A second roll of the previous diver's table, three a day.
     feelNostalgic(mob, page_text);
+    // Free stench jelly off any stench monster; NCforce() spends it as a sneak.
+    extractJelly(mob, page_text);
+    // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
+    replaceEnemy(mob, page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());

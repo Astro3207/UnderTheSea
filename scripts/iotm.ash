@@ -419,6 +419,131 @@ void timeSpinnerRefight(location loc) {
     run_choice(1, "monid=" + wantedMonster[loc]);
 }
 
+// ─── JANUARY'S GARBAGE TOTE: BROKEN CHAMPAGNE BOTTLE ──────────────────────────
+// The bottle doubles the item drop BONUS, and it stacks fully with Steely-Eyed
+// Squint for a 4x multiplier. Against the bonus this script already carries that
+// is the largest single item effect available anywhere in the run.
+//
+// It holds 11 ounces and loses one after every winning combat, including free
+// fights, so the charges are strictly limited and worth aiming. They are all
+// spent at Fitzsimmons: the unholy diver has four separate rivet slots plus the
+// porthole and the broken helmet, so it is the only table fat enough that
+// doubling the bonus caps several slots at once.
+//
+// One quirk worth knowing: the bottle doubles the Florist buff but NOT Otoscope,
+// while Steely-Eyed Squint does the opposite. They do not overlap, so pairing
+// Otoscope with the bottle on the same diver is still a straight gain.
+
+boolean champagneReady() {
+    return have_item($item[broken champagne bottle])
+        && to_int(get_property("garbageChampagneCharge")) > 0;
+}
+
+// Fitzsimmons only, deliberately. Equipping it anywhere else would drain ounces
+// on fights whose drop tables cannot pay them back.
+string champagneEquip(location loc) {
+    if (champagneReady() && loc == $location[The Wreck of the Edgar Fitzsimmons])
+        return if_equip($item[broken champagne bottle]);
+    return "";
+}
+
+// Pull the bottle out of the tote once, if we own a tote and have not already
+// spent its charges this ascension.
+void garbageTote() {
+    if (!have_item($item[January's Garbage Tote]))
+        return;
+    if (have_item($item[broken champagne bottle]))
+        return;
+    if (to_int(get_property("garbageChampagneCharge")) <= 0)
+        return;
+    visit_url("inv_use.php?whichitem=" + to_int($item[January's Garbage Tote]) + "&pwd=" + my_hash());
+    int grab;
+    int leave;
+    foreach num, optionText in available_choice_options() {
+        if (contains_text(optionText, "champagne"))
+            grab = num;
+        if (contains_text(optionText, "Ignore the garbage"))
+            leave = num;
+    }
+    // Never leave the run parked inside a choice we could not read.
+    if (grab > 0)
+        run_choice(grab);
+    else if (leave > 0)
+        run_choice(leave);
+}
+
+// ─── SPACE JELLYFISH ──────────────────────────────────────────────────────────
+// Underwater the jellyfish is a full Fairy -- its modifier is literally the Fairy
+// formula multiplied by env(underwater) -- so on this route it matches Grouper
+// Groupie's item drop exactly. What it adds for free is Extract Jelly.
+//
+// Stench monsters yield stench jelly, and chewing stench jelly forces a
+// noncombat. NCforce() already knows how to spend that jelly, but the only way
+// it could previously get any was to burn a storage pull on one. Producing it in
+// combat makes those pulls unnecessary.
+//
+// Only stench is worth taking. The other four jellies are elemental resistances
+// and damage, and jelly is a spleen item, which this route needs for fish sauce
+// to stay Fishy -- so we take one and stop rather than filling up on them.
+
+boolean jellyfishReady() {
+    return have_familiar($familiar[Space Jellyfish]);
+}
+
+void extractJelly(monster mob, string page_text) {
+    if (my_familiar() != $familiar[Space Jellyfish])
+        return;
+    if (mob.attack_element != $element[stench] && mob.defense_element != $element[stench])
+        return;
+    // Spleen is contested; one forced noncombat is all we are after.
+    if (item_amount($item[stench jelly]) > 0)
+        return;
+    if (!contains_text(page_text, "Extract Jelly"))
+        return;
+    use_skill($skill[Extract Jelly]);
+}
+
+// ─── POWERFUL GLOVE ───────────────────────────────────────────────────────────
+// CHEAT CODE: Replace Enemy swaps the current foe for a different one from the
+// same zone. The battery holds 100% a day and Replace costs 10%, so ten re-rolls.
+//
+// Each re-roll is a fresh draw at the monster we actually want, without spending
+// the turn that a fresh draw would normally cost. At Fitzsimmons the diver is 1
+// in 5, which makes each charge worth roughly a turn.
+//
+// The glove is an accessory, so it is only equipped at Fitzsimmons rather than
+// run-wide -- the same slot is carrying the blood cubic zirconia's free kills and
+// the backup camera's copies elsewhere, and those are worth more per slot than a
+// re-roll is.
+
+boolean gloveReady() {
+    return have_item($item[Powerful Glove])
+        && to_int(get_property("_powerfulGloveBatteryPowerUsed")) <= 90;
+}
+
+string gloveEquip(location loc) {
+    if (gloveReady() && loc == $location[The Wreck of the Edgar Fitzsimmons])
+        return if_equip($item[Powerful Glove]);
+    return "";
+}
+
+void replaceEnemy(monster mob, string page_text) {
+    if (!gloveReady())
+        return;
+    if (!have_equipped($item[Powerful Glove]))
+        return;
+    if (my_location() != $location[The Wreck of the Edgar Fitzsimmons])
+        return;
+    // Never re-roll the monster we came for, and stop once its drops are in.
+    if (mob == $monster[unholy diver])
+        return;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    if (!contains_text(page_text, "CHEAT CODE: Replace Enemy"))
+        return;
+    use_skill($skill[CHEAT CODE: Replace Enemy]);
+}
+
 // ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
 // The chip's skills are permanent once installed, so unlike the doctor bag or
 // the glove this costs no equipment slot at all. free_run() already spends Feel
