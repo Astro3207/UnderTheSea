@@ -191,6 +191,16 @@ void main(int whichchoice, string page) {
             run_choice(1);
             break;
 
+        // ── Lil' Doctor™ bag quest offer ──────────────────────────────────
+        // "Is There A Doctor In The House?" fires whenever the bag is
+        // equipped (freeKill carries it for Chest X-Rays) and no case is
+        // active. The quests send you to random off-route zones for trivial
+        // rewards, so turn the phone off for the day: option 3 stops the
+        // offer from interrupting again.
+        case 1340:
+            run_choice(3);
+            break;
+
         // ── Fourth of May Cosplay Saber ───────────────────────────────────
         // 1386 is the once-daily upgrade. Option 4 is the Empathy Chip
         // (+10 familiar weight), which feeds Glover in Cyberzone 1 during the
