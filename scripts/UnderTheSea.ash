@@ -2814,11 +2814,22 @@ void sorceress() {
             // safe here when it resolves to a passive fairy, and under
             // Driving Waterproofly it resolves to Jill, who acts.
             use_familiar($familiar[none]);
-            tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece,");
+            // This fight is a pure damage race. At his shavings-delevel floor
+            // Shub still hits ~135 a round REGARDLESS of Damage Absorption
+            // gear (identical chip across two attempts with different DA
+            // outfits), so maximizing DA buys nothing -- what decides the
+            // fight is killing him before the chip empties the HP pool. An
+            // attempt at ~270 damage a round died at round 11; one at ~575
+            // was on pace to win. Maximize the hit, and pin the seal club
+            // rather than hoping the maximizer keeps it.
+            tempEquipment("weapon damage, weapon damage percent, mus",
+                "mer-kin gladiator mask,mer-kin gladiator tailpiece," + if_equip($item[legendary seal-clubbing club]));
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            cli_execute("recover hp; cast * empathy");
+            // No familiar since the retaliation fix, so Empathy (familiar
+            // weight) would burn the MP pool for nothing.
+            cli_execute("recover hp");
             adv($location[Mer-kin Temple (Left Door)]);
         }
     }
