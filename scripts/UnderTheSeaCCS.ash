@@ -405,9 +405,12 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Coral Corral]:
-            if (last_monster() == $monster[wild seahorse] && item_amount($item[sea cowbell]) >= 3 && to_int(get_property("lassoTrainingCount")) == 20){
+            if (last_monster() == $monster[wild seahorse] && item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea lasso]) >= 1 && to_int(get_property("lassoTrainingCount")) == 20){
                 throw_items($item[sea cowbell], $item[sea cowbell]);
                 throw_items($item[sea cowbell], $item[sea lasso]);
+                if (current_round() != 0){
+                    abort("For some reason seahorse wasn't tamed, check that out");
+                }
             }
             if (($location[the coral corral].turns_spent <= 1 && item_amount($item[sea leather]) == 0 && available_amount($item[sea cowboy hat]) == 0) || get_property("_lastCombatWon") == false) {
                 if (highShiny() && get_property("swordOfSWordsMonster") != "775"){
