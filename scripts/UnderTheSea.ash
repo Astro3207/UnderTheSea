@@ -2808,7 +2808,12 @@ void sorceress() {
                 if (have_effect(ef) > 0)
                     cli_execute("uneffect " + ef);
             }
-            use_familiar("itdrop");
+            // NO familiar against Shub. He retaliates against familiar
+            // actions, escalating each time -- a Jill-of-All-Trades lifesteal
+            // drew a 9,063-damage response and ended a run. "itdrop" is only
+            // safe here when it resolves to a passive fairy, and under
+            // Driving Waterproofly it resolves to Jill, who acts.
+            use_familiar($familiar[none]);
             tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece,");
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
