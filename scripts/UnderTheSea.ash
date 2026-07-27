@@ -109,6 +109,17 @@ import <seedfinder/seedfinder.ash>;
     // if_equip() now lives in iotm.ash: champagneEquip() and gloveEquip() there
     // call it, and imports are parsed before this file's own functions exist.
 
+    // Arm a yellow ray for the next fight if Everything Looks Yellow allows:
+    // the parka's dilophosaur ray, or a spitball as the shieldless fallback.
+    void yellowRayPrep(){
+        if (have_effect($effect[everything looks yellow]) == 0){
+            if (have_item($item[jurassic parka]))
+                cli_execute("parka dilophosaur; equip jurassic parka");
+            else if (have_item($item[April Shower Thoughts shield]))
+                create($item[spitball]);
+        }
+    }
+
     // Equip the saber only where a turn-free exit actually buys us something.
     // Takes the target location explicitly because callers set equipment up
     // before adv(), so my_location() is still the previous zone here.
@@ -1820,47 +1831,71 @@ void seaMonkees() {
             mood("itdrop");
             if (have_effect($effect[shadow waters]) == 0)
                 shadowRift();
-            // Get rusty porthole first via unholy diver
+            // Diver #1. Under the Force plan the fight's drops are forced, so
+            // the familiar's job is the diver-#2 insurance egg, not +item, and
+            // the mimic outranks the drop familiars.
             if (item_amount($item[rusty porthole]) == 0) {
-                if (baseballPlayers() >= 8){
+                if (diverForceReady()){
+                    if (!use_familiar($familiar[chest mimic]))
+                        use_familiar("itdrop");
+                } else if (baseballPlayers() >= 8){
                     if (!use_familiar($familiar[jill-of-all-trades]))
                         use_familiar("itdrop");
                 } else {
                     if (!use_familiar($familiar[chest mimic]))
                         use_familiar("itdrop");
                 }
-                tempEquipment("item drop", if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]) + if_equip($item[baseball diamond]));
+                tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]) + if_equip($item[baseball diamond]));
                 print("Item drop rate is " + numeric_modifier("item drop"));
-                mood("superitdrop");
-                if (have_effect($effect[everything looks yellow]) == 0){
-                    if (have_item($item[jurassic parka]))
-                        cli_execute("parka dilophosaur; equip jurassic parka");
-                    else if (have_item($item[April Shower Thoughts shield]))
-                        create($item[spitball]);
-                }
+                // Squint is NOT cast here any more: diver #1 is always Forced
+                // or yellow-rayed, and forced drops ignore item bonuses -- the
+                // once-a-day squint was being burned for nothing while the
+                // corral one-turn attempt downstream went without it.
+                if (!diverForceReady())
+                    yellowRayPrep();
                 summon($monster[unholy diver]);
             }
 
             if (baseballPlayers() >= 9)
                 baseballD();
-            if (item_amount($item[rusty rivet]) < 4){
-                if (!use_familiar($familiar[chest mimic]))
-                    use_familiar("itdrop");
-            } else {
-                if (!use_familiar($familiar[jill-of-all-trades]))
-                    use_familiar("itdrop");
-            }
-            tempEquipment("item drop", if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
-            if (have_effect($effect[everything looks yellow]) == 0){
-                if (have_item($item[jurassic parka]))
-                    cli_execute("parka dilophosaur; equip jurassic parka");
-                else if (have_item($item[April Shower Thoughts shield]))
-                    create($item[spitball]);
-            }
 
-            if (item_amount($item[rusty rivet]) < 7) {
-                summon($monster[unholy diver]);
-                run_combat();
+            // Divers #2..n, cheapest source first: the insurance egg is a free
+            // fight, a Time-Spinner refight costs one turn but is guaranteed,
+            // another summon costs whatever it costs. The CCS Forces or
+            // yellow-rays each of these while charges last, so with a saber
+            // this loop runs at most once. The tries cap keeps a misreporting
+            // resource from spinning the ladder.
+            int diverTries;
+            while ((item_amount($item[rusty rivet]) < 8
+                    || item_amount($item[rusty porthole]) == 0
+                    || available_amount($item[rusty broken diving helmet]) == 0)
+                && diverTries < 4) {
+                diverTries += 1;
+                if (diverForceReady() || item_amount($item[rusty rivet]) < 4){
+                    if (!use_familiar($familiar[chest mimic]))
+                        use_familiar("itdrop");
+                } else {
+                    if (!use_familiar($familiar[jill-of-all-trades]))
+                        use_familiar("itdrop");
+                }
+                tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
+                if (!diverForceReady()){
+                    // Probabilistic roll: now the squint and the ray earn
+                    // their keep.
+                    mood("superitdrop");
+                    yellowRayPrep();
+                }
+                if (item_amount($item[mimic egg]) > 0
+                    && contains_text(get_property("mimicEggMonsters"), "745")){
+                    cli_execute("c2t_megg fight unholy diver");
+                    run_combat();
+                } else if (timeSpinnerFight($monster[unholy diver])) {
+                } else if (count_summons() >= 1) {
+                    summon($monster[unholy diver]);
+                    run_combat();
+                } else {
+                    break;
+                }
             }
             if (item_amount($item[rusty rivet]) < 8
                 && pulls_remaining() > reservedPulls()
