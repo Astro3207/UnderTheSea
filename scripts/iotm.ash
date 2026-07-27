@@ -136,10 +136,10 @@ boolean saberZone(location loc) {
 // (Its c-flagged drops, glowing syringe and unholy water, are not forced; we
 // want neither.)
 //
-// Duplicate is cast BEFORE the Force so the doubled table is what gets
-// dropped: duplicate + Force is the ceiling (8 rivets in one fight), and if
-// the pairing turns out not to double under the Force, the ladder simply
-// proceeds to diver #2 -- every rung is guarded on still being short.
+// Duplicate is NOT part of this plan: spaded on a live run, doubling only
+// pays on a WIN, and a Forced fight is never won -- a Duplicated, Forced
+// diver dropped a single table. The day's cast belongs to fat tables the
+// route actually kills; see duplicateMonster().
 
 // The rivet hunt is live while nothing that fills the diving-helmet slot is
 // owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
@@ -550,16 +550,24 @@ void duplicateMonster(monster mob, string page_text) {
     // Spaded on a live run: Duplicate does NOT double Use the Force's
     // handover -- a Duplicated, Forced diver dropped a single table.
     // Doubling pays only on a WIN, so never spend the day's cast on a fight
-    // the saber is about to Force; killed fat tables (the cow at the corral,
-    // the monitor during the sheet grind) are where it earns.
+    // the saber is about to Force.
     boolean aboutToForce = have_equipped($item[Fourth of May Cosplay Saber])
         && ((mob == $monster[unholy diver] && diverForceReady())
             || (mob == $monster[sea cow] && seaCowNeeded() && forcesAfterHealer() > 0));
     if (aboutToForce)
         return;
-    boolean wanted = (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8)
+    // Best killed tables, in the order the route meets them: the Black
+    // Crayon Golem is a free fight with a flat 100% crayon shavings drop and
+    // shavings are the Shub deleveler that can't be wished for -- doubling
+    // the summon banks a spare pair. The unForced sea cow and the monitor
+    // during the sheet grind are the runners-up, and the diver only rates a
+    // cast on saberless kits, where a doubled kill (8 rivets) ends the hunt
+    // outright.
+    boolean wanted = (mob == $monster[Black Crayon Golem] && item_amount($item[crayon shavings]) < 4)
         || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive())
-        || (mob == $monster[Mer-kin monitor] && cheatsheetsNeeded());
+        || (mob == $monster[Mer-kin monitor] && cheatsheetsNeeded())
+        || (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8
+            && !have_item($item[Fourth of May Cosplay Saber]));
     if (!wanted)
         return;
     if (!contains_text(page_text, "Duplicate"))

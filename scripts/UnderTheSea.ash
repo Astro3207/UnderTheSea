@@ -916,8 +916,9 @@ import <seedfinder/seedfinder.ash>;
             // farming loop to ask for it.
             sourceEnhance();
 
-            // Slot duplicate.edu now so the skill is in hand by the time we
-            // reach Fitzsimmons, and claim the day's embers.
+            // Slot duplicate.edu now so the skill is in hand for the first
+            // fat table the route kills (the golem recall, or sooner on
+            // saberless kits), and claim the day's embers.
             sourceEducate();
             cargoPocket();
             garbageTote();
