@@ -176,9 +176,14 @@ void main(int round, monster mob, string page_text) {
     // non-conditional drop and ends the fight -- nothing below applies.
     if (diverForce(mob, page_text))
         return;
-    // Same trick on the sea cow's leather and cowbells, from the unreserved
-    // Force balance.
+    // Same trick down the Force priority ladder: the outpost healer's
+    // prayerbeads, the sea cow's leather and cowbells, the researcher's
+    // scrolls -- each from its own tier of the budget.
+    if (healerForce(mob, page_text))
+        return;
     if (seaCowForce(mob, page_text))
+        return;
+    if (researcherForce(mob, page_text))
         return;
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);

@@ -136,17 +136,48 @@ boolean diverHuntActive() {
     return true;
 }
 
-boolean diverForceReady() {
-    return diverHuntActive()
-        && have_item($item[Fourth of May Cosplay Saber])
-        && to_int(get_property("_saberForceUses")) < 5;
+// Mirrors doneWithSeaCow() in UnderTheSea.ash, which parse order keeps out of
+// reach of this file.
+boolean seaCowNeeded() {
+    if (item_amount($item[sea leather]) + available_amount($item[sea chaps])
+        + available_amount($item[sea cowboy hat]) < 2)
+        return true;
+    if (item_amount($item[sea cowbell]) < 3)
+        return true;
+    return false;
 }
 
-// Force charges the rest of the script may spend (free-run of last resort).
-// Two stay reserved while the diver plan can still need them.
+boolean prayerbeadsShort() {
+    return available_amount($item[mer-kin prayerbeads]) < 3;
+}
+
+// ─── THE FORCE BUDGET ─────────────────────────────────────────────────────────
+// Five charges a day, claimed in priority order by turns-per-charge:
+//   1. the diver (2 while its hunt is live)            ~4 turns each
+//   2. the outpost healer while prayerbeads are short  ~2-4 turns
+//   3. the sea cow while its drops are owed            ~1.5-2 turns
+//   4. the library researcher / free-run of last resort: whatever remains
+// Each claim releases the moment its need-check goes false, so a run that
+// skips a phase hands the charges down the ladder automatically.
+int saberChargesLeft() {
+    if (!have_item($item[Fourth of May Cosplay Saber]))
+        return 0;
+    return 5 - to_int(get_property("_saberForceUses"));
+}
+
+boolean diverForceReady() {
+    return diverHuntActive() && saberChargesLeft() > 0;
+}
+
+// Charges available to each claimant, after every higher-priority claim.
+int forcesAfterDiver() {
+    return saberChargesLeft() - (diverHuntActive() ? 2 : 0);
+}
+int forcesAfterHealer() {
+    return forcesAfterDiver() - (prayerbeadsShort() ? 1 : 0);
+}
 int saberForcesFree() {
-    int reserved = diverHuntActive() ? 2 : 0;
-    return 5 - to_int(get_property("_saberForceUses")) - reserved;
+    return forcesAfterHealer() - (seaCowNeeded() ? 1 : 0);
 }
 
 // Weapon-slot pin for the summoned diver fights, so the Force is castable.
@@ -180,17 +211,6 @@ boolean diverForce(monster mob, string page_text) {
 // exactly as it hands over the diver's rivets. Two Forced cows nearly close the
 // corral needs (leather x2, cowbell x3).
 
-// Mirrors doneWithSeaCow() in UnderTheSea.ash, which parse order keeps out of
-// reach of this file.
-boolean seaCowNeeded() {
-    if (item_amount($item[sea leather]) + available_amount($item[sea chaps])
-        + available_amount($item[sea cowboy hat]) < 2)
-        return true;
-    if (item_amount($item[sea cowbell]) < 3)
-        return true;
-    return false;
-}
-
 // CCS entry, same contract as diverForce(): true means the fight is over and
 // the caller must end the consult pass.
 boolean seaCowForce(monster mob, string page_text) {
@@ -198,9 +218,9 @@ boolean seaCowForce(monster mob, string page_text) {
         return false;
     if (!seaCowNeeded())
         return false;
-    // The cow spends only the UNRESERVED balance, and keeps one charge back
-    // for the free-run of last resort.
-    if (saberForcesFree() <= 1)
+    // Third claim on the budget: only charges beyond the diver's and the
+    // outpost healer's reserves.
+    if (forcesAfterHealer() <= 0)
         return false;
     // The skateboard's McTwist forces this table for free, once a day; let the
     // corral branch spend that before a Force charge.
@@ -211,6 +231,62 @@ boolean seaCowForce(monster mob, string page_text) {
     if ($location[the coral corral].turns_spent <= 1
         && item_amount($item[sea leather]) == 0
         && available_amount($item[sea cowboy hat]) == 0)
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
+// ─── OUTPOST HEALER AND LIBRARY RESEARCHER ────────────────────────────────────
+// The healer's table is all non-conditional (prayerbeads n5, thingpouch n15,
+// healscroll n25), and beads are the run's chronic shortage. A Forced fight
+// spends no turn and leaves the lockkey's turns_spent clock alone, so this
+// rides the outpost phase for free -- the stall the saberZone() ban guards
+// against comes from UNLIMITED last-resort forcing, not a capped targeted one.
+// In practice it fires on farmPrayerbeads() trips, where healerSaber() frees
+// the weapon slot; the lockkey grind keeps the monodent.
+boolean healerForce(monster mob, string page_text) {
+    if (mob != $monster[Mer-kin healer])
+        return false;
+    if (!prayerbeadsShort())
+        return false;
+    // While the healer is the designated lockkey carrier its WIN matters --
+    // the lockkey is a quest drop the Force cannot deliver.
+    if (get_property("merkinLockkeyMonster") == "Mer-kin healer")
+        return false;
+    if (forcesAfterDiver() <= 0)
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
+// Weapon-slot pin for the bead-farming trips.
+string healerSaber() {
+    if (prayerbeadsShort()
+        && get_property("merkinLockkeyMonster") != "Mer-kin healer"
+        && forcesAfterDiver() > 0
+        && have_item($item[Fourth of May Cosplay Saber]))
+        return "Fourth of May Cosplay Saber,";
+    return "";
+}
+
+// The researcher's healscroll and killscroll are 10% each -- the slowest slots
+// in the library at any bonus -- and one charge lands both, freeing their
+// reserved pulls. Lowest priority: only truly unreserved charges.
+boolean researcherForce(monster mob, string page_text) {
+    if (mob != $monster[Mer-kin researcher])
+        return false;
+    if (item_amount($item[mer-kin killscroll]) > 0
+        && item_amount($item[mer-kin healscroll]) > 0)
+        return false;
+    if (saberForcesFree() <= 0)
         return false;
     if (!have_equipped($item[Fourth of May Cosplay Saber]))
         return false;
@@ -681,7 +757,7 @@ void professorFamiliar() {
     }
     // Corral: once the Force budget there is spent, lecture copies of the sea
     // cow are the next cheapest source of leather and cowbells.
-    if (seaCowNeeded() && saberForcesFree() <= 1)
+    if (seaCowNeeded() && forcesAfterHealer() <= 0)
         use_familiar($familiar[Pocket Professor]);
 }
 
@@ -733,7 +809,7 @@ string champagneEquip(location loc) {
         return if_equip($item[broken champagne bottle]);
     // The corral inherits the bottle once the Force budget there is spent and
     // the cow's leather/cowbell rolls are back to probability.
-    if (loc == $location[The Coral Corral] && seaCowNeeded() && saberForcesFree() <= 1)
+    if (loc == $location[The Coral Corral] && seaCowNeeded() && forcesAfterHealer() <= 0)
         return if_equip($item[broken champagne bottle]);
     return "";
 }

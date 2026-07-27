@@ -1269,7 +1269,18 @@ import <seedfinder/seedfinder.ash>;
             conditional += "congressional medal of insanity,";
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) && !highShiny())
             conditional += "backup camera,";
-        if (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0)
+        // One Force charge on the researcher lands both scrolls (10% slots,
+        // the slowest in the zone) and frees their reserved pulls. saberEquip()
+        // below already pins the saber -- but both are weapons, so what
+        // actually lets it into the slot is keeping the monodent OUT while a
+        // truly spare charge exists. worktea and knucklebone come from the
+        // other two monsters, so the monodent keeps the slot for those.
+        boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0
+                || item_amount($item[mer-kin healscroll]) == 0)
+            && saberForcesFree() > 0
+            && have_item($item[Fourth of May Cosplay Saber]);
+        if (!saberForResearcher
+            && (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0))
             conditional += "monodent of the sea,";
         conditional += saberEquip($location[mer-kin library]);
         conditional += cloakeEquip($location[mer-kin library]);
@@ -1325,7 +1336,7 @@ import <seedfinder/seedfinder.ash>;
         // Whichever victim we are hunting, its whole table is non-conditional,
         // so once the Force budget is out the ray forces the same result. The
         // CCS kill path fires it via Spit jurassic acid.
-        if (saberForcesFree() <= 1)
+        if (forcesAfterHealer() <= 0)
             yellowRayPrep();
 
         // Unconditional: a dangling `else` used to swallow this line, so the
@@ -1523,6 +1534,10 @@ import <seedfinder/seedfinder.ash>;
         string conditional;
         if (lowShiny() == true)
             conditional += "congressional medal of insanity,";
+        // The weapon slot is free on these trips, so the saber rides along:
+        // any healer that slips through the -combat stack gets Forced for a
+        // guaranteed prayerbead + thingpouch, with the turn refunded.
+        conditional += healerSaber();
         tempEquipment("-combat","really nice swimming trunks," + bathysphere($item[none]) + conditional);
         
         mood("-combat");
