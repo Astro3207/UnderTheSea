@@ -148,13 +148,52 @@ import <seedfinder/seedfinder.ash>;
         return bool;
     }
 
+    // How many of the day's 20 pulls must be held back rather than spent on
+    // whatever asks first.
+    //
+    // Only one of each unique item may be pulled per day, so every entry here
+    // reserves at most ONE slot no matter how many the route still needs. The
+    // old version reserved 3 - prayerbeads owned, which looked prudent but could
+    // not be spent: a second prayerbead is simply not pullable the same day, so
+    // those extra slots were held back and then wasted.
+    //
+    // The five protected items are the ones that cost real turns to farm once
+    // the zones the route already camps in have been accounted for:
+    //
+    //   Mer-kin pinkslip    ~15 turns  the Dive Bar is not otherwise visited
+    //   Mer-kin prayerbeads ~15 turns  Outpost yields ~1.7 of 3 during the lockkey block
+    //   sea cowbell         ~10 turns  the Coral Corral block length IS this hunt
+    //   ink bladder          ~4 turns  Marinara Trench, 1 in 4 at 30%
+    //   comb jelly           ~4 turns  Marinara Trench, 1 in 4 at 40%
+    //
+    // Everything else the script pulls is either unfarmable -- in which case a
+    // reservation cannot help, it simply has to be bought -- or comes free from a
+    // block the route runs anyway, in which case it is worth about nothing.
     int reservedPulls(){
         int n;
         if (available_amount($item[peppermint parasol]) == 0 && available_amount($item[navel ring of navel gazing]) == 0 && available_amount($item[greatest american pants]) == 0)
             n += 1;
-        if (available_amount($item[mer-kin prayerbeads]) < 3)
-            n += 3-available_amount($item[mer-kin prayerbeads]);
         if (available_amount($item[crayon shavings]) < 9)
+            n += 1;
+        // One slot each, held only while the item is BOTH still wanted and still
+        // pullable today. Comma-delimited match so an id cannot match inside a
+        // longer one.
+        string pulledToday = "," + get_property("_roninStoragePulls") + ",";
+        if (available_amount($item[mer-kin pinkslip]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[mer-kin pinkslip]) + ","))
+            n += 1;
+        if (available_amount($item[mer-kin prayerbeads]) < 3
+            && !contains_text(pulledToday, "," + to_int($item[mer-kin prayerbeads]) + ","))
+            n += 1;
+        if (item_amount($item[sea cowbell]) < 3
+            && !contains_text(pulledToday, "," + to_int($item[sea cowbell]) + ","))
+            n += 1;
+        if (available_amount($item[ink bladder]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[ink bladder]) + ","))
+            n += 1;
+        if (have_effect($effect[Jelly Combed]) == 0
+            && available_amount($item[comb jelly]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[comb jelly]) + ","))
             n += 1;
         return n;
     }
@@ -1487,7 +1526,7 @@ import <seedfinder/seedfinder.ash>;
             while (item_amount($item[mer-kin killscroll]) == 0){
                 if (item_amount($item[mer-kin thingpouch]) > 0)
                     use(item_amount($item[mer-kin thingpouch]), $item[mer-kin thingpouch]);
-                else if (lowShiny == false && pulls_remaining() > 0)
+                else if (lowShiny == false && pulls_remaining() > reservedPulls())
                     pullSequence($item[mer-kin killscroll]);
                 else
                     farmPrayerbeads();
@@ -1495,7 +1534,7 @@ import <seedfinder/seedfinder.ash>;
         }
         if (get_property("dreadScroll2") == "0"){
             while (item_amount($item[mer-kin healscroll]) == 0){
-                if (lowShiny == false && pulls_remaining() > 0)
+                if (lowShiny == false && pulls_remaining() > reservedPulls())
                     pullSequence($item[mer-kin healscroll]);
                 else
                     farmPrayerbeads();
@@ -1619,7 +1658,12 @@ void seaMonkees() {
     if (get_property("questS02Monkees") == "step4") {
         use_familiar("-combat");
         if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny == false) {
-            if (pullSequence($item[mer-kin hidepaint]));
+            // The Outpost burglar drops this anyway, so yield the slot if a
+            // reserved item still needs it. (The old stray semicolon meant the
+            // use() below ran whether or not the pull actually happened.)
+            if (pulls_remaining() > reservedPulls())
+                pullSequence($item[mer-kin hidepaint]);
+            if (item_amount($item[mer-kin hidepaint]) > 0)
                 use($item[mer-kin hidepaint]);
         }
         while (get_property("questS02Monkees") == "step4") {
@@ -1806,6 +1850,7 @@ void seaMonkees() {
                 run_combat();
             }
             if (item_amount($item[rusty rivet]) < 8
+                && pulls_remaining() > reservedPulls()
                 && !contains_text(get_property("_roninStoragePulls"), "3604"))
                 pullSequence($item[rusty rivet]);
         } else {
@@ -2025,7 +2070,8 @@ void sorceress() {
 
     // ── Teflon ore acquisition ────────────────────────────────────────────────
     if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]) {
-        if (available_amount($item[mer-kin digpick]) == 0 && lowShiny == false){
+        if (available_amount($item[mer-kin digpick]) == 0 && lowShiny == false
+            && pulls_remaining() > reservedPulls()){
             pullSequence($item[mer-kin digpick]);
         } else if (available_amount($item[mer-kin digpick]) == 0){
             mood("itdrop");
@@ -2462,7 +2508,8 @@ void sorceress() {
         }
 
         // Healscroll pull
-        if (item_amount($item[mer-kin healscroll]) == 0)
+        if (item_amount($item[mer-kin healscroll]) == 0
+            && pulls_remaining() > reservedPulls())
             pullSequence($item[mer-kin healscroll]);
 
         // YogUrt fight
