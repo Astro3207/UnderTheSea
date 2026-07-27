@@ -920,13 +920,14 @@ import <seedfinder/seedfinder.ash>;
             // pearls and those are smuggled in via the codpiece.
             if (have_item($item[Fourth of May Cosplay Saber])
                 && get_property("_saberMod") == "0") {
+                // mafia auto-resolves the choice this visit redirects into,
+                // using choiceAdventure1386 -- and its built-in default is 5,
+                // "Maybe Later", which skips the upgrade. Answering manually
+                // afterwards hits an already-closed choice and aborts the run
+                // with "Invalid choice", so set the property and let mafia
+                // take option 4 (the +10 familiar weight chip) itself.
+                set_property("choiceAdventure1386", "4");
                 visit_url("main.php?action=may4");
-                // choiceAdventureScript only fires during automated adventuring,
-                // not for visit_url, so answer choice 1386 here or the session
-                // is left parked inside it. Option 4 is the familiar weight
-                // chip; see the 1386 case in UnderTheSea_Choice.ash.
-                if (count(available_choice_options()) > 0)
-                    run_choice(4);
             }
 
             // Autosell junk gems
