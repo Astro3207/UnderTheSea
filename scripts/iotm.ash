@@ -265,6 +265,18 @@ void becomeBat(string page_text) {
 // The other five blessings are all dead ends here: Wisdom is MP, Intuition is
 // stats per fight, Carapace is resistance, Taste is stat gains from food, and
 // Color is actively harmful -- it raises combat frequency.
+//
+// Two costs worth knowing about, neither of which is a turn:
+//   - The regalia scales the monster up. With the Ring on it is Scale +20 with
+//     30% physical resistance, so the CCS kills it with saucegeyser rather than
+//     anything physical. Elemental resistance stays at 0 until the Rod, which we
+//     never equip.
+//   - Character equipment is left exactly as the previous zone set it. Nothing
+//     here calls maximize() or tempEquipment(), so the loop's gear survives the
+//     detour untouched; only the familiar changes, and familiars carry their own
+//     equipment, so swapping back restores the farming familiar as it was.
+// The CCS has a matching guard so that none of this fight's rounds spend the
+// previous zone's banishes, free kills, darts or cloake charges.
 
 boolean godLobsterReady() {
     return have_familiar($familiar[God Lobster])
