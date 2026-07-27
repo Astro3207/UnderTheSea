@@ -193,10 +193,8 @@ void main(int whichchoice, string page) {
 
         // ── Lil' Doctor™ bag quest offer ──────────────────────────────────
         // "Is There A Doctor In The House?" fires whenever the bag is
-        // equipped (freeKill carries it for Chest X-Rays) and no case is
-        // active. The quests send you to random off-route zones for trivial
-        // rewards, so turn the phone off for the day: option 3 stops the
-        // offer from interrupting again.
+        // equipped and no case is active; option 3 turns the offers off for
+        // the day.
         case 1340:
             run_choice(3);
             break;

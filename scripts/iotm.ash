@@ -67,11 +67,8 @@ boolean cheatsheetsNeeded() {
 }
 
 // ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
-// Which monster we are actually trying to reach in each zone. Three separate
-// monster-pickers read this table -- the Peridot of Peril (choice 1557), Map the
-// Monsters (choice 1435) and the Time-Spinner (choice 1196) -- so keeping one
-// copy here means they can never disagree about the target. It lives in iotm.ash
-// rather than in the choice script because the main script needs it too.
+// Target monster id per zone, read by all three monster-pickers: the Peridot
+// of Peril (choice 1557), Map the Monsters (1435) and the Time-Spinner (1196).
 int [location] wantedMonster = {
     $location[An Octopus's Garden]:                 740,   // Neptune flytrap
     $location[The Wreck of the Edgar Fitzsimmons]:  745,   // unholy diver
@@ -103,16 +100,10 @@ int zoneTarget(location loc) {
 }
 
 // ─── FOURTH OF MAY COSPLAY SABER ──────────────────────────────────────────────
-// The saber is handed to you automatically at the start of a run, so there is
-// nothing to pull or buy. "Use the Force" leaves combat without spending an
-// adventure and hands over the monster's non-conditional drops.
-//
-// That makes it a drop-farming tool, NOT a general free kill:
-//   - it forfeits the combat win, so it never advances a quest counter, and
-//   - it does not burn a turn, so it cannot advance a turns_spent gate.
-// The Mer-kin Outpost is the trap: the lockkey needs ~25 turns actually spent
-// there, so forcing your way out would stall that loop forever. Anywhere we are
-// looping purely on an item count, it is a straight turn saving.
+// "Use the Force" leaves combat without spending the adventure and hands over
+// the monster's non-conditional drops. It forfeits the win and burns no turn,
+// so saberZone() only allows it where the loop is purely on an item count --
+// never where progress gates on wins or turns spent (the outpost lockkey).
 
 boolean saberReady() {
     return have_item($item[Fourth of May Cosplay Saber])
@@ -130,8 +121,6 @@ boolean saberZone(location loc) {
 // whole payload is non-conditional -- rusty rivet n20/n15/n10/n5, rusty
 // porthole n15, rusty broken diving helmet n15 -- so one Forced diver is a
 // guaranteed 4 rivets + porthole + helmet, independent of item bonus.
-// (Its c-flagged drops, glowing syringe and unholy water, are not forced; we
-// want neither.)
 
 // The rivet hunt is live while nothing that fills the diving-helmet slot is
 // owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
@@ -163,13 +152,10 @@ boolean prayerbeadsShort() {
 }
 
 // ─── THE FORCE BUDGET ─────────────────────────────────────────────────────────
-// Five charges a day, claimed in priority order by turns-per-charge:
-//   1. the diver (2 while its hunt is live)            ~4 turns each
-//   2. the outpost healer while prayerbeads are short  ~2-4 turns
-//   3. the sea cow while its drops are owed            ~1.5-2 turns
-//   4. the library researcher / free-run of last resort: whatever remains
-// Each claim releases the moment its need-check goes false, so a run that
-// skips a phase hands the charges down the ladder automatically.
+// Five charges a day, claimed in priority order: the diver (2 while its hunt
+// is live), the outpost healer while prayerbeads are short, the sea cow while
+// its drops are owed, then the library researcher / free-run of last resort.
+// Each claim releases the moment its need-check goes false.
 int saberChargesLeft() {
     if (!have_item($item[Fourth of May Cosplay Saber]))
         return 0;
@@ -218,10 +204,8 @@ boolean diverForce(monster mob, string page_text) {
 }
 
 // ─── SEA COW: THE SAME TRICK AT THE CORRAL ────────────────────────────────────
-// Both of the cow's drops are non-conditional in monsters.txt (sea cowbell n10,
-// sea leather n20), so Use the Force hands over a guaranteed leather + cowbell
-// exactly as it hands over the diver's rivets. Two Forced cows nearly close the
-// corral needs (leather x2, cowbell x3).
+// Both of the cow's drops are non-conditional (sea cowbell n10, sea leather
+// n20), so one Forced cow is a guaranteed leather + cowbell.
 
 // CCS entry, same contract as diverForce(): true means the fight is over and
 // the caller must end the consult pass.
@@ -255,12 +239,9 @@ boolean seaCowForce(monster mob, string page_text) {
 
 // ─── OUTPOST HEALER AND LIBRARY RESEARCHER ────────────────────────────────────
 // The healer's table is all non-conditional (prayerbeads n5, thingpouch n15,
-// healscroll n25), and beads are the run's chronic shortage. A Forced fight
-// spends no turn and leaves the lockkey's turns_spent clock alone, so this
-// rides the outpost phase for free -- the stall the saberZone() ban guards
-// against comes from UNLIMITED last-resort forcing, not a capped targeted one.
-// In practice it fires on farmPrayerbeads() trips, where healerSaber() frees
-// the weapon slot; the lockkey grind keeps the monodent.
+// healscroll n25). A Forced fight spends no turn and leaves the lockkey's
+// turns_spent clock alone; it fires on farmPrayerbeads() trips, where
+// healerSaber() frees the weapon slot -- the lockkey grind keeps the monodent.
 boolean healerForce(monster mob, string page_text) {
     if (mob != $monster[Mer-kin healer])
         return false;
@@ -404,9 +385,8 @@ string if_equip(item it) {
 // answered in UnderTheSea_Choice.ash from the same wantedMonster table.
 //
 // The Peridot is once per zone per day; these are the extra charges once the
-// Peridot's is spent. They go to the longest odds first (diver 1-in-5,
-// flytrap 1-in-4, sea cow 1-in-3). The outpost is excluded: its lockkey
-// gates on turns spent, so a chosen encounter saves nothing there.
+// Peridot's is spent, longest odds first. The outpost is excluded: its
+// lockkey gates on turns spent, so a chosen encounter saves nothing there.
 
 boolean mapReady() {
     return have_skill($skill[Map the Monsters])
@@ -526,8 +506,7 @@ void duplicateMonster(monster mob, string page_text) {
 //
 // All embers buy Septapus summoning charms: the CCS throws them at the
 // shadow slab, and each charm's seven pickpockets take items outside the
-// drop roll, immune to the per-slot cap. Nothing else in the shop shortens
-// the run.
+// drop roll, immune to the per-slot cap.
 void censer() {
     if (!have_item($item[Sept-Ember Censer]))
         return;
@@ -662,11 +641,8 @@ void timeSpinnerRefight(location loc) {
 }
 
 // ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
-// "lecture on relativity" chains a free copy of the current fight. The daily
-// pool is gated on buffed familiar weight (next cast needs n^2 + 1 lbs). The
-// Professor is a weaker underwater fairy and needs the bathysphere, so it is
-// swapped in only where copies beat drop bonus and swapped out when the
-// lectures run dry.
+// "lecture on relativity" chains a free copy of the current fight; the next
+// cast needs buffed familiar weight of n^2 + 1 lbs.
 
 // Conservative: familiar_weight() of an inactive familiar is its base weight, so
 // this can under-count while Fidoxene's floor is up. Under-counting only ends the
@@ -724,9 +700,7 @@ void lectureOnRelativity(monster mob, string page_text) {
 // ─── JANUARY'S GARBAGE TOTE: BROKEN CHAMPAGNE BOTTLE ──────────────────────────
 // The bottle doubles the item drop BONUS and stacks with Steely-Eyed Squint.
 // It holds 11 ounces, one spent per winning combat including free fights, so
-// the charges are aimed at the fattest rolled tables rather than worn
-// generally. (It doubles the Florist buff but not Otoscope; Squint is the
-// reverse, so all three pair cleanly.)
+// it is only worn at the fattest rolled tables.
 
 boolean champagneReady() {
     return have_item($item[broken champagne bottle])
@@ -812,9 +786,8 @@ boolean macroReady() {
 
 // ─── POWERFUL GLOVE ───────────────────────────────────────────────────────────
 // CHEAT CODE: Replace Enemy swaps the current foe for a fresh draw from the
-// zone; the 100% daily battery at 10% a cast gives ten re-rolls. It costs an
-// accessory slot, so it is equipped only where re-rolls pay and other
-// accessories don't compete.
+// zone; the 100% daily battery at 10% a cast gives ten re-rolls. Equipped
+// only at re-roll sites.
 
 boolean gloveReady() {
     return have_item($item[Powerful Glove])
@@ -959,12 +932,8 @@ void mummery() {
 }
 
 // ─── CARGO CULTIST SHORTS ─────────────────────────────────────────────────────
-// One pocket a day, and a pocket once opened is gone for good on the account
-// rather than for the run, so this is a permanent spend and worth being fussy
-// about.
-//
-// Pocket 494 is Vinegavotte, +20% item drops for 50 turns -- duration
-// outweighs magnitude at the bonus this script already stacks.
+// One pocket a day, gone for good on the account once opened. Pocket 494 is
+// Vinegavotte, +20% item drops for 50 turns.
 void cargoPocket() {
     if (!have_item($item[Cargo Cultist Shorts]))
         return;
@@ -983,10 +952,8 @@ void cargoPocket() {
 // Are Forever: +50% item drops for 50 turns, for no turn.
 //
 // Which tab carries which buff is randomised every ascension, so the first
-// acquisition in a run also pays some discovery clicks. The budget is 11 clicks
-// a day, or 22 once the crank is unlocked, and the script stops cleanly when
-// they run out, so there is nothing to guard past not asking for a buff we
-// already have.
+// acquisition in a run also pays some discovery clicks against the 11-a-day
+// budget (22 with the crank unlocked).
 void briefcase() {
     if (!have_item($item[Kremlin's Greatest Briefcase]))
         return;

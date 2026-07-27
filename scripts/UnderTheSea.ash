@@ -1764,11 +1764,9 @@ void seaMonkees() {
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
     step("phase: Mer-kin Outpost (stashbox / lockkey)");
-    // Fidoxene now: its 30 turns cover the weight-sensitive farming stretch
-    // (outpost beads, the corral remainder, into elementary). Only when the
-    // forcer inventory means Sneakisol will not be needed -- otherwise the
-    // free pill stays banked for NCforce() to spend at the moment of need,
-    // since a forcer fires on the FIRST noncombat after it is taken.
+    // Fidoxene only when the forcer inventory means Sneakisol will not be
+    // needed; otherwise the free pill stays banked for NCforce(), since a
+    // forcer fires on the FIRST noncombat after it is taken.
     if (NCForceEstimate() >= 4)
         pillKeeper("free familiar");
     while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || contains_text("step6,step7,step8",get_property("questS02Monkees"))) {

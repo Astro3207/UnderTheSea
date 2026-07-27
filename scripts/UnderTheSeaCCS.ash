@@ -40,11 +40,10 @@ void free_kill(string ptext, boolean drop) {
         throw_item(freecombat);
     }
 
-    // Last resort. Use the Force is not a kill: it forfeits the win and any
-    // conditional drops, so every real free kill above is strictly better and
-    // gets first refusal. It only runs if the fight is somehow still going and
-    // the saber was deliberately equipped for this zone by saberEquip().
-    // saberForcesFree() keeps two charges reserved for the diver plan.
+    // Last resort: Use the Force forfeits the win and any conditional drops,
+    // so it runs only after every real free kill above, and only where
+    // saberEquip() put the saber on. saberForcesFree() keeps two charges
+    // reserved for the diver plan.
     if (current_round() > 0
         && saberForcesFree() > 0
         && have_equipped($item[Fourth of May Cosplay Saber])
@@ -801,11 +800,9 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Colosseum]:
             if (have_skill($skill[Club 'Em Back in Time]))
                 use_skill($skill[Club 'Em Back in Time]);
-            // End of the run: every unspent free kill -- shadow bricks above
-            // all, at up to 13 a day -- expires worthless at rollover, and a
-            // round won free is a whole turn. Rounds need WINS, so this is
-            // free_kill and never Use the Force (which forfeits the win); the
-            // saber is not equipped here, so its last-resort clause stays dead.
+            // Colosseum rounds need WINS, so this drains free kills and never
+            // Use the Force (which forfeits the win); the saber is not
+            // equipped here, so its last-resort clause stays dead.
             if (current_round() > 0)
                 free_kill(page_text, false);
             if (to_int(get_property("lastColosseumRoundWon")) < 15)
