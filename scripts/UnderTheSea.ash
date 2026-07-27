@@ -2160,6 +2160,44 @@ void seaMonkees() {
         }
     }
 }
+// ─── EAGLE BANISH RUNDOWN ─────────────────────────────────────────────────────
+// uts_runOutEagleBanish (experimental): the patriotic eagle's Patriotic
+// Screech leaves the construct phylum banished after the run ends, which can
+// make other scripts misbehave. When enabled, burn the banish out by farming
+// unblemished pearls (they ride to the next ascension in the codpiece) until
+// mafia reports the phylum free again. Needs the pearl zone open and turns
+// of Fishy; anything short of that is a loud abort, not a silent skip.
+
+void runOutEagleBanish() {
+    if (get_property("uts_runOutEagleBanish") != "true")
+        return;
+    if (!contains_text(get_property("banishedPhyla"), "construct"))
+        return;
+    step("postloop: running out the Patriotic Screech construct banish");
+    if (!can_adventure(pearlLoc[my_primestat()]))
+        abort("uts_runOutEagleBanish: " + pearlLoc[my_primestat()]
+            + " isn't open, so the construct banish can't be farmed out.");
+    if (have_effect($effect[Fishy]) == 0)
+        abort("uts_runOutEagleBanish: no turns of Fishy, so the construct banish can't be farmed out.");
+    use_familiar("itdrop");
+    mood(pearlRes[my_primestat()]);
+    tempEquipment("item drop", "monodent of the sea," + swimmingTrunks() + bathysphere($item[none]));
+    int spent;
+    while (contains_text(get_property("banishedPhyla"), "construct")) {
+        if (have_effect($effect[Fishy]) == 0)
+            abort("uts_runOutEagleBanish: out of Fishy after " + spent
+                + " turns with the construct banish still up.");
+        if (my_adventures() == 0)
+            abort("uts_runOutEagleBanish: out of adventures after " + spent
+                + " turns with the construct banish still up.");
+        if (spent >= 120)
+            abort("uts_runOutEagleBanish: construct banish still up after 120 turns; something is wrong, bailing out.");
+        adv1(pearlLoc[my_primestat()]);
+        spent += 1;
+    }
+    print("Patriotic Screech construct banish is gone after " + spent + " pearl-farming turns.", "blue");
+}
+
 // ─── SORCERESS ────────────────────────────────────────────────────────────────
 
 void sorceress() {
@@ -2932,6 +2970,7 @@ void sorceress() {
                     $item[waterlogged scroll of healing]);
             council();
             council();
+            runOutEagleBanish();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         }
@@ -2946,6 +2985,7 @@ void main(string command) {
         // startup and nothing else -- no pulls, no turns, no combat.
         iotmChecklist();
         pullChecklist();
+        simEstimate();
         return;
     }
     if (command != "")
