@@ -914,8 +914,11 @@ import <seedfinder/seedfinder.ash>;
             // is weight-scaled, so it is the default. If we are actually short
             // of noncombat forces, leave the pill unspent so NCforce() can take
             // Sneakisol instead when it needs it.
+            // mafia's pillkeeper command takes keywords, not pill names --
+            // "familiar" is Fidoxene. "fidoxene" made it open choice 1395 and
+            // then submit nothing valid, aborting the run with Invalid choice.
             if (NCForceEstimate() >= 4)
-                pillKeeper("fidoxene");
+                pillKeeper("free familiar");
 
             // One free saber upgrade per day. Choice 1386 is answered in
             // UnderTheSea_Choice.ash; we take the familiar weight option, since
