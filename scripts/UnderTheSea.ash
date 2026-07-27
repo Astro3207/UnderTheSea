@@ -199,6 +199,13 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[comb jelly]) == 0
             && !contains_text(pulledToday, "," + to_int($item[comb jelly]) + ","))
             n += 1;
+        // One slot for the Shub deleveler while he is alive and unbanked --
+        // running dry here once stranded a run two turns from the end.
+        if (get_property("shubJigguwattDefeated") == "false"
+            && item_amount($item[crayon shavings]) < 4
+            && item_amount($item[null-day exploit]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[null-day exploit]) + ","))
+            n += 1;
         return n;
     }
 
@@ -2698,10 +2705,13 @@ void sorceress() {
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
 
-        // Late pulls
+        // Late pulls. The comfort/cleanup items wait until Shub is dead:
+        // they once ate the last pull slots right before a Shub retry needed
+        // the null-day exploit.
         if (pulls_remaining() > 0) {
             if (item_amount($item[crayon shavings]) < 8)
                 pullSequence($item[null-day exploit]);
+            if (get_property("shubJigguwattDefeated") == "true")
             foreach num in $strings[5401, 3679, 3775, 11583, 7014, 11706] {
                 if (!contains_text(get_property("_roninStoragePulls"), num)) {
                     pullSequence(to_item(num));
