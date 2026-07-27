@@ -159,10 +159,6 @@ import <seedfinder/seedfinder.ash>;
     //   sea cowbell         ~10 turns  the Coral Corral block length IS this hunt
     //   ink bladder          ~4 turns  Marinara Trench, 1 in 4 at 30%
     //   comb jelly           ~4 turns  Marinara Trench, 1 in 4 at 40%
-    //
-    // Everything else the script pulls is either unfarmable -- in which case a
-    // reservation cannot help, it simply has to be bought -- or comes free from a
-    // block the route runs anyway, in which case it is worth about nothing.
     int reservedPulls(){
         int n;
         if (available_amount($item[peppermint parasol]) == 0 && available_amount($item[navel ring of navel gazing]) == 0 && available_amount($item[greatest american pants]) == 0)

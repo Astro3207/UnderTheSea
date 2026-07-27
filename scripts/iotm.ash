@@ -453,10 +453,9 @@ int NCForceEstimate(){
 // The terminal is a campground fixture, so it survives ascension and there is
 // nothing to install or pull in-run.
 //
-// items.enh is a flat +item drops buff lasting 25
-// turns, or 100 on a fully chipped terminal, with up to 3 casts a day. It costs
-// no turn and carries no risk, and it shortens every drop-farming loop in the
-// script, so it is called wherever we are already setting up for +item.
+// items.enh is a flat +item drops buff lasting 25 turns (100 on a fully
+// chipped terminal), up to 3 casts a day, re-upped wherever +item setup
+// already happens.
 
 void sourceEnhance() {
     if (get_campground()[$item[Source terminal]] == 0)
@@ -468,10 +467,8 @@ void sourceEnhance() {
     cli_execute("terminal enhance items.enh");
 }
 
-// duplicate.edu: one cast a day turns a monster into two, and each copy rolls
-// the whole drop table -- one extra encounter for no turn. Slotting it
-// displaces nothing this script casts. Targeting lives in duplicateMonster();
-// a cast against an uncopyable monster does not consume the daily use.
+// Keep duplicate.edu in an educate slot so Duplicate is castable in combat;
+// duplicateMonster() below spends the one daily cast.
 
 boolean duplicateEducated() {
     return get_property("sourceTerminalEducate1") == "duplicate.edu"
@@ -545,14 +542,7 @@ void censer() {
 }
 
 // ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
-// The first pill each day is free; every one after costs 3 spleen, which we need
-// for fish sauce to stay Fishy, so only ever take the free one.
-//
-// Fidoxene is the default. Familiars start an ascension at very low weight and
-// the script leans on Grouper Groupie (underwater,item0) for +item nearly
-// everywhere, so 30 turns of "every familiar is at least 20 lbs" cuts farming
-// turns directly. Chest Mimic and Jill-of-All-Trades are item0 as well.
-//
+// Take only the daily free pill -- the rest cost spleen the diet needs.
 // `pill` must be a mafia pillkeeper KEYWORD ([free] explode | extend |
 // noncombat | element | stat | familiar | lucky | random); the command does
 // not accept pill names.
@@ -822,7 +812,7 @@ void extractJelly(monster mob, string page_text) {
 // Replaces the current foe with a fresh draw from the zone -- the same job as
 // the glove's CHEAT CODE below, but from a skill, so it costs no equipment
 // slot. Ten casts a day. Meteor Lore is hardcore-permanent from the first
-// read of the guide, so anyone who has ever read it simply has the skill.
+// read of the guide.
 boolean macroReady() {
     return have_skill($skill[Macrometeorite])
         && to_int(get_property("_macrometeoriteUses")) < 10;
@@ -962,22 +952,10 @@ void otoscope(monster mob, string page_text) {
 }
 
 // ─── MUMMING TRUNK ────────────────────────────────────────────────────────────
-// Prince George is +15% item drops, or +25% on a clothes-wearing familiar, and
-// it lasts until rollover rather than for a fixed number of turns. That duration
-// is the whole point: it covers every farming turn the costumed familiar is out
-// for, which no timed buff manages.
-//
-// Each costume may be applied once per day, and putting a second costume on a
-// familiar overwrites the first, so there is exactly one shot at this. It goes
-// on whichever familiar the item setup actually picks, which is why this is
-// called from use_familiar("itdrop") rather than at a fixed point in the run.
-//
-// None of the other six costumes touch turns. The Captain is meat. Beelzebub and
-// The Doctor restore MP and HP, which the free rests already cover. Saint
-// Patrick, Oliver Cromwell and Miss Funny are stat gains, and this route has no
-// level gates. Their familiar-specific riders are all combat-round effects -- a
-// stagger, or winning initiative -- and a fight costs one adventure however many
-// rounds it runs, so none of them shorten the run.
+// Prince George: +15% item drops (+25% on a clothes-wearing familiar), lasting
+// until rollover. Once per day, and a second costume overwrites the first, so
+// it goes on whichever familiar the item setup actually picks -- hence called
+// from use_familiar("itdrop") rather than at a fixed point in the run.
 void mummery() {
     if (!have_item($item[mumming trunk]))
         return;
@@ -1012,8 +990,7 @@ void cargoPocket() {
 // ─── KREMLIN'S GREATEST BRIEFCASE ─────────────────────────────────────────────
 // Driven through Ezandora's Briefcase script, which owns the dial, handle and
 // tab state machine. "briefcase buff item" spends clicks until it lands Items
-// Are Forever: +50% item drops for 50 turns, the largest single item effect
-// available to this run, for no turn.
+// Are Forever: +50% item drops for 50 turns, for no turn.
 //
 // Which tab carries which buff is randomised every ascension, so the first
 // acquisition in a run also pays some discovery clicks. The budget is 11 clicks
