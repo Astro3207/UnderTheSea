@@ -2814,11 +2814,37 @@ void sorceress() {
             // safe here when it resolves to a passive fairy, and under
             // Driving Waterproofly it resolves to Jill, who acts.
             use_familiar($familiar[none]);
-            tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece,");
+            // Per the wiki, the fight's rules are: any damage from a source
+            // other than a standard attack draws 20% of your max HP,
+            // DOUBLING each instance (hence no familiar); damage past 500 is
+            // crushed to 500+(Z-500)^0.6, so reliability beats big swings;
+            // his attacks are 95% elemental but maxed Damage Absorption is
+            // still prescribed; and the pre-fight bolt hits for HALF YOUR
+            // CURRENT MP, so walk in empty.
+            tempEquipment("weapon damage, mus, moxie, damage absorption",
+                "mer-kin gladiator mask,mer-kin gladiator tailpiece," + if_equip($item[legendary seal-clubbing club]));
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            cli_execute("recover hp; cast * empathy");
+            // Wiki-prescribed miss/fumble insurance, both one-fight pulls.
+            if (item_amount($item[gremlin juice]) == 0)
+                pullSequence($item[gremlin juice]);
+            if (item_amount($item[handful of hand chalk]) == 0)
+                pullSequence($item[handful of hand chalk]);
+            if (item_amount($item[gremlin juice]) > 0)
+                use($item[gremlin juice]);
+            if (item_amount($item[handful of hand chalk]) > 0)
+                use($item[handful of hand chalk]);
+            cli_execute("recover hp");
+            // Ruthless Efficiency sharpens the shavings delevel. Cast before
+            // the MP dump while there is still a pool to pay for it; a
+            // redundant recast just feeds the dump.
+            if (have_skill($skill[Ruthless Efficiency]))
+                use_skill($skill[Ruthless Efficiency]);
+            // The MP dump. Empathy is a cheap repeatable sink -- its buff is
+            // irrelevant with no familiar, but emptying the pool blunts the
+            // pre-fight bolt to nothing.
+            cli_execute("cast * empathy");
             adv($location[Mer-kin Temple (Left Door)]);
         }
     }
