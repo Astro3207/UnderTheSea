@@ -55,9 +55,9 @@ void free_run(string ptext, boolean banish) {
     if (have_equipped($item[greatest american pants]) && to_int(get_property("_navelRunaways")) < 3)
         runaway();
 
-    foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Feel Hatred, snokebomb] {
+    foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Feel Hatred, Reflex Hammer, snokebomb] {
         if (!contains_text(ptext, to_string(freeskill))) continue;
-        if (!banish && $skills[snokebomb, Bowl a Curveball, Feel Hatred, Throw Latte on Opponent] contains freeskill) continue;
+        if (!banish && $skills[snokebomb, Bowl a Curveball, Feel Hatred, Throw Latte on Opponent, Reflex Hammer] contains freeskill) continue;
         if (banish && banishUsedAtYourLocation("snokebomb") && freeskill == $skill[snokebomb]) continue;
         if ($locations[The Outskirts of Cobb's Knob, The Sleazy Back Alley,
             The Haunted Pantry] contains my_location()
@@ -172,6 +172,10 @@ void main(int round, monster mob, string page_text) {
     becomeBat(page_text);
     // One extra roll of the diver's drop table, once a day, for no turn.
     duplicateMonster(mob, page_text);
+    // +200% item on the diver itself, three a day, before free_kill can end it.
+    otoscope(mob, page_text);
+    // A second roll of the previous diver's table, three a day.
+    feelNostalgic(mob, page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());
