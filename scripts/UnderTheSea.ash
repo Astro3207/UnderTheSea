@@ -909,16 +909,13 @@ import <seedfinder/seedfinder.ash>;
             garbageTote();
             censer();
 
-            // The one free pill of the day. Fidoxene lasts 30 turns, which is
-            // most of a run, and every farming familiar the script reaches for
-            // is weight-scaled, so it is the default. If we are actually short
-            // of noncombat forces, leave the pill unspent so NCforce() can take
-            // Sneakisol instead when it needs it.
-            // mafia's pillkeeper command takes keywords, not pill names --
-            // "familiar" is Fidoxene. "fidoxene" made it open choice 1395 and
-            // then submit nothing valid, aborting the run with Invalid choice.
-            if (NCForceEstimate() >= 4)
-                pillKeeper("free familiar");
+            // The free pill is NOT taken here. Sneakisol must fire right
+            // before the noncombat it is meant to force, so NCforce() takes it
+            // at the moment of need; and Fidoxene's 30 turns are worth more
+            // over the weight-sensitive farming stretch (outpost beads through
+            // the corral and into elementary) than over turns 0-30, where the
+            // Force plans make the big drops deterministic anyway. See the
+            // pillKeeper() calls at the outpost and corral phases.
 
             // One free saber upgrade per day. Choice 1386 is answered in
             // UnderTheSea_Choice.ash; we take the familiar weight option, since
@@ -1318,6 +1315,10 @@ import <seedfinder/seedfinder.ash>;
     void getMissingCorralItems(){
         string conditional;
         use_familiar("itdrop");
+        // Backup Fidoxene site for reruns that skip the outpost phase; the
+        // free-pill guard inside makes repeat calls a no-op.
+        if (NCForceEstimate() >= 4)
+            pillKeeper("free familiar");
         // Lecture copies of the sea cow once the Force budget is spent;
         // internally gated, a no-op the rest of the time.
         professorFamiliar();
@@ -1776,6 +1777,13 @@ void seaMonkees() {
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
     step("phase: Mer-kin Outpost (stashbox / lockkey)");
+    // Fidoxene now: its 30 turns cover the weight-sensitive farming stretch
+    // (outpost beads, the corral remainder, into elementary). Only when the
+    // forcer inventory means Sneakisol will not be needed -- otherwise the
+    // free pill stays banked for NCforce() to spend at the moment of need,
+    // since a forcer fires on the FIRST noncombat after it is taken.
+    if (NCForceEstimate() >= 4)
+        pillKeeper("free familiar");
     while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || contains_text("step6,step7,step8",get_property("questS02Monkees"))) {
         if ($location[The Mer-Kin Outpost].turns_spent < 5)
             set_property("stashboxChecked", "0");
