@@ -531,11 +531,19 @@ void sourceEducate() {
 void duplicateMonster(monster mob, string page_text) {
     if (!duplicateReady() || !duplicateEducated())
         return;
-    // The diver has first claim while its hunt is live; if the run never
-    // needed rivets (a better mask is owned), the day's Duplicate goes to the
-    // sea cow instead -- doubled leather + cowbell under the same Force.
+    // Spaded on a live run: Duplicate does NOT double Use the Force's
+    // handover -- a Duplicated, Forced diver dropped a single table.
+    // Doubling pays only on a WIN, so never spend the day's cast on a fight
+    // the saber is about to Force; killed fat tables (the cow at the corral,
+    // the monitor during the sheet grind) are where it earns.
+    boolean aboutToForce = have_equipped($item[Fourth of May Cosplay Saber])
+        && ((mob == $monster[unholy diver] && diverForceReady())
+            || (mob == $monster[sea cow] && seaCowNeeded() && forcesAfterHealer() > 0));
+    if (aboutToForce)
+        return;
     boolean wanted = (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8)
-        || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive());
+        || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive())
+        || (mob == $monster[Mer-kin monitor] && cheatsheetsNeeded());
     if (!wanted)
         return;
     if (!contains_text(page_text, "Duplicate"))

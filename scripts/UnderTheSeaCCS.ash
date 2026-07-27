@@ -212,8 +212,9 @@ void main(int round, monster mob, string page_text) {
     // own definition (the name is not bound until the definition completes),
     // so the loop, not recursion, is the dispatch mechanism.
     while (true) {
-    // One extra roll of the diver's drop table, once a day, for no turn.
-    // Cast BEFORE the Force below so the doubled table is what gets dropped.
+    // One extra roll of a fat drop table, once a day, for no turn -- on
+    // fights that will be WON. (Spaded: pairing it with Use the Force wastes
+    // the cast; duplicateMonster() refuses those fights itself.)
     duplicateMonster(mob, page_text);
     // Deterministic diver: insurance egg, then Use the Force hands over every
     // non-conditional drop and ends the fight -- nothing below applies.
