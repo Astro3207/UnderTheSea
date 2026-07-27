@@ -1826,6 +1826,9 @@ void seaMonkees() {
                 conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
                 conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
                 conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                // Chained divers cost no adventure, which beats the drop
+                // familiar we give up. Reverts itself once the rivets are in.
+                professorFamiliar();
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                     if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                         conditional += "spring shoes,";

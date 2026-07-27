@@ -419,6 +419,67 @@ void timeSpinnerRefight(location loc) {
     run_choice(1, "monid=" + wantedMonster[loc]);
 }
 
+// ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
+// "lecture on relativity" makes you fight the current monster again straight
+// after the combat, and that chained fight is a copy -- it costs no adventure.
+// Spent on the unholy diver, one cast is a whole extra diver, which is five
+// turns of Fitzsimmons we never pay for.
+//
+// The three lectures share one daily pool, and the size of that pool is set by
+// buffed familiar weight through n^2 + 1, where n is the number already cast.
+// At the weights this route reaches -- Fidoxene floors familiars at 20 and the
+// mood adds Leash, Empathy and Thoughtful Empathy on top -- that is about seven
+// casts, far more than the rivet hunt actually needs.
+//
+// What it costs: the Professor is a plain 1x Fairy where Red-Nosed Snapper is
+// 1.5x underwater, and it cannot breathe underwater at all, so bathysphere()
+// spends the familiar equipment slot on a little bitty bathysphere. Both are
+// real losses and both are dwarfed by not spending the turns.
+//
+// It is swapped in only for the rivet hunt and only while lectures remain, so
+// the rest of the run keeps the better drop familiar.
+
+// Conservative: familiar_weight() of an inactive familiar is its base weight, so
+// this can under-count while Fidoxene's floor is up. Under-counting only ends the
+// swap early, which is the safe direction.
+int professorLectureLimit() {
+    int w = familiar_weight($familiar[Pocket Professor]) + weight_adjustment();
+    int n;
+    while ((n * n + 1) <= w)
+        n += 1;
+    return n;
+}
+
+boolean professorReady() {
+    return have_familiar($familiar[Pocket Professor])
+        && to_int(get_property("_pocketProfessorLectures")) < professorLectureLimit();
+}
+
+void professorFamiliar() {
+    if (!professorReady())
+        return;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    use_familiar($familiar[Pocket Professor]);
+}
+
+void lectureOnRelativity(monster mob, string page_text) {
+    if (!professorReady())
+        return;
+    if (my_familiar() != $familiar[Pocket Professor])
+        return;
+    if (mob != $monster[unholy diver])
+        return;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    // The skill refuses to fire below 2 adventures, even against a free fight.
+    if (my_adventures() < 2)
+        return;
+    if (!contains_text(page_text, "lecture on relativity"))
+        return;
+    use_skill($skill[lecture on relativity]);
+}
+
 // ─── JANUARY'S GARBAGE TOTE: BROKEN CHAMPAGNE BOTTLE ──────────────────────────
 // The bottle doubles the item drop BONUS, and it stacks fully with Steely-Eyed
 // Squint for a 4x multiplier. Against the bonus this script already carries that
