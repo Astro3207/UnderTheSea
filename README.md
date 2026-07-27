@@ -81,7 +81,6 @@ exceeding it.
 | scale-mail underwear | Underwater +item pants, same fights |
 | Congressional Medal of Insanity | Large +item accessory worn through most farming; must already be in storage — the script won't buy one |
 | Flash Liquidizer Ultra Dousing Accessory | Douse Foe procs on the shadow slab during the pay-phone free fights |
-| Pocket Meteor Guide | Read once so Meteor Lore exists in-run; Macrometeorite is the slot-free monster re-roller |
 
 ### Pulled when the route needs them
 
@@ -175,7 +174,7 @@ changes how whole phases play out:
 | Time-Spinner | Guaranteed re-fight of a just-fought target for one turn |
 | January's Garbage Tote | The champagne bottle doubles the item bonus at roll-heavy zones |
 | Powerful Glove | Monster re-rolls when Macrometeorite casts run out |
-| Pocket Meteor Guide | Macrometeorite: ten re-rolls a day from a skill, no gear slot |
+| Meteor Lore (Macrometeorite) | Ten monster re-rolls a day from a skill, no gear slot |
 | combat lover's locket | Diver and golem summons |
 | emotion chip | Feel Hatred banish; Feel Nostalgic re-rolls a copied drop table |
 | Lil' Doctor™ bag | Chest X-Ray free kills, Otoscope +200% item, Reflex Hammer banish |
