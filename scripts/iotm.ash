@@ -420,6 +420,20 @@ void timeSpinnerRefight(location loc) {
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
+// Why this script forces noncombats instead of just stacking more -combat:
+//
+// Combat frequency has hard diminishing returns. The first 25 points of a
+// modifier count in full; beyond that, every further 5 points contribute only 1.
+// A raw -30 lands at -26, and a raw -50 lands at -30.
+//
+// The mood("-combat") list already casts roughly -50 raw before the maximizer
+// adds any gear, so it is deep in the 5:1 band. Another -5 or -10 raw from any
+// source is worth one or two effective points, which is why cheap-looking
+// -combat buffs are not worth routing in here.
+//
+// A forced noncombat -- a "sneak" -- bypasses the roll entirely and is not
+// subject to any of this, so forcing is strictly better than buffing once the
+// stack is this deep. That is what NCForceEstimate() is counting.
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
