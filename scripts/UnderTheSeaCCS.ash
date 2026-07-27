@@ -42,8 +42,10 @@ void free_kill(string ptext, boolean drop) {
     if (current_round() > 0
         && saberForcesFree() > 0
         && have_equipped($item[Fourth of May Cosplay Saber])
-        && contains_text(ptext, "Use the Force"))
+        && contains_text(ptext, "Use the Force")) {
+        step("Use the Force: free-run of last resort");
         use_skill($skill[Use the Force]);
+    }
 }
 
 // Attempt a free run using available skills/items.

@@ -19,6 +19,12 @@ int count_substring(string text, string sub) {
 
 boolean [monster] haveLocketMonster = get_locket_monsters();
 
+// One-line progress marker printed before every significant action, so a
+// broken run's log shows exactly where it was.
+void step(string msg) {
+    print("UTS: " + msg, "blue");
+}
+
 // Use a skill if it appears as an option on the current page
 void use_if_have_skill(string page_text, skill sk) {
     if (contains_text(page_text, to_string(sk)))
@@ -201,6 +207,7 @@ boolean diverForce(monster mob, string page_text) {
         return false;
     if (my_familiar() == $familiar[chest mimic])
         use_skill($skill[%fn, lay an egg]);
+    step("Use the Force -> unholy diver (rivets " + item_amount($item[rusty rivet]) + "/8)");
     use_skill($skill[Use the Force]);
     return true;
 }
@@ -236,6 +243,7 @@ boolean seaCowForce(monster mob, string page_text) {
         return false;
     if (!contains_text(page_text, "Use the Force"))
         return false;
+    step("Use the Force -> sea cow");
     use_skill($skill[Use the Force]);
     return true;
 }
@@ -263,6 +271,7 @@ boolean healerForce(monster mob, string page_text) {
         return false;
     if (!contains_text(page_text, "Use the Force"))
         return false;
+    step("Use the Force -> Mer-kin healer (prayerbeads)");
     use_skill($skill[Use the Force]);
     return true;
 }
@@ -292,6 +301,7 @@ boolean researcherForce(monster mob, string page_text) {
         return false;
     if (!contains_text(page_text, "Use the Force"))
         return false;
+    step("Use the Force -> Mer-kin researcher (scrolls)");
     use_skill($skill[Use the Force]);
     return true;
 }
@@ -418,6 +428,7 @@ void mapMonster(location loc) {
     if (available_amount($item[peridot of peril]) > 0
         && !contains_text("," + get_property("_perilLocations") + ",", "," + to_int(loc) + ","))
         return;
+    step("Map the Monsters armed for " + loc);
     use_skill($skill[Map the Monsters]);
 }
 
@@ -526,6 +537,7 @@ void duplicateMonster(monster mob, string page_text) {
         return;
     if (!contains_text(page_text, "Duplicate"))
         return;
+    step("Duplicate: " + mob);
     use_skill($skill[Duplicate]);
 }
 
@@ -575,6 +587,7 @@ void pillKeeper(string pill) {
         return;
     if (get_property("_freePillKeeperUsed") != "false")
         return;
+    step("Pill keeper: " + pill);
     cli_execute("pillkeeper " + pill);
 }
 
@@ -672,7 +685,14 @@ boolean timeSpinnerFight(monster mon) {
     if (last_monster() != mon)
         return false;
 
+    step("Time-Spinner: refighting " + mon);
     visit_url("inv_use.php?whichitem=" + to_int($item[Time-Spinner]) + "&pwd=" + my_hash());
+    // mafia auto-resolves choices it has handling for, even on visit_url; if
+    // nothing is live any manual answer would abort with "Invalid choice".
+    if (!handling_choice()) {
+        step("Time-Spinner choice was auto-resolved or never opened; skipping");
+        return false;
+    }
     int travel;
     int backOut;
     foreach num, optionText in available_choice_options() {
@@ -777,6 +797,7 @@ void lectureOnRelativity(monster mob, string page_text) {
         return;
     if (!contains_text(page_text, "lecture on relativity"))
         return;
+    step("Lecture on Relativity: chaining a free " + mob);
     use_skill($skill[lecture on relativity]);
 }
 
@@ -823,7 +844,13 @@ void garbageTote() {
         return;
     if (to_int(get_property("garbageChampagneCharge")) <= 0)
         return;
+    step("Garbage tote: fetching the broken champagne bottle");
     visit_url("inv_use.php?whichitem=" + to_int($item[January's Garbage Tote]) + "&pwd=" + my_hash());
+    // Same auto-resolution caveat as everywhere: only answer a LIVE choice.
+    if (!handling_choice()) {
+        step("Tote choice was auto-resolved or never opened; skipping");
+        return;
+    }
     int grab;
     int leave;
     foreach num, optionText in available_choice_options() {
@@ -915,11 +942,13 @@ string gloveEquip(location loc) {
 // free_run() runs away from the very target the re-roll produced.
 boolean rerollEnemy(string page_text) {
     if (macroReady() && contains_text(page_text, "Macrometeorite")) {
+        step("Macrometeorite: re-rolling the monster");
         use_skill($skill[Macrometeorite]);
         return true;
     }
     if (gloveReady() && have_equipped($item[Powerful Glove])
         && contains_text(page_text, "CHEAT CODE: Replace Enemy")) {
+        step("CHEAT CODE: re-rolling the monster");
         use_skill($skill[CHEAT CODE: Replace Enemy]);
         return true;
     }
@@ -981,6 +1010,7 @@ void feelNostalgic(monster mob, string page_text) {
         return;
     if (!contains_text(page_text, "Feel Nostalgic"))
         return;
+    step("Feel Nostalgic: re-rolling the " + copied + " table");
     use_skill($skill[Feel Nostalgic]);
 }
 
@@ -1011,6 +1041,7 @@ void otoscope(monster mob, string page_text) {
         return;
     if (!contains_text(page_text, "Otoscope"))
         return;
+    step("Otoscope on " + mob);
     use_skill($skill[Otoscope]);
 }
 
@@ -1064,6 +1095,7 @@ void cargoPocket() {
     // Comma-delimited match so a pocket number cannot match inside another.
     if (contains_text("," + get_property("cargoPocketsEmptied") + ",", ",494,"))
         return;
+    step("Cargo shorts: opening pocket 494");
     cli_execute("cargo pocket 494");
 }
 
@@ -1566,17 +1598,10 @@ void baseballD() {
 }
 
 // ─── RUN-START CHECKLISTS ─────────────────────────────────────────────────────
-// Logged once at initialization: which supported IOTMs this account is
-// missing (future acquisitions), and which of the pulls the route may ask for
-// are absent from Hagnk's and would have to be mall-bought or cannot be
-// bought at all. Purely informational -- every use in the script is
-// ownership-guarded regardless.
-
-string trimList(string s) {
-    if (length(s) > 2)
-        return substring(s, 0, length(s) - 2);
-    return s;
-}
+// Logged once at initialization: every supported IOTM and every pull the
+// route may ask for, one per line -- blue check for present, red cross for
+// absent. Purely informational; every use in the script is ownership-guarded
+// regardless.
 
 void iotmChecklist() {
     boolean [item] iotmItems = $items[monodent of the sea,
@@ -1601,24 +1626,23 @@ void iotmChecklist() {
         Glover, Foul Ball, Space Jellyfish, Pocket Professor,
         Tiny Plastic Santa Claus Skeleton];
 
-    string have;
-    string missing;
+    print("IOTM check — supported IOTMs:");
     int owned;
     int total;
     foreach it in iotmItems {
         total += 1;
-        if (have_item(it)) { owned += 1; have += it + ", "; }
-        else missing += it + ", ";
+        if (have_item(it)) { owned += 1; print("✓ " + it, "blue"); }
+        else print("✗ " + it, "red");
     }
     foreach sk in iotmSkills {
         total += 1;
-        if (have_skill(sk)) { owned += 1; have += sk + ", "; }
-        else missing += sk + ", ";
+        if (have_skill(sk)) { owned += 1; print("✓ " + sk, "blue"); }
+        else print("✗ " + sk, "red");
     }
     foreach fam in iotmFamiliars {
         total += 1;
-        if (have_familiar(fam)) { owned += 1; have += fam + ", "; }
-        else missing += fam + ", ";
+        if (have_familiar(fam)) { owned += 1; print("✓ " + fam, "blue"); }
+        else print("✗ " + fam, "red");
     }
     total += 1;
     if (get_workshed() != $item[none]
@@ -1626,20 +1650,15 @@ void iotmChecklist() {
         || have_item($item[model train set])
         || have_item($item[portable Mayo Clinic])
         || have_item($item[TakerSpace letter of Marque])) {
-        owned += 1; have += "a workshed, ";
+        owned += 1; print("✓ a workshed", "blue");
     } else
-        missing += "a workshed, ";
+        print("✗ a workshed", "red");
     total += 1;
     if (get_campground() contains $item[Source terminal]) {
-        owned += 1; have += "Source Terminal, ";
+        owned += 1; print("✓ Source Terminal", "blue");
     } else
-        missing += "Source Terminal, ";
-
+        print("✗ Source Terminal", "red");
     print("IOTM check: " + owned + " of " + total + " supported IOTMs owned.");
-    if (have != "")
-        print("Owned: " + trimList(have));
-    if (missing != "")
-        print("Missing (future acquisitions): " + trimList(missing), "olive");
 }
 
 void pullChecklist() {
@@ -1657,29 +1676,19 @@ void pullChecklist() {
         stench jelly, peppermint parasol, ink bladder, Mer-kin pinkslip,
         Louder Than Bomb, anchor bomb];
 
-    string stocked;
-    string toBuy;
-    string unbuyable;
+    print("Pull check — Hagnk's stock:");
     foreach it in pulls {
         // Catalog credits create these in-run; only worth stocking without it.
         if (have_item($item[2002 Mr. Store Catalog])
             && $items[pro skateboard, software glitch] contains it)
             continue;
         if (storage_amount(it) > 0)
-            stocked += it + ", ";
+            print("✓ " + it, "blue");
         else if (is_tradeable(it))
-            toBuy += it + ", ";
+            print("✗ " + it + " — will be mall-bought if the route needs it", "red");
         else
-            unbuyable += it + ", ";
+            print("✗ " + it + " — NOT mall-buyable, acquire before it's needed", "red");
     }
-    if (stocked != "")
-        print("Pulls already in Hagnk's: " + trimList(stocked));
-    if (toBuy != "")
-        print("Pulls not in Hagnk's — will be mall-bought if the route needs them: "
-            + trimList(toBuy), "olive");
-    if (unbuyable != "")
-        print("Pulls not in Hagnk's and NOT mall-buyable — acquire before they're needed: "
-            + trimList(unbuyable), "red");
 }
 
 // ─── FINISHER ─────────────────────────────────────────────────────────────────
