@@ -1639,9 +1639,6 @@ void seaMonkees() {
     }
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
-    // Fetch the Silence blessing here rather than at startup: it only lasts 33
-    // turns, and this noncombat hunt is the one block long enough to spend them.
-    godLobster();
     while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || contains_text("step6,step7,step8",get_property("questS02Monkees"))) {
         if ($location[The Mer-Kin Outpost].turns_spent < 5)
             set_property("stashboxChecked", "0");

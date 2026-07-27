@@ -199,24 +199,6 @@ void main(int whichchoice, string page) {
             run_choice(3);
             break;
 
-        // ── God Lobster reward ────────────────────────────────────────────
-        // Only one of the six blessings is worth anything to this route, and it
-        // is the one behind God Lobster's Ring: Silence, -5% combat frequency
-        // for 33 turns, taken just before the Outpost noncombat hunt. With the
-        // Ring equipped, ask for the blessing; with anything else on, ask for
-        // regalia instead and work toward the Ring for a later run. Options are
-        // matched on text because the regalia entry disappears once the Crown is
-        // equipped, which shifts the numbering.
-        case 1310:
-            if (have_equipped($item[God Lobster's Ring])) {
-                if (!pickChoice("blessing"))
-                    pickChoice("experience");
-            } else {
-                if (!pickChoice("regalia"))
-                    pickChoice("experience");
-            }
-            break;
-
         // ── Underwater zone run_choice(2) cases ───────────────────────────
         case 1469:
         case 1470:

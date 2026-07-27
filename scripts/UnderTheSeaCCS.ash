@@ -168,18 +168,6 @@ item bangB(){
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
-    // God Lobster is not part of any zone loop, but my_location() still reports
-    // the last zone we adventured in while it is on screen. Without this guard
-    // every location-keyed branch below fires against it and spends that zone's
-    // resources on a monster that drops nothing we want and never returns: a
-    // banish from free_run, a dart, a free kill, a cloake charge, bang potions.
-    // Worse, free_kill ends on Use the Force, which forfeits the combat and so
-    // would throw away the blessing the fight was started for. Kill it with MP,
-    // which is the one resource this route is not short of.
-    if (mob == $monster[God Lobster]) {
-        cleanUp();
-        return;
-    }
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
