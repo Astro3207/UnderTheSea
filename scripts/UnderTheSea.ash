@@ -287,6 +287,11 @@ import <seedfinder/seedfinder.ash>;
             fam = $familiar[grouper groupie];
         }
         use_familiar(fam);
+        // Prince George goes on whichever familiar the item setup just settled
+        // on, and only the first time, since the costume is once a day and
+        // lasts until rollover.
+        if (mod == "itdrop")
+            mummery();
         return;
     }
 
@@ -317,6 +322,9 @@ import <seedfinder/seedfinder.ash>;
                 // calling it on every itdrop setup just tops the buff back up
                 // when it lapses and is a no-op the rest of the time.
                 sourceEnhance();
+                // Same idea for the briefcase's +50% item tab buff: internally
+                // guarded, so this just re-acquires it when the 50 turns lapse.
+                briefcase();
                 break;
             case "superitdrop":
                 effect [int] superitdrop = {$effect[Hustlin'], $effect[Steely-Eyed Squint],
@@ -843,6 +851,7 @@ import <seedfinder/seedfinder.ash>;
             // Slot duplicate.edu now so the skill is in hand by the time we
             // reach Fitzsimmons, and claim the day's embers.
             sourceEducate();
+            cargoPocket();
             censer();
 
             // The one free pill of the day. Fidoxene lasts 30 turns, which is

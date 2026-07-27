@@ -419,6 +419,88 @@ void timeSpinnerRefight(location loc) {
     run_choice(1, "monid=" + wantedMonster[loc]);
 }
 
+// ─── MUMMING TRUNK ────────────────────────────────────────────────────────────
+// Prince George is +15% item drops, or +25% on a clothes-wearing familiar, and
+// it lasts until rollover rather than for a fixed number of turns. That duration
+// is the whole point: it covers every farming turn the costumed familiar is out
+// for, which no timed buff manages.
+//
+// Each costume may be applied once per day, and putting a second costume on a
+// familiar overwrites the first, so there is exactly one shot at this. It goes
+// on whichever familiar the item setup actually picks, which is why this is
+// called from use_familiar("itdrop") rather than at a fixed point in the run.
+//
+// None of the other six costumes touch turns. The Captain is meat. Beelzebub and
+// The Doctor restore MP and HP, which the free rests already cover. Saint
+// Patrick, Oliver Cromwell and Miss Funny are stat gains, and this route has no
+// level gates. Their familiar-specific riders are all combat-round effects -- a
+// stagger, or winning initiative -- and a fight costs one adventure however many
+// rounds it runs, so none of them shorten the run.
+void mummery() {
+    if (!have_item($item[mumming trunk]))
+        return;
+    // _mummeryMods records what has already been applied today; an Item Drop
+    // entry means Prince George is spent.
+    if (contains_text(get_property("_mummeryMods"), "Item Drop"))
+        return;
+    if (my_familiar() == $familiar[none])
+        return;
+    cli_execute("mummery item");
+}
+
+// ─── CARGO CULTIST SHORTS ─────────────────────────────────────────────────────
+// One pocket a day, and a pocket once opened is gone for good on the account
+// rather than for the run, so this is a permanent spend and worth being fussy
+// about.
+//
+// Pocket 494 is Vinegavotte, +20% item drops for 50 turns. It beats the
+// bigger-looking numbers because duration outweighs magnitude at the item bonus
+// this script already stacks: Finding Stuff is +30% but runs only 20 turns,
+// which does not cover enough of the farming to make the difference back.
+//
+// The -combat pockets are deliberately left alone. Combat frequency has hard
+// diminishing returns past 25 points and this script is already near -50 raw, so
+// Barely Visible's -10 would buy about two effective points. See NCforce().
+void cargoPocket() {
+    if (!have_item($item[Cargo Cultist Shorts]))
+        return;
+    if (get_property("_cargoPocketEmptied") != "false")
+        return;
+    // Comma-delimited match so a pocket number cannot match inside another.
+    if (contains_text("," + get_property("cargoPocketsEmptied") + ",", ",494,"))
+        return;
+    cli_execute("cargo pocket 494");
+}
+
+// ─── KREMLIN'S GREATEST BRIEFCASE ─────────────────────────────────────────────
+// Driven through Ezandora's Briefcase script, which owns the dial, handle and
+// tab state machine. "briefcase buff item" spends clicks until it lands Items
+// Are Forever: +50% item drops for 50 turns, the largest single item effect
+// available to this run, for no turn.
+//
+// Which tab carries which buff is randomised every ascension, so the first
+// acquisition in a run also pays some discovery clicks. The budget is 11 clicks
+// a day, or 22 once the crank is unlocked, and the script stops cleanly when
+// they run out, so there is nothing to guard past not asking for a buff we
+// already have.
+//
+// The case can also hold a -combat enchantment. It is deliberately not set, for
+// the same reason the -combat pockets are skipped.
+void briefcase() {
+    if (!have_item($item[Kremlin's Greatest Briefcase]))
+        return;
+    if (have_effect($effect[Items Are Forever]) > 0)
+        return;
+    // An unopened case has no tabs to read, so asking for a buff would only
+    // burn clicks. Opening it is a two-day job and not something a run should
+    // be spending its budget on.
+    if (get_property("_kgbOpened") == "false")
+        return;
+    if (to_int(get_property("_kgbClicksUsed")) >= 22)
+        return;
+    cli_execute("briefcase buff item");
+}
+
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
 // Why this script forces noncombats instead of just stacking more -combat:
 //
