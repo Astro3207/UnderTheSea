@@ -419,6 +419,65 @@ void timeSpinnerRefight(location loc) {
     run_choice(1, "monid=" + wantedMonster[loc]);
 }
 
+// ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
+// The chip's skills are permanent once installed, so unlike the doctor bag or
+// the glove this costs no equipment slot at all. free_run() already spends Feel
+// Hatred as a banish; Feel Nostalgic is the one that moves turns.
+//
+// It appends the last copyable monster's whole drop table to the current fight,
+// at the original rates, so our item bonus still applies to it. Cast after a
+// diver, on anything that is not a diver, it is a second roll of the diver's
+// rivets without meeting another diver -- and meeting one costs five turns at
+// Fitzsimmons. Three casts a day.
+//
+// Two rules from the skill worth encoding: casting it on the same monster we are
+// nostalgic for does nothing but burn the charge, and the fight has to be won,
+// so this must not fire where the saber is going to Use the Force out of combat.
+//
+// Feel Envy looks like the better skill -- it forces every drop -- but it does
+// not work underwater, which is the entire route. It is deliberately absent.
+void feelNostalgic(monster mob, string page_text) {
+    if (!have_skill($skill[Feel Nostalgic]))
+        return;
+    if (to_int(get_property("_feelNostalgicUsed")) >= 3)
+        return;
+    if (mob == $monster[unholy diver])
+        return;
+    if (get_property("lastCopyableMonster") != "unholy diver")
+        return;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    if (!contains_text(page_text, "Feel Nostalgic"))
+        return;
+    use_skill($skill[Feel Nostalgic]);
+}
+
+// ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
+// The bag grants three skills, three uses each, and the script was only ever
+// spending one of them. freeKill() already equips the bag for Chest X-Ray, so
+// the other two ride along in the same accessory slot for nothing.
+//
+// Otoscope is +200% item drops for that combat. It goes on the diver, whose four
+// rivet slots make it the fattest table in the run, and it pairs with the Chest
+// X-Ray that free_kill() is about to fire: boost the drops first, then take the
+// kill for free. Cast early so the fight cannot end before it lands.
+//
+// Reflex Hammer, the third skill, is a free runaway plus a 30-turn banish, and
+// is wired into free_run() with the other banishes rather than here.
+void otoscope(monster mob, string page_text) {
+    if (to_int(get_property("_otoscopeUsed")) >= 3)
+        return;
+    if (!have_equipped($item[Lil' Doctor&trade; bag]))
+        return;
+    if (mob != $monster[unholy diver])
+        return;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    if (!contains_text(page_text, "Otoscope"))
+        return;
+    use_skill($skill[Otoscope]);
+}
+
 // ─── MUMMING TRUNK ────────────────────────────────────────────────────────────
 // Prince George is +15% item drops, or +25% on a clothes-wearing familiar, and
 // it lasts until rollover rather than for a fixed number of turns. That duration
