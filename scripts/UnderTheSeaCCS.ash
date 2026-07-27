@@ -31,6 +31,14 @@ void free_kill(string ptext, boolean drop) {
         if (freecombat == $item[groveling gravel] && drop) continue;
         if (freecombat == $item[shadow brick]
             && to_int(get_property("_shadowBricksUsed")) == 13) continue;
+        // Bank bricks for the colosseum, where each is worth exactly one
+        // turn: last run's 13 bricks were half-spent on casual free kills and
+        // the colosseum went 5 rounds paid. Same reserve pattern as the pulls
+        // and the Force ladder.
+        if (freecombat == $item[shadow brick]
+            && my_location() != $location[Mer-kin Colosseum]
+            && to_int(get_property("lastColosseumRoundWon")) < 15
+            && item_amount($item[shadow brick]) <= 6) continue;
         throw_item(freecombat);
     }
 
@@ -659,6 +667,12 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Elementary School]:
+            // A pickpocket is an extra roll OUTSIDE the drop system, immune to
+            // the per-slot cap -- and this whole table is plain-flagged
+            // (cheatsheet 30, bunwig 5, mouthsoap 20). Why the leaderboard is
+            // wall-to-wall Accordion Thieves.
+            if (my_primestat() == $stat[moxie] && can_still_steal())
+                steal();
             if (free_monster(mob)) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
@@ -718,6 +732,10 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Library]:
+            // Same as the school: healscroll/killscroll (10), worktea (10),
+            // knucklebone (10) are all stealable.
+            if (my_primestat() == $stat[moxie] && can_still_steal())
+                steal();
             if (free_monster(mob)) {
                 if (bcz_gaze_ready())
                     use_skill($skill[BCZ: Refracted Gaze]);

@@ -678,11 +678,13 @@ import <seedfinder/seedfinder.ash>;
                     && item_amount($item[astral six-pack]) > 0) {
                     use($item[astral six-pack]);
                     cli_execute("shrug Donho's Bubbly Ballad");
-                    use_skill($skill[the ode to booze]);
+                    if (have_skill($skill[The Ode to Booze]))
+                        use_skill($skill[the ode to booze]);
                     drink($item[astral pilsner]);
                 } else if (item_amount($item[astral pilsner]) > 0) {
                     cli_execute("shrug Donho's Bubbly Ballad");            
-                    use_skill($skill[the ode to booze]);
+                    if (have_skill($skill[The Ode to Booze]))
+                        use_skill($skill[the ode to booze]);
                     drink($item[astral pilsner]);
                 } else {
                     abort("no more easy diet");

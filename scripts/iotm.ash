@@ -437,14 +437,17 @@ void mapMonster(location loc) {
 // free pill needs reserving for Sneakisol, so counting it would be circular.
 int NCForceEstimate(){
     int force = 2;
+    // Remaining CHARGES, not ownership: the old version told the free-pill
+    // logic a spent arsenal was still full, and a thin-forcer run paid five
+    // raw turns hunting the skate park noncombat.
     if (have_item($item[Apriling band tuba]))
-        force += 3;
+        force += max(0, 3 - to_int(get_property("_aprilBandTubaUses")));
     if (have_item($item[McHugeLarge left ski]))
-        force += 3;
+        force += max(0, 3 - to_int(get_property("_mcHugeLargeAvalancheUses")));
     if (have_item($item[Cincho de Mayo]))
-        force += 7;
+        force += min(3, 1 + max(0, total_free_rests() - to_int(get_property("timesRested"))) / 2);
     if (have_item($item[Jurassic Parka]))
-        force += 5;
+        force += max(0, 5 - to_int(get_property("_spikolodonSpikeUses")));
     return force;
 }
 
