@@ -199,6 +199,13 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[comb jelly]) == 0
             && !contains_text(pulledToday, "," + to_int($item[comb jelly]) + ","))
             n += 1;
+        // One slot for the Shub deleveler while he is alive and unbanked --
+        // running dry here once stranded a run two turns from the end.
+        if (get_property("shubJigguwattDefeated") == "false"
+            && item_amount($item[crayon shavings]) < 4
+            && item_amount($item[null-day exploit]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[null-day exploit]) + ","))
+            n += 1;
         return n;
     }
 
@@ -2698,10 +2705,13 @@ void sorceress() {
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
 
-        // Late pulls
+        // Late pulls. The comfort/cleanup items wait until Shub is dead:
+        // they once ate the last pull slots right before a Shub retry needed
+        // the null-day exploit.
         if (pulls_remaining() > 0) {
             if (item_amount($item[crayon shavings]) < 8)
                 pullSequence($item[null-day exploit]);
+            if (get_property("shubJigguwattDefeated") == "true")
             foreach num in $strings[5401, 3679, 3775, 11583, 7014, 11706] {
                 if (!contains_text(get_property("_roninStoragePulls"), num)) {
                     pullSequence(to_item(num));
@@ -2801,16 +2811,32 @@ void sorceress() {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
             else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // Two pairs is the whole need now. Exploit first; failing
-                // that, the monkey's paw can wish the gap closed -- by this
-                // point in the run the wishes have no other claimant.
+                // Two pairs is the whole need now. Ladder: pull the exploit
+                // in place (the paw CANNOT wish shavings -- "That wish is
+                // quite impossible", and a refused wish consumes nothing, so
+                // a wish loop once hung a run); then free golem fights, which
+                // drop shavings, off whatever summons remain; then an abort
+                // that names the shortfall.
+                if (item_amount($item[null-day exploit]) == 0)
+                    pullSequence($item[null-day exploit]);
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
+                int golemTries;
                 while (item_amount($item[crayon shavings]) < 4
                     && have_effect($effect[null afternoon]) == 0
-                    && available_amount($item[cursed monkey's paw]) > 0
-                    && to_int(get_property("_monkeyPawWishesUsed")) < 5)
-                    cli_execute("monkeypaw item crayon shavings");
+                    && count_summons() >= 1 && golemTries < 6) {
+                    golemTries += 1;
+                    use_familiar("itdrop");
+                    tempEquipment("item drop", if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
+                    mood("itdrop");
+                    summon($monster[black crayon golem]);
+                    run_combat();
+                }
+                if (item_amount($item[crayon shavings]) < 4
+                    && have_effect($effect[null afternoon]) == 0)
+                    abort("Shub prep is short: acquire 4 crayon shavings or a"
+                        + " null-day exploit (Null Afternoon) and rerun --"
+                        + " rollover pulls or golem fights both work.");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)

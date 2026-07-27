@@ -854,6 +854,10 @@ void main(int round, monster mob, string page_text) {
                     use_if_have_skill(page_text, sk);
                 use_skill($skill[Club 'Em Into Next Week]);
             }
+            // In-place summons (the Shub shavings fallback) reach this case
+            // with no location logic to finish the fight; a no-op when a
+            // location case already resolved it.
+            cleanUp();
             break;
         case $monster[unholy diver]:
             if (my_familiar() == $familiar[chest mimic])
