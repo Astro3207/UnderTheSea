@@ -2160,16 +2160,22 @@ void seaMonkees() {
         }
     }
 }
-// ─── EAGLE BANISH RUNDOWN ─────────────────────────────────────────────────────
+// ─── EAGLE BANISH RE-AIM ──────────────────────────────────────────────────────
 // uts_runOutEagleBanish (experimental): the patriotic eagle's Patriotic
 // Screech leaves the construct phylum banished after the run ends, which can
-// make other scripts misbehave. When enabled, burn the banish out farming
-// unblemished pearls until mafia reports the phylum free again. Pearl
-// progress is 1.7% * floor(zone resistance / 3) per combat, capped at 10%
-// at 18 resistance -- so the outfit maximizes the zone's element, not item
-// drop -- and each zone's pearl is claimable once a day, so the farm
-// rotates to the next open zone with an unclaimed pearl. No such zone, no
-// Fishy, or no adventures is a loud abort, not a silent skip.
+// make other scripts misbehave. Rather than waiting the banish out, re-aim
+// it: the screech recharges after 11 combats with the eagle out
+// (screechCombats counts down to 0), and one unblemished pearl costs about
+// that to farm at capped resistance (progress is 1.7% * floor(res/3) per
+// combat, 10% cap at 18 -- so the outfit maximizes the zone's element, and
+// each zone's pearl is once a day, so the farm picks an open zone with an
+// unclaimed pearl). Once ready, screech the first smut orc at the Logging
+// Camp: recasting moves the phylum banish onto orcs and constructs are
+// free immediately. Missing pieces (eagle, zones, Fishy) abort loudly.
+
+string screechFilter(int round, monster mob, string page_text) {
+    return "skill 7451";   // %fn, Release the Patriotic Screech!
+}
 
 // Both post-run preps start by emptying Hagnk's -- the run is over, so
 // everything left in storage may as well be on hand for gearing and
@@ -2184,7 +2190,11 @@ void runOutEagleBanish() {
         return;
     if (!contains_text(get_property("banishedPhyla"), "construct"))
         return;
-    step("postloop: running out the Patriotic Screech construct banish");
+    step("postloop: re-aiming the Patriotic Screech off the construct phylum");
+    if (!have_familiar($familiar[Patriotic Eagle]))
+        abort("uts_runOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
+    if (!can_adventure($location[The Smut Orc Logging Camp]))
+        abort("uts_runOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
     pullEverything();
     string [location] pearlZoneRes = {
         $location[Anemone Mine]:          "spooky res",
@@ -2207,26 +2217,29 @@ void runOutEagleBanish() {
         $location[The Marinara Trench]:   "_unblemishedPearlMarinaraTrenchProgress",
         $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepestsProgress"
     };
+    // The eagle stays out for the whole farm -- its combats are what
+    // recharge the screech -- and the bathysphere lets it act underwater.
+    use_familiar($familiar[Patriotic Eagle]);
     int spent;
     location current = $location[none];
     while (true) {
-        boolean banished = contains_text(get_property("banishedPhyla"), "construct");
-        // A part-farmed pearl gets finished even after the banish expires:
+        boolean screechReady = to_int(get_property("screechCombats")) == 0;
+        // A part-farmed pearl gets finished even once the screech is ready:
         // zone progress doesn't survive rollover, so walking away would
-        // throw the turns already spent after the banish.
+        // throw the turns already spent.
         boolean midPearl = current != $location[none]
             && get_property(pearlClaimed[current]) != "true"
             && to_int(get_property(pearlProgress[current])) > 0;
-        if (!banished && !midPearl)
+        if (screechReady && !midPearl)
             break;
         if (have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
-                + " turns with the rundown unfinished.");
+                + " turns with the re-aim unfinished.");
         if (my_adventures() == 0)
             abort("uts_runOutEagleBanish: out of adventures after " + spent
-                + " turns with the rundown unfinished.");
-        if (spent >= 120)
-            abort("uts_runOutEagleBanish: still going after 120 turns; something is wrong, bailing out.");
+                + " turns with the re-aim unfinished.");
+        if (spent >= 40)
+            abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
         if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
             current = $location[none];
             foreach loc in pearlZoneRes {
@@ -2236,15 +2249,19 @@ void runOutEagleBanish() {
                 }
             }
             if (current == $location[none])
-                abort("uts_runOutEagleBanish: no open pearl zone with today's pearl unclaimed, so the construct banish can't be farmed out usefully.");
-            use_familiar("itdrop");
+                abort("uts_runOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
             mood(pearlZoneRes[current]);
             tempEquipment(pearlZoneRes[current], swimmingTrunks() + bathysphere($item[none]));
         }
         adv1(current);
         spent += 1;
     }
-    print("Patriotic Screech construct banish is gone after " + spent + " pearl-farming turns.", "blue");
+    // Re-aim: the screech ends the fight and moves the phylum banish onto
+    // smut orcs (phylum: orc), freeing constructs in a single adventure.
+    adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
+    if (contains_text(get_property("banishedPhyla"), "construct"))
+        abort("uts_runOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
+    print("Patriotic Screech re-aimed at smut orcs after " + spent + " pearl-farming turns; constructs are free.", "blue");
 }
 
 // uts_prepCodpiece: leave the run with the codpiece already loaded for the
