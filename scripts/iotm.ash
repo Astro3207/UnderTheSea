@@ -935,11 +935,21 @@ string gloveEquip(location loc) {
     return "";
 }
 
+// Returns true if this monster provides a free fight. Lives here (not the
+// CCS) so the re-roll policies below can refuse to waste a cast on one:
+// free wanderers also burn delay, advancing turns_spent wherever they land.
+boolean free_monster(monster mob) {
+    return $monsters[black crayon golem, time cop,sausage goblin,
+        kid who is too old to be Trick-or-Treating,
+        suburban security civilian, vandal kid] contains mob;
+}
+
 // Casts whichever re-roller is available: Macrometeorite (Meteor Lore, 10 a
 // day, no equipment slot) first, the glove's CHEAT CODE second. On true the
-// fight holds a NEW monster and the caller MUST end the consult pass -- every
-// branch below it would still be looking at the stale `mob`, and worst case
-// free_run() runs away from the very target the re-roll produced.
+// fight holds a NEW monster and the caller MUST re-dispatch the CCS main()
+// with last_monster() and a re-fetched fight page -- a bare return would fall
+// through to the CCS's safety abort, since mafia does not re-invoke a consult
+// script that returns mid-combat.
 boolean rerollEnemy(string page_text) {
     if (macroReady() && contains_text(page_text, "Macrometeorite")) {
         step("Macrometeorite: re-rolling the monster");
@@ -959,6 +969,10 @@ boolean rerollEnemy(string page_text) {
 // still owed.
 boolean replaceEnemy(monster mob, string page_text) {
     if (my_location() != $location[The Wreck of the Edgar Fitzsimmons])
+        return false;
+    // Never re-roll a free fight: it costs nothing, burns delay, and dies to
+    // the location logic's fall-through kill.
+    if (free_monster(mob))
         return false;
     // Never re-roll the monster we came for, and stop once its drops are in.
     if (mob == $monster[unholy diver])
