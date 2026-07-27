@@ -71,6 +71,11 @@ holding slots back for items it knows it will need later (`reservedPulls()`).
 Mall purchases into storage respect `autoBuyPriceLimit` and confirm before
 exceeding it.
 
+At the start of each run the script logs a pull checklist: what is already
+stocked in Hagnk's, what will be mall-bought if the route needs it, and — in
+red — anything absent that cannot be bought and should be acquired ahead of
+time.
+
 ### Pulled early, every run
 
 | Item | Why |
@@ -126,7 +131,9 @@ exceeding it.
 ## IOTMs the script uses
 
 None are strictly required — every use is guarded — but turn count scales
-with what you own.
+with what you own. At the start of each run the script logs which of these
+your account owns and which are missing, as a shopping list for future
+acquisitions.
 
 ### The most important ones
 
