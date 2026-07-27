@@ -32,9 +32,7 @@ void free_kill(string ptext, boolean drop) {
         if (freecombat == $item[shadow brick]
             && to_int(get_property("_shadowBricksUsed")) == 13) continue;
         // Bank bricks for the colosseum, where each is worth exactly one
-        // turn: last run's 13 bricks were half-spent on casual free kills and
-        // the colosseum went 5 rounds paid. Same reserve pattern as the pulls
-        // and the Force ladder.
+        // turn; outside it they only fire once that reserve is safe.
         if (freecombat == $item[shadow brick]
             && my_location() != $location[Mer-kin Colosseum]
             && to_int(get_property("lastColosseumRoundWon")) < 15
@@ -169,8 +167,8 @@ item bangB(){
     return $item[none];
 }
 
-// Shub's percentage delevelers, strongest first, per the wiki: jam band
-// bootleg 50%, crayon shavings 30%, rattler rattle and electronics kit 25%.
+// Shub's percentage delevelers, strongest first: jam band bootleg 50%,
+// crayon shavings 30%, rattler rattle and electronics kit 25%.
 // All multiplicative, none deal damage (which would trigger his doubling
 // 20%-max-HP retaliation).
 item shubDeleveler() {
@@ -212,9 +210,8 @@ void main(int round, monster mob, string page_text) {
     // own definition (the name is not bound until the definition completes),
     // so the loop, not recursion, is the dispatch mechanism.
     while (true) {
-    // One extra roll of a fat drop table, once a day, for no turn -- on
-    // fights that will be WON. (Spaded: pairing it with Use the Force wastes
-    // the cast; duplicateMonster() refuses those fights itself.)
+    // One extra roll of a fat drop table, once a day, on fights that will be
+    // WON; duplicateMonster() refuses fights the saber is about to Force.
     duplicateMonster(mob, page_text);
     // Deterministic diver: insurance egg, then Use the Force hands over every
     // non-conditional drop and ends the fight -- nothing below applies.
@@ -369,7 +366,7 @@ void main(int round, monster mob, string page_text) {
         case $location[The Marinara Trench]:
         case $location[The Dive Bar]:
         case $location[Anemone Mine]:
-            // Fixed: was checking sea cowboy hat twice, second should be sea chaps
+            // Lasso training only counts with both trainer pieces worn.
             if (have_equipped($item[sea cowboy hat]) && have_equipped($item[sea chaps])) {
                 throw_item($item[sea lasso]);
             }
@@ -377,10 +374,8 @@ void main(int round, monster mob, string page_text) {
                 steal();
                 use_if_have_skill(page_text,$skill[swoop like a bat]);
             }
-            // The corral gate applies to both targets: sniffing feeds the step4
-            // pearl hunt, which is over once the corral has started. && used to
-            // bind it to the tippler arm only, so the squid kept getting
-            // olfacted into the -combat noncombat hunt afterwards.
+            // The corral gate applies to both targets: sniffing feeds the
+            // step4 pearl hunt, which is over once the corral has started.
             if (((mob == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
                 || (mob == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")))
                 && $location[The coral corral].turns_spent == 0) {
@@ -668,10 +663,9 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Elementary School]:
-            // A pickpocket is an extra roll OUTSIDE the drop system, immune to
-            // the per-slot cap -- and this whole table is plain-flagged
-            // (cheatsheet 30, bunwig 5, mouthsoap 20). Why the leaderboard is
-            // wall-to-wall Accordion Thieves.
+            // A pickpocket is an extra roll OUTSIDE the drop system, immune
+            // to the per-slot cap, and this whole table is plain-flagged
+            // (stealable).
             if (my_primestat() == $stat[moxie] && can_still_steal())
                 steal();
             if (free_monster(mob)) {

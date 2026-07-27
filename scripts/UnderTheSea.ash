@@ -2,16 +2,9 @@ import iotm.ash;
 import <seedfinder/seedfinder.ash>;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
-// These replace what used to be hardcoded checks against the original author's
-// character id. Set them once with the mafia CLI; both default to off.
-//
-//   set uts_godRunGuard = true
-//       Abort at <=17 turns played if the dreadscroll 7 clue is still unknown,
-//       so you can eat a sushi for it instead of burning the record attempt.
-//       Only worth enabling if you are actually chasing a top turncount.
-//
-//   set uts_postloopCommand = postloop
-//       CLI command to run once the loop finishes. Leave empty to skip.
+// Per-account preferences, set once with the mafia CLI; all default to off.
+// uts_godRunGuard, uts_postloopCommand, uts_runOutEagleBanish and
+// uts_prepCodpiece -- see the README for what each does.
 //
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
@@ -156,10 +149,7 @@ import <seedfinder/seedfinder.ash>;
     // whatever asks first.
     //
     // Only one of each unique item may be pulled per day, so every entry here
-    // reserves at most ONE slot no matter how many the route still needs. The
-    // old version reserved 3 - prayerbeads owned, which looked prudent but could
-    // not be spent: a second prayerbead is simply not pullable the same day, so
-    // those extra slots were held back and then wasted.
+    // reserves at most ONE slot no matter how many the route still needs.
     //
     // The five protected items are the ones that cost real turns to farm once
     // the zones the route already camps in have been accounted for:
@@ -199,8 +189,7 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[comb jelly]) == 0
             && !contains_text(pulledToday, "," + to_int($item[comb jelly]) + ","))
             n += 1;
-        // One slot for the Shub deleveler while he is alive and unbanked --
-        // running dry here once stranded a run two turns from the end.
+        // One slot for the Shub deleveler while he is alive and unbanked.
         if (get_property("shubJigguwattDefeated") == "false"
             && item_amount($item[crayon shavings]) < 4
             && item_amount($item[null-day exploit]) == 0
@@ -402,9 +391,8 @@ import <seedfinder/seedfinder.ash>;
                             && item_amount($item[ultra-soft ferns]) == 0) continue;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
-                        // Ownership first: the cli command hard-errors without
-                        // the helmet ("You need an Apriling band helmet"),
-                        // killing the run on accounts that lack it.
+                        // Ownership first: the cli command hard-errors
+                        // without the helmet.
                         if (ef == $effect[Apriling Band Patrol Beat] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
@@ -1357,9 +1345,8 @@ import <seedfinder/seedfinder.ash>;
         if (forcesAfterHealer() <= 0)
             yellowRayPrep();
 
-        // Unconditional: a dangling `else` used to swallow this line, so the
-        // itdrop buffs were skipped on every pass that still had a victim to
-        // set -- which was most of the corral hunt.
+        // Unconditional: the itdrop buffs must go up on every pass, victim
+        // set or not.
         mood("itdrop");
         // sea cow is 1 of 3 here and this loop runs until lasso, cowbell x3 and
         // leather x2 are all in hand, so it is the third-best use of a charge.
@@ -1736,8 +1723,7 @@ void seaMonkees() {
         use_familiar("-combat");
         if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
             // The Outpost burglar drops this anyway, so yield the slot if a
-            // reserved item still needs it. (The old stray semicolon meant the
-            // use() below ran whether or not the pull actually happened.)
+            // reserved item still needs it.
             if (pulls_remaining() > reservedPulls())
                 pullSequence($item[mer-kin hidepaint]);
             if (item_amount($item[mer-kin hidepaint]) > 0)
@@ -1756,10 +1742,8 @@ void seaMonkees() {
                 conditional += baseball_equip();
             } else if ((my_primestat() == $stat[mysticality] && !contains_text(get_property("trackedMonsters"), "giant squid"))
                     || (my_primestat() == $stat[moxie] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler"))) {
-                // && bound tighter than || here, so the ownership check only
-                // covered the moxie arm and a poleless myst run hit a
-                // "Missing McHugeLarge left pole" abort. if_equip() is the
-                // ownership check.
+                // if_equip() is the ownership check for the pole; both class
+                // arms need it.
                 conditional += if_equip($item[McHugeLarge left pole]);
             }
             if (baseballPlayers() >= 9 && to_int(get_property("_baseballInnings")) <= 2)
@@ -1917,10 +1901,9 @@ void seaMonkees() {
                 }
                 tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]) + if_equip($item[baseball diamond]));
                 print("Item drop rate is " + numeric_modifier("item drop"));
-                // Squint is NOT cast here any more: diver #1 is always Forced
-                // or yellow-rayed, and forced drops ignore item bonuses -- the
-                // once-a-day squint was being burned for nothing while the
-                // corral one-turn attempt downstream went without it.
+                // Squint is not cast here: diver #1 is Forced or yellow-rayed
+                // and forced drops ignore item bonuses, so the once-a-day
+                // squint is saved for the corral attempt.
                 if (!diverForceReady())
                     yellowRayPrep();
                 summon($monster[unholy diver]);
@@ -2162,17 +2145,14 @@ void seaMonkees() {
     }
 }
 // ─── EAGLE BANISH RE-AIM ──────────────────────────────────────────────────────
-// uts_runOutEagleBanish (experimental): the patriotic eagle's Patriotic
-// Screech leaves the construct phylum banished after the run ends, which can
-// make other scripts misbehave. Rather than waiting the banish out, re-aim
-// it: the screech recharges after 11 combats with the eagle out
-// (screechCombats counts down to 0), and one unblemished pearl costs about
-// that to farm at capped resistance (progress is 1.7% * floor(res/3) per
-// combat, 10% cap at 18 -- so the outfit maximizes the zone's element, and
-// each zone's pearl is once a day, so the farm picks an open zone with an
-// unclaimed pearl). Once ready, screech the first smut orc at the Logging
-// Camp: recasting moves the phylum banish onto orcs and constructs are
-// free immediately. Missing pieces (eagle, zones, Fishy) abort loudly.
+// uts_runOutEagleBanish (experimental): clear the leftover Patriotic Screech
+// construct banish by re-aiming it. The screech recharges after 11 eagle
+// combats (screechCombats counts down to 0), about what one pearl costs to
+// farm: progress is 1.7% * floor(res/3) per combat (10% cap at 18), one
+// pearl per zone per day, so the outfit maximizes the zone's element and the
+// farm picks an open zone with an unclaimed pearl. Once recharged, screech
+// the first monster at the Smut Orc Logging Camp -- recasting moves the
+// banish onto the orc phylum. Missing pieces abort loudly.
 
 string screechFilter(int round, monster mob, string page_text) {
     return "skill 7451";   // %fn, Release the Patriotic Screech!
@@ -2673,7 +2653,6 @@ void sorceress() {
             // Verify all non-scroll-7 clues are found
             for x from 1 to 8 {
                 if (x == 7) continue;
-                // Fixed: was comparing string to int, and had capital X bug on x==5
                 if (get_property("dreadScroll" + x) == "0") {
                     if (x == 2) {
                         print("Missed the healscroll hint", "red");
@@ -2856,9 +2835,8 @@ void sorceress() {
     if (my_path().id == 55 || (my_path().id == 0 && boss == "Shub")){
         // ── Gladiator gear grind ──────────────────────────────────────────────────
         step("phase: gymnasium (gladiator gear)");
-        // || not &&: the colosseum outfit needs BOTH pieces, and with && a run
-        // resumed with only one of them exited the loop and aborted on the
-        // missing piece at the colosseum maximizer call.
+        // || not &&: the colosseum outfit needs BOTH pieces, so keep looping
+        // while either is missing.
         while (available_amount($item[Mer-kin gladiator mask]) == 0
             || available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
             gymnasium();
@@ -2938,12 +2916,11 @@ void sorceress() {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
             else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // The need is 4 shaving-EQUIVALENTS: the CCS's shubDelevel()
-                // throws the whole wiki family -- jam band bootleg counts
+                // The need is 4 shaving-EQUIVALENTS: shubDelevel() throws
+                // the whole deleveler family -- jam band bootleg counts
                 // double (50%), rattler rattle and electronics kit count one
-                // (25%) -- and the paw sometimes grants those even when it
-                // refuses the exploit and the shavings ("That wish is quite
-                // impossible" consumes nothing, so testing wishes is free).
+                // (25%) -- and a refused paw wish ("That wish is quite
+                // impossible") consumes nothing, so testing wishes is free.
                 // Ladder: pull the exploit in place, then free golem fights
                 // (they drop shavings), then an abort naming every exit.
                 if (item_amount($item[null-day exploit]) == 0)
@@ -2981,25 +2958,22 @@ void sorceress() {
                 if (have_effect(ef) > 0)
                     cli_execute("uneffect " + ef);
             }
-            // NO familiar against Shub. He retaliates against familiar
-            // actions, escalating each time -- a Jill-of-All-Trades lifesteal
-            // drew a 9,063-damage response and ended a run. "itdrop" is only
-            // safe here when it resolves to a passive fairy, and under
-            // Driving Waterproofly it resolves to Jill, who acts.
+            // NO familiar against Shub: he retaliates against familiar
+            // actions, escalating each time, and "itdrop" can resolve to a
+            // familiar that acts.
             use_familiar($familiar[none]);
-            // Per the wiki, the fight's rules are: any damage from a source
-            // other than a standard attack draws 20% of your max HP,
-            // DOUBLING each instance (hence no familiar); damage past 500 is
-            // crushed to 500+(Z-500)^0.6, so reliability beats big swings;
-            // his attacks are 95% elemental but maxed Damage Absorption is
-            // still prescribed; and the pre-fight bolt hits for HALF YOUR
-            // CURRENT MP, so walk in empty.
+            // Fight rules: damage from any source other than a standard
+            // attack draws 20% of max HP, DOUBLING each instance (hence no
+            // familiar); damage past 500 is crushed to 500+(Z-500)^0.6, so
+            // reliability beats big swings; maxed Damage Absorption still
+            // helps; and the pre-fight bolt hits for half your CURRENT MP,
+            // so walk in empty.
             tempEquipment("weapon damage, mus, moxie, damage absorption",
                 "mer-kin gladiator mask,mer-kin gladiator tailpiece," + if_equip($item[legendary seal-clubbing club]));
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            // Wiki-prescribed miss/fumble insurance, both one-fight pulls.
+            // Miss/fumble insurance, both one-fight pulls.
             if (item_amount($item[gremlin juice]) == 0)
                 pullSequence($item[gremlin juice]);
             if (item_amount($item[handful of hand chalk]) == 0)

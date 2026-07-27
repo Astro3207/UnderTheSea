@@ -38,9 +38,8 @@ boolean have_item(item it) {
         || storage_amount(it) > 0;
 }
 
-// have_item() cannot see gear equipped on terrarium familiars -- the
-// miniature crystal ball usually lives on one, and the checklist called it
-// missing while the owner was looking right at it.
+// Like have_item(), but also sees gear equipped on terrarium familiars,
+// which have_item() misses.
 boolean have_item_anywhere(item it) {
     if (have_item(it))
         return true;
@@ -52,8 +51,8 @@ boolean have_item_anywhere(item it) {
 }
 
 // A function, not a global set by initialization(): the CCS runs in its own
-// interpreter where initialization() never executes, so a global was stuck at
-// its default (false) for every combat decision that read it.
+// interpreter where initialization() never executes, so a global set there
+// would read as its default.
 boolean lowShiny() {
     return !have_item($item[2002 Mr. Store Catalog])
         && !have_item($item[cursed monkey's paw])
@@ -92,11 +91,9 @@ int [location] wantedMonster = {
     $location[Madness Bakery]:                      1750
 };
 
-// Need-driven wrapper the three pickers actually call. The static table maps
-// the Elementary School to the teacher, but per monsters.txt the cheatsheet is
-// the MONITOR's drop (30%) -- the teacher only carries the bunwig (5% hat
-// slot). During the 9-sheet grind every charge pointed at a teacher was worth
-// zero cheatsheets.
+// Need-driven wrapper the three pickers call. The cheatsheet is the monitor's
+// drop, not the teacher's, so the school targets the monitor while the sheet
+// grind is live and falls back to the static table otherwise.
 int zoneTarget(location loc) {
     if (loc == $location[mer-kin elementary school] && cheatsheetsNeeded())
         return 852;   // Mer-kin monitor
@@ -136,10 +133,8 @@ boolean saberZone(location loc) {
 // (Its c-flagged drops, glowing syringe and unholy water, are not forced; we
 // want neither.)
 //
-// Duplicate is NOT part of this plan: spaded on a live run, doubling only
-// pays on a WIN, and a Forced fight is never won -- a Duplicated, Forced
-// diver dropped a single table. The day's cast belongs to fat tables the
-// route actually kills; see duplicateMonster().
+// Duplicate is not part of this plan: doubling pays only on a WIN, and a
+// Forced fight is never won. duplicateMonster() owns the day's cast.
 
 // The rivet hunt is live while nothing that fills the diving-helmet slot is
 // owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
@@ -411,18 +406,10 @@ string if_equip(item it) {
 // zone into a monster of your choosing -- the same job as the Peridot of Peril,
 // answered in UnderTheSea_Choice.ash from the same wantedMonster table.
 //
-// The Peridot is once per zone per day, so these are the extra charges for when
-// you still need more of a drop after the Peridot there is spent. Charges are
-// scarce, so they go to the longest odds first. Chance of drawing the monster we
-// actually want, per combats.txt:
-//
-//     The Wreck of the Edgar Fitzsimmons   unholy diver       1 in 5
-//     An Octopus's Garden                  Neptune flytrap    1 in 4
-//     The Coral Corral                     sea cow            1 in 3
-//
-// The Mer-kin Outpost is left out for the same reason the saber is: the lockkey
-// needs ~25 turns actually spent there, so skipping to a chosen monster and
-// shortening the zone saves nothing.
+// The Peridot is once per zone per day; these are the extra charges once the
+// Peridot's is spent. They go to the longest odds first (diver 1-in-5,
+// flytrap 1-in-4, sea cow 1-in-3). The outpost is excluded: its lockkey
+// gates on turns spent, so a chosen encounter saves nothing there.
 
 boolean mapReady() {
     return have_skill($skill[Map the Monsters])
@@ -453,9 +440,7 @@ void mapMonster(location loc) {
 // free pill needs reserving for Sneakisol, so counting it would be circular.
 int NCForceEstimate(){
     int force = 2;
-    // Remaining CHARGES, not ownership: the old version told the free-pill
-    // logic a spent arsenal was still full, and a thin-forcer run paid five
-    // raw turns hunting the skate park noncombat.
+    // Counts remaining CHARGES, not ownership.
     if (have_item($item[Apriling band tuba]))
         force += max(0, 3 - to_int(get_property("_aprilBandTubaUses")));
     if (have_item($item[McHugeLarge left ski]))
@@ -476,22 +461,10 @@ int NCForceEstimate(){
 // no turn and carries no risk, and it shortens every drop-farming loop in the
 // script, so it is called wherever we are already setting up for +item.
 //
-// Digitize is deliberately NOT used, despite being the obvious candidate:
-//
-//   - It does not create a free fight. It creates a wandering monster, and that
-//     wanderer costs an adventure when it lands.
-//   - Copies arrive 7 turns after the cast, then +27, +57. Recasting resets the
-//     counter, so 3 casts is roughly 3 copies at 7-turn spacing, and none of it
-//     can be aimed at a particular zone.
-//   - The only long contiguous block in this route is the Mer-kin Outpost, and
-//     that block is spent hunting NONCOMBATS: the stashbox (choices 313/314/315),
-//     prayerbeads and the lockkey. A wandering combat there displaces exactly
-//     what we are looking for.
-//   - Wanderers outrank forced noncombats, so a mistimed copy can waste a Cincho
-//     charge on top of the turn.
-//
-// Map the Monsters already supplies 3 precisely aimed encounters with none of
-// that downside, which makes digitize a strictly worse version of the same idea.
+// Digitize is deliberately NOT used: its wanderers cost an adventure, arrive
+// on their own schedule, cannot be aimed at a zone, displace the noncombats
+// the outpost block hunts, and outrank forced noncombats. Map the Monsters
+// does the same job aimed and free.
 
 void sourceEnhance() {
     if (get_campground()[$item[Source terminal]] == 0)
@@ -503,24 +476,10 @@ void sourceEnhance() {
     cli_execute("terminal enhance items.enh");
 }
 
-// duplicate.edu is the other educate file worth routing in, and unlike digitize
-// it costs nothing to slot. Duplicate turns a monster into two, and each copy
-// rolls the whole drop table separately, so one cast is worth exactly one extra
-// encounter of that monster -- for no turn at all.
-//
-// Slotting it displaces nothing. The two active educate slots hold extract.edu
-// and digitize.edu, and this script casts neither: Extract only farms Source
-// essence, which we have no use for in-run, and digitize was rejected outright
-// for the reasons above.
-//
-// It is spent on the unholy diver. That is the rarest monster we still farm, at
-// 1 in 5, and it carries four separate rusty rivet slots at 20/15/10/5% on top
-// of the porthole and the broken helmet, so it has by far the fattest drop table
-// in the run. One extra roll of it is worth roughly the five turns it would take
-// to meet another diver.
-//
-// A cast against an uncopyable monster does not consume the daily use, so a
-// misfire costs only MP and a round.
+// duplicate.edu: one cast a day turns a monster into two, and each copy rolls
+// the whole drop table -- one extra encounter for no turn. Slotting it
+// displaces nothing this script casts. Targeting lives in duplicateMonster();
+// a cast against an uncopyable monster does not consume the daily use.
 
 boolean duplicateEducated() {
     return get_property("sourceTerminalEducate1") == "duplicate.edu"
@@ -547,8 +506,6 @@ void sourceEducate() {
 void duplicateMonster(monster mob, string page_text) {
     if (!duplicateReady() || !duplicateEducated())
         return;
-    // Spaded on a live run: Duplicate does NOT double Use the Force's
-    // handover -- a Duplicated, Forced diver dropped a single table.
     // Doubling pays only on a WIN, so never spend the day's cast on a fight
     // the saber is about to Force.
     boolean aboutToForce = have_equipped($item[Fourth of May Cosplay Saber])
@@ -556,13 +513,10 @@ void duplicateMonster(monster mob, string page_text) {
             || (mob == $monster[sea cow] && seaCowNeeded() && forcesAfterHealer() > 0));
     if (aboutToForce)
         return;
-    // Best killed tables, in the order the route meets them: the Black
-    // Crayon Golem is a free fight with a flat 100% crayon shavings drop and
-    // shavings are the Shub deleveler that can't be wished for -- doubling
-    // the summon banks a spare pair. The unForced sea cow and the monitor
-    // during the sheet grind are the runners-up, and the diver only rates a
-    // cast on saberless kits, where a doubled kill (8 rivets) ends the hunt
-    // outright.
+    // Best killed tables the route meets: the golem (free fight, flat 100%
+    // crayon shavings -- the Shub deleveler), then the unForced sea cow, the
+    // sheet-grind monitor, and the diver only on saberless kits, where a
+    // doubled kill's 8 rivets end the hunt outright.
     boolean wanted = (mob == $monster[Black Crayon Golem] && item_amount($item[crayon shavings]) < 4)
         || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive())
         || (mob == $monster[Mer-kin monitor] && cheatsheetsNeeded())
@@ -581,16 +535,10 @@ void duplicateMonster(monster mob, string page_text) {
 // but only once the censer has actually been stoked -- they do not accrue on
 // their own, so the run has to go and claim them.
 //
-// One shop item is already a consumer in this script: the CCS throws a Septapus
-// summoning charm at the shadow slab, and the charm makes seven pickpocket
-// attempts. A pickpocket takes an item outside the drop roll entirely, which
-// makes it immune to the 100%-per-slot cap that blunts every +item buff we
-// stack, so it is the one thing on these shelves that reliably shortens a loop.
-//
-// Nothing else there earns its embers on the turn axis: wheel of camembert and
-// head of emberg lettuce buy adventures, the jacket, bembershoot and hat of
-// remembering are resistance and MP, and structural ember and the miniature
-// Embering Hulk are crafting and a fight we have no use for.
+// All embers buy Septapus summoning charms: the CCS throws them at the
+// shadow slab, and each charm's seven pickpockets take items outside the
+// drop roll, immune to the per-slot cap. Nothing else in the shop shortens
+// the run.
 void censer() {
     if (!have_item($item[Sept-Ember Censer]))
         return;
@@ -617,10 +565,9 @@ void censer() {
 // it is a yellow ray: it grants Everything Looks Yellow for 29 turns, which
 // collides with the Jurassic Parka dilophosaur ray the script already fires at
 // the unholy diver, so it would cost more than it gives.
-// `pill` must be a mafia pillkeeper KEYWORD, per the command's own usage
-// string: [free] explode | extend | noncombat | element | stat | familiar |
-// lucky | random. Pill names are not accepted -- "fidoxene" opened choice
-// 1395 and then submitted nothing valid, killing the run.
+// `pill` must be a mafia pillkeeper KEYWORD ([free] explode | extend |
+// noncombat | element | stat | familiar | lucky | random); the command does
+// not accept pill names.
 void pillKeeper(string pill) {
     if (!have_item($item[Eight Days a Week Pill Keeper]))
         return;
@@ -646,10 +593,8 @@ void pillKeeper(string pill) {
 // elemental resistance, neither of which shortens a farming loop -- so all 10
 // charges go to Become a Bat.
 //
-// The form is granted mid-combat and item drops are rolled when the combat ends,
-// so the +50% applies to the fight it is cast in. That is the one link in this
-// chain taken from how every other mid-combat +item effect behaves rather than
-// from a direct spade, so if drops ever look wrong, check here first.
+// Drops are rolled when the combat ends, so the +50% applies to the fight it
+// is cast in.
 
 boolean cloakeReady() {
     return have_item($item[vampyric cloake])
@@ -692,21 +637,12 @@ void becomeBat(string page_text) {
 // Also handed to you automatically at the start of a run. 10 minutes a day, and
 // "Travel to a Recent Fight" costs 3 of them, so 3 uses.
 //
-// It is NOT a free fight -- the refight costs an adventure. What it buys is
-// certainty: instead of spending a turn on a 1-in-4 or 1-in-5 roll for the
-// monster we want, we spend a turn on that monster directly. At Fitzsimmons the
-// unholy diver is 1 of 5, so each use replaces about five random turns with one.
-// That makes it the same trade as Map the Monsters, just paid for with a turn,
-// and it stacks on top of the three Map charges rather than competing with them.
-//
-// The monster has to be in the zone's combat queue, which means it must have
-// been encountered in the last five combats there. Rather than guess, we only
-// fire immediately after winning against the target in that very zone, which
-// guarantees it is queued.
-//
-// mafia's own "timespinner" CLI command only covers food and pranks, so the
-// choice chain is walked by hand: 1195 -> Travel to a Recent Fight -> 1196,
-// where the monster is submitted as monid.
+// Not a free fight -- the refight costs its adventure; it buys a guaranteed
+// encounter where the target is a rare draw. The monster must be in the
+// zone's recent-combat queue, so it only fires straight after fighting the
+// target there. mafia's "timespinner" CLI covers only food and pranks, so
+// the choice chain (1195 -> Travel to a Recent Fight -> 1196, monid submit)
+// is walked by hand.
 
 boolean timeSpinnerReady() {
     return have_item($item[Time-Spinner])
@@ -768,24 +704,11 @@ void timeSpinnerRefight(location loc) {
 }
 
 // ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
-// "lecture on relativity" makes you fight the current monster again straight
-// after the combat, and that chained fight is a copy -- it costs no adventure.
-// Spent on the unholy diver, one cast is a whole extra diver, which is five
-// turns of Fitzsimmons we never pay for.
-//
-// The three lectures share one daily pool, and the size of that pool is set by
-// buffed familiar weight through n^2 + 1, where n is the number already cast.
-// At the weights this route reaches -- Fidoxene floors familiars at 20 and the
-// mood adds Leash, Empathy and Thoughtful Empathy on top -- that is about seven
-// casts, far more than the rivet hunt actually needs.
-//
-// What it costs: the Professor is a plain 1x Fairy where Red-Nosed Snapper is
-// 1.5x underwater, and it cannot breathe underwater at all, so bathysphere()
-// spends the familiar equipment slot on a little bitty bathysphere. Both are
-// real losses and both are dwarfed by not spending the turns.
-//
-// It is swapped in only for the rivet hunt and only while lectures remain, so
-// the rest of the run keeps the better drop familiar.
+// "lecture on relativity" chains a free copy of the current fight. The daily
+// pool is gated on buffed familiar weight (next cast needs n^2 + 1 lbs). The
+// Professor is a weaker underwater fairy and needs the bathysphere, so it is
+// swapped in only where copies beat drop bonus and swapped out when the
+// lectures run dry.
 
 // Conservative: familiar_weight() of an inactive familiar is its base weight, so
 // this can under-count while Fidoxene's floor is up. Under-counting only ends the
@@ -841,19 +764,11 @@ void lectureOnRelativity(monster mob, string page_text) {
 }
 
 // ─── JANUARY'S GARBAGE TOTE: BROKEN CHAMPAGNE BOTTLE ──────────────────────────
-// The bottle doubles the item drop BONUS, and it stacks fully with Steely-Eyed
-// Squint for a 4x multiplier. Against the bonus this script already carries that
-// is the largest single item effect available anywhere in the run.
-//
-// It holds 11 ounces and loses one after every winning combat, including free
-// fights, so the charges are strictly limited and worth aiming. They are all
-// spent at Fitzsimmons: the unholy diver has four separate rivet slots plus the
-// porthole and the broken helmet, so it is the only table fat enough that
-// doubling the bonus caps several slots at once.
-//
-// One quirk worth knowing: the bottle doubles the Florist buff but NOT Otoscope,
-// while Steely-Eyed Squint does the opposite. They do not overlap, so pairing
-// Otoscope with the bottle on the same diver is still a straight gain.
+// The bottle doubles the item drop BONUS and stacks with Steely-Eyed Squint.
+// It holds 11 ounces, one spent per winning combat including free fights, so
+// the charges are aimed at the fattest rolled tables rather than worn
+// generally. (It doubles the Florist buff but not Otoscope; Squint is the
+// reverse, so all three pair cleanly.)
 
 boolean champagneReady() {
     return have_item($item[broken champagne bottle])
@@ -906,18 +821,9 @@ void garbageTote() {
 }
 
 // ─── SPACE JELLYFISH ──────────────────────────────────────────────────────────
-// Underwater the jellyfish is a full Fairy -- its modifier is literally the Fairy
-// formula multiplied by env(underwater) -- so on this route it matches Grouper
-// Groupie's item drop exactly. What it adds for free is Extract Jelly.
-//
-// Stench monsters yield stench jelly, and chewing stench jelly forces a
-// noncombat. NCforce() already knows how to spend that jelly, but the only way
-// it could previously get any was to burn a storage pull on one. Producing it in
-// combat makes those pulls unnecessary.
-//
-// Only stench is worth taking. The other four jellies are elemental resistances
-// and damage, and jelly is a spleen item, which this route needs for fish sauce
-// to stay Fishy -- so we take one and stop rather than filling up on them.
+// A full fairy underwater, and Extract Jelly can pull stench jelly from
+// stench monsters -- a chewable noncombat forcer NCforce() already spends.
+// Jelly costs spleen, which fish sauce also needs, so exactly one is taken.
 
 boolean jellyfishReady() {
     return have_familiar($familiar[Space Jellyfish]);
@@ -947,17 +853,10 @@ boolean macroReady() {
 }
 
 // ─── POWERFUL GLOVE ───────────────────────────────────────────────────────────
-// CHEAT CODE: Replace Enemy swaps the current foe for a different one from the
-// same zone. The battery holds 100% a day and Replace costs 10%, so ten re-rolls.
-//
-// Each re-roll is a fresh draw at the monster we actually want, without spending
-// the turn that a fresh draw would normally cost. At Fitzsimmons the diver is 1
-// in 5, which makes each charge worth roughly a turn.
-//
-// The glove is an accessory, so it is only equipped at Fitzsimmons rather than
-// run-wide -- the same slot is carrying the blood cubic zirconia's free kills and
-// the backup camera's copies elsewhere, and those are worth more per slot than a
-// re-roll is.
+// CHEAT CODE: Replace Enemy swaps the current foe for a fresh draw from the
+// zone; the 100% daily battery at 10% a cast gives ten re-rolls. It costs an
+// accessory slot, so it is equipped only where re-rolls pay and other
+// accessories don't compete.
 
 boolean gloveReady() {
     return have_item($item[Powerful Glove])
@@ -1022,22 +921,11 @@ boolean replaceEnemy(monster mob, string page_text) {
 }
 
 // ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
-// The chip's skills are permanent once installed, so unlike the doctor bag or
-// the glove this costs no equipment slot at all. free_run() already spends Feel
-// Hatred as a banish; Feel Nostalgic is the one that moves turns.
-//
-// It appends the last copyable monster's whole drop table to the current fight,
-// at the original rates, so our item bonus still applies to it. Cast after a
-// diver, on anything that is not a diver, it is a second roll of the diver's
-// rivets without meeting another diver -- and meeting one costs five turns at
-// Fitzsimmons. Three casts a day.
-//
-// Two rules from the skill worth encoding: casting it on the same monster we are
-// nostalgic for does nothing but burn the charge, and the fight has to be won,
-// so this must not fire where the saber is going to Use the Force out of combat.
-//
-// Feel Envy looks like the better skill -- it forces every drop -- but it does
-// not work underwater, which is the entire route. It is deliberately absent.
+// Feel Nostalgic appends the last copyable monster's whole drop table to the
+// current fight at original rates; three casts a day, no equipment slot. The
+// fight must be WON, and casting it on the monster being copied does
+// nothing. Feel Envy would force drops outright but does not work
+// underwater, so it is absent.
 void feelNostalgic(monster mob, string page_text) {
     if (!have_skill($skill[Feel Nostalgic]))
         return;
@@ -1201,17 +1089,15 @@ void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
         if (to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
             cli_execute("aprilband play tuba");
-        // Enter the Cincho branch only if it can actually fire -- either enough
-        // cinch already, or free rests left to restore it. An exhausted Cincho
-        // used to swallow the whole chain and block the free Sneakisol pill.
+        // Enter the Cincho branch only if it can actually fire -- either
+        // enough cinch already, or free rests left to restore it.
         } else if (have_item($item[Cincho de Mayo])
             && (to_int(get_property("_cinchUsed")) <= 40
                 || to_int(get_property("timesRested")) < total_free_rests())){
             while (to_int(get_property("_cinchUsed")) > 40
                 && to_int(get_property("timesRested")) < total_free_rests()) {
                 // The helmet sweetens the rest but is optional; equipping it
-                // unowned hard-errors ("You need 1 more Apriling band helmet")
-                // and kills the run.
+                // unowned hard-errors.
                 if (have_item($item[Apriling band helmet]))
                     cli_execute("unequip hat; equip apriling band helmet");
                 cli_execute("camp rest free");
@@ -1287,10 +1173,8 @@ record ban {
 };
 
 ban [item] banMap = {
-    // prefs are matched inside \Q..\E against banishedMonsters, so they must be
-    // literal prefixes of the recorded banisher name -- no regex escaping. The
-    // old "Sea \\*dent" put a real backslash in the pattern and never matched,
-    // so the monodent's banish was invisible to banished()/combatBan().
+    // prefs are matched inside \Q..\E against banishedMonsters, so they must
+    // be literal prefixes of the recorded banisher name -- no regex escaping.
     $item[spring shoes]:        new ban("Spring Kick",           $skill[spring kick]),
     $item[monodent of the sea]: new ban("Sea *dent",             $skill[Sea *dent: Throw a Lightning Bolt]),
     $item[Heartstone]:          new ban("Heartstone",            $skill[Heartstone: %banish]),
@@ -1527,7 +1411,6 @@ boolean wanderer() {
     if (total_turns_played() >= to_int(get_property("clubEmNextWeekMonsterTurn")) + 8
         && get_property("clubEmNextWeekMonster") != "")
         return true;
-    // Fixed: was incorrectly checking clubEmNextWeekMonster for the VHS tape condition
     if (total_turns_played() >= to_int(get_property("spookyVHSTapeMonsterTurn")) + 8
         && get_property("spookyVHSTapeMonster") != "")
         return true;
@@ -1700,9 +1583,8 @@ void iotmChecklist() {
     }
     foreach sk in iotmSkills {
         total += 1;
-        // have_skill() has been seen reporting Macrometeorite absent at
-        // initialization on a day the CCS cast it in combat; the owned guide
-        // is accepted as the second signal.
+        // have_skill() can flicker at initialization; the owned guide is
+        // accepted as a second signal for Macrometeorite.
         boolean has = have_skill(sk)
             || (sk == $skill[Macrometeorite] && have_item($item[Pocket Meteor Guide]));
         if (has) { owned += 1; simOwned[to_string(sk)] = true; print("✓ " + sk, "blue"); }
@@ -1766,15 +1648,12 @@ void pullChecklist() {
 }
 
 // ─── SIM MODEL ────────────────────────────────────────────────────────────────
-// The turn model behind "UnderTheSea sim". Anchored at both ends: a no-IOTM,
-// moderate-perms account runs the path in 180-200 adventures (community
-// 1-day guide), and a full kit runs at ~33 (leaderboard pace). Each owned
-// IOTM, skill and familiar contributes "kit power" -- its per-item weight,
-// with later credits discounted since savings overlap -- and the curve
-// between the anchors is quadratic: near a full kit each missing item costs
-// about its published estimate, while on a bare account the first few items
-// are worth several times their weight. Weights are the midpoints of the
-// per-item estimates modeled against a measured 47-turn reference run.
+// Turn model behind "UnderTheSea sim". Each owned IOTM, skill and familiar
+// contributes weighted "kit power", with later credits discounted since
+// savings overlap. The estimate is quadratic in missing power between two
+// anchors -- BASELINE turns with no kit, FULLKIT with everything -- so near
+// a full kit each missing item costs about its weight, while on a bare
+// account the first items are worth several times theirs.
 
 // Kit power of a set of weights: biggest five in full, next five at 75%,
 // the rest at half.
@@ -1792,8 +1671,8 @@ float simTierSum(float [int] vals) {
 }
 
 void simEstimate() {
-    float BASELINE = 190.0;   // no-IOTM anchor: the guide's 180-200 range
-    float FULLKIT = 33.0;     // full-kit anchor: leaderboard pace
+    float BASELINE = 190.0;   // modeled turns with no supported kit at all
+    float FULLKIT = 33.0;     // modeled turns with everything owned
     float FLOOR = 31.0;
     float [string] worth;
     // Route carriers
