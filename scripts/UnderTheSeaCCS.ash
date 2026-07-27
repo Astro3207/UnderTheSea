@@ -85,13 +85,6 @@ void free_run(string ptext, boolean banish) {
     }
 }
 
-// Returns true if this monster provides a free fight
-boolean free_monster(monster mob) {
-    return $monsters[black crayon golem, time cop,sausage goblin,
-        kid who is too old to be Trick-or-Treating,
-        suburban security civilian, vandal kid] contains mob;
-}
-
 // BCZ refracted gaze helper — checks stat threshold before casting
 boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
@@ -194,11 +187,15 @@ void main(int round, monster mob, string page_text) {
     // Free stench jelly off any stench monster; NCforce() spends it as a sneak.
     extractJelly(mob, page_text);
     // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
-    // On a re-roll the fight holds a NEW monster, so end this pass -- everything
-    // below is branched on the stale `mob`, and the old fallthrough could
-    // free_run away from the very diver the re-roll produced.
-    if (replaceEnemy(mob, page_text))
+    // On a re-roll the fight holds a NEW monster. Returning would fall through
+    // to the CCS's safety abort line -- mafia does NOT re-invoke a consult
+    // script that returns mid-combat -- so re-dispatch main() with the new
+    // monster and a re-fetched page, which also resyncs mafia's round counter
+    // after the swap.
+    if (replaceEnemy(mob, page_text)) {
+        main(current_round(), last_monster(), visit_url("fight.php"));
         return;
+    }
     // Chain another free diver off this one.
     lectureOnRelativity(mob, page_text);
     // feelNostalgic() is NOT called here: its payout needs the fight to be won,
@@ -293,7 +290,10 @@ void main(int round, monster mob, string page_text) {
             cleanUp();
             break;
         case $location[The Wreck of the Edgar Fitzsimmons]:
-            if (mob != $monster[unholy diver]){
+            // Free wanderers burn delay -- they advance the zone's turns_spent
+            // for free -- and their fight costs nothing, so they are killed by
+            // the fall-through below, never run from or re-rolled.
+            if (mob != $monster[unholy diver] && !free_monster(mob)){
                 free_run(page_text, true);
                 if (mob == $monster[Mer-kin scavenger]){
                     if (have_equipped($item[spring shoes]))
@@ -543,24 +543,33 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                         // Runs exhausted: re-roll the fight into a fresh draw
                         // rather than killing a monster that owes us nothing.
-                        if (current_round() > 0 && rerollEnemy(page_text))
+                        if (current_round() > 0 && rerollEnemy(page_text)) {
+                            // Re-dispatch: see the replaceEnemy note up top.
+                            main(current_round(), last_monster(), visit_url("fight.php"));
                             return;
+                        }
                     }
                 } else if (mob == $monster[sea cow] && doneWithSeaCow()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        if (current_round() > 0 && rerollEnemy(page_text))
+                        if (current_round() > 0 && rerollEnemy(page_text)) {
+                            // Re-dispatch: see the replaceEnemy note up top.
+                            main(current_round(), last_monster(), visit_url("fight.php"));
                             return;
+                        }
                     }
                 } else if (mob == $monster[sea cowboy] && doneWithCowboy()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        if (current_round() > 0 && rerollEnemy(page_text))
+                        if (current_round() > 0 && rerollEnemy(page_text)) {
+                            // Re-dispatch: see the replaceEnemy note up top.
+                            main(current_round(), last_monster(), visit_url("fight.php"));
                             return;
+                        }
                     }
                 }
                 // Fight being killed from here on -- the one safe moment for a
@@ -645,8 +654,11 @@ void main(int round, monster mob, string page_text) {
             // stat-fights, and forced-victim fights are already monitors.
             if (cheatsheetsNeeded() && mob != $monster[Mer-kin monitor]
                 && !free_monster(mob) && current_round() > 0
-                && rerollEnemy(page_text))
+                && rerollEnemy(page_text)) {
+                // Re-dispatch: see the replaceEnemy note up top.
+                main(current_round(), last_monster(), visit_url("fight.php"));
                 return;
+            }
             // Kill path from here on -- the safe spot for a Feel Nostalgic
             // charge on the monitor's cheatsheet table.
             if (current_round() > 0)
