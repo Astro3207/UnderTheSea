@@ -164,6 +164,11 @@ item bangB(){
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
+    // Re-roll dispatch loop. A monster swap restarts this pass with the new
+    // monster and a re-fetched page. ASH cannot call main() from inside its
+    // own definition (the name is not bound until the definition completes),
+    // so the loop, not recursion, is the dispatch mechanism.
+    while (true) {
     // One extra roll of the diver's drop table, once a day, for no turn.
     // Cast BEFORE the Force below so the doubled table is what gets dropped.
     duplicateMonster(mob, page_text);
@@ -189,12 +194,13 @@ void main(int round, monster mob, string page_text) {
     // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
     // On a re-roll the fight holds a NEW monster. Returning would fall through
     // to the CCS's safety abort line -- mafia does NOT re-invoke a consult
-    // script that returns mid-combat -- so re-dispatch main() with the new
-    // monster and a re-fetched page, which also resyncs mafia's round counter
-    // after the swap.
+    // script that returns mid-combat -- so restart the dispatch loop with the
+    // new monster and a re-fetched page, which also resyncs mafia's round
+    // counter after the swap.
     if (replaceEnemy(mob, page_text)) {
-        main(current_round(), last_monster(), visit_url("fight.php"));
-        return;
+        mob = last_monster();
+        page_text = to_string(visit_url("fight.php"));
+        continue;
     }
     // Chain another free diver off this one.
     lectureOnRelativity(mob, page_text);
@@ -545,8 +551,9 @@ void main(int round, monster mob, string page_text) {
                         // rather than killing a monster that owes us nothing.
                         if (current_round() > 0 && rerollEnemy(page_text)) {
                             // Re-dispatch: see the replaceEnemy note up top.
-                            main(current_round(), last_monster(), visit_url("fight.php"));
-                            return;
+                            mob = last_monster();
+                            page_text = to_string(visit_url("fight.php"));
+                            continue;
                         }
                     }
                 } else if (mob == $monster[sea cow] && doneWithSeaCow()){
@@ -556,8 +563,9 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                         if (current_round() > 0 && rerollEnemy(page_text)) {
                             // Re-dispatch: see the replaceEnemy note up top.
-                            main(current_round(), last_monster(), visit_url("fight.php"));
-                            return;
+                            mob = last_monster();
+                            page_text = to_string(visit_url("fight.php"));
+                            continue;
                         }
                     }
                 } else if (mob == $monster[sea cowboy] && doneWithCowboy()){
@@ -567,8 +575,9 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                         if (current_round() > 0 && rerollEnemy(page_text)) {
                             // Re-dispatch: see the replaceEnemy note up top.
-                            main(current_round(), last_monster(), visit_url("fight.php"));
-                            return;
+                            mob = last_monster();
+                            page_text = to_string(visit_url("fight.php"));
+                            continue;
                         }
                     }
                 }
@@ -656,8 +665,9 @@ void main(int round, monster mob, string page_text) {
                 && !free_monster(mob) && current_round() > 0
                 && rerollEnemy(page_text)) {
                 // Re-dispatch: see the replaceEnemy note up top.
-                main(current_round(), last_monster(), visit_url("fight.php"));
-                return;
+                mob = last_monster();
+                page_text = to_string(visit_url("fight.php"));
+                continue;
             }
             // Kill path from here on -- the safe spot for a Feel Nostalgic
             // charge on the monitor's cheatsheet table.
@@ -865,4 +875,6 @@ void main(int round, monster mob, string page_text) {
             cleanUp();
             break;
     }
+    return;
+    } // dispatch loop
 }
