@@ -1,27 +1,7 @@
 import iotm;
 
-// ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
-// Shared by both monster-pickers: the Peridot of Peril (choice 1557) and Map the
-// Monsters (choice 1435). Keeping one table means the two can never disagree
-// about which monster we are actually trying to reach in a zone.
-int [location] wantedMonster = {
-    $location[An Octopus's Garden]:                 740,   // Neptune flytrap
-    $location[The Wreck of the Edgar Fitzsimmons]:  745,   // unholy diver
-    $location[The Sleazy Back Alley]:               159,
-    $location[The Haunted Pantry]:                  145,
-    $location[The Overgrown Lot]:                   1752,
-    $location[The Coral Corral]:                    775,   // sea cow
-    $location[The Marinara Trench]:                 762,
-    $location[Anemone Mine]:                        765,
-    $location[The Dive Bar]:                        768,
-    $location[Cyberzone 1]:                         2458,
-    $location[Mer-kin Library]:                     840,   // Mer-kin researcher
-    $location[the mer-kin outpost]:                 773,
-    $location[the caliginous abyss]:                1373,
-    $location[mer-kin elementary school]:           838,   // Mer-kin teacher
-    $location[The Outskirts of Cobb's Knob]:        152,
-    $location[Madness Bakery]:                      1750
-};
+// The wantedMonster table used by the monster-pickers below now lives in
+// iotm.ash, because the Time-Spinner needs it from the main script too.
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
