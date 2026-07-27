@@ -46,61 +46,151 @@ holding slots back for items it knows it will need later (`reservedPulls()`).
 Mall purchases into storage respect `autoBuyPriceLimit` and confirm before
 exceeding it.
 
-**Pulled early, every run:** Mer-kin sneakmask, sea lasso, shark jumper,
-scale-mail underwear, Congressional Medal of Insanity, Flash Liquidizer Ultra
-Dousing Accessory, Pocket Meteor Guide (if owned and unread).
+### Pulled early, every run
 
-**Pulled when the route needs them:** Mer-kin digpick, lodestone, comb jelly,
-Elf Guard SCUBA tank, rusty rivet, sea cowbell, Mer-kin prayerbeads, Mer-kin
-healscroll / killscroll / worktea / knucklebone / cheatsheet / hallpass /
-hidepaint, pro skateboard, software glitch, pulled yellow taffy, stuffed yam
-stinkbomb, waffle, skate blade, null-day exploit, New Age healing crystal,
-soggy used band-aid, damp old wallet, fish sauce / Aldebaran sardines / cheap
-pasta + pie man was not meant to eat (diet and Asdon fuel), Handheld Allied
-radio / Clara's bell / stench jelly (only when no noncombat-forcing IOTM is
-owned).
+| Item | Why |
+|---|---|
+| Mer-kin sneakmask | Underwater-legal −combat hat for every noncombat hunt (outpost, pearl zones) |
+| sea lasso | Lasso training toward 20 and seahorse taming; skipped when the Sword of S Words plan or monkey's paw wishes will supply them |
+| shark jumper | Underwater +item shirt for the Caliginous Abyss and copy fights |
+| scale-mail underwear | Underwater +item pants, same fights |
+| Congressional Medal of Insanity | Large +item accessory worn through most farming; must already be in storage — the script won't buy one |
+| Flash Liquidizer Ultra Dousing Accessory | Douse Foe procs on the shadow slab during the pay-phone free fights |
+| Pocket Meteor Guide | Read once so Meteor Lore exists in-run; Macrometeorite is the slot-free monster re-roller |
 
-**End-of-run cleanup pulls** (whatever slots remain): peppermint parasol, ink
-bladder, Mer-kin pinkslip, stuffed yam stinkbomb, Louder Than Bomb, anchor
-bomb.
+### Pulled when the route needs them
 
-**Reserved slots** are held for the items that cost real turns to farm if the
-pull is spent elsewhere: a free-runaway source (parasol / navel ring / GAPs),
-Mer-kin pinkslip, Mer-kin prayerbeads, sea cowbell, ink bladder, comb jelly,
-and a null-day exploit while crayon shavings are short.
+| Item | Why |
+|---|---|
+| Mer-kin digpick | Mine teflon ore for the swim fins tailpiece; also flags miner fights as killable |
+| lodestone | Loded effect: extra mining attempts after Unaccompanied Miner's five run out |
+| comb jelly | Jelly Combed +item buff before Abyss and corral trips |
+| Elf Guard SCUBA tank | Waterbreathing gear that frees the pants slot during habitat fights and the lasso backup plan |
+| rusty rivet | Tops the diver hunt up to 8 when one short |
+| sea cowbell | Seahorse taming needs three thrown |
+| Mer-kin prayerbeads | Yog-Urt: three equipped means only two healing items to shed Suckrament |
+| Mer-kin healscroll | Dreadscroll clue 2 (thrown in the library) and a Yog-Urt healing item |
+| Mer-kin killscroll | Dreadscroll clue 5 (thrown at a mer-kin) |
+| Mer-kin worktea | Dreadscroll clue 7 via the sushi meal |
+| Mer-kin knucklebone | Dreadscroll clue 4 on use |
+| Mer-kin cheatsheet | Tops up the 9-sheet vocabulary grind |
+| Mer-kin hallpass | Steers the elementary school noncombat cycle |
+| Mer-kin hidepaint | Colorfully Concealed −combat for the Grandpa noncombat hunt |
+| pro skateboard | Do an epic McTwist forces the corral opener's drops |
+| software glitch | Corral opener: swaps the fight for the Bugged bugbear |
+| pulled yellow taffy | Yellow-ray combat item for the corral opener |
+| waffle | Re-rolls a monster in place: seahorse phase and peanut fights |
+| skate blade | Skate Park war gear for the Holey Rollers resolution |
+| null-day exploit | Null afternoon replaces crayon shavings as the Shub/colosseum deleveler |
+| New Age healing crystal / soggy used band-aid | Yog-Urt healing when prayerbeads are short |
+| damp old wallet | Sand dollars for the Old Guy's boot without spending a clover adventure |
+| fish sauce / Aldebaran sardines / cheapest pasta | Keeping Fishy up (diet path depends on gear owned) |
+| pie man was not meant to eat | One-pull Asdon Martin fuel for Driving Waterproofly |
+| Handheld Allied radio / Clara's bell / stench jelly | Noncombat forcer of last resort, only when no forcer IOTM is owned |
+
+### End-of-run cleanup pulls (whatever slots remain)
+
+| Item | Why |
+|---|---|
+| peppermint parasol | Three free runaways for the next day's farming |
+| ink bladder | Underwater free-run combat item |
+| Mer-kin pinkslip | Free-run item that works on any mer-kin |
+| stuffed yam stinkbomb | Banishing free run |
+| Louder Than Bomb | Banishing free run |
+| anchor bomb | Banishing free run (TakerSpace) |
+
+### Reserved slots
+
+`reservedPulls()` holds a slot for each item that costs real turns to farm if
+the pull gets spent elsewhere first: a free-runaway source (parasol / navel
+ring / GAPs), Mer-kin pinkslip (~15 turns, the Dive Bar is never visited
+otherwise), Mer-kin prayerbeads (~15 turns of outpost), sea cowbell (~10
+turns of corral), ink bladder and comb jelly (~4 turns of Marinara Trench
+each), and a null-day exploit while crayon shavings are short.
 
 ## IOTMs the script uses
 
 None are strictly required — every use is guarded — but turn count scales
-with what you own. Roughly by impact:
+with what you own.
 
-**Route drivers** (each worth multiple turns): closed-circuit pay phone,
-cursed monkey's paw, 2002 Mr. Store Catalog (Spooky VHS / pro skateboard /
-software glitch), august scepter, book of facts (Just the Facts, Monster
-Habitats), patriotic eagle + CyberRealm keycode, Peridot of Peril,
-Comprehensive Cartography (Map the Monsters), blood cubic zirconia, baseball
-diamond, Heartstone, backup camera, Jurassic Parka, Fourth of May Cosplay
-Saber (Use the Force drives the deterministic diver, sea cow and prayerbead
-plans), spring shoes, monodent of the sea, Everfull Dart Holster, Mayam
-Calendar, Leprecondo, Cincho de Mayo, McHugeLarge duffel bag, Apriling band
-helmet, April Shower Thoughts shield, bat wings.
+### Route drivers (each worth multiple turns)
 
-**Copy and free-turn engines:** Source Terminal (items.enh, duplicate.edu),
-Time-Spinner, January's Garbage Tote (broken champagne bottle), Powerful
-Glove, Pocket Meteor Guide (Macrometeorite), combat lover's locket, emotion
-chip (Feel Hatred / Feel Nostalgic), Lil' Doctor™ bag (Chest X-Ray, Otoscope,
-Reflex Hammer), mumming trunk, Kremlin's Greatest Briefcase, Cargo Cultist
-Shorts, Eight Days a Week Pill Keeper, Sept-Ember Censer, vampyric cloake,
-knock-off retro superhero cape, roman candelabra, miniature crystal ball,
-latte lovers member's mug, V for Vivala mask, designer sweatpants, tearaway
-pants, autumn-aton, S.I.T. Course, a workshed (Asdon Martin, model train set,
-TakerSpace or Mayo Clinic), clan photobooth, clan pool table (Hustlin').
+| IOTM | Why it's used |
+|---|---|
+| closed-circuit pay phone | Eleven free shadow fights a day carry lasso training; Shadow Waters buff |
+| cursed monkey's paw | Wishes replace whole corral farming loops (lasso, cowbell) |
+| 2002 Mr. Store Catalog | Spooky VHS copies, the pro skateboard's McTwist, software glitch |
+| august scepter | Waffles re-roll monsters in place; Aug. 2nd is a free Lucky!; Aug. 24th waffle stock |
+| book of facts | Just the Facts wishes and Monster Habitats copy chains for the Mom rescue |
+| patriotic eagle (hatchling) | RWB blast forces the flytrap pellet; phylum screech banishes constructs |
+| CyberRealm keycode | Cyberzone 1 free fights drive Mom-rescue progress |
+| Peridot of Peril | One forced encounter per zone per day, aimed by `zoneTarget()` |
+| Comprehensive Cartography | Three more forced encounters (Map the Monsters), same targeting |
+| Fourth of May Cosplay Saber | Use the Force: deterministic diver, sea cow, prayerbead and scroll drops via the Force budget ladder |
+| blood cubic zirconia | Sweat Bullets free kills; Refracted Gaze substat farming on free fights |
+| baseball diamond | Team pitches: yellow ray, free kill and banish outcomes |
+| Heartstone | %banish skill plus the Ultraheart colosseum buff |
+| backup camera | Copies: golem stat-chains and lockkey-monster repeats |
+| Jurassic Parka | Dilophosaur yellow ray; spikolodon spikes force noncombats |
+| spring shoes | Spring Kick banish and Spring Away free runs |
+| monodent of the sea | Lightning-bolt banish in an underwater-legal weapon |
+| Everfull Dart Holster | Bullseye free kills once the perk set supports them |
+| Mayam Calendar | Daily ring resources claimed at initialization |
+| Leprecondo | Passive furniture buffs, need-ordered install |
+| Cincho de Mayo | Fiesta Exit noncombat forces, recharged through free rests |
+| McHugeLarge duffel bag | Avalanche noncombat force; left pole tracks squid/tippler; slash olfaction |
+| Apriling band helmet | Tuba noncombat forces; patrol beat −combat |
+| April Shower Thoughts shield | Spitball yellow ray fallback; daily glob claim |
+| bat wings | Five free fights, swoop, and upside-down free rests |
 
-**Familiars:** Grouper Groupie (the underwater fairy the route leans on),
-Red-Nosed Snapper, Jill-of-All-Trades, chest mimic, patriotic eagle, Sword of
-S Words, peace turkey or disgeist, Jumpsuited Hound Dog, Glover, Foul Ball,
-Space Jellyfish, Pocket Professor, Tiny Plastic Santa Claus Skeleton
-(aftercore Dad fight only).
+### Copy and free-turn engines
+
+| IOTM | Why it's used |
+|---|---|
+| Source Terminal | items.enh +item buff; duplicate.edu doubles the diver's (or cow's) table |
+| Time-Spinner | Guaranteed re-fight of a just-fought target for one turn |
+| January's Garbage Tote | The champagne bottle doubles the item bonus at roll-heavy zones |
+| Powerful Glove | Monster re-rolls when Macrometeorite casts run out |
+| Pocket Meteor Guide | Macrometeorite: ten re-rolls a day from a skill, no gear slot |
+| combat lover's locket | Diver and golem summons |
+| emotion chip | Feel Hatred banish; Feel Nostalgic re-rolls a copied drop table |
+| Lil' Doctor™ bag | Chest X-Ray free kills, Otoscope +200% item, Reflex Hammer banish |
+| mumming trunk | Prince George: +item that lasts until rollover, not N turns |
+| Kremlin's Greatest Briefcase | Items Are Forever +50% item for 50 turns (needs the case opened) |
+| Cargo Cultist Shorts | Pocket 494: Vinegavotte, +20% item for 50 turns |
+| Eight Days a Week Pill Keeper | Free pill: Fidoxene familiar-weight floor, or Sneakisol as a forcer |
+| Sept-Ember Censer | Septapus charms: seven pickpockets against the shadow slab |
+| vampyric cloake | Become a Bat: +50% item per farming fight, ten a day |
+| knock-off retro superhero cape | Colosseum kill-mode fallback |
+| roman candelabra | Purple candle copies of the habitat monsters |
+| miniature crystal ball | Predicts the corral so seahorse attempts aren't wasted |
+| latte lovers member's mug | Throw Latte banish |
+| V for Vivala mask | Creepy grin banish |
+| designer sweatpants | Sweat-powered free runs during the guild unlock |
+| tearaway pants | Skips the moxie guild test; Tear Away banishes plants |
+| autumn-aton | Background farming (digpick zone, shadow rift) while you adventure |
+| S.I.T. Course | Daily certificate skill |
+| a workshed | Asdon: Driving Waterproofly; train set: resources; TakerSpace: anchor bomb; Mayo Clinic |
+| clan photobooth | Sheriff set: Assert Your Authority free kills |
+| clan pool table | Hustlin' in the superitdrop mood |
+
+### Familiars
+
+| Familiar | Why it's used |
+|---|---|
+| Grouper Groupie | The underwater fairy the route leans on by default |
+| Red-Nosed Snapper | Phylum tracking on top of a stronger underwater fairy |
+| Jill-of-All-Trades | Best fairy once Driving Waterproofly is up |
+| chest mimic | Diver insurance eggs and fight copies |
+| patriotic eagle | RWB pellet forcing, zone citizenship, construct screech |
+| Sword of S Words | Kill-a-lot chains for lasso and cowbell farming |
+| peace turkey / disgeist | −combat for the noncombat hunts |
+| Jumpsuited Hound Dog | +combat for the gymnasium |
+| Glover | Cyberzone 1 fights |
+| Foul Ball | Colosseum support |
+| Space Jellyfish | Full fairy underwater, plus stench jelly as a free forcer |
+| Pocket Professor | Lecture copy chains on the diver and the sea cow |
+| Tiny Plastic Santa Claus Skeleton | Aftercore Dad Sea Monkee fight only |
 
 ## Does class matter?
 
