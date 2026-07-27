@@ -2801,16 +2801,20 @@ void sorceress() {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
             else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // Two pairs is the whole need now. Exploit first; failing
-                // that, the monkey's paw can wish the gap closed -- by this
-                // point in the run the wishes have no other claimant.
+                // Two pairs is the whole need now. Pull the exploit right
+                // here rather than trusting the late-pulls block upstream to
+                // have done it -- on a fresh day this closes the gap in one
+                // pull. The monkey's paw is NOT a fallback: shavings are not
+                // wishable ("That wish is quite impossible"), and a refused
+                // wish consumes nothing, so a wish loop hung a run.
+                if (item_amount($item[null-day exploit]) == 0)
+                    pullSequence($item[null-day exploit]);
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
-                while (item_amount($item[crayon shavings]) < 4
-                    && have_effect($effect[null afternoon]) == 0
-                    && available_amount($item[cursed monkey's paw]) > 0
-                    && to_int(get_property("_monkeyPawWishesUsed")) < 5)
-                    cli_execute("monkeypaw item crayon shavings");
+                if (item_amount($item[crayon shavings]) < 4
+                    && have_effect($effect[null afternoon]) == 0)
+                    abort("Shub prep is short: acquire 4 crayon shavings or a"
+                        + " null-day exploit (Null Afternoon) and rerun.");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
