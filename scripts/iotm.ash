@@ -154,6 +154,52 @@ boolean diverForce(monster mob, string page_text) {
     return true;
 }
 
+// ─── SEA COW: THE SAME TRICK AT THE CORRAL ────────────────────────────────────
+// Both of the cow's drops are non-conditional in monsters.txt (sea cowbell n10,
+// sea leather n20), so Use the Force hands over a guaranteed leather + cowbell
+// exactly as it hands over the diver's rivets. Two Forced cows nearly close the
+// corral needs (leather x2, cowbell x3).
+
+// Mirrors doneWithSeaCow() in UnderTheSea.ash, which parse order keeps out of
+// reach of this file.
+boolean seaCowNeeded() {
+    if (item_amount($item[sea leather]) + available_amount($item[sea chaps])
+        + available_amount($item[sea cowboy hat]) < 2)
+        return true;
+    if (item_amount($item[sea cowbell]) < 3)
+        return true;
+    return false;
+}
+
+// CCS entry, same contract as diverForce(): true means the fight is over and
+// the caller must end the consult pass.
+boolean seaCowForce(monster mob, string page_text) {
+    if (mob != $monster[sea cow])
+        return false;
+    if (!seaCowNeeded())
+        return false;
+    // The cow spends only the UNRESERVED balance, and keeps one charge back
+    // for the free-run of last resort.
+    if (saberForcesFree() <= 1)
+        return false;
+    // The skateboard's McTwist forces this table for free, once a day; let the
+    // corral branch spend that before a Force charge.
+    if (have_equipped($item[pro skateboard]) && get_property("_epicMcTwistUsed") == "false")
+        return false;
+    // The one-turn corral opener converts early fights via its own
+    // McTwist/backup-camera machinery -- stay out of its way.
+    if ($location[the coral corral].turns_spent <= 1
+        && item_amount($item[sea leather]) == 0
+        && available_amount($item[sea cowboy hat]) == 0)
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
 // Returns the number of chamois available in the clan slime tube
 int chamoixAmount() {
     matcher m = create_matcher("There are (\\d+) chamoi", visit_url("clan_slimetube.php?action=bucket"));
@@ -374,10 +420,12 @@ void sourceEducate() {
 void duplicateMonster(monster mob, string page_text) {
     if (!duplicateReady() || !duplicateEducated())
         return;
-    if (mob != $monster[unholy diver])
-        return;
-    // Nothing left to gain once the rivets are in hand.
-    if (item_amount($item[rusty rivet]) >= 8)
+    // The diver has first claim while its hunt is live; if the run never
+    // needed rivets (a better mask is owned), the day's Duplicate goes to the
+    // sea cow instead -- doubled leather + cowbell under the same Force.
+    boolean wanted = (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8)
+        || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive());
+    if (!wanted)
         return;
     if (!contains_text(page_text, "Duplicate"))
         return;
@@ -599,16 +647,20 @@ boolean professorReady() {
 }
 
 void professorFamiliar() {
-    // Under the Force plan a diver pays 4 guaranteed rivets and the second
-    // one is a Time-Spinner refight away -- lecture copies add nothing, so
-    // keep the better drop familiar out.
-    if (diverForceReady())
-        return;
     if (!professorReady())
         return;
-    if (item_amount($item[rusty rivet]) >= 8)
+    // Rivet hunt: under the Force plan a diver pays 4 guaranteed rivets and
+    // the second one is a Time-Spinner refight away -- lecture copies add
+    // nothing, so keep the better drop familiar out.
+    if (diverHuntActive()) {
+        if (!diverForceReady())
+            use_familiar($familiar[Pocket Professor]);
         return;
-    use_familiar($familiar[Pocket Professor]);
+    }
+    // Corral: once the Force budget there is spent, lecture copies of the sea
+    // cow are the next cheapest source of leather and cowbells.
+    if (seaCowNeeded() && saberForcesFree() <= 1)
+        use_familiar($familiar[Pocket Professor]);
 }
 
 void lectureOnRelativity(monster mob, string page_text) {
@@ -616,9 +668,11 @@ void lectureOnRelativity(monster mob, string page_text) {
         return;
     if (my_familiar() != $familiar[Pocket Professor])
         return;
-    if (mob != $monster[unholy diver])
-        return;
-    if (item_amount($item[rusty rivet]) >= 8)
+    // Same targets as professorFamiliar(): the diver while rivets are owed,
+    // the sea cow while its drops are.
+    boolean wanted = (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8)
+        || (mob == $monster[sea cow] && seaCowNeeded());
+    if (!wanted)
         return;
     // The skill refuses to fire below 2 adventures, even against a free fight.
     if (my_adventures() < 2)
@@ -648,14 +702,16 @@ boolean champagneReady() {
         && to_int(get_property("garbageChampagneCharge")) > 0;
 }
 
-// Fitzsimmons only, deliberately. Equipping it anywhere else would drain ounces
-// on fights whose drop tables cannot pay them back.
+// Only where a fat table is being ROLLED. Forced drops ignore item bonus, so
+// while a Force plan covers the zone the ounces are banked instead.
 string champagneEquip(location loc) {
-    // Forced drops ignore item bonus entirely, so while the Force plan is
-    // live the bottle's ounces are better banked than drained on free kills.
-    if (diverForceReady())
+    if (!champagneReady())
         return "";
-    if (champagneReady() && loc == $location[The Wreck of the Edgar Fitzsimmons])
+    if (loc == $location[The Wreck of the Edgar Fitzsimmons] && !diverForceReady())
+        return if_equip($item[broken champagne bottle]);
+    // The corral inherits the bottle once the Force budget there is spent and
+    // the cow's leather/cowbell rolls are back to probability.
+    if (loc == $location[The Coral Corral] && seaCowNeeded() && saberForcesFree() <= 1)
         return if_equip($item[broken champagne bottle]);
     return "";
 }
@@ -716,6 +772,16 @@ void extractJelly(monster mob, string page_text) {
     use_skill($skill[Extract Jelly]);
 }
 
+// ─── METEOR LORE: MACROMETEORITE ──────────────────────────────────────────────
+// The Pocket Meteor Guide's combat skill replaces the current foe with a fresh
+// draw from the zone -- the same job as the glove's CHEAT CODE below, but from
+// a skill, so it costs no equipment slot. Ten casts a day. initialization()
+// reads the guide so the skill actually exists in-run.
+boolean macroReady() {
+    return have_skill($skill[Macrometeorite])
+        && to_int(get_property("_macrometeoriteUses")) < 10;
+}
+
 // ─── POWERFUL GLOVE ───────────────────────────────────────────────────────────
 // CHEAT CODE: Replace Enemy swaps the current foe for a different one from the
 // same zone. The battery holds 100% a day and Replace costs 10%, so ten re-rolls.
@@ -735,21 +801,36 @@ boolean gloveReady() {
 }
 
 string gloveEquip(location loc) {
+    // Macrometeorite does the same job from a skill slot; while it has casts
+    // left, the accessory slot goes back to the zirconia and backup camera.
+    if (macroReady())
+        return "";
     if (gloveReady() && loc == $location[The Wreck of the Edgar Fitzsimmons])
         return if_equip($item[Powerful Glove]);
     return "";
 }
 
-// Returns true when it actually re-rolled the monster. The caller MUST end the
-// consult pass on true: the fight now holds a different monster, and every
-// branch below the call would still be looking at the stale `mob` -- worst case
-// free_run() runs away from the diver the re-roll just produced. Returning lets
-// mafia re-invoke the consult script with the new monster.
+// Casts whichever re-roller is available: Macrometeorite (Meteor Lore, 10 a
+// day, no equipment slot) first, the glove's CHEAT CODE second. On true the
+// fight holds a NEW monster and the caller MUST end the consult pass -- every
+// branch below it would still be looking at the stale `mob`, and worst case
+// free_run() runs away from the very target the re-roll produced.
+boolean rerollEnemy(string page_text) {
+    if (macroReady() && contains_text(page_text, "Macrometeorite")) {
+        use_skill($skill[Macrometeorite]);
+        return true;
+    }
+    if (gloveReady() && have_equipped($item[Powerful Glove])
+        && contains_text(page_text, "CHEAT CODE: Replace Enemy")) {
+        use_skill($skill[CHEAT CODE: Replace Enemy]);
+        return true;
+    }
+    return false;
+}
+
+// Fitzsimmons policy: re-roll anything that is not the diver while rivets are
+// still owed.
 boolean replaceEnemy(monster mob, string page_text) {
-    if (!gloveReady())
-        return false;
-    if (!have_equipped($item[Powerful Glove]))
-        return false;
     if (my_location() != $location[The Wreck of the Edgar Fitzsimmons])
         return false;
     // Never re-roll the monster we came for, and stop once its drops are in.
@@ -757,10 +838,7 @@ boolean replaceEnemy(monster mob, string page_text) {
         return false;
     if (item_amount($item[rusty rivet]) >= 8)
         return false;
-    if (!contains_text(page_text, "CHEAT CODE: Replace Enemy"))
-        return false;
-    use_skill($skill[CHEAT CODE: Replace Enemy]);
-    return true;
+    return rerollEnemy(page_text);
 }
 
 // ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
@@ -791,11 +869,15 @@ void feelNostalgic(monster mob, string page_text) {
     // with it -- so never overlap the two.
     if (saberForcesFree() > 0 && have_equipped($item[Fourth of May Cosplay Saber]))
         return;
-    if (mob == $monster[unholy diver])
+    // Worth a charge only while the copied table still owes us something:
+    // the diver's rivets, or the sea cow's leather and cowbells.
+    string copied = get_property("lastCopyableMonster");
+    boolean wanted = (copied == "unholy diver" && item_amount($item[rusty rivet]) < 8)
+        || (copied == "sea cow" && seaCowNeeded());
+    if (!wanted)
         return;
-    if (get_property("lastCopyableMonster") != "unholy diver")
-        return;
-    if (item_amount($item[rusty rivet]) >= 8)
+    // Casting it on the monster we are nostalgic for does nothing.
+    if (to_string(mob) == copied)
         return;
     if (!contains_text(page_text, "Feel Nostalgic"))
         return;
