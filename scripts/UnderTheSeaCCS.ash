@@ -176,9 +176,14 @@ void main(int round, monster mob, string page_text) {
     // non-conditional drop and ends the fight -- nothing below applies.
     if (diverForce(mob, page_text))
         return;
-    // Same trick on the sea cow's leather and cowbells, from the unreserved
-    // Force balance.
+    // Same trick down the Force priority ladder: the outpost healer's
+    // prayerbeads, the sea cow's leather and cowbells, the researcher's
+    // scrolls -- each from its own tier of the budget.
+    if (healerForce(mob, page_text))
+        return;
     if (seaCowForce(mob, page_text))
+        return;
+    if (researcherForce(mob, page_text))
         return;
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
@@ -632,6 +637,18 @@ void main(int round, monster mob, string page_text) {
                     }
                 }
             }
+            // During the sheet grind, a teacher or punisher that survived its
+            // banish attempt is worth re-rolling into a fresh 1-in-3 draw at
+            // the monitor rather than killing for nothing. Never the golem
+            // stat-fights, and forced-victim fights are already monitors.
+            if (cheatsheetsNeeded() && mob != $monster[Mer-kin monitor]
+                && !free_monster(mob) && current_round() > 0
+                && rerollEnemy(page_text))
+                return;
+            // Kill path from here on -- the safe spot for a Feel Nostalgic
+            // charge on the monitor's cheatsheet table.
+            if (current_round() > 0)
+                feelNostalgic(mob, page_text);
             if (bcz_gaze_ready() && get_property("NCtoC") != "true") {
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
                 if (to_monster(get_property("lastEncounter")) != $monster[none] && item_amount($item[mer-kin cheatsheet]) < 10)
@@ -715,6 +732,13 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Colosseum]:
             if (have_skill($skill[Club 'Em Back in Time]))
                 use_skill($skill[Club 'Em Back in Time]);
+            // End of the run: every unspent free kill -- shadow bricks above
+            // all, at up to 13 a day -- expires worthless at rollover, and a
+            // round won free is a whole turn. Rounds need WINS, so this is
+            // free_kill and never Use the Force (which forfeits the win); the
+            // saber is not equipped here, so its last-resort clause stays dead.
+            if (current_round() > 0)
+                free_kill(page_text, false);
             if (to_int(get_property("lastColosseumRoundWon")) < 15)
                 cleanUp();
             break;
