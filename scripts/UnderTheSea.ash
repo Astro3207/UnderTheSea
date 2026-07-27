@@ -929,6 +929,7 @@ import <seedfinder/seedfinder.ash>;
                 // afterwards hits an already-closed choice and aborts the run
                 // with "Invalid choice", so set the property and let mafia
                 // take option 4 (the +10 familiar weight chip) itself.
+                step("initialization: saber daily upgrade (choice 1386)");
                 set_property("choiceAdventure1386", "4");
                 visit_url("main.php?action=may4");
             }
@@ -940,6 +941,7 @@ import <seedfinder/seedfinder.ash>;
                 autosell(item_amount(it), it);
             }
 
+            step("initialization: Mayam rings");
             // MAYAM rings
             if (get_property("_mayamSymbolsUsed") == "" && have_item($item[Mayam Calendar])) {
                 if (!use_familiar($familiar[chest mimic]))
@@ -990,6 +992,7 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
 
+            step("initialization: workshed");
             // Workshed activation
             if (get_property("_workshedItemUsed") == "false" && get_workshed() == $item[none]) {
                 if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
@@ -1007,6 +1010,7 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
 
+            step("initialization: storage pulls");
             // Storage pulls for sea gear
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
                 scale-mail underwear, Congressional Medal of Insanity,
@@ -1608,6 +1612,7 @@ void seaMonkees() {
     }
     
     // ── Guild unlock prerequisite ─────────────────────────────────────────────
+    step("phase: guild unlock");
     if (get_property("questG03Ego") == "unstarted" && item_amount($item[Closed-circuit pay phone]) > 0 && my_path().id == 55 && !highShiny()) {
         unlockGuild();
         if (get_property("questG03Ego") == "unstarted") {
@@ -1617,6 +1622,7 @@ void seaMonkees() {
     }
     post_adv();
     // ── Step: Flytrap pellet ──────────────────────────────────────────────────
+    step("phase: flytrap pellet (Sea Monkees start)");
     if (get_property("questS02Monkees") == "unstarted") {
         // Get citizen/RWB ray on neptune flytrap
         while (item_amount($item[wriggling flytrap pellet]) == 0 && have_effect($effect[Citizen of a Zone]) == 0
@@ -1687,6 +1693,7 @@ void seaMonkees() {
         visit_url("monkeycastle.php?who=1");
 
     // ── Step 1: Edgar Fitzsimmons wreck ──────────────────────────────────────
+    step("phase: Wreck of the Edgar Fitzsimmons (step 1)");
     while (get_property("questS02Monkees") == "step1") {
         if (NCForceEstimate() >= 4){
             if (get_property("noncombatForcerActive") != "true")
@@ -1705,6 +1712,7 @@ void seaMonkees() {
     }
 
     // ── Step 4: Unlocking Grandpa ──────────────────────────────────
+    step("phase: Grandpa unlock (step 4)");
     if (get_property("questS02Monkees") == "step4") {
         use_familiar("-combat");
         if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
@@ -1751,6 +1759,7 @@ void seaMonkees() {
         cli_execute("grandpa grandma");
 
     // ── Step 6: Black Crayon Golem recall ────────────────────────────────────
+    step("phase: golem recall (step 6)");
     if (get_property("questS02Monkees") == "step6" && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55 && !highShiny() && have_skill($skill[just the facts])) {
         if (have_familiar($familiar[red-nosed snapper]))
             use_familiar("itdrop");
@@ -1763,6 +1772,7 @@ void seaMonkees() {
     }
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
+    step("phase: Mer-kin Outpost (stashbox / lockkey)");
     while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || contains_text("step6,step7,step8",get_property("questS02Monkees"))) {
         if ($location[The Mer-Kin Outpost].turns_spent < 5)
             set_property("stashboxChecked", "0");
@@ -1859,6 +1869,7 @@ void seaMonkees() {
         oldGuy();
     }
     // ── Diving helmet acquisition for mid to high shiny ───────────────────────────────
+    step("phase: diving helmet (rivet hunt)");
     if (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat]) {
         if (have_item($item[Cursed monkey's paw]) && count_summons() >= 1 && !highShiny()){
             mood("itdrop");
@@ -1980,6 +1991,7 @@ void seaMonkees() {
     }
 
     // ── Construct banish + habitat recall for cyberzone ───────────────────────
+    step("phase: Mom rescue (habitats / cyberzone)");
     if (my_path().id == 55){
         int initialMomProgress = 24;
         if (!have_item($item[backup camera]))
@@ -2100,6 +2112,7 @@ void seaMonkees() {
     // ── Diving helmet acquisition for non-monkey paw owners and shadow rift owners ───────────────────────────────
 
     // ── Craft sea cowboy hat and chaps ────────────────────────────────────────
+    step("phase: corral (leather / cowbell)");
     if (my_path().id == 0){
         retrieve_item($item[sea chaps]);
         retrieve_item($item[sea cowboy hat]);
@@ -2127,6 +2140,7 @@ void seaMonkees() {
 void sorceress() {
 
     // ── Shadow rift prep ─────────────────────────────────────────────────────
+    step("phase: shadow rift prep");
     if (my_path().id == 55){
         if (to_int(get_property("encountersUntilSRChoice")) > 9
             && get_property("questRufus") == "unstarted"
@@ -2150,6 +2164,7 @@ void sorceress() {
     }
 
     // ── Teflon ore acquisition ────────────────────────────────────────────────
+    step("phase: teflon ore");
     if (item_amount($item[teflon ore]) == 0 && tailpiece() == $item[none]) {
         if (available_amount($item[mer-kin digpick]) == 0 && lowShiny() == false
             && pulls_remaining() > reservedPulls()){
@@ -2187,6 +2202,7 @@ void sorceress() {
         }
 
         // ── Lasso training via shadow rift ────────────────────────────────────────
+        step("phase: lasso training");
         while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
             shadowRift();
 
@@ -2236,6 +2252,7 @@ void sorceress() {
     }
 
     // ── Seahorse taming ───────────────────────────────────────────────────────
+    step("phase: seahorse taming");
     while (get_property("seahorseName") == "") {
         if (my_path().id == 0){
             retrieve_item(3, $item[sea cowbell]);
@@ -2348,6 +2365,7 @@ void sorceress() {
     }
 
     // ── YogUrt preparation ────────────────────────────────────────────────────
+    step("phase: Yog-Urt preparation");
     if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
         if (get_property("isMerkinHighPriest") == "false") {
             if (isKBandSushiEnough() == false || my_path().id == 0){
@@ -2355,6 +2373,7 @@ void sorceress() {
                 if (my_path().id == 0){
                     cli_execute("acquire 10 mer-kin cheatsheet, 10 mer-kin wordquiz, mer-kin killscroll, mer-kin healscroll, mer-kin knucklebone");
                 }
+                step("phase: elementary school (cheatsheets / vocabulary)");
                 while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0") {
                     getCheatsheet();
                 }
@@ -2473,6 +2492,7 @@ void sorceress() {
                 dreadSeedCheck();
             }
 
+            step("phase: library (dreadscroll)");
             // Dread scroll acquisition
             while (available_amount($item[mer-kin dreadscroll]) == 0 || get_property("dreadScroll1") == "0" || get_property("dreadScroll6") == "0" || get_property("dreadScroll8") == "0") {
                 merkinLib();
@@ -2532,6 +2552,7 @@ void sorceress() {
                     leprecondo("22,24,12,8,13,15,10,4,5,6");
             }
 
+            step("phase: becoming High Priest");
             while (get_property("isMerkinHighPriest") == "false") {
                 if (turns_played() <= 17 && get_property("uts_godRunGuard") == "true" && get_property("dreadScroll7") == "0"){
                     if (item_amount($item[mer-kin worktea]) > 0){
@@ -2681,6 +2702,7 @@ void sorceress() {
 
     if (my_path().id == 55 || (my_path().id == 0 && boss == "Shub")){
         // ── Gladiator gear grind ──────────────────────────────────────────────────
+        step("phase: gymnasium (gladiator gear)");
         // || not &&: the colosseum outfit needs BOTH pieces, and with && a run
         // resumed with only one of them exited the loop and aborted on the
         // missing piece at the colosseum maximizer call.
@@ -2708,6 +2730,7 @@ void sorceress() {
         refresh_status();
 
         // ── Colosseum ─────────────────────────────────────────────────────────────
+        step("phase: colosseum");
         while (to_int(get_property("lastColosseumRoundWon")) < 15) {
             string freeFight;
             if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
@@ -2757,6 +2780,7 @@ void sorceress() {
         }
 
         // ── Shub-Jigguwatt ────────────────────────────────────────────────────────
+        step("phase: Shub-Jigguwatt");
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
@@ -2780,6 +2804,7 @@ void sorceress() {
 
     if (my_path().id == 55){
         // ── Naughty Sorceress intro ───────────────────────────────────────────────
+        step("phase: Naughty Sorceress");
         if (get_property("questL13Final") == "unstarted") {
             if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()) {
                 tempEquipment("spell damage percent, mys", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece," + if_equip($item[bat wings])
