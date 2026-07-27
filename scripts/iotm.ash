@@ -88,6 +88,72 @@ boolean saberZone(location loc) {
     return !($locations[The Mer-Kin Outpost] contains loc);
 }
 
+// ─── DETERMINISTIC DIVER PLAN ─────────────────────────────────────────────────
+// Use the Force (option 3) forces every NON-CONDITIONAL drop at 100%, without
+// winning and without spending the turn. Per mafia's monsters.txt the diver's
+// whole payload is non-conditional -- rusty rivet n20/n15/n10/n5, rusty
+// porthole n15, rusty broken diving helmet n15 -- so one Forced diver is a
+// guaranteed 4 rivets + porthole + helmet, independent of item bonus.
+// (Its c-flagged drops, glowing syringe and unholy water, are not forced; we
+// want neither.)
+//
+// Duplicate is cast BEFORE the Force so the doubled table is what gets
+// dropped: duplicate + Force is the ceiling (8 rivets in one fight), and if
+// the pairing turns out not to double under the Force, the ladder simply
+// proceeds to diver #2 -- every rung is guarded on still being short.
+
+// The rivet hunt is live while nothing that fills the diving-helmet slot is
+// owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
+// out of reach of this file.
+boolean diverHuntActive() {
+    if (item_amount($item[rusty rivet]) >= 8)
+        return false;
+    foreach it in $items[Mer-kin gladiator mask, Mer-kin scholar mask,
+        crappy Mer-kin mask, aerated diving helmet, Elf Guard SCUBA tank] {
+        if (item_amount(it) > 0 || have_equipped(it))
+            return false;
+    }
+    return true;
+}
+
+boolean diverForceReady() {
+    return diverHuntActive()
+        && have_item($item[Fourth of May Cosplay Saber])
+        && to_int(get_property("_saberForceUses")) < 5;
+}
+
+// Force charges the rest of the script may spend (free-run of last resort).
+// Two stay reserved while the diver plan can still need them.
+int saberForcesFree() {
+    int reserved = diverHuntActive() ? 2 : 0;
+    return 5 - to_int(get_property("_saberForceUses")) - reserved;
+}
+
+// Weapon-slot pin for the summoned diver fights, so the Force is castable.
+string diverSaber() {
+    if (diverForceReady())
+        return "Fourth of May Cosplay Saber,";
+    return "";
+}
+
+// CCS entry. On the diver: lay the insurance egg for diver #2 while the fight
+// is still open, then Force the drops. Returns true when it Forced -- the
+// combat is over and the caller must end the consult pass.
+boolean diverForce(monster mob, string page_text) {
+    if (mob != $monster[unholy diver])
+        return false;
+    if (!diverForceReady())
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    if (my_familiar() == $familiar[chest mimic])
+        use_skill($skill[%fn, lay an egg]);
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
 // Returns the number of chamois available in the clan slime tube
 int chamoixAmount() {
     matcher m = create_matcher("There are (\\d+) chamoi", visit_url("clan_slimetube.php?action=bucket"));
@@ -451,15 +517,15 @@ boolean timeSpinnerReady() {
         && my_adventures() > 0;
 }
 
-void timeSpinnerRefight(location loc) {
-    if (!timeSpinnerReady() || !(wantedMonster contains loc))
-        return;
-    // Only worth a turn where the target is genuinely rare; these are the same
-    // zones Map the Monsters spends its charges on.
-    if (!mapZone(loc))
-        return;
-    if (my_location() != loc || last_monster().id != wantedMonster[loc])
-        return;
+// Re-fight `mon` for one turn, guaranteed. Only fires straight after fighting
+// that monster (last_monster()), which keeps it inside the recent-fights
+// window without guessing at the window's exact size -- and works after
+// summoned or Forced fights too, since the list records encounters, not wins.
+boolean timeSpinnerFight(monster mon) {
+    if (!timeSpinnerReady())
+        return false;
+    if (last_monster() != mon)
+        return false;
 
     visit_url("inv_use.php?whichitem=" + to_int($item[Time-Spinner]) + "&pwd=" + my_hash());
     int travel;
@@ -474,13 +540,26 @@ void timeSpinnerRefight(location loc) {
     if (travel == 0) {
         if (backOut > 0)
             run_choice(backOut);
-        return;
+        return false;
     }
     run_choice(travel);
-    run_choice(1, "monid=" + wantedMonster[loc]);
+    run_choice(1, "monid=" + to_int(mon));
     // The monid submit drops us into the fight; without this the session is
     // left mid-combat and the next adv() errors out.
     run_combat();
+    return true;
+}
+
+void timeSpinnerRefight(location loc) {
+    if (!(wantedMonster contains loc))
+        return;
+    // Only worth a turn where the target is genuinely rare; these are the same
+    // zones Map the Monsters spends its charges on.
+    if (!mapZone(loc))
+        return;
+    if (my_location() != loc)
+        return;
+    timeSpinnerFight(to_monster(wantedMonster[loc]));
 }
 
 // ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
@@ -520,6 +599,11 @@ boolean professorReady() {
 }
 
 void professorFamiliar() {
+    // Under the Force plan a diver pays 4 guaranteed rivets and the second
+    // one is a Time-Spinner refight away -- lecture copies add nothing, so
+    // keep the better drop familiar out.
+    if (diverForceReady())
+        return;
     if (!professorReady())
         return;
     if (item_amount($item[rusty rivet]) >= 8)
@@ -567,6 +651,10 @@ boolean champagneReady() {
 // Fitzsimmons only, deliberately. Equipping it anywhere else would drain ounces
 // on fights whose drop tables cannot pay them back.
 string champagneEquip(location loc) {
+    // Forced drops ignore item bonus entirely, so while the Force plan is
+    // live the bottle's ounces are better banked than drained on free kills.
+    if (diverForceReady())
+        return "";
     if (champagneReady() && loc == $location[The Wreck of the Edgar Fitzsimmons])
         return if_equip($item[broken champagne bottle]);
     return "";
@@ -697,10 +785,11 @@ void feelNostalgic(monster mob, string page_text) {
         return;
     if (to_int(get_property("_feelNostalgicUsed")) >= 3)
         return;
-    // The appended drops only pay out if this fight is WON. When the saber is
-    // armed, free_kill() may Use the Force out of the combat, forfeiting the
-    // win and the charge with it -- so never overlap the two.
-    if (saberReady() && have_equipped($item[Fourth of May Cosplay Saber]))
+    // The appended drops only pay out if this fight is WON. When the saber
+    // still has Force charges the rest of the script may spend, free_kill()
+    // may Use the Force out of the combat, forfeiting the win and the charge
+    // with it -- so never overlap the two.
+    if (saberForcesFree() > 0 && have_equipped($item[Fourth of May Cosplay Saber]))
         return;
     if (mob == $monster[unholy diver])
         return;
@@ -726,6 +815,10 @@ void feelNostalgic(monster mob, string page_text) {
 // Reflex Hammer, the third skill, is a free runaway plus a 30-turn banish, and
 // is wired into free_run() with the other banishes rather than here.
 void otoscope(monster mob, string page_text) {
+    // A fight the saber is about to Force has its drops forced anyway; the
+    // +200% would be a wasted charge.
+    if (diverForceReady() && have_equipped($item[Fourth of May Cosplay Saber]))
+        return;
     if (to_int(get_property("_otoscopeUsed")) >= 3)
         return;
     if (!have_equipped($item[Lil' Doctor&trade; bag]))

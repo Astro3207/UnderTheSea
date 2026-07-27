@@ -38,8 +38,9 @@ void free_kill(string ptext, boolean drop) {
     // conditional drops, so every real free kill above is strictly better and
     // gets first refusal. It only runs if the fight is somehow still going and
     // the saber was deliberately equipped for this zone by saberEquip().
+    // saberForcesFree() keeps two charges reserved for the diver plan.
     if (current_round() > 0
-        && saberReady()
+        && saberForcesFree() > 0
         && have_equipped($item[Fourth of May Cosplay Saber])
         && contains_text(ptext, "Use the Force"))
         use_skill($skill[Use the Force]);
@@ -168,10 +169,15 @@ item bangB(){
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
+    // One extra roll of the diver's drop table, once a day, for no turn.
+    // Cast BEFORE the Force below so the doubled table is what gets dropped.
+    duplicateMonster(mob, page_text);
+    // Deterministic diver: insurance egg, then Use the Force hands over every
+    // non-conditional drop and ends the fight -- nothing below applies.
+    if (diverForce(mob, page_text))
+        return;
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
-    // One extra roll of the diver's drop table, once a day, for no turn.
-    duplicateMonster(mob, page_text);
     // +200% item on the diver itself, three a day, before free_kill can end it.
     otoscope(mob, page_text);
     // Free stench jelly off any stench monster; NCforce() spends it as a sneak.
