@@ -1174,7 +1174,12 @@ void NCforce() {
                 || to_int(get_property("timesRested")) < total_free_rests())){
             while (to_int(get_property("_cinchUsed")) > 40
                 && to_int(get_property("timesRested")) < total_free_rests()) {
-                cli_execute("unequip hat; equip apriling band helmet; camp rest free");
+                // The helmet sweetens the rest but is optional; equipping it
+                // unowned hard-errors ("You need 1 more Apriling band helmet")
+                // and kills the run.
+                if (have_item($item[Apriling band helmet]))
+                    cli_execute("unequip hat; equip apriling band helmet");
+                cli_execute("camp rest free");
             }
             if (to_int(get_property("_cinchUsed")) <= 40) {
                 equip($slot[acc3], $item[cincho de mayo]);
