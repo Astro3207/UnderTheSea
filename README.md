@@ -51,12 +51,13 @@ Two ways to run it, both typed into the gCLI:
 | `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
 | `UnderTheSea sim` | Checklist only — prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit (with the biggest missing savings called out), and exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
 
-Preferences, set once in the gCLI; both default to off:
+Preferences, set once in the gCLI; all default to off:
 
 | Preference | What it does |
 |---|---|
 | `set uts_godRunGuard = true` | Abort at ≤17 turns played if the dreadscroll 7 clue is still unknown, so you can eat a sushi for it instead of burning a record attempt. Only worth enabling if you are chasing a top turncount. |
 | `set uts_postloopCommand = <command>` | CLI command to run once the loop finishes (e.g. a farming script). Leave empty to skip. |
+| `set uts_runOutEagleBanish = true` | **Experimental.** After the run finishes, keep adventuring in your class's pearl zone until the patriotic eagle's Patriotic Screech stops banishing the construct phylum — a leftover phylum banish can make other scripts misbehave. The burned turns farm unblemished pearls (which ride to your next ascension in the codpiece). Needs the pearl zone open and turns of Fishy, and aborts loudly the moment it can't continue. Likely to burn a lot of turns post-run unless you have a lot of free kills. |
 
 ## High shiny, low shiny
 

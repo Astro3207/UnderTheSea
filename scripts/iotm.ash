@@ -1758,16 +1758,34 @@ void pullChecklist() {
 }
 
 // ─── SIM MODEL ────────────────────────────────────────────────────────────────
-// The turn model behind "UnderTheSea sim": start from a kit-less baseline and
-// credit each owned IOTM, skill and familiar with the turns it saves a run,
-// discounting later credits -- savings overlap, so the tenth item is worth
-// less than the first. Calibrated so a full kit models at ~33 turns
-// (leaderboard pace) and an empty kit at the ~91-turn baseline. The weights
-// are the midpoints of the per-item estimates modeled against a measured
-// 47-turn reference run.
+// The turn model behind "UnderTheSea sim". Anchored at both ends: a no-IOTM,
+// moderate-perms account runs the path in 180-200 adventures (community
+// 1-day guide), and a full kit runs at ~33 (leaderboard pace). Each owned
+// IOTM, skill and familiar contributes "kit power" -- its per-item weight,
+// with later credits discounted since savings overlap -- and the curve
+// between the anchors is quadratic: near a full kit each missing item costs
+// about its published estimate, while on a bare account the first few items
+// are worth several times their weight. Weights are the midpoints of the
+// per-item estimates modeled against a measured 47-turn reference run.
+
+// Kit power of a set of weights: biggest five in full, next five at 75%,
+// the rest at half.
+float simTierSum(float [int] vals) {
+    sort vals by -value;
+    float total;
+    int rank;
+    foreach i in vals {
+        if (rank < 5) total += vals[i];
+        else if (rank < 10) total += 0.75 * vals[i];
+        else total += 0.5 * vals[i];
+        rank += 1;
+    }
+    return total;
+}
 
 void simEstimate() {
-    float BASELINE = 91.0;
+    float BASELINE = 190.0;   // no-IOTM anchor: the guide's 180-200 range
+    float FULLKIT = 33.0;     // full-kit anchor: leaderboard pace
     float FLOOR = 31.0;
     float [string] worth;
     // Route carriers
@@ -1837,31 +1855,29 @@ void simEstimate() {
     worth[to_string($familiar[Foul Ball])] = 0.5;
     worth[to_string($familiar[Jumpsuited Hound Dog])] = 0.5;
 
+    float [int] all;
     float [int] have;
     float [string] missing;
     foreach name, saving in worth {
+        all[count(all)] = saving;
         if (simOwned contains name)
             have[count(have)] = saving;
         else
             missing[name] = saving;
     }
 
-    // Biggest savings count in full; the deeper the kit, the more the next
-    // item's job is already covered by something else.
-    sort have by -value;
-    float saved;
-    int rank;
-    foreach i in have {
-        if (rank < 5) saved += have[i];
-        else if (rank < 10) saved += 0.75 * have[i];
-        else saved += 0.5 * have[i];
-        rank += 1;
-    }
-    int est = to_int(BASELINE - saved + 0.5);
+    // Quadratic between the anchors. gap is the kit power still missing;
+    // the linear term prices items near a full kit at their published
+    // estimates, the squared term stretches an empty kit out to BASELINE.
+    float full = simTierSum(all);
+    float gap = full - simTierSum(have);
+    float b = (BASELINE - FULLKIT - full) / (full * full);
+    int est = to_int(FULLKIT + gap + b * gap * gap + 0.5);
     if (est < to_int(FLOOR)) est = to_int(FLOOR);
 
     print("Modeled run length for this kit: ~" + est + " turns.", "blue");
-    print("(Baseline " + to_int(BASELINE) + " with no IOTMs at all; a full kit models at ~33."
+    print("(Anchors: ~" + to_int(BASELINE) + " turns with no IOTMs -- the community"
+        + " 1-day guide expects 180-200 -- and ~33 with a full kit."
         + " Savings overlap, so treat this as a planning number, not a promise.)");
     if (!(simOwned contains to_string($item[monodent of the sea])))
         print("No Monodent of the Sea: the estimate assumes you acquire one -- the route aborts without it.", "red");
