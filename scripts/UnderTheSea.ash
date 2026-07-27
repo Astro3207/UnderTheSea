@@ -1003,6 +1003,15 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
 
+            // Meteor Lore: the guide is owned but its skills only exist in-run
+            // after reading it. Macrometeorite is the free monster re-roller
+            // the diver and corral hunts lean on.
+            if (!have_skill($skill[Macrometeorite]) && have_item($item[Pocket Meteor Guide])) {
+                if (item_amount($item[Pocket Meteor Guide]) == 0)
+                    pullSequence($item[Pocket Meteor Guide]);
+                use($item[Pocket Meteor Guide]);
+            }
+
             // Storage pulls for sea gear
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
                 scale-mail underwear, Congressional Medal of Insanity,
@@ -1296,6 +1305,9 @@ import <seedfinder/seedfinder.ash>;
     void getMissingCorralItems(){
         string conditional;
         use_familiar("itdrop");
+        // Lecture copies of the sea cow once the Force budget is spent;
+        // internally gated, a no-op the rest of the time.
+        professorFamiliar();
         if (!contains_text(get_property("banishedMonsters"),"Mer-kin rustler")
             || (doneWithCowboy() && !contains_text(get_property("banishedMonsters"),"sea cowboy"))
             || (doneWithSeaCow() && !contains_text(get_property("banishedMonsters"),"sea cow:")))
@@ -1304,11 +1316,17 @@ import <seedfinder/seedfinder.ash>;
             conditional += "congressional medal of insanity,";
         conditional += saberEquip($location[The Coral Corral]);
         conditional += cloakeEquip($location[The Coral Corral]);
+        conditional += champagneEquip($location[The Coral Corral]);
         tempEquipment("item drop", "really nice swimming trunks," + if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
             set_property("choiceAdventure1589","1&victim=775");
         else if (!doneWithCowboy())
             set_property("choiceAdventure1589","1&victim=776");
+        // Whichever victim we are hunting, its whole table is non-conditional,
+        // so once the Force budget is out the ray forces the same result. The
+        // CCS kill path fires it via Spit jurassic acid.
+        if (saberForcesFree() <= 1)
+            yellowRayPrep();
 
         // Unconditional: a dangling `else` used to swallow this line, so the
         // itdrop buffs were skipped on every pass that still had a victim to

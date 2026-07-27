@@ -176,6 +176,10 @@ void main(int round, monster mob, string page_text) {
     // non-conditional drop and ends the fight -- nothing below applies.
     if (diverForce(mob, page_text))
         return;
+    // Same trick on the sea cow's leather and cowbells, from the unreserved
+    // Force balance.
+    if (seaCowForce(mob, page_text))
+        return;
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
     // +200% item on the diver itself, three a day, before free_kill can end it.
@@ -530,20 +534,32 @@ void main(int round, monster mob, string page_text) {
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
+                        // Runs exhausted: re-roll the fight into a fresh draw
+                        // rather than killing a monster that owes us nothing.
+                        if (current_round() > 0 && rerollEnemy(page_text))
+                            return;
                     }
                 } else if (mob == $monster[sea cow] && doneWithSeaCow()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
+                        if (current_round() > 0 && rerollEnemy(page_text))
+                            return;
                     }
                 } else if (mob == $monster[sea cowboy] && doneWithCowboy()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
+                        if (current_round() > 0 && rerollEnemy(page_text))
+                            return;
                     }
                 }
+                // Fight being killed from here on -- the one safe moment for a
+                // Feel Nostalgic charge on the cow's table.
+                if (current_round() > 0)
+                    feelNostalgic(mob, page_text);
                 if (have_equipped($item[legendary seal-clubbing club]))
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 cleanUp();
