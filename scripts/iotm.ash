@@ -543,9 +543,7 @@ void censer() {
 
 // ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
 // Take only the daily free pill -- the rest cost spleen the diet needs.
-// `pill` must be a mafia pillkeeper KEYWORD ([free] explode | extend |
-// noncombat | element | stat | familiar | lucky | random); the command does
-// not accept pill names.
+// `pill` is a mafia pillkeeper keyword, not a pill name.
 void pillKeeper(string pill) {
     if (!have_item($item[Eight Days a Week Pill Keeper]))
         return;
