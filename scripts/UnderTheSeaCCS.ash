@@ -161,6 +161,41 @@ item bangB(){
     return $item[none];
 }
 
+// Shub's percentage delevelers, strongest first, per the wiki: jam band
+// bootleg 50%, crayon shavings 30%, rattler rattle and electronics kit 25%.
+// All multiplicative, none deal damage (which would trigger his doubling
+// 20%-max-HP retaliation).
+item shubDeleveler() {
+    foreach it in $items[jam band bootleg, crayon shavings, rattler rattle,
+        electronics kit] {
+        if (item_amount(it) > 0)
+            return it;
+    }
+    return $item[none];
+}
+
+// Throw delevelers until his attack multiplier is floored (~x0.25),
+// funkslinging same-item pairs while worthwhile. Two bootlegs, four
+// shavings, or a mix all land in 2-4 rounds.
+void shubDelevel() {
+    float remaining = 1.0;
+    while (remaining > 0.25 && current_round() > 0) {
+        item d = shubDeleveler();
+        if (d == $item[none])
+            break;
+        float f = (d == $item[jam band bootleg]) ? 0.5
+            : (d == $item[crayon shavings]) ? 0.7 : 0.75;
+        if (item_amount(d) >= 2 && (remaining * f * f) >= 0.2
+            && have_skill($skill[Ambidextrous Funkslinging])) {
+            throw_items(d, d);
+            remaining = remaining * f * f;
+        } else {
+            throw_item(d);
+            remaining = remaining * f;
+        }
+    }
+}
+
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
@@ -789,13 +824,8 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Left Door)]:
-            if (have_effect($effect[null afternoon]) == 0){
-                // Two pairs floor his attack (30% multiplicative each, and
-                // every prior loss shaves 250 off the base); the old four
-                // pairs wasted four shavings and two extra chip rounds.
-                for i from 1 to 2
-                    throw_items($item[crayon shavings], $item[crayon shavings]);
-            }
+            if (have_effect($effect[null afternoon]) == 0)
+                shubDelevel();
             while (current_round() > 0)
                 attack();
             break;
@@ -830,8 +860,8 @@ void main(int round, monster mob, string page_text) {
                 attack();
             }
             if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
-                for i from 1 to 2
-                    throw_items($item[crayon shavings], $item[crayon shavings]);
+                if (have_effect($effect[null afternoon]) == 0)
+                    shubDelevel();
                 while (current_round() > 0)
                     attack();
             }

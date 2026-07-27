@@ -2811,20 +2811,44 @@ void sorceress() {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
             else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // Two pairs is the whole need now. Pull the exploit right
-                // here rather than trusting the late-pulls block upstream to
-                // have done it -- on a fresh day this closes the gap in one
-                // pull. The monkey's paw is NOT a fallback: shavings are not
-                // wishable ("That wish is quite impossible"), and a refused
-                // wish consumes nothing, so a wish loop hung a run.
+                // The need is 4 shaving-EQUIVALENTS: the CCS's shubDelevel()
+                // throws the whole wiki family -- jam band bootleg counts
+                // double (50%), rattler rattle and electronics kit count one
+                // (25%) -- and the paw sometimes grants those even when it
+                // refuses the exploit and the shavings ("That wish is quite
+                // impossible" consumes nothing, so testing wishes is free).
+                // Ladder: pull the exploit in place, then free golem fights
+                // (they drop shavings), then an abort naming every exit.
                 if (item_amount($item[null-day exploit]) == 0)
                     pullSequence($item[null-day exploit]);
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
-                if (item_amount($item[crayon shavings]) < 4
+                int delevelUnits = item_amount($item[crayon shavings])
+                    + 2 * item_amount($item[jam band bootleg])
+                    + item_amount($item[rattler rattle])
+                    + item_amount($item[electronics kit]);
+                int golemTries;
+                while (delevelUnits < 4
+                    && have_effect($effect[null afternoon]) == 0
+                    && count_summons() >= 1 && golemTries < 6) {
+                    golemTries += 1;
+                    use_familiar("itdrop");
+                    tempEquipment("item drop", if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
+                    mood("itdrop");
+                    summon($monster[black crayon golem]);
+                    run_combat();
+                    delevelUnits = item_amount($item[crayon shavings])
+                        + 2 * item_amount($item[jam band bootleg])
+                        + item_amount($item[rattler rattle])
+                        + item_amount($item[electronics kit]);
+                }
+                if (delevelUnits < 4
                     && have_effect($effect[null afternoon]) == 0)
-                    abort("Shub prep is short: acquire 4 crayon shavings or a"
-                        + " null-day exploit (Null Afternoon) and rerun.");
+                    abort("Shub prep is short: need 4 shaving-equivalents"
+                        + " (crayon shavings x1, jam band bootleg x2, rattler"
+                        + " rattle / electronics kit x1) or Null Afternoon."
+                        + " Paw wishes, golem fights and rollover pulls all"
+                        + " work; acquire and rerun.");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
