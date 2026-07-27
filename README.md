@@ -192,33 +192,6 @@ with what you own.
 | Pocket Professor | Lecture copy chains on the diver and the sea cow |
 | Tiny Plastic Santa Claus Skeleton | Aftercore Dad Sea Monkee fight only |
 
-## Does class matter?
-
-Any class can complete the run, but the script is tuned on **Sauceror**, and
-the polish drops off the further you get from it:
-
-- **Prime stat picks your zones.** The guild-unlock quest, the pearl /
-  Grandpa noncombat hunt, and the backup lasso zone are all selected by
-  `my_primestat()` (Mysticality → Marinara Trench, Moxie → Dive Bar, Muscle →
-  Anemone Mine), with matching resistance moods. All three are mapped; none
-  of them breaks.
-- **Moxie classes get shortcuts** the others don't: pickpocketing pristine
-  fish scales, and tearaway pants skipping the guild test.
-- **The combat finisher casts Saucegeyser / Saucestorm.** Other classes lean
-  on free kills and plain attacks instead; fights that fall through to the
-  spell finisher will error without those skills, so expect rough edges.
-- **The Colosseum plan builds spell damage for Saucegeyser.** The gear
-  maximizer targets `spell damage percent, mys` — on a non-Mysticality class
-  the fifteen rounds will be slower and may need attention.
-- **The aftercore Dad Sea Monkee fight** uses the Mysticality spell rotation.
-- Skills from other classes are cast only if known (Cannelloni Cocoon, The
-  Ode to Booze, Tongue of the Walrus, Raise Backup Dancer, Double-Fisted
-  Skull Smashing for dual-wield equipping).
-
-Ascending as a different class mostly means different zones for the early
-quests and losing whichever of the shortcuts above belonged to your old
-class. The turn estimates in the commit history assume Sauceror.
-
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
 
 ## Items to add support for
