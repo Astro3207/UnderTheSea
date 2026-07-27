@@ -167,6 +167,124 @@ int NCForceEstimate(){
     return force;
 }
 
+// ─── SOURCE TERMINAL ──────────────────────────────────────────────────────────
+// The terminal is a campground fixture, so it survives ascension and there is
+// nothing to install or pull in-run.
+//
+// Only enhance is routed in. items.enh is a flat +item drops buff lasting 25
+// turns, or 100 on a fully chipped terminal, with up to 3 casts a day. It costs
+// no turn and carries no risk, and it shortens every drop-farming loop in the
+// script, so it is called wherever we are already setting up for +item.
+//
+// Digitize is deliberately NOT used, despite being the obvious candidate:
+//
+//   - It does not create a free fight. It creates a wandering monster, and that
+//     wanderer costs an adventure when it lands.
+//   - Copies arrive 7 turns after the cast, then +27, +57. Recasting resets the
+//     counter, so 3 casts is roughly 3 copies at 7-turn spacing, and none of it
+//     can be aimed at a particular zone.
+//   - The only long contiguous block in this route is the Mer-kin Outpost, and
+//     that block is spent hunting NONCOMBATS: the stashbox (choices 313/314/315),
+//     prayerbeads and the lockkey. A wandering combat there displaces exactly
+//     what we are looking for.
+//   - Wanderers outrank forced noncombats, so a mistimed copy can waste a Cincho
+//     charge on top of the turn.
+//
+// Map the Monsters already supplies 3 precisely aimed encounters with none of
+// that downside, which makes digitize a strictly worse version of the same idea.
+
+void sourceEnhance() {
+    if (get_campground()[$item[Source terminal]] == 0)
+        return;
+    if (have_effect($effect[items.enh]) > 0)
+        return;
+    if (to_int(get_property("_sourceTerminalEnhanceUses")) >= 3)
+        return;
+    cli_execute("terminal enhance items.enh");
+}
+
+// duplicate.edu is the other educate file worth routing in, and unlike digitize
+// it costs nothing to slot. Duplicate turns a monster into two, and each copy
+// rolls the whole drop table separately, so one cast is worth exactly one extra
+// encounter of that monster -- for no turn at all.
+//
+// Slotting it displaces nothing. The two active educate slots hold extract.edu
+// and digitize.edu, and this script casts neither: Extract only farms Source
+// essence, which we have no use for in-run, and digitize was rejected outright
+// for the reasons above.
+//
+// It is spent on the unholy diver. That is the rarest monster we still farm, at
+// 1 in 5, and it carries four separate rusty rivet slots at 20/15/10/5% on top
+// of the porthole and the broken helmet, so it has by far the fattest drop table
+// in the run. One extra roll of it is worth roughly the five turns it would take
+// to meet another diver.
+//
+// A cast against an uncopyable monster does not consume the daily use, so a
+// misfire costs only MP and a round.
+
+boolean duplicateEducated() {
+    return get_property("sourceTerminalEducate1") == "duplicate.edu"
+        || get_property("sourceTerminalEducate2") == "duplicate.edu";
+}
+
+boolean duplicateReady() {
+    if (get_campground()[$item[Source terminal]] == 0)
+        return false;
+    if (to_int(get_property("_sourceTerminalDuplicateUses")) >= 1)
+        return false;
+    return contains_text(get_property("sourceTerminalEducateKnown"), "duplicate.edu");
+}
+
+void sourceEducate() {
+    if (!duplicateReady() || duplicateEducated())
+        return;
+    cli_execute("terminal educate duplicate.edu");
+}
+
+// Called from the CCS. Doubling the diver doubles its HP, attack, defence and
+// attacks per round as well as its drops, so it goes out early in the fight
+// rather than being saved for last.
+void duplicateMonster(monster mob, string page_text) {
+    if (!duplicateReady() || !duplicateEducated())
+        return;
+    if (mob != $monster[unholy diver])
+        return;
+    // Nothing left to gain once the rivets are in hand.
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    if (!contains_text(page_text, "Duplicate"))
+        return;
+    use_skill($skill[Duplicate]);
+}
+
+// ─── SEPT-EMBER CENSER ────────────────────────────────────────────────────────
+// Seven embers a day. They bank across days rather than resetting at rollover,
+// but only once the censer has actually been stoked -- they do not accrue on
+// their own, so the run has to go and claim them.
+//
+// One shop item is already a consumer in this script: the CCS throws a Septapus
+// summoning charm at the shadow slab, and the charm makes seven pickpocket
+// attempts. A pickpocket takes an item outside the drop roll entirely, which
+// makes it immune to the 100%-per-slot cap that blunts every +item buff we
+// stack, so it is the one thing on these shelves that reliably shortens a loop.
+//
+// Nothing else there earns its embers on the turn axis: wheel of camembert and
+// head of emberg lettuce buy adventures, the jacket, bembershoot and hat of
+// remembering are resistance and MP, and structural ember and the miniature
+// Embering Hulk are crafting and a fight we have no use for.
+void censer() {
+    if (!have_item($item[Sept-Ember Censer]))
+        return;
+    if (get_property("_septEmberBalanceChecked") == "false")
+        visit_url("shop.php?whichshop=september");
+    int wanted = 3 - item_amount($item[Septapus summoning charm]);
+    int afford = to_int(get_property("availableSeptEmbers")) / 2;
+    if (afford < wanted)
+        wanted = afford;
+    if (wanted > 0)
+        buy($coinmaster[Sept-Ember Censer], wanted, $item[Septapus summoning charm]);
+}
+
 // ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
 // The first pill each day is free; every one after costs 3 spleen, which we need
 // for fish sauce to stay Fishy, so only ever take the free one.
@@ -302,6 +420,20 @@ void timeSpinnerRefight(location loc) {
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
+// Why this script forces noncombats instead of just stacking more -combat:
+//
+// Combat frequency has hard diminishing returns. The first 25 points of a
+// modifier count in full; beyond that, every further 5 points contribute only 1.
+// A raw -30 lands at -26, and a raw -50 lands at -30.
+//
+// The mood("-combat") list already casts roughly -50 raw before the maximizer
+// adds any gear, so it is deep in the 5:1 band. Another -5 or -10 raw from any
+// source is worth one or two effective points, which is why cheap-looking
+// -combat buffs are not worth routing in here.
+//
+// A forced noncombat -- a "sneak" -- bypasses the roll entirely and is not
+// subject to any of this, so forcing is strictly better than buffing once the
+// stack is this deep. That is what NCForceEstimate() is counting.
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
