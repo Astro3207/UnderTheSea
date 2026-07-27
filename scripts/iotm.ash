@@ -1565,6 +1565,123 @@ void baseballD() {
     }
 }
 
+// ─── RUN-START CHECKLISTS ─────────────────────────────────────────────────────
+// Logged once at initialization: which supported IOTMs this account is
+// missing (future acquisitions), and which of the pulls the route may ask for
+// are absent from Hagnk's and would have to be mall-bought or cannot be
+// bought at all. Purely informational -- every use in the script is
+// ownership-guarded regardless.
+
+string trimList(string s) {
+    if (length(s) > 2)
+        return substring(s, 0, length(s) - 2);
+    return s;
+}
+
+void iotmChecklist() {
+    boolean [item] iotmItems = $items[monodent of the sea,
+        closed-circuit pay phone, 2002 Mr. Store Catalog, cursed monkey's paw,
+        august scepter, Fourth of May Cosplay Saber, Peridot of Peril,
+        blood cubic zirconia, baseball diamond, Heartstone, backup camera,
+        Jurassic Parka, spring shoes, Everfull Dart Holster, Mayam Calendar,
+        Leprecondo, Cincho de Mayo, McHugeLarge duffel bag,
+        Apriling band helmet, April Shower Thoughts shield, bat wings,
+        server room key, Time-Spinner, January's Garbage Tote, Powerful Glove,
+        combat lover's locket, Lil' Doctor&trade; bag, mumming trunk,
+        Kremlin's Greatest Briefcase, Cargo Cultist Shorts,
+        Eight Days a Week Pill Keeper, Sept-Ember Censer, vampyric cloake,
+        Unwrapped knock-off retro superhero cape, roman candelabra,
+        miniature crystal ball, latte lovers member's mug, V for Vivala mask,
+        designer sweatpants, tearaway pants, autumn-aton, cosmic bowling ball];
+    boolean [skill] iotmSkills = $skills[Just the Facts, Map the Monsters,
+        Macrometeorite, Feel Nostalgic];
+    boolean [familiar] iotmFamiliars = $familiars[Grouper Groupie,
+        Red-Nosed Snapper, Jill-of-All-Trades, Chest Mimic, Patriotic Eagle,
+        Sword of S Words, Peace Turkey, Disgeist, Jumpsuited Hound Dog,
+        Glover, Foul Ball, Space Jellyfish, Pocket Professor,
+        Tiny Plastic Santa Claus Skeleton];
+
+    string have;
+    string missing;
+    int owned;
+    int total;
+    foreach it in iotmItems {
+        total += 1;
+        if (have_item(it)) { owned += 1; have += it + ", "; }
+        else missing += it + ", ";
+    }
+    foreach sk in iotmSkills {
+        total += 1;
+        if (have_skill(sk)) { owned += 1; have += sk + ", "; }
+        else missing += sk + ", ";
+    }
+    foreach fam in iotmFamiliars {
+        total += 1;
+        if (have_familiar(fam)) { owned += 1; have += fam + ", "; }
+        else missing += fam + ", ";
+    }
+    total += 1;
+    if (get_workshed() != $item[none]
+        || have_item($item[Asdon Martin keyfob (on ring)])
+        || have_item($item[model train set])
+        || have_item($item[portable Mayo Clinic])
+        || have_item($item[TakerSpace letter of Marque])) {
+        owned += 1; have += "a workshed, ";
+    } else
+        missing += "a workshed, ";
+    total += 1;
+    if (get_campground() contains $item[Source terminal]) {
+        owned += 1; have += "Source Terminal, ";
+    } else
+        missing += "Source Terminal, ";
+
+    print("IOTM check: " + owned + " of " + total + " supported IOTMs owned.");
+    if (have != "")
+        print("Owned: " + trimList(have));
+    if (missing != "")
+        print("Missing (future acquisitions): " + trimList(missing), "olive");
+}
+
+void pullChecklist() {
+    boolean [item] pulls = $items[Mer-kin sneakmask, sea lasso, shark jumper,
+        scale-mail underwear, Congressional Medal of Insanity,
+        Flash Liquidizer Ultra Dousing Accessory, Mer-kin digpick, lodestone,
+        comb jelly, Elf Guard SCUBA tank, rusty rivet, sea cowbell,
+        Mer-kin prayerbeads, Mer-kin healscroll, Mer-kin killscroll,
+        Mer-kin worktea, Mer-kin knucklebone, Mer-kin cheatsheet,
+        Mer-kin hallpass, Mer-kin hidepaint, pro skateboard, software glitch,
+        pulled yellow taffy, stuffed yam stinkbomb, waffle, skate blade,
+        null-day exploit, New Age healing crystal, soggy used band-aid,
+        damp old wallet, fish sauce, Aldebaran sardines,
+        pie man was not meant to eat, Handheld Allied radio, Clara's bell,
+        stench jelly, peppermint parasol, ink bladder, Mer-kin pinkslip,
+        Louder Than Bomb, anchor bomb];
+
+    string stocked;
+    string toBuy;
+    string unbuyable;
+    foreach it in pulls {
+        // Catalog credits create these in-run; only worth stocking without it.
+        if (have_item($item[2002 Mr. Store Catalog])
+            && $items[pro skateboard, software glitch] contains it)
+            continue;
+        if (storage_amount(it) > 0)
+            stocked += it + ", ";
+        else if (is_tradeable(it))
+            toBuy += it + ", ";
+        else
+            unbuyable += it + ", ";
+    }
+    if (stocked != "")
+        print("Pulls already in Hagnk's: " + trimList(stocked));
+    if (toBuy != "")
+        print("Pulls not in Hagnk's — will be mall-bought if the route needs them: "
+            + trimList(toBuy), "olive");
+    if (unbuyable != "")
+        print("Pulls not in Hagnk's and NOT mall-buyable — acquire before they're needed: "
+            + trimList(unbuyable), "red");
+}
+
 // ─── FINISHER ─────────────────────────────────────────────────────────────────
 // Resets all script overrides and hands control back to garbo
 void starter(){

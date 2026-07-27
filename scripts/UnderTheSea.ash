@@ -848,6 +848,9 @@ import <seedfinder/seedfinder.ash>;
         }
         if (get_property("autoSatisfyWithNPCs") == "false")
             abort("set autoSatisfyWithNPCs = true, the script isn't going to work if it's false");
+        iotmChecklist();
+        if (my_path().id == 55)
+            pullChecklist();
         write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
         set_ccs("temp");
         set_property("battleAction", "custom combat script");
