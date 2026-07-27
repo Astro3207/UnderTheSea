@@ -790,7 +790,10 @@ void main(int round, monster mob, string page_text) {
 
         case $location[Mer-kin Temple (Left Door)]:
             if (have_effect($effect[null afternoon]) == 0){
-                for i from 1 to 4
+                // Two pairs floor his attack (30% multiplicative each, and
+                // every prior loss shaves 250 off the base); the old four
+                // pairs wasted four shavings and two extra chip rounds.
+                for i from 1 to 2
                     throw_items($item[crayon shavings], $item[crayon shavings]);
             }
             while (current_round() > 0)
@@ -827,7 +830,7 @@ void main(int round, monster mob, string page_text) {
                 attack();
             }
             if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
-                for i from 1 to 4
+                for i from 1 to 2
                     throw_items($item[crayon shavings], $item[crayon shavings]);
                 while (current_round() > 0)
                     attack();
