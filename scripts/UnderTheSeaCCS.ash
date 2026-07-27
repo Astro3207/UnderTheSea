@@ -715,6 +715,13 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Colosseum]:
             if (have_skill($skill[Club 'Em Back in Time]))
                 use_skill($skill[Club 'Em Back in Time]);
+            // End of the run: every unspent free kill -- shadow bricks above
+            // all, at up to 13 a day -- expires worthless at rollover, and a
+            // round won free is a whole turn. Rounds need WINS, so this is
+            // free_kill and never Use the Force (which forfeits the win); the
+            // saber is not equipped here, so its last-resort clause stays dead.
+            if (current_round() > 0)
+                free_kill(page_text, false);
             if (to_int(get_property("lastColosseumRoundWon")) < 15)
                 cleanUp();
             break;

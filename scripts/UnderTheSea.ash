@@ -1551,7 +1551,12 @@ import <seedfinder/seedfinder.ash>;
             mood("-combat");
         mood("itdrop");
         useMapIfAvailable();
+        // Leftover Map charges force a monitor here (zoneTarget picks it while
+        // the sheet grind is live); the refight buys a guaranteed monitor for
+        // one turn straight after fighting one.
+        mapMonster($location[mer-kin elementary school]);
         adv($location[mer-kin elementary school]);
+        timeSpinnerRefight($location[mer-kin elementary school]);
         put_closet(item_amount($item[mer-kin hallpass]),
             $item[mer-kin hallpass]);
     }
@@ -2699,6 +2704,12 @@ void sorceress() {
                 freeFight = "legendary seal-clubbing club,";
             else if (to_int(get_property("_batWingsFreeFights")) < 5 && have_item($item[bat wings]) && !highShiny())
                 freeFight = if_equip($item[bat wings]);
+            // This is the end of the run: any Chest X-Rays left in the bag
+            // expire worthless at rollover, and a free-killed round is a whole
+            // turn. The CCS colosseum case drains the equipment-free kills
+            // (shadow bricks and friends) on its own.
+            else if (to_int(get_property("_chestXRayUsed")) < 3 && have_item($item[Lil' Doctor&trade; bag]))
+                freeFight = "Lil' Doctor™ bag,";
             else if (have_item($item[Unwrapped knock-off retro superhero cape])){
                 freeFight = "unwrapped knock-off retro superhero cape,";
                 modes = "retrocape heck kill";

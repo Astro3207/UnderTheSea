@@ -281,8 +281,9 @@ void main(int whichchoice, string page) {
         case 1557:
             set_property("NCtoC","true");
             location here = my_location();
-            if (wantedMonster contains here) {
-                run_choice(1, "bandersnatch=" + wantedMonster[here]);
+            int target = zoneTarget(here);
+            if (target > 0) {
+                run_choice(1, "bandersnatch=" + target);
                 if (here == $location[The Coral Corral]) run_choice(2);
             }
             break;
@@ -294,8 +295,9 @@ void main(int whichchoice, string page) {
         // through and let mafia resolve rather than pick a monster at random.
         case 1435:
             location mapHere = my_location();
-            if (wantedMonster contains mapHere)
-                run_choice(1, "heyscriptswhatsupwinkwink=" + wantedMonster[mapHere]);
+            int mapTarget = zoneTarget(mapHere);
+            if (mapTarget > 0)
+                run_choice(1, "heyscriptswhatsupwinkwink=" + mapTarget);
             break;
 
         case 1596:

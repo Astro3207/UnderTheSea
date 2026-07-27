@@ -41,6 +41,13 @@ boolean lowShiny() {
         && !have_item($item[august scepter]);
 }
 
+// The 9-sheet vocabulary grind is live. Mirrors getCheatsheet()'s loop
+// condition in UnderTheSea.ash.
+boolean cheatsheetsNeeded() {
+    return item_amount($item[mer-kin cheatsheet]) < 9
+        && get_property("merkinVocabularyMastery") == "0";
+}
+
 // ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
 // Which monster we are actually trying to reach in each zone. Three separate
 // monster-pickers read this table -- the Peridot of Peril (choice 1557), Map the
@@ -65,6 +72,19 @@ int [location] wantedMonster = {
     $location[The Outskirts of Cobb's Knob]:        152,
     $location[Madness Bakery]:                      1750
 };
+
+// Need-driven wrapper the three pickers actually call. The static table maps
+// the Elementary School to the teacher, but per monsters.txt the cheatsheet is
+// the MONITOR's drop (30%) -- the teacher only carries the bunwig (5% hat
+// slot). During the 9-sheet grind every charge pointed at a teacher was worth
+// zero cheatsheets.
+int zoneTarget(location loc) {
+    if (loc == $location[mer-kin elementary school] && cheatsheetsNeeded())
+        return 852;   // Mer-kin monitor
+    if (wantedMonster contains loc)
+        return wantedMonster[loc];
+    return 0;
+}
 
 // ─── FOURTH OF MAY COSPLAY SABER ──────────────────────────────────────────────
 // The saber is handed to you automatically at the start of a run, so there is
@@ -310,7 +330,8 @@ boolean mapReady() {
 
 boolean mapZone(location loc) {
     return $locations[The Wreck of the Edgar Fitzsimmons,
-        An Octopus's Garden, The Coral Corral] contains loc;
+        An Octopus's Garden, The Coral Corral,
+        Mer-kin Elementary School] contains loc;
 }
 
 // Only cast once the Peridot's charge for this zone is gone, so the two do not
@@ -599,7 +620,8 @@ boolean timeSpinnerFight(monster mon) {
 }
 
 void timeSpinnerRefight(location loc) {
-    if (!(wantedMonster contains loc))
+    int target = zoneTarget(loc);
+    if (target == 0)
         return;
     // Only worth a turn where the target is genuinely rare; these are the same
     // zones Map the Monsters spends its charges on.
@@ -607,7 +629,7 @@ void timeSpinnerRefight(location loc) {
         return;
     if (my_location() != loc)
         return;
-    timeSpinnerFight(to_monster(wantedMonster[loc]));
+    timeSpinnerFight(to_monster(target));
 }
 
 // ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
