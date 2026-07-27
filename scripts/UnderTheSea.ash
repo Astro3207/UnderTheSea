@@ -146,19 +146,8 @@ import <seedfinder/seedfinder.ash>;
     }
 
     // How many of the day's 20 pulls must be held back rather than spent on
-    // whatever asks first.
-    //
-    // Only one of each unique item may be pulled per day, so every entry here
-    // reserves at most ONE slot no matter how many the route still needs.
-    //
-    // The five protected items are the ones that cost real turns to farm once
-    // the zones the route already camps in have been accounted for:
-    //
-    //   Mer-kin pinkslip    ~15 turns  the Dive Bar is not otherwise visited
-    //   Mer-kin prayerbeads ~15 turns  Outpost yields ~1.7 of 3 during the lockkey block
-    //   sea cowbell         ~10 turns  the Coral Corral block length IS this hunt
-    //   ink bladder          ~4 turns  Marinara Trench, 1 in 4 at 30%
-    //   comb jelly           ~4 turns  Marinara Trench, 1 in 4 at 40%
+    // whatever asks first. Only one of each unique item may be pulled per
+    // day, so every entry reserves at most ONE slot.
     int reservedPulls(){
         int n;
         if (available_amount($item[peppermint parasol]) == 0 && available_amount($item[navel ring of navel gazing]) == 0 && available_amount($item[greatest american pants]) == 0)
@@ -2138,13 +2127,11 @@ void seaMonkees() {
 }
 // ─── EAGLE BANISH RE-AIM ──────────────────────────────────────────────────────
 // uts_runOutEagleBanish (experimental): clear the leftover Patriotic Screech
-// construct banish by re-aiming it. The screech recharges after 11 eagle
-// combats (screechCombats counts down to 0), about what one pearl costs to
-// farm: progress is 1.7% * floor(res/3) per combat (10% cap at 18), one
-// pearl per zone per day, so the outfit maximizes the zone's element and the
-// farm picks an open zone with an unclaimed pearl. Once recharged, screech
-// the first monster at the Smut Orc Logging Camp -- recasting moves the
-// banish onto the orc phylum. Missing pieces abort loudly.
+// construct banish by re-aiming it. Farm a pearl with the eagle out (zone-
+// element outfit, in an open zone with an unclaimed pearl) until
+// screechCombats hits 0, then screech the first monster at the Smut Orc
+// Logging Camp -- the banish moves onto the orc phylum. Missing pieces
+// abort loudly.
 
 string screechFilter(int round, monster mob, string page_text) {
     return "skill 7451";   // %fn, Release the Patriotic Screech!

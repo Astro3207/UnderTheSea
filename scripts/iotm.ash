@@ -100,10 +100,9 @@ int zoneTarget(location loc) {
 }
 
 // ─── FOURTH OF MAY COSPLAY SABER ──────────────────────────────────────────────
-// "Use the Force" leaves combat without spending the adventure and hands over
-// the monster's non-conditional drops. It forfeits the win and burns no turn,
-// so saberZone() only allows it where the loop is purely on an item count --
-// never where progress gates on wins or turns spent (the outpost lockkey).
+// Use the Force forfeits the win and burns no turn, so saberZone() only
+// allows it where the loop is purely on an item count -- never where
+// progress gates on wins or turns spent (the outpost lockkey).
 
 boolean saberReady() {
     return have_item($item[Fourth of May Cosplay Saber])
@@ -116,11 +115,8 @@ boolean saberZone(location loc) {
 }
 
 // ─── DETERMINISTIC DIVER PLAN ─────────────────────────────────────────────────
-// Use the Force (option 3) forces every NON-CONDITIONAL drop at 100%, without
-// winning and without spending the turn. Per mafia's monsters.txt the diver's
-// whole payload is non-conditional -- rusty rivet n20/n15/n10/n5, rusty
-// porthole n15, rusty broken diving helmet n15 -- so one Forced diver is a
-// guaranteed 4 rivets + porthole + helmet, independent of item bonus.
+// One Forced diver is a guaranteed 4 rivets + porthole + helmet (its whole
+// payload is non-conditional), independent of item bonus.
 
 // The rivet hunt is live while nothing that fills the diving-helmet slot is
 // owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
@@ -204,8 +200,7 @@ boolean diverForce(monster mob, string page_text) {
 }
 
 // ─── SEA COW: THE SAME TRICK AT THE CORRAL ────────────────────────────────────
-// Both of the cow's drops are non-conditional (sea cowbell n10, sea leather
-// n20), so one Forced cow is a guaranteed leather + cowbell.
+// One Forced cow is a guaranteed leather + cowbell (both non-conditional).
 
 // CCS entry, same contract as diverForce(): true means the fight is over and
 // the caller must end the consult pass.
@@ -238,10 +233,10 @@ boolean seaCowForce(monster mob, string page_text) {
 }
 
 // ─── OUTPOST HEALER AND LIBRARY RESEARCHER ────────────────────────────────────
-// The healer's table is all non-conditional (prayerbeads n5, thingpouch n15,
-// healscroll n25). A Forced fight spends no turn and leaves the lockkey's
-// turns_spent clock alone; it fires on farmPrayerbeads() trips, where
-// healerSaber() frees the weapon slot -- the lockkey grind keeps the monodent.
+// A Forced healer is a guaranteed prayerbead + thingpouch + healscroll and
+// leaves the lockkey's turns_spent clock alone; it fires on farmPrayerbeads()
+// trips, where healerSaber() frees the weapon slot -- the lockkey grind
+// keeps the monodent.
 boolean healerForce(monster mob, string page_text) {
     if (mob != $monster[Mer-kin healer])
         return false;
@@ -430,12 +425,7 @@ int NCForceEstimate(){
 }
 
 // ─── SOURCE TERMINAL ──────────────────────────────────────────────────────────
-// The terminal is a campground fixture, so it survives ascension and there is
-// nothing to install or pull in-run.
-//
-// items.enh is a flat +item drops buff lasting 25 turns (100 on a fully
-// chipped terminal), up to 3 casts a day, re-upped wherever +item setup
-// already happens.
+// items.enh is re-upped wherever +item setup already happens.
 
 void sourceEnhance() {
     if (get_campground()[$item[Source terminal]] == 0)
@@ -469,9 +459,7 @@ void sourceEducate() {
     cli_execute("terminal educate duplicate.edu");
 }
 
-// Called from the CCS. Doubling the diver doubles its HP, attack, defence and
-// attacks per round as well as its drops, so it goes out early in the fight
-// rather than being saved for last.
+// CCS entry, cast at the top of the fight so nothing ends it first.
 void duplicateMonster(monster mob, string page_text) {
     if (!duplicateReady() || !duplicateEducated())
         return;
@@ -500,13 +488,8 @@ void duplicateMonster(monster mob, string page_text) {
 }
 
 // ─── SEPT-EMBER CENSER ────────────────────────────────────────────────────────
-// Seven embers a day. They bank across days rather than resetting at rollover,
-// but only once the censer has actually been stoked -- they do not accrue on
-// their own, so the run has to go and claim them.
-//
-// All embers buy Septapus summoning charms: the CCS throws them at the
-// shadow slab, and each charm's seven pickpockets take items outside the
-// drop roll, immune to the per-slot cap.
+// Claim the day's embers, then spend them all on Septapus summoning charms
+// for the CCS to throw at the shadow slab.
 void censer() {
     if (!have_item($item[Sept-Ember Censer]))
         return;
@@ -533,11 +516,8 @@ void pillKeeper(string pill) {
 }
 
 // ─── VAMPYRIC CLOAKE ──────────────────────────────────────────────────────────
-// Handed to you automatically at the start of a run. The cloake is pinned to
-// the back slot (+15% item, and the slot must stay free for the skill), and
-// "Become a Bat" adds +50% item for the current fight -- one form per
-// combat, 10 uses a day, all spent on the bat. Drops are rolled when the
-// combat ends, so the +50% applies to the fight it is cast in.
+// Pinned to the back slot so Become a Bat stays castable; all 10 daily form
+// uses go to the bat.
 
 boolean cloakeReady() {
     return have_item($item[vampyric cloake])
@@ -577,9 +557,8 @@ void becomeBat(string page_text) {
 }
 
 // ─── TIME-SPINNER ─────────────────────────────────────────────────────────────
-// "Travel to a Recent Fight": 3 uses a day, one adventure each. mafia's
-// "timespinner" CLI covers only food and pranks, so the choice chain
-// (1195 -> 1196, monid submit) is walked by hand.
+// mafia's "timespinner" CLI covers only food and pranks, so Travel to a
+// Recent Fight's choice chain (1195 -> 1196, monid submit) is walked by hand.
 
 boolean timeSpinnerReady() {
     return have_item($item[Time-Spinner])
@@ -641,8 +620,7 @@ void timeSpinnerRefight(location loc) {
 }
 
 // ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
-// "lecture on relativity" chains a free copy of the current fight; the next
-// cast needs buffed familiar weight of n^2 + 1 lbs.
+// The next lecture needs buffed familiar weight of n^2 + 1 lbs.
 
 // Conservative: familiar_weight() of an inactive familiar is its base weight, so
 // this can under-count while Fidoxene's floor is up. Under-counting only ends the
@@ -698,9 +676,7 @@ void lectureOnRelativity(monster mob, string page_text) {
 }
 
 // ─── JANUARY'S GARBAGE TOTE: BROKEN CHAMPAGNE BOTTLE ──────────────────────────
-// The bottle doubles the item drop BONUS and stacks with Steely-Eyed Squint.
-// It holds 11 ounces, one spent per winning combat including free fights, so
-// it is only worn at the fattest rolled tables.
+// The bottle's ounces are spent only at the fattest rolled tables.
 
 boolean champagneReady() {
     return have_item($item[broken champagne bottle])
@@ -753,9 +729,8 @@ void garbageTote() {
 }
 
 // ─── SPACE JELLYFISH ──────────────────────────────────────────────────────────
-// A full fairy underwater, and Extract Jelly can pull stench jelly from
-// stench monsters -- a chewable noncombat forcer NCforce() already spends.
-// Jelly costs spleen, which fish sauce also needs, so exactly one is taken.
+// Extract stench jelly for NCforce(); jelly costs spleen the diet needs, so
+// exactly one is taken.
 
 boolean jellyfishReady() {
     return have_familiar($familiar[Space Jellyfish]);
@@ -775,19 +750,16 @@ void extractJelly(monster mob, string page_text) {
 }
 
 // ─── METEOR LORE: MACROMETEORITE ──────────────────────────────────────────────
-// Replaces the current foe with a fresh draw from the zone -- the same job as
-// the glove's CHEAT CODE below, but from a skill, so it costs no equipment
-// slot. Ten casts a day. Meteor Lore is hardcore-permanent from the first
-// read of the guide.
+// Same re-roll as the glove's CHEAT CODE but from a skill; rerollEnemy()
+// spends these casts first.
 boolean macroReady() {
     return have_skill($skill[Macrometeorite])
         && to_int(get_property("_macrometeoriteUses")) < 10;
 }
 
 // ─── POWERFUL GLOVE ───────────────────────────────────────────────────────────
-// CHEAT CODE: Replace Enemy swaps the current foe for a fresh draw from the
-// zone; the 100% daily battery at 10% a cast gives ten re-rolls. Equipped
-// only at re-roll sites.
+// Equipped only at re-roll sites, and only once Macrometeorite's casts are
+// gone.
 
 boolean gloveReady() {
     return have_item($item[Powerful Glove])
@@ -852,10 +824,8 @@ boolean replaceEnemy(monster mob, string page_text) {
 }
 
 // ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
-// Feel Nostalgic appends the last copyable monster's whole drop table to the
-// current fight at original rates; three casts a day, no equipment slot. The
-// fight must be WON, and casting it on the monster being copied does
-// nothing.
+// Feel Nostalgic pays only on a WIN and does nothing cast on the monster
+// being copied.
 void feelNostalgic(monster mob, string page_text) {
     if (!have_skill($skill[Feel Nostalgic]))
         return;
@@ -886,15 +856,9 @@ void feelNostalgic(monster mob, string page_text) {
 }
 
 // ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
-// The bag grants three skills, three uses each; freeKill() already equips it
-// for Chest X-Ray, so Otoscope and Reflex Hammer ride the same accessory
-// slot.
-//
-// Otoscope is +200% item drops for that combat; cast early, before free_kill()
-// can end the fight.
-//
-// Reflex Hammer, the third skill, is a free runaway plus a 30-turn banish, and
-// is wired into free_run() with the other banishes rather than here.
+// freeKill() equips the bag for Chest X-Ray; Otoscope rides along, cast
+// early so free_kill() cannot end the fight first. Reflex Hammer is wired
+// into free_run() with the other banishes.
 void otoscope(monster mob, string page_text) {
     // A fight the saber is about to Force has its drops forced anyway; the
     // +200% would be a wasted charge.
@@ -915,10 +879,9 @@ void otoscope(monster mob, string page_text) {
 }
 
 // ─── MUMMING TRUNK ────────────────────────────────────────────────────────────
-// Prince George: +15% item drops (+25% on a clothes-wearing familiar), lasting
-// until rollover. Once per day, and a second costume overwrites the first, so
-// it goes on whichever familiar the item setup actually picks -- hence called
-// from use_familiar("itdrop") rather than at a fixed point in the run.
+// A second costume overwrites the first, so Prince George goes on whichever
+// familiar the item setup actually picks -- hence called from
+// use_familiar("itdrop") rather than at a fixed point in the run.
 void mummery() {
     if (!have_item($item[mumming trunk]))
         return;
@@ -932,8 +895,7 @@ void mummery() {
 }
 
 // ─── CARGO CULTIST SHORTS ─────────────────────────────────────────────────────
-// One pocket a day, gone for good on the account once opened. Pocket 494 is
-// Vinegavotte, +20% item drops for 50 turns.
+// Opens pocket 494, Vinegavotte.
 void cargoPocket() {
     if (!have_item($item[Cargo Cultist Shorts]))
         return;
@@ -947,13 +909,9 @@ void cargoPocket() {
 }
 
 // ─── KREMLIN'S GREATEST BRIEFCASE ─────────────────────────────────────────────
-// Driven through Ezandora's Briefcase script, which owns the dial, handle and
-// tab state machine. "briefcase buff item" spends clicks until it lands Items
-// Are Forever: +50% item drops for 50 turns, for no turn.
-//
-// Which tab carries which buff is randomised every ascension, so the first
-// acquisition in a run also pays some discovery clicks against the 11-a-day
-// budget (22 with the crank unlocked).
+// Driven through Ezandora's Briefcase script, which owns the dial, handle
+// and tab state machine; "briefcase buff item" clicks until Items Are
+// Forever lands.
 void briefcase() {
     if (!have_item($item[Kremlin's Greatest Briefcase]))
         return;
@@ -970,9 +928,8 @@ void briefcase() {
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
-// Spend a noncombat forcer ("sneak"): the next adventure is guaranteed a
-// noncombat, bypassing the -combat roll and its diminishing returns.
-// Cheapest charge first; NCForceEstimate() counts what remains.
+// Spend the cheapest available forcer charge; NCForceEstimate() counts what
+// remains.
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
