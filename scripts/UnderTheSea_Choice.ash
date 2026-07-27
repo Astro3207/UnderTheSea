@@ -65,6 +65,10 @@ void main(int whichchoice, string page) {
                     run_choice(1);
                 } else if (available_amount($item[mer-kin healscroll]) == 0 && get_property("dreadScroll2") == "0") {
                     run_choice(2);
+                } else {
+                    // Nothing needed -- still answer the choice, or mafia drops
+                    // to manual control mid-automation. Beads never hurt.
+                    run_choice(3);
                 }
             } else {
                 int [int] healer = {0:3, 1:1, 2:2}; stashboxCheck(healer); 
@@ -148,6 +152,10 @@ void main(int whichchoice, string page) {
                     break;
                 }
             }
+            // No unknown card left to spade: pick the first option rather than
+            // calling run_choice(0), which errors out of the choice handler.
+            if (dread == 0)
+                dread = 1;
             string choice = available_choice_options()[dread];
             run_choice(dread);
             if (get_property("DS1") == false && get_property("dreadScroll1") != 0){

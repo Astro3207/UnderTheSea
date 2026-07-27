@@ -32,6 +32,15 @@ boolean have_item(item it) {
         || storage_amount(it) > 0;
 }
 
+// A function, not a global set by initialization(): the CCS runs in its own
+// interpreter where initialization() never executes, so a global was stuck at
+// its default (false) for every combat decision that read it.
+boolean lowShiny() {
+    return !have_item($item[2002 Mr. Store Catalog])
+        && !have_item($item[cursed monkey's paw])
+        && !have_item($item[august scepter]);
+}
+
 // ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
 // Which monster we are actually trying to reach in each zone. Three separate
 // monster-pickers read this table -- the Peridot of Peril (choice 1557), Map the
@@ -98,7 +107,9 @@ string LastAdvTxt() {
 boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
         return false;
-    if (!contains_text(get_property("_roninStoragePulls"), to_int(it))) {
+    // Comma-delimited so an id cannot match inside a longer one (360 vs 3604);
+    // a false hit here silently skips the pull and callers fall back to farming.
+    if (!contains_text("," + get_property("_roninStoragePulls") + ",", "," + to_int(it) + ",")) {
         if (storage_amount(it) == 0){
             if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))){
                 if (!user_confirm("Price of " + it + " exeeds autoBuyPriceLimit, skip?"))
@@ -136,9 +147,12 @@ void codpiece(string input) {
             visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
                 + "&iid=" + to_int(to_item(slots[num])));
         }
-        // Verify all slots mounted correctly
+        // Verify all slots mounted correctly. Entries blanked above were
+        // deliberately skipped, so they must not fail verification.
         string verify = visit_url("inventory.php?action=docodpiece");
         foreach num in slots {
+            if (slots[num] == "")
+                continue;
             if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
                 abort("Codpiece slot incorrect");
         }
@@ -193,7 +207,7 @@ void mapMonster(location loc) {
     if (!mapReady() || !mapZone(loc))
         return;
     if (available_amount($item[peridot of peril]) > 0
-        && !contains_text(get_property("_perilLocations"), to_string(to_int(loc))))
+        && !contains_text("," + get_property("_perilLocations") + ",", "," + to_int(loc) + ","))
         return;
     use_skill($skill[Map the Monsters]);
 }
@@ -464,6 +478,9 @@ void timeSpinnerRefight(location loc) {
     }
     run_choice(travel);
     run_choice(1, "monid=" + wantedMonster[loc]);
+    // The monid submit drops us into the fight; without this the session is
+    // left mid-combat and the next adv() errors out.
+    run_combat();
 }
 
 // ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
@@ -635,21 +652,27 @@ string gloveEquip(location loc) {
     return "";
 }
 
-void replaceEnemy(monster mob, string page_text) {
+// Returns true when it actually re-rolled the monster. The caller MUST end the
+// consult pass on true: the fight now holds a different monster, and every
+// branch below the call would still be looking at the stale `mob` -- worst case
+// free_run() runs away from the diver the re-roll just produced. Returning lets
+// mafia re-invoke the consult script with the new monster.
+boolean replaceEnemy(monster mob, string page_text) {
     if (!gloveReady())
-        return;
+        return false;
     if (!have_equipped($item[Powerful Glove]))
-        return;
+        return false;
     if (my_location() != $location[The Wreck of the Edgar Fitzsimmons])
-        return;
+        return false;
     // Never re-roll the monster we came for, and stop once its drops are in.
     if (mob == $monster[unholy diver])
-        return;
+        return false;
     if (item_amount($item[rusty rivet]) >= 8)
-        return;
+        return false;
     if (!contains_text(page_text, "CHEAT CODE: Replace Enemy"))
-        return;
+        return false;
     use_skill($skill[CHEAT CODE: Replace Enemy]);
+    return true;
 }
 
 // ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
@@ -673,6 +696,11 @@ void feelNostalgic(monster mob, string page_text) {
     if (!have_skill($skill[Feel Nostalgic]))
         return;
     if (to_int(get_property("_feelNostalgicUsed")) >= 3)
+        return;
+    // The appended drops only pay out if this fight is WON. When the saber is
+    // armed, free_kill() may Use the Force out of the combat, forfeiting the
+    // win and the charge with it -- so never overlap the two.
+    if (saberReady() && have_equipped($item[Fourth of May Cosplay Saber]))
         return;
     if (mob == $monster[unholy diver])
         return;
@@ -813,7 +841,12 @@ void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
         if (to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
             cli_execute("aprilband play tuba");
-        } else if (have_item($item[Cincho de Mayo])){
+        // Enter the Cincho branch only if it can actually fire -- either enough
+        // cinch already, or free rests left to restore it. An exhausted Cincho
+        // used to swallow the whole chain and block the free Sneakisol pill.
+        } else if (have_item($item[Cincho de Mayo])
+            && (to_int(get_property("_cinchUsed")) <= 40
+                || to_int(get_property("timesRested")) < total_free_rests())){
             while (to_int(get_property("_cinchUsed")) > 40
                 && to_int(get_property("timesRested")) < total_free_rests()) {
                 cli_execute("unequip hat; equip apriling band helmet; camp rest free");
@@ -855,7 +888,7 @@ void candy(string action) {
     if (action == "fight"){
         int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
         visit_url("place.php?whichplace=town&action=town_trickortreat");
-        visit_url("choice.php?whichchoice=80&pwd=" + my_hash() + "&option=3&whichhouse=" + houseToVisit);
+        visit_url("choice.php?whichchoice=804&pwd=" + my_hash() + "&option=3&whichhouse=" + houseToVisit);
         run_combat();
     } else if (action == "treat"){
         while(contains_text(get_property("_trickOrTreatBlock"),"L")){
@@ -889,9 +922,13 @@ record ban {
 };
 
 ban [item] banMap = {
+    // prefs are matched inside \Q..\E against banishedMonsters, so they must be
+    // literal prefixes of the recorded banisher name -- no regex escaping. The
+    // old "Sea \\*dent" put a real backslash in the pattern and never matched,
+    // so the monodent's banish was invisible to banished()/combatBan().
     $item[spring shoes]:        new ban("Spring Kick",           $skill[spring kick]),
-    $item[monodent of the sea]: new ban("Sea \\*dent",           $skill[Sea *dent: Throw a Lightning Bolt]),
-    $item[Heartstone]:          new ban("Heartstone %banish",    $skill[Heartstone: %banish]),
+    $item[monodent of the sea]: new ban("Sea *dent",             $skill[Sea *dent: Throw a Lightning Bolt]),
+    $item[Heartstone]:          new ban("Heartstone",            $skill[Heartstone: %banish]),
     $item[none]:                new ban("snokebomb",             $skill[snokebomb]),
 };
 
@@ -933,8 +970,12 @@ item banishGear(location loc) {
             break;
         }
     }
-    set_property(to_string(to_slot(it)) + "Override", ", equip " + it);
-    print(to_string(to_slot(it)) + "Override");
+    // No candidate leaves it at $item[none]; writing an override for it would
+    // create a junk "noneOverride" property.
+    if (it != $item[none]) {
+        set_property(to_string(to_slot(it)) + "Override", ", equip " + it);
+        print(to_string(to_slot(it)) + "Override");
+    }
     return it;
 }
 

@@ -17,7 +17,7 @@ void free_kill(string ptext, boolean drop) {
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
         BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
         if (freeskill == $skill[Club 'Em Back in Time]
-            && (my_location() != $location[mer-kin colosseum] || lowShiny))
+            && (my_location() != $location[mer-kin colosseum] || lowShiny()))
             continue;
         if (freeskill == $skill[BCZ: Sweat Bullets]
             && (my_basestat($stat[submoxie]) - 22500) < BCZcost("SweatBulletsCasts"))
@@ -174,14 +174,19 @@ void main(int round, monster mob, string page_text) {
     duplicateMonster(mob, page_text);
     // +200% item on the diver itself, three a day, before free_kill can end it.
     otoscope(mob, page_text);
-    // A second roll of the previous diver's table, three a day.
-    feelNostalgic(mob, page_text);
     // Free stench jelly off any stench monster; NCforce() spends it as a sneak.
     extractJelly(mob, page_text);
     // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
-    replaceEnemy(mob, page_text);
+    // On a re-roll the fight holds a NEW monster, so end this pass -- everything
+    // below is branched on the stale `mob`, and the old fallthrough could
+    // free_run away from the very diver the re-roll produced.
+    if (replaceEnemy(mob, page_text))
+        return;
     // Chain another free diver off this one.
     lectureOnRelativity(mob, page_text);
+    // feelNostalgic() is NOT called here: its payout needs the fight to be won,
+    // so it fires inside the Fitzsimmons branch after free_run() has had its
+    // chance, not at the top where a later runaway would waste the charge.
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());
@@ -285,6 +290,11 @@ void main(int round, monster mob, string page_text) {
                     use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
                 }
             }
+            // Still in combat here means the free runs above didn't fire, so
+            // this fight is getting killed -- the one moment a Feel Nostalgic
+            // charge on the diver's drop table is guaranteed to pay out.
+            if (current_round() > 0)
+                feelNostalgic(mob, page_text);
             darts();
             free_kill(page_text, true);
             cleanUp();
@@ -300,8 +310,12 @@ void main(int round, monster mob, string page_text) {
                 steal();
                 use_if_have_skill(page_text,$skill[swoop like a bat]);
             }
-            if ((mob == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
-                || (mob == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")) 
+            // The corral gate applies to both targets: sniffing feeds the step4
+            // pearl hunt, which is over once the corral has started. && used to
+            // bind it to the tippler arm only, so the squid kept getting
+            // olfacted into the -combat noncombat hunt afterwards.
+            if (((mob == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
+                || (mob == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")))
                 && $location[The coral corral].turns_spent == 0) {
                 foreach sk in $skills[transcendent olfaction,
                     Gallapagosian Mating Call, MCHUGELARGE SLASH]
@@ -365,7 +379,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     cleanUp();
                 }
@@ -686,8 +700,15 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Temple (Right Door)]:
             if (my_maxhp() > 311)
                 abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
-            throw_items(yogDeleveler(),yogHealing());
-            throw_items(yogDeleveler(),yogHealing());
+            // yogDeleveler() returns $item[none] when moxie already outpaces
+            // her attack; funkslinging none errors out, so heal solo then.
+            for i from 1 to 2 {
+                item dlv = yogDeleveler();
+                if (dlv == $item[none])
+                    throw_item(yogHealing());
+                else
+                    throw_items(dlv, yogHealing());
+            }
             if (equipped_amount($item[mer-kin prayerbeads]) < 3)
                 throw_item(yogHealing());
             if (equipped_amount($item[mer-kin prayerbeads]) < 2)
