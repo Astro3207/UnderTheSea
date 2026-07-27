@@ -107,14 +107,8 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
-    string if_equip(item it) {
-        if ($items[baseball diamond, peridot of peril, heartstone, blood cubic zirconia] contains it)
-            codpiece("none");
-        if (it == $item[none] || available_amount(it) == 0)
-            return "";
-        else
-            return to_string(it) + ",";
-    }
+    // if_equip() now lives in iotm.ash: champagneEquip() and gloveEquip() there
+    // call it, and imports are parsed before this file's own functions exist.
 
     // Equip the saber only where a turn-free exit actually buys us something.
     // Takes the target location explicitly because callers set equipment up

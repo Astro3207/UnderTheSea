@@ -111,6 +111,53 @@ boolean pullSequence(item it) {
     return false;
 }
 
+// ─── CODPIECE ─────────────────────────────────────────────────────────────────
+
+void codpiece(string input) {
+    visit_url("inventory.php?action=docodpiece");
+    if (input == "none") {
+        string verify = visit_url("inventory.php?action=docodpiece");
+        if (!contains_text(verify, " mounted in slot #"))
+            return;
+        for slots from 1 to 5 {
+            if (contains_text(verify," Empty slot #" + slots )){
+                continue;
+            } else {
+                visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
+            }
+        }
+    } else {
+        string [int] slots = split_string(input, ",");
+        foreach num in slots {
+            if (available_amount(to_item(slots[num])) == 0 ){
+                slots[num] = "";
+                continue;
+            }
+            visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
+                + "&iid=" + to_int(to_item(slots[num])));
+        }
+        // Verify all slots mounted correctly
+        string verify = visit_url("inventory.php?action=docodpiece");
+        foreach num in slots {
+            if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
+                abort("Codpiece slot incorrect");
+        }
+    }
+    cli_execute("refresh inv");
+}
+
+// "item name," if we can equip it, "" if we cannot. ASH resolves calls in parse
+// order and this file is imported before UnderTheSea.ash's own functions exist,
+// so if_equip has to live here, below codpiece and above its first caller.
+string if_equip(item it) {
+    if ($items[baseball diamond, peridot of peril, heartstone, blood cubic zirconia] contains it)
+        codpiece("none");
+    if (it == $item[none] || available_amount(it) == 0)
+        return "";
+    else
+        return to_string(it) + ",";
+}
+
 // ─── MAP THE MONSTERS ─────────────────────────────────────────────────────────
 // Comprehensive Cartography gives 3 casts a day. Each turns the next fight in a
 // zone into a monster of your choosing -- the same job as the Peridot of Peril,
@@ -980,41 +1027,6 @@ void trainset() {
         + "&slot%5B5%5D=" + slots[5]
         + "&slot%5B6%5D=" + slots[6]
         + "&slot%5B7%5D=" + slots[7]);
-}
-
-// ─── CODPIECE ─────────────────────────────────────────────────────────────────
-
-void codpiece(string input) {
-    visit_url("inventory.php?action=docodpiece");
-    if (input == "none") {
-        string verify = visit_url("inventory.php?action=docodpiece");
-        if (!contains_text(verify, " mounted in slot #"))
-            return;
-        for slots from 1 to 5 {
-            if (contains_text(verify," Empty slot #" + slots )){
-                continue;
-            } else { 
-                visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
-            }
-        }
-    } else {
-        string [int] slots = split_string(input, ",");
-        foreach num in slots {
-            if (available_amount(to_item(slots[num])) == 0 ){
-                slots[num] = "";
-                continue;
-            }
-            visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
-                + "&iid=" + to_int(to_item(slots[num])));
-        }
-        // Verify all slots mounted correctly
-        string verify = visit_url("inventory.php?action=docodpiece");
-        foreach num in slots {
-            if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
-                abort("Codpiece slot incorrect");
-        }
-    }
-    cli_execute("refresh inv");
 }
 
 // ─── LEPRECONDO ───────────────────────────────────────────────────────────────
