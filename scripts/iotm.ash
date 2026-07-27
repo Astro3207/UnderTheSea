@@ -871,10 +871,10 @@ void extractJelly(monster mob, string page_text) {
 }
 
 // ─── METEOR LORE: MACROMETEORITE ──────────────────────────────────────────────
-// The Pocket Meteor Guide's combat skill replaces the current foe with a fresh
-// draw from the zone -- the same job as the glove's CHEAT CODE below, but from
-// a skill, so it costs no equipment slot. Ten casts a day. initialization()
-// reads the guide so the skill actually exists in-run.
+// Replaces the current foe with a fresh draw from the zone -- the same job as
+// the glove's CHEAT CODE below, but from a skill, so it costs no equipment
+// slot. Ten casts a day. Meteor Lore is hardcore-permanent from the first
+// read of the guide, so anyone who has ever read it simply has the skill.
 boolean macroReady() {
     return have_skill($skill[Macrometeorite])
         && to_int(get_property("_macrometeoriteUses")) < 10;

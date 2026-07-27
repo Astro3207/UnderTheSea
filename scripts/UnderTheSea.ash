@@ -1003,15 +1003,6 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
 
-            // Meteor Lore: the guide is owned but its skills only exist in-run
-            // after reading it. Macrometeorite is the free monster re-roller
-            // the diver and corral hunts lean on.
-            if (!have_skill($skill[Macrometeorite]) && have_item($item[Pocket Meteor Guide])) {
-                if (item_amount($item[Pocket Meteor Guide]) == 0)
-                    pullSequence($item[Pocket Meteor Guide]);
-                use($item[Pocket Meteor Guide]);
-            }
-
             // Storage pulls for sea gear
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
                 scale-mail underwear, Congressional Medal of Insanity,
