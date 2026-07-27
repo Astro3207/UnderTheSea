@@ -2163,10 +2163,13 @@ void seaMonkees() {
 // ─── EAGLE BANISH RUNDOWN ─────────────────────────────────────────────────────
 // uts_runOutEagleBanish (experimental): the patriotic eagle's Patriotic
 // Screech leaves the construct phylum banished after the run ends, which can
-// make other scripts misbehave. When enabled, burn the banish out by farming
-// unblemished pearls (they ride to the next ascension in the codpiece) until
-// mafia reports the phylum free again. Needs the pearl zone open and turns
-// of Fishy; anything short of that is a loud abort, not a silent skip.
+// make other scripts misbehave. When enabled, burn the banish out farming
+// unblemished pearls until mafia reports the phylum free again. Pearl
+// progress is 1.7% * floor(zone resistance / 3) per combat, capped at 10%
+// at 18 resistance -- so the outfit maximizes the zone's element, not item
+// drop -- and each zone's pearl is claimable once a day, so the farm
+// rotates to the next open zone with an unclaimed pearl. No such zone, no
+// Fishy, or no adventures is a loud abort, not a silent skip.
 
 void runOutEagleBanish() {
     if (get_property("uts_runOutEagleBanish") != "true")
@@ -2174,15 +2177,22 @@ void runOutEagleBanish() {
     if (!contains_text(get_property("banishedPhyla"), "construct"))
         return;
     step("postloop: running out the Patriotic Screech construct banish");
-    if (!can_adventure(pearlLoc[my_primestat()]))
-        abort("uts_runOutEagleBanish: " + pearlLoc[my_primestat()]
-            + " isn't open, so the construct banish can't be farmed out.");
-    if (have_effect($effect[Fishy]) == 0)
-        abort("uts_runOutEagleBanish: no turns of Fishy, so the construct banish can't be farmed out.");
-    use_familiar("itdrop");
-    mood(pearlRes[my_primestat()]);
-    tempEquipment("item drop", "monodent of the sea," + swimmingTrunks() + bathysphere($item[none]));
+    string [location] pearlZoneRes = {
+        $location[Anemone Mine]:          "spooky res",
+        $location[The Dive Bar]:          "sleaze res",
+        $location[Madness Reef]:          "stench res",
+        $location[The Marinara Trench]:   "hot res",
+        $location[The Briniest Deepests]: "cold res"
+    };
+    string [location] pearlClaimed = {
+        $location[Anemone Mine]:          "_unblemishedPearlAnemoneMine",
+        $location[The Dive Bar]:          "_unblemishedPearlDiveBar",
+        $location[Madness Reef]:          "_unblemishedPearlMadnessReef",
+        $location[The Marinara Trench]:   "_unblemishedPearlMarinaraTrench",
+        $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepests"
+    };
     int spent;
+    location current = $location[none];
     while (contains_text(get_property("banishedPhyla"), "construct")) {
         if (have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
@@ -2192,10 +2202,43 @@ void runOutEagleBanish() {
                 + " turns with the construct banish still up.");
         if (spent >= 120)
             abort("uts_runOutEagleBanish: construct banish still up after 120 turns; something is wrong, bailing out.");
-        adv1(pearlLoc[my_primestat()]);
+        if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
+            current = $location[none];
+            foreach loc in pearlZoneRes {
+                if (get_property(pearlClaimed[loc]) != "true" && can_adventure(loc)) {
+                    current = loc;
+                    break;
+                }
+            }
+            if (current == $location[none])
+                abort("uts_runOutEagleBanish: no open pearl zone with today's pearl unclaimed, so the construct banish can't be farmed out usefully.");
+            use_familiar("itdrop");
+            mood(pearlZoneRes[current]);
+            tempEquipment(pearlZoneRes[current], swimmingTrunks() + bathysphere($item[none]));
+        }
+        adv1(current);
         spent += 1;
     }
     print("Patriotic Screech construct banish is gone after " + spent + " pearl-farming turns.", "blue");
+}
+
+// uts_prepCodpiece: leave the run with the codpiece already loaded for the
+// next ascension -- five unblemished pearls, mall-bought if the farm came
+// up short. Runs after the banish rundown so its pearls count.
+void prepCodpiece() {
+    if (get_property("uts_prepCodpiece") != "true")
+        return;
+    step("postloop: loading the codpiece with unblemished pearls");
+    if (!have_item($item[The Eternity Codpiece]))
+        abort("uts_prepCodpiece: you don't own The Eternity Codpiece.");
+    codpiece("none");
+    if (item_amount($item[unblemished pearl]) < 5)
+        retrieve_item(5, $item[unblemished pearl]);
+    if (item_amount($item[unblemished pearl]) < 5)
+        abort("uts_prepCodpiece: couldn't get to five unblemished pearls (have "
+            + item_amount($item[unblemished pearl]) + ").");
+    codpiece("unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl");
+    print("Codpiece loaded: five unblemished pearls slotted for the next run.", "blue");
 }
 
 // ─── SORCERESS ────────────────────────────────────────────────────────────────
@@ -2971,6 +3014,7 @@ void sorceress() {
             council();
             council();
             runOutEagleBanish();
+            prepCodpiece();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         }
