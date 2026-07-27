@@ -356,6 +356,9 @@ boolean pullSequence(item it) {
 // ─── CODPIECE ─────────────────────────────────────────────────────────────────
 
 void codpiece(string input) {
+    // Gem mounting is a bonus, not a requirement -- no codpiece, no-op.
+    if (!have_item($item[The Eternity Codpiece]))
+        return;
     visit_url("inventory.php?action=docodpiece");
     if (input == "none") {
         string verify = visit_url("inventory.php?action=docodpiece");
@@ -1652,6 +1655,7 @@ void baseballD() {
 
 void iotmChecklist() {
     boolean [item] iotmItems = $items[monodent of the sea,
+        The Eternity Codpiece,
         closed-circuit pay phone, 2002 Mr. Store Catalog, cursed monkey's paw,
         august scepter, Fourth of May Cosplay Saber, Peridot of Peril,
         blood cubic zirconia, baseball diamond, Heartstone, backup camera,
@@ -1734,6 +1738,11 @@ void pullChecklist() {
         if (have_item($item[2002 Mr. Store Catalog])
             && $items[pro skateboard, software glitch] contains it)
             continue;
+        // Never auto-bought (see the pull loop) -- flag it as a nice-to-have.
+        if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0) {
+            print("✗ " + it + " — optional, the script won't buy one", "red");
+            continue;
+        }
         if (storage_amount(it) > 0)
             print("✓ " + it, "blue");
         else if (is_tradeable(it))

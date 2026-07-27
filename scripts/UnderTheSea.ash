@@ -1034,7 +1034,7 @@ import <seedfinder/seedfinder.ash>;
                         continue;
                     if (storage_amount(it) == 0){
                         if (it == $item[Congressional Medal of Insanity])
-                            abort("Get yer own CMOI, ya filthy animal!");
+                            { print("No Congressional Medal of Insanity in storage -- skipping it (optional, the script won't buy one).", "red"); continue; }
                         buy_using_storage(it);
                     }
                     take_storage(1, it);
@@ -1245,7 +1245,7 @@ import <seedfinder/seedfinder.ash>;
         string conditional;
         if (!contains_text(get_property("banishedMonsters"), "school of many"))
             conditional += "monodent of the sea,";
-        tempEquipment("mys","shark jumper,scale-mail underwear,black glass,congressional medal of insanity,"
+        tempEquipment("mys","shark jumper,scale-mail underwear,black glass," + if_equip($item[Congressional Medal of Insanity])
             + if_equip(divingHelmet()) + bathysphere($item[none]) + if_equip($item[blood cubic zirconia]) + conditional);
         adv($location[The Caliginous Abyss]);
     }
@@ -1279,7 +1279,7 @@ import <seedfinder/seedfinder.ash>;
 
         string conditional;
         if (lowShiny() == true)
-            conditional += "congressional medal of insanity,";
+            conditional += if_equip($item[Congressional Medal of Insanity]);
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) && !highShiny())
             conditional += "backup camera,";
         // One Force charge on the researcher lands both scrolls (10% slots,
@@ -1341,7 +1341,7 @@ import <seedfinder/seedfinder.ash>;
             || (doneWithSeaCow() && !contains_text(get_property("banishedMonsters"),"sea cow:")))
             conditional += if_equip(banishGear($location[The Coral Corral]));
         if (lowShiny())
-            conditional += "congressional medal of insanity,";
+            conditional += if_equip($item[Congressional Medal of Insanity]);
         conditional += saberEquip($location[The Coral Corral]);
         conditional += cloakeEquip($location[The Coral Corral]);
         conditional += champagneEquip($location[The Coral Corral]);
@@ -1440,27 +1440,27 @@ import <seedfinder/seedfinder.ash>;
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("hot res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("hot res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar("itdrop");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("sleaze res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("sleaze res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else {
             tempEquipment("item drop","monodent of the sea");
@@ -1550,7 +1550,7 @@ import <seedfinder/seedfinder.ash>;
         use_familiar("-combat");
         string conditional;
         if (lowShiny() == true)
-            conditional += "congressional medal of insanity,";
+            conditional += if_equip($item[Congressional Medal of Insanity]);
         // The weapon slot is free on these trips, so the saber rides along:
         // any healer that slips through the -combat stack gets Forced for a
         // guaranteed prayerbead + thingpouch, with the turn refunded.
@@ -1648,7 +1648,7 @@ void seaMonkees() {
             use_familiar($familiar[patriotic eagle]);
             string conditional;
             if (lowShiny())
-                conditional += "congressional medal of insanity,";
+                conditional += if_equip($item[Congressional Medal of Insanity]);
             tempEquipment("item drop", swimmingTrunks() + "peridot of peril,"
                 + bathysphere($item[none]) + baseball_equip() + freeKill() + conditional);
             adv($location[An octopus's garden]);
@@ -1835,7 +1835,7 @@ void seaMonkees() {
             else if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
                 conditional += if_equip($item[blood cubic zirconia]);
             else
-                conditional += "congressional medal of insanity,";
+                conditional += if_equip($item[Congressional Medal of Insanity]);
 
             if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
                 conditional += "shark jumper,scale-mail underwear,elf guard scuba,";
@@ -1996,7 +1996,7 @@ void seaMonkees() {
                         conditional += "spring shoes,";
                     } else if (get_property("heartstoneBanishUnlocked") == "true")
                         conditional += if_equip($item[heartstone]);
-                    tempEquipment("item drop","monodent of the sea,congressional medal of insanity," + if_equip($item[peridot of peril]) + conditional + bathysphere($item[toy cupid bow]));
+                    tempEquipment("item drop","monodent of the sea," + if_equip($item[Congressional Medal of Insanity]) + if_equip($item[peridot of peril]) + conditional + bathysphere($item[toy cupid bow]));
                     mood("itdrop");
                 } else {
                     tempEquipment("-combat", "monodent of the sea," + conditional);
@@ -2107,12 +2107,12 @@ void seaMonkees() {
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
           && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
             tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
-                + "pro skateboard,The Eternity Codpiece,backup camera");
+                + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
             mood("itdrop");
             adv($location[The Coral Corral]);
         } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
             pullSequence($item[software glitch]);
-            tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard,The Eternity Codpiece");
+            tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             mood("itdrop");
             adv($location[The Coral Corral]);
         } else {
@@ -2120,7 +2120,7 @@ void seaMonkees() {
             pullSequence($item[software glitch]);
             if (!have_item($item[spring shoes]) && !have_item($item[heartstone]) && available_amount($item[stuffed yam stinkbomb]) == 0 && available_amount($item[handful of split pea soup]) == 0 && !lowShiny())
                 pullSequence($item[stuffed yam stinkbomb]);
-            tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard,The Eternity Codpiece,monodent of the sea," + baseball_equip());
+            tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + baseball_equip());
             mood("itdrop");
             adv($location[The Coral Corral]);
         }
@@ -2791,7 +2791,7 @@ void sorceress() {
             }
             float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
             tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
-                + "congressional medal of insanity," + freeFight + bathysphere($item[none]));
+                + if_equip($item[Congressional Medal of Insanity]) + freeFight + bathysphere($item[none]));
             adv($location[Mer-kin Colosseum]);
             if (get_property("lastEncounter") == "Been There, Won That"){
                 set_property("lastColosseumRoundWon","15");
@@ -2903,10 +2903,10 @@ void sorceress() {
         if (get_property("questL13Final") == "unstarted") {
             if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()) {
                 tempEquipment("spell damage percent, mys", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece," + if_equip($item[bat wings])
-                    + "congressional medal of insanity");
+                    + if_equip($item[Congressional Medal of Insanity]));
             } else {
                 tempEquipment("spell damage percent, mys", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece,"
-                    + "congressional medal of insanity");
+                    + if_equip($item[Congressional Medal of Insanity]));
                 if (have_item($item[Unwrapped knock-off retro superhero cape])){
                     cli_execute("retrocape heck kill; equip unwrapped knock-off retro superhero cape");
                 }
@@ -2940,7 +2940,16 @@ void sorceress() {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
-void main() {
+void main(string command) {
+    if (to_lower_case(command) == "sim") {
+        // Report-only mode: the same ownership checklists the run prints at
+        // startup and nothing else -- no pulls, no turns, no combat.
+        iotmChecklist();
+        pullChecklist();
+        return;
+    }
+    if (command != "")
+        abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
         print("Starting UnderTheSea");
