@@ -770,6 +770,10 @@ import <seedfinder/seedfinder.ash>;
             if (my_spleen_use() > (spleen_limit() - 5))
                 abort("Have at least 5 spleen");
         }
+        if (have_item($item[tiny stillsuit]) && have_familiar($familiar[tickle-me emilio])){
+            use_familiar($familiar[tickle-me emilio]);
+            equip($item[tiny stillsuit]);
+        }
         if (available_amount($item[black glass]) == 0 && item_amount($item[sand dollar]) > 13)
             blackGlass();
         if (my_path().id == 55){
