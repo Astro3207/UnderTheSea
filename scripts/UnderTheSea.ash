@@ -823,6 +823,11 @@ import <seedfinder/seedfinder.ash>;
         while (my_mp() < target
             && total_free_rests() > to_int(get_property("timesRested")))
             cli_execute("camp rest free");
+        // Same junk sale post_adv() makes when meat runs low: spare scales
+        // fund the soda water.
+        if (my_mp() < target && my_meat() < 300)
+            foreach it in $items[dull fish scale, rough fish scale]
+                autosell(item_amount(it), it);
         while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
             int need = min((target - my_mp()) / 4 + 1,
                 my_meat() / npc_price($item[soda water]));
@@ -2808,8 +2813,18 @@ void sorceress() {
                     }
                 }
             }
+            // Yog-Urt's debuff deals ~90% of max HP per round and each
+            // healing item works once, so max HP must stay low enough for
+            // them to out-heal it. Gummiheart's +100 muscle inflates max HP
+            // past that line: strip it, pulling the antidote if needed.
+            if (have_effect($effect[gummiheart]) > 0) {
+                if (item_amount($item[soft green echo eyedrop antidote]) == 0)
+                    pullSequence($item[soft green echo eyedrop antidote]);
+                if (item_amount($item[soft green echo eyedrop antidote]) > 0)
+                    cli_execute("uneffect gummiheart");
+            }
             if (have_effect($effect[gummiheart]) > 0)
-                abort("Have gummiheart effect — drop HP somehow before fighting");
+                abort("Gummiheart is inflating max HP past what the healing items can out-heal; remove it (soft green echo eyedrop antidote) and rerun.");
             adv($location[Mer-kin Temple (Right Door)]);
         }
     }
