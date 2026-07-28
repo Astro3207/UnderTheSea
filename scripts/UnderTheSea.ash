@@ -903,15 +903,20 @@ import <seedfinder/seedfinder.ash>;
             // pearls and those are smuggled in via the codpiece.
             if (have_item($item[Fourth of May Cosplay Saber])
                 && get_property("_saberMod") == "0") {
-                // mafia auto-resolves the choice this visit redirects into,
-                // using choiceAdventure1386 -- and its built-in default is 5,
-                // "Maybe Later", which skips the upgrade. Answering manually
-                // afterwards hits an already-closed choice and aborts the run
-                // with "Invalid choice", so set the property and let mafia
-                // take option 4 (the +10 familiar weight chip) itself.
+                // mafia may auto-resolve the choice this visit redirects
+                // into (choiceAdventure1386 steers it to option 4, the +10
+                // familiar weight chip). Only answer a choice that is still
+                // open, and only with an option the page actually offers --
+                // otherwise leave via Maybe Later.
                 step("initialization: saber daily upgrade (choice 1386)");
                 set_property("choiceAdventure1386", "4");
                 visit_url("main.php?action=may4");
+                if (handling_choice() && last_choice() == 1386) {
+                    if (available_choice_options() contains 4)
+                        run_choice(4);
+                    else
+                        run_choice(5);
+                }
             }
 
             // Autosell junk gems
@@ -3020,8 +3025,12 @@ void sorceress() {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
-void main(string command) {
-    if (to_lower_case(command) == "sim") {
+// Vararg rather than a plain string: mafia prompts for any missing typed
+// parameter, but collects a vararg silently, so a bare "UnderTheSea" runs
+// without a dialog.
+void main(string... args) {
+    string command = count(args) > 0 ? to_lower_case(args[0]) : "";
+    if (command == "sim") {
         // Report-only mode: the same ownership checklists the run prints at
         // startup and nothing else -- no pulls, no turns, no combat.
         iotmChecklist();
