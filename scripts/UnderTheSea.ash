@@ -270,6 +270,14 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
         }
+        // A still-free off-hand on a drop-farming trip carries the Kramco:
+        // its goblins are free fights that burn delay wherever they land.
+        // Anything pinned above (champagne bottle, baseball diamond, a
+        // Double-Fisted second weapon) keeps the slot.
+        if (contains_text(maximizerInput, "item drop")
+            && equipmentSelection[$slot[off-hand]] == $item[none]
+            && have_item($item[Kramco Sausage-o-Matic&trade;]))
+            equipmentSelection[$slot[off-hand]] = $item[Kramco Sausage-o-Matic&trade;];
         string maximizerString = maximizerInput;
         foreach slo in equipmentSelection{
             if (available_amount(equipmentSelection[slo]) == 0)
