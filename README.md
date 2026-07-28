@@ -40,7 +40,7 @@ of this list:
 | Command | What it does |
 |---|---|
 | `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
-| `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit (with the biggest missing savings called out), and exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. Forecast run length is experimental, no guarantees of accuracy. |
+| `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit. Forecast run length is experimental, no guarantees of accuracy. |
 
 Preferences, set once in the gCLI; all default to off:
 
@@ -48,7 +48,7 @@ Preferences, set once in the gCLI; all default to off:
 |---|---|
 | `set uts_godRunGuard = true` | Abort at ≤17 turns played if the dreadscroll 7 clue is still unknown, so you can eat a sushi for it instead of burning a record attempt. Only worth enabling if you are chasing a top turncount. |
 | `set uts_postloopCommand = <command>` | CLI command to run once the loop finishes (e.g. a farming script). Leave empty to skip. |
-| `set uts_runOutEagleBanish = true` | **Experimental.** After the run finishes, keep adventuring until the patriotic eagle's Patriotic Screech stops banishing the construct phylum — a leftover phylum banish can make other scripts (⭐garbo⭐) misbehave. Empties Hagnk's first (`pull all`) so all your gear is on hand, then burns the turns farming unblemished pearls (which ride to your next ascension in the codpiece), rotating through whichever of the five pearl zones are open with today's pearl unclaimed, wearing that zone's elemental resistance — at 18+ resistance a pearl is ten combats. A pearl in progress when the banish expires gets finished (zone progress doesn't survive rollover). Needs such a zone and turns of Fishy, and aborts loudly the moment it can't continue. Likely to burn a lot of turns post-run unless you have a lot of free kills. |
+| `set uts_runOutEagleBanish = true` | **Experimental.** After the run finishes, keep adventuring until the patriotic eagle's Patriotic Screech stops banishing the construct phylum — a leftover phylum banish can make other scripts (⭐garbo⭐) misbehave. Empties Hagnk's first (`pull all`) so all your gear is on hand, then burns the turns farming unblemished pearls (which ride to your next ascension in the codpiece). Might burn ~11 turns post-run unless you have a lot of free kills. |
 | `set uts_prepCodpiece = true` | After the run (and after the banish rundown, if that's enabled), load The Eternity Codpiece for your next ascension: Empties Hagnk's first (`pull all`), buys unblemished pearls from the mall if you're still short, then slots five of them. |
 
 ## High shiny, low shiny
