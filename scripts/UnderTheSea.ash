@@ -2234,9 +2234,20 @@ void runOutEagleBanish() {
         if (have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
                 + " turns with the re-aim unfinished.");
-        if (my_adventures() == 0)
-            abort("uts_runOutEagleBanish: out of adventures after " + spent
-                + " turns with the re-aim unfinished.");
+        if (my_adventures() == 0) {
+            // Same pilsner ladder as the in-run diet: crack the six-pack if
+            // needed, Ode up, drink one. No pilsner left is a hard stop.
+            if (item_amount($item[astral pilsner]) == 0
+                && item_amount($item[astral six-pack]) > 0)
+                use($item[astral six-pack]);
+            if (item_amount($item[astral pilsner]) > 0) {
+                cli_execute("shrug Donho's Bubbly Ballad");
+                if (have_skill($skill[The Ode to Booze]))
+                    use_skill($skill[the ode to booze]);
+                drink($item[astral pilsner]);
+            } else
+                abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
+        }
         if (spent >= 40)
             abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
         if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
