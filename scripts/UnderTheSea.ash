@@ -10,6 +10,7 @@ import <seedfinder/seedfinder.ash>;
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
+    string choice1387Storage = get_property("choiceAdventure1387");
     string seaFit,boss,modes;
     string [stat] pearlRes = {
         $stat[mysticality]: "hot res",
@@ -1455,6 +1456,10 @@ import <seedfinder/seedfinder.ash>;
                     abort("mimice egg failed to extract. Rerun and if this happens again ping FS");
                 cli_execute("c2t_megg fight " + mon);
                 run_combat();
+                // A Force cast during the egg fight can strand the session
+                // in choice 1387 if nothing auto-resolved it.
+                if (handling_choice() && last_choice() == 1387)
+                    run_choice(3);
             } else if (have_skill($skill[just the facts])){
                 if (item_amount($item[pocket wish]) == 0){
                     if (my_class() == $class[accordion thief]){
@@ -1928,6 +1933,10 @@ void seaMonkees() {
                     && contains_text(get_property("mimicEggMonsters"), "745")){
                     cli_execute("c2t_megg fight unholy diver");
                     run_combat();
+                    // A Force cast during the egg fight can strand the
+                    // session in choice 1387 if nothing auto-resolved it.
+                    if (handling_choice() && last_choice() == 1387)
+                        run_choice(3);
                 } else if (timeSpinnerFight($monster[unholy diver])) {
                 } else if (count_summons() >= 1) {
                     summon($monster[unholy diver]);
@@ -3042,12 +3051,17 @@ void main(string... args) {
         abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+        // c2t_megg clears choiceAdventureScript for the span of its egg
+        // fights, so the Force's follow-up choice must also be answerable
+        // from the property alone.
+        set_property("choiceAdventure1387", "3");
         print("Starting UnderTheSea");
         initialization();
         seaMonkees();
         sorceress();
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
+        set_property("choiceAdventure1387", choice1387Storage);
         set_ccs(CCSStorage);
         print("Ending UnderTheSea");
     }
