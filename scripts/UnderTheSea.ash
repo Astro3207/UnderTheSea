@@ -815,6 +815,26 @@ import <seedfinder/seedfinder.ash>;
             retrieve_item($item[handful of split pea soup]);
     }
 
+    // Mafia's autorecovery aborts the run when it cannot reach its MP target
+    // -- and with no meat it cannot buy a single restorer. Free rests are
+    // spent first (they cost nothing but compete with the Cincho), then NPC
+    // soda water only while meat covers it.
+    void topUpMp(int target) {
+        while (my_mp() < target
+            && total_free_rests() > to_int(get_property("timesRested")))
+            cli_execute("camp rest free");
+        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
+            int need = min((target - my_mp()) / 4 + 1,
+                my_meat() / npc_price($item[soda water]));
+            buy(need, $item[soda water]);
+            use(min(need, item_amount($item[soda water])), $item[soda water]);
+        }
+        if (my_mp() < target)
+            print("MP top-up stalled at " + my_mp() + "/" + target
+                + " -- out of free rests and meat. Autorecovery may abort;"
+                + " sell some junk or fight for meat and rerun.", "red");
+    }
+
     void adv(location loc) {
         adv1(loc);
         post_adv();
@@ -2483,12 +2503,14 @@ void sorceress() {
         maximize("50 spooky res, hp",false);
         while (get_property("dreadScroll3") == "0") {
             restore_hp(1000);
+            topUpMp(150);
             use_skill($skill[deep dark visions]);
         }
     }
 
     // ── YogUrt preparation ────────────────────────────────────────────────────
     step("phase: Yog-Urt preparation");
+    topUpMp(250);
     if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
         if (get_property("isMerkinHighPriest") == "false") {
             if (isKBandSushiEnough() == false || my_path().id == 0){
