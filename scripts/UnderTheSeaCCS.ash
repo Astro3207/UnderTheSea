@@ -299,6 +299,21 @@ void main(int round, monster mob, string page_text) {
             }
             if (mob == $monster[tumbleweed])
                 abort("Unexpected mob encountered in shadow rift");
+            // Slab hunting: bricks are the colosseum's free rounds, so a
+            // snake or stalk draw is worth a spare Macrometeorite while
+            // bricks are short. The diver hunt keeps first claim on the
+            // casts (at least four held back while it is live).
+            if ($monsters[shadow snake, shadow stalk] contains mob
+                && item_amount($item[shadow brick]) < 6
+                && to_int(get_property("lastColosseumRoundWon")) < 15
+                && (!diverHuntActive() || to_int(get_property("_macrometeoriteUses")) < 6)
+                && macroReady() && contains_text(page_text, "Macrometeorite")) {
+                step("Macrometeorite: re-rolling for a shadow slab");
+                use_skill($skill[Macrometeorite]);
+                mob = last_monster();
+                page_text = to_string(visit_url("fight.php"));
+                continue;
+            }
             if (!can_still_steal() || available_amount($item[pristine fish scale]) < 6)
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             darts();

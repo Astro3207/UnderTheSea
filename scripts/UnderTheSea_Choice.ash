@@ -204,7 +204,11 @@ void main(int whichchoice, string page) {
         // (+10 familiar weight), which feeds Glover in Cyberzone 1 during
         // the Mom rescue.
         case 1386:
-            run_choice(4);
+            // Take the upgrade only if the page still offers it.
+            if (available_choice_options() contains 4)
+                run_choice(4);
+            else
+                run_choice(5);
             break;
 
         // 1387 is Using the Force. Option 3, "you will drop your things and
