@@ -2818,13 +2818,17 @@ void sorceress() {
             // them to out-heal it. Gummiheart's +100 muscle inflates max HP
             // past that line: strip it, pulling the antidote if needed.
             if (have_effect($effect[gummiheart]) > 0) {
-                if (item_amount($item[soft green echo eyedrop antidote]) == 0)
+                // The antidote costs a pull slot, so keep hands off the
+                // reserved ones -- the Shub deleveler slot is still live
+                // here, and losing it costs far more than this saves.
+                if (item_amount($item[soft green echo eyedrop antidote]) == 0
+                    && pulls_remaining() > reservedPulls())
                     pullSequence($item[soft green echo eyedrop antidote]);
                 if (item_amount($item[soft green echo eyedrop antidote]) > 0)
                     cli_execute("uneffect gummiheart");
             }
             if (have_effect($effect[gummiheart]) > 0)
-                abort("Gummiheart is inflating max HP past what the healing items can out-heal; remove it (soft green echo eyedrop antidote) and rerun.");
+                abort("Gummiheart is inflating max HP past what the healing items can out-heal, and the pull budget is fully reserved. Remove it (soft green echo eyedrop antidote) or burn its remaining turns, then rerun.");
             adv($location[Mer-kin Temple (Right Door)]);
         }
     }
