@@ -177,8 +177,10 @@ void main(int whichchoice, string page) {
             break;
 
         case 1059:
-            run_choice(1);
+            if (get_property("choiceAdventure1059") == "")
+                run_choice(1);
             break;
+
         // ── Underwater zone run_choice(2) cases ───────────────────────────
         case 1469:
         case 1470:
