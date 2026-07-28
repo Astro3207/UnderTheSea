@@ -32,9 +32,7 @@ of this list:
   won't buy one for you. Can't guarantee runs will finish without one. 
 - **The Eternity Codpiece**, loaded with unblemished pearls before
   ascending. The Nautical Seaceress demands five unblemished pearls and
-  the path makes them unpullable — pearls carried across ascension in the
-  codpiece skip most of that farming, and socketed gems keep their skills
-  without spending accessory slots.
+  the path makes them unpullable.
 - **3 Familiars** Grouper Groupie, Glover, Foul Ball
 
 ## Options
@@ -42,7 +40,7 @@ of this list:
 | Command | What it does |
 |---|---|
 | `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
-| `UnderTheSea sim` | Checklist only — prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit (with the biggest missing savings called out), and exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. Forecast run length is experimental, no guarantees of accuracy. |
+| `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit (with the biggest missing savings called out), and exits. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. Forecast run length is experimental, no guarantees of accuracy. |
 
 Preferences, set once in the gCLI; all default to off:
 
@@ -90,9 +88,6 @@ The script sorts your account into a resource tier and routes accordingly:
 | cursed monkey's paw | Wishes materialize scarce quest items like sea lassos and sea cowbells for the seahorse taming instead of farming sea cowboys and sea cows for them. |
 | 2002 Mr. Store Catalog | Store credits buy copy and drop-forcing tools mid-run that shortcut opening The Coral Corral and finding Mom in The Caliginous Abyss. |
 | book of facts | Just the Facts wishes and Monster Habitats copy chains cut the adventures needed to find Mom in The Caliginous Abyss |
-| august scepter | Waffles & clovers are good. |
-| Pocket Meteor Guide | Waffles. |
-| Power Glove | Waffles. |
 | patriotic eagle (hatchling) | Patriotic Screech can save a good amount of turns, and is irreplaceable. |
 
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
