@@ -3,8 +3,9 @@ import <seedfinder/seedfinder.ash>;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Per-account preferences, set once with the mafia CLI; all default to off.
-// uts_godRunGuard, uts_postloopCommand, uts_runOutEagleBanish and
-// uts_prepCodpiece -- see the README for what each does.
+// uts_godRunGuard, uts_postloopCommand, uts_postLoopRunOutEagleBanish,
+// uts_postLoopFarmPearls, uts_postLoopCloverFishy and
+// uts_postLoopPrepCodpiece -- see the README for what each does.
 //
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
@@ -402,7 +403,10 @@ import <seedfinder/seedfinder.ash>;
                         if (ef == $effect[Crunchy Steps]
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
-                            && get_property("yogUrtDefeated") == "false") continue;
+                            && (get_property("yogUrtDefeated") == "false"
+                                || to_int(get_property("_photoBoothEffects")) >= 3)) continue;
+                        if (ef == $effect[Fresh Breath]
+                            && get_property("_aug6Cast") == "true") continue;
                         if (ef == $effect[Bloodbathed]
                             && lowShiny() == true) continue;
                         if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
@@ -414,6 +418,7 @@ import <seedfinder/seedfinder.ash>;
                 break;
             case "hotres":
             case "spookyres":
+            case "stenchres":
                 foreach ef in $effects[Astral Shell, Minor Invulnerability,
                     Elemental Saucesphere] {
                     if (ef == $effect[Minor Invulnerability]
@@ -423,6 +428,7 @@ import <seedfinder/seedfinder.ash>;
                 }
                 break;
             case "sleazeres":
+            case "coldres":
                 foreach ef in $effects[Astral Shell, Minor Invulnerability,
                     Elemental Saucesphere, scarysauce] {
                     if (ef == $effect[Minor Invulnerability]
@@ -858,6 +864,10 @@ import <seedfinder/seedfinder.ash>;
     void initialization() {
         if (get_revision() < 29057)
             abort("Please update mafia to newer than 29057");
+        // A pearl farm that aborted mid-loop leaves this set, and a stuck
+        // "true" reduces the whole CCS to cleanUp(); in-run zones need the
+        // full consult.
+        set_property("_utsPearlFarm", "false");
         if (chosenFamiliar != $familiar[none]){
             use_familiar($familiar[none]);
             int itdrop1 = numeric_modifier("item drop");
@@ -2172,37 +2182,22 @@ void seaMonkees() {
         }
     }
 }
-// ─── EAGLE BANISH RE-AIM ──────────────────────────────────────────────────────
-// uts_runOutEagleBanish (experimental): clear the leftover Patriotic Screech
-// construct banish by re-aiming it. Farm a pearl with the eagle out (zone-
-// element outfit, in an open zone with an unclaimed pearl) until
-// screechCombats hits 0, then screech the first monster at the Smut Orc
-// Logging Camp -- the banish moves onto the orc phylum. Missing pieces
-// abort loudly.
+// ─── PEARL FARMING / EAGLE BANISH RE-AIM ─────────────────────────────────────
+// One walker serves both postloop prefs. uts_postLoopRunOutEagleBanish
+// (experimental): the Patriotic Eagle farms pearl zones until the screech
+// recharges, spends it at once on the first monster at the Smut Orc
+// Logging Camp -- the leftover construct banish moves onto the orc phylum
+// -- and hands the familiar slot to the Hound Dog, since nothing after
+// the re-aim needs the eagle. uts_postLoopFarmPearls: when a pearl's mall price
+// beats the ten turns its farm costs at valueOfAdventure, keep walking
+// until every open zone's daily pearl is claimed. Missing pieces abort
+// loudly.
+//
+// Free kills, free runs and fight-enders advance neither a zone's pearl
+// progress nor screechCombats -- only a combat fought to a plain win on a
+// spent turn counts. _utsPearlFarm tells the CCS to fight that way while
+// the walker below is running.
 
-string screechFilter(int round, monster mob, string page_text) {
-    return "skill 7451";   // %fn, Release the Patriotic Screech!
-}
-
-// Both post-run preps start by emptying Hagnk's -- the run is over, so
-// everything left in storage may as well be on hand for gearing and
-// pearl-buying. Emptying is once per ascension; a repeat call is a no-op.
-void pullEverything() {
-    if (to_int(get_property("lastEmptiedStorage")) != my_ascensions())
-        cli_execute("pull all");
-}
-
-void runOutEagleBanish() {
-    if (get_property("uts_runOutEagleBanish") != "true")
-        return;
-    if (!contains_text(get_property("banishedPhyla"), "construct"))
-        return;
-    step("postloop: re-aiming the Patriotic Screech off the construct phylum");
-    if (!have_familiar($familiar[Patriotic Eagle]))
-        abort("uts_runOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
-    if (!can_adventure($location[The Smut Orc Logging Camp]))
-        abort("uts_runOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
-    pullEverything();
     string [location] pearlZoneRes = {
         $location[Anemone Mine]:          "spooky res",
         $location[The Dive Bar]:          "sleaze res",
@@ -2224,20 +2219,189 @@ void runOutEagleBanish() {
         $location[The Marinara Trench]:   "_unblemishedPearlMarinaraTrenchProgress",
         $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepestsProgress"
     };
-    // The eagle stays out for the whole farm -- its combats are what
-    // recharge the screech -- and the bathysphere lets it act underwater.
-    use_familiar($familiar[Patriotic Eagle]);
+
+// Pearl progress pays its full 10% a combat only at 18+ of the zone's
+// element; below that the game pays partial credit and the ten-combat
+// pearl stretches. Checked every turn, not just at zone entry -- the res
+// buffs run out mid-zone -- re-upping expired buffs and refusing to farm
+// slower than the economics were priced at.
+void pearlResCheck(location zone) {
+    string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
+    mood(elem + "res");
+    mood("combat");
+    if (numeric_modifier(elem + " resistance") < 18)
+        abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
+            + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
+            + " is up; add " + elem + " resistance gear or buffs and rerun.");
+}
+
+void pearlZonePrep(location zone) {
+    string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
+    // Buffs up before the maximize: their res levels count toward the 18
+    // and free gear slots for +combat.
+    mood(elem + "res");
+    mood("combat");
+    // Res to the line, then combat with the change: the 200 weight means
+    // no combat piece can outbid a needed res level, "18 max" stops the
+    // maximizer crediting res past the line, and every slot left over
+    // chases +combat -- each noncombat dodged is a turn the pearl doesn't
+    // cost. No "18 min": a hard maximizer failure would abort as
+    // "Maximizer failed" where pearlResCheck names the element and value,
+    // and it runs before the first adventure.
+    tempEquipment("200 " + pearlZoneRes[zone] + " 18 max, combat",
+        swimmingTrunks() + bathysphere($item[none]));
+}
+
+string screechFilter(int round, monster mob, string page_text) {
+    return "skill 7451";   // %fn, Release the Patriotic Screech!
+}
+
+// Both post-run preps start by emptying Hagnk's -- the run is over, so
+// everything left in storage may as well be on hand for gearing and
+// pearl-buying. Emptying is once per ascension; a repeat call is a no-op.
+void pullEverything() {
+    if (to_int(get_property("lastEmptiedStorage")) != my_ascensions())
+        cli_execute("pull all");
+}
+
+// uts_postLoopCloverFishy: top Fishy up with a Lucky! visit to The
+// Brinier Deepers -- The Haggling grants 20 turns, and works even at
+// 0 Fishy for 2 adventures instead of 1 -- so the walk keeps going
+// where it would otherwise stop. Aug 2nd casts are free Lucky!; after
+// those, an 11-leaf clover from inventory or, when mafia may buy from
+// the hermit, his daily three.
+boolean cloverFishy(location zone) {
+    if (get_property("uts_postLoopCloverFishy") != "true")
+        return false;
+    if (my_adventures() < 3)
+        return false;
+    if (!can_adventure($location[The Brinier Deepers]))
+        return false;
+    // getLucky()'s clover branch exits the script when no clover can be
+    // had, so only enter it on a guaranteed path: Lucky! already up, a
+    // free Aug. 2nd cast, a clover in inventory, or hermit stock that
+    // mafia is permitted to buy (autoSatisfyWithCoinmasters).
+    boolean aug2Free = have_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day])
+        && get_property("_aug2Cast") == "false"
+        && to_int(get_property("_augSkillsCast")) < 5;
+    if (have_effect($effect[Lucky!]) == 0 && !aug2Free
+        && item_amount($item[11-leaf clover]) == 0
+        && !(get_property("autoSatisfyWithCoinmasters") == "true"
+            && to_int(get_property("_cloversPurchased")) < 3))
+        return false;
+    getLucky();
+    if (have_effect($effect[Lucky!]) == 0)
+        return false;
+    step("postloop pearls: Lucky! trip to The Brinier Deepers for 20 turns of Fishy");
+    // The zone is underwater: gear the player's breathing and the
+    // familiar's bathysphere before diving -- the walk may not have
+    // prepped a zone yet when this fires.
+    tempEquipment("combat", swimmingTrunks() + bathysphere($item[none]));
+    adv1($location[The Brinier Deepers]);
+    // A wanderer can spend the turn without spending the Lucky!; one
+    // more visit collects The Haggling. At 0 Fishy it costs 2 turns.
+    if (have_effect($effect[Fishy]) == 0
+        && have_effect($effect[Lucky!]) > 0 && my_adventures() > 1)
+        adv1($location[The Brinier Deepers]);
+    boolean fishy = have_effect($effect[Fishy]) > 0;
+    // The dive's maximize stripped the pearl gear; a still-live zone gets
+    // its 18-res outfit back before the walk's next turn there.
+    if (zone != $location[none] && get_property(pearlClaimed[zone]) != "true")
+        pearlZonePrep(zone);
+    return fishy;
+}
+
+void pearlPostloop() {
+    boolean rundown = get_property("uts_postLoopRunOutEagleBanish") == "true"
+        && contains_text(get_property("banishedPhyla"), "construct");
+    boolean farm;
+    if (get_property("uts_postLoopFarmPearls") == "true") {
+        int pearlPrice = mall_price($item[unblemished pearl]);
+        int voa = to_int(get_property("valueOfAdventure"));
+        if (pearlPrice > 0 && voa <= 0) {
+            // garbo's own default; an unset zero would make farming always win.
+            voa = 4000;
+            print("uts_postLoopFarmPearls: valueOfAdventure isn't set, assuming " + voa + ".", "blue");
+        }
+        if (pearlPrice <= 0)
+            print("uts_postLoopFarmPearls: couldn't get a mall price for the pearl; skipping the farm.", "red");
+        else if (pearlPrice <= voa * 10)
+            print("uts_postLoopFarmPearls: a pearl mall-buys at " + pearlPrice
+                + " and ten farming turns are worth " + (voa * 10)
+                + " -- buying beats farming today.", "blue");
+        else {
+            farm = true;
+            step("postloop: pearls sell for " + pearlPrice + " against " + (voa * 10)
+                + " for ten farming turns -- farming");
+        }
+    }
+    if (!rundown && !farm)
+        return;
+    if (rundown) {
+        step("postloop: re-aiming the Patriotic Screech off the construct phylum");
+        if (!have_familiar($familiar[Patriotic Eagle]))
+            abort("uts_postLoopRunOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
+        if (!can_adventure($location[The Smut Orc Logging Camp]))
+            abort("uts_postLoopRunOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
+    }
+    pullEverything();
+    // The eagle's combats are what recharge the screech, so it stays out
+    // until the re-aim; otherwise the Hound Dog's +combat means fewer
+    // noncombats per pearl (picked directly, never via the "combat"
+    // overload, which force-swaps Hound-Dog-less accounts; the maximizer
+    // never recommends familiars). With no familiar out at all, bathysphere()'s
+    // equip term has nowhere to land and tempEquipment aborts; beyond
+    // that the familiar doesn't matter, pearls are counter claims, not
+    // drops.
+    if (rundown)
+        use_familiar($familiar[Patriotic Eagle]);
+    else if (have_familiar($familiar[Jumpsuited Hound Dog]))
+        use_familiar($familiar[Jumpsuited Hound Dog]);
+    if (my_familiar() == $familiar[none]) {
+        foreach fam in $familiars[Patriotic Eagle, grouper groupie] {
+            if (have_familiar(fam)) {
+                use_familiar(fam);
+                break;
+            }
+        }
+        if (my_familiar() == $familiar[none])
+            abort("postloop pearls: no familiar out; take out any familiar and rerun.");
+    }
+    set_property("_utsPearlFarm", "true");
     int spent;
+    int claimed;
     location current = $location[none];
+    try {
     while (true) {
-        boolean screechReady = to_int(get_property("screechCombats")) == 0;
-        // A part-farmed pearl gets finished even once the screech is ready:
-        // zone progress doesn't survive rollover, so walking away would
-        // throw the turns already spent.
+        // The moment the screech is back, spend it: one fight at the Smut
+        // Orc Logging Camp moves the banish onto the orc phylum. Zone
+        // progress holds while stepping out, and everything afterward
+        // farms behind the Hound Dog instead of the eagle.
+        if (rundown && to_int(get_property("screechCombats")) == 0) {
+            if (my_adventures() == 0)
+                abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
+            adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
+            if (contains_text(get_property("banishedPhyla"), "construct"))
+                abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
+            print("Patriotic Screech re-aimed at smut orcs after " + spent + " pearl-farming turns; constructs are free.", "blue");
+            rundown = false;
+            if (have_familiar($familiar[Jumpsuited Hound Dog])) {
+                use_familiar($familiar[Jumpsuited Hound Dog]);
+                // The bathysphere is familiar equipment, so the new
+                // familiar needs it maximized back on before the next
+                // underwater turn; a claimed or unset zone gets its prep
+                // from the selection block instead.
+                if (current != $location[none]
+                    && get_property(pearlClaimed[current]) != "true")
+                    pearlZonePrep(current);
+            }
+        }
+        // A part-farmed pearl always gets finished: zone progress doesn't
+        // survive rollover, so walking away would throw the turns spent.
         boolean midPearl = current != $location[none]
             && get_property(pearlClaimed[current]) != "true"
             && to_int(get_property(pearlProgress[current])) > 0;
-        if (screechReady && !midPearl)
+        if (!rundown && !farm && !midPearl)
             break;
         if (have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
@@ -2266,37 +2430,53 @@ void runOutEagleBanish() {
                     break;
                 }
             }
-            if (current == $location[none])
-                abort("uts_runOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
-            mood(pearlZoneRes[current]);
-            tempEquipment(pearlZoneRes[current], swimmingTrunks() + bathysphere($item[none]));
+            if (current == $location[none]) {
+                if (rundown)
+                    abort("uts_postLoopRunOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
+                break;
+            }
+            pearlZonePrep(current);
         }
+        if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
+            abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
+                + claimed + " pearls claimed; today's zone progress won't survive rollover.");
+        if (my_adventures() == 0)
+            abort("postloop pearls: out of adventures mid-zone after " + spent + " turns with "
+                + claimed + " pearls claimed; today's zone progress won't survive rollover.");
+        if (spent >= 90)
+            abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
+        pearlResCheck(current);
         adv1(current);
         spent += 1;
     }
-    // Re-aim: the screech ends the fight and moves the phylum banish onto
-    // smut orcs (phylum: orc), freeing constructs in a single adventure.
-    adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
-    if (contains_text(get_property("banishedPhyla"), "construct"))
-        abort("uts_runOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
-    print("Patriotic Screech re-aimed at smut orcs after " + spent + " pearl-farming turns; constructs are free.", "blue");
+    } finally {
+        set_property("_utsPearlFarm", "false");
+    }
+    if (farm) {
+        foreach loc in pearlZoneRes {
+            if (get_property(pearlClaimed[loc]) != "true")
+                print("uts_postLoopFarmPearls: " + loc + " left unclaimed.", "red");
+        }
+        print("uts_postLoopFarmPearls: " + claimed + " pearls claimed in " + spent + " turns.", "blue");
+    }
 }
 
-// uts_prepCodpiece: leave the run with the codpiece already loaded for the
+// uts_postLoopPrepCodpiece: leave the run with the codpiece already loaded for the
 // next ascension -- five unblemished pearls, mall-bought if the farm came
-// up short. Runs after the banish rundown so its pearls count.
+// up short. Runs after the banish rundown and the pearl farm so their
+// pearls count.
 void prepCodpiece() {
-    if (get_property("uts_prepCodpiece") != "true")
+    if (get_property("uts_postLoopPrepCodpiece") != "true")
         return;
     step("postloop: loading the codpiece with unblemished pearls");
     if (!have_item($item[The Eternity Codpiece]))
-        abort("uts_prepCodpiece: you don't own The Eternity Codpiece.");
+        abort("uts_postLoopPrepCodpiece: you don't own The Eternity Codpiece.");
     pullEverything();
     codpiece("none");
     if (item_amount($item[unblemished pearl]) < 5)
         retrieve_item(5, $item[unblemished pearl]);
     if (item_amount($item[unblemished pearl]) < 5)
-        abort("uts_prepCodpiece: couldn't get to five unblemished pearls (have "
+        abort("uts_postLoopPrepCodpiece: couldn't get to five unblemished pearls (have "
             + item_amount($item[unblemished pearl]) + ").");
     codpiece("unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl");
     print("Codpiece loaded: five unblemished pearls slotted for the next run.", "blue");
@@ -3084,7 +3264,7 @@ void sorceress() {
                     $item[waterlogged scroll of healing]);
             council();
             council();
-            runOutEagleBanish();
+            pearlPostloop();
             prepCodpiece();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));

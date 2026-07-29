@@ -217,6 +217,13 @@ void shubDelevel() {
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
+    // Pearl farming spends plain turns: free kills, free runs, Forces and
+    // copies advance neither a zone's pearl progress nor screechCombats,
+    // so every trick below would burn a charge for zero progress.
+    if (get_property("_utsPearlFarm") == "true") {
+        cleanUp();
+        return;
+    }
     // Re-roll dispatch loop. A monster swap restarts this pass with the new
     // monster and a re-fetched page. ASH cannot call main() from inside its
     // own definition (the name is not bound until the definition completes),
