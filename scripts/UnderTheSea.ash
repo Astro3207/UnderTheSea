@@ -405,6 +405,7 @@ import <seedfinder/seedfinder.ash>;
                 break;
             case "hotres":
             case "spookyres":
+            case "stenchres":
                 foreach ef in $effects[Astral Shell, Minor Invulnerability,
                     Elemental Saucesphere] {
                     if (ef == $effect[Minor Invulnerability]
@@ -414,6 +415,7 @@ import <seedfinder/seedfinder.ash>;
                 }
                 break;
             case "sleazeres":
+            case "coldres":
                 foreach ef in $effects[Astral Shell, Minor Invulnerability,
                     Elemental Saucesphere, scarysauce] {
                     if (ef == $effect[Minor Invulnerability]
@@ -2164,6 +2166,24 @@ void seaMonkees() {
         $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepestsProgress"
     };
 
+// Pearl progress pays its full 10% a combat only at 18+ of the zone's
+// element; below that the game pays partial credit and the ten-combat
+// pearl stretches. Checked every turn, not just at zone entry -- the res
+// buffs run out mid-zone -- re-upping expired buffs and refusing to farm
+// slower than the economics were priced at.
+void pearlResCheck(location zone) {
+    string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
+    mood(elem + "res");
+    if (numeric_modifier(elem + " resistance") < 18)
+        abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
+            + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
+            + " is up; add " + elem + " resistance gear or buffs and rerun.");
+}
+
+void pearlZonePrep(location zone) {
+    tempEquipment(pearlZoneRes[zone], swimmingTrunks() + bathysphere($item[none]));
+}
+
 string screechFilter(int round, monster mob, string page_text) {
     return "skill 7451";   // %fn, Release the Patriotic Screech!
 }
@@ -2222,8 +2242,9 @@ void runOutEagleBanish() {
             }
             if (current == $location[none])
                 abort("uts_runOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
-            tempEquipment(pearlZoneRes[current], swimmingTrunks() + bathysphere($item[none]));
+            pearlZonePrep(current);
         }
+        pearlResCheck(current);
         adv1(current);
         spent += 1;
     }
@@ -2305,7 +2326,7 @@ void farmPearls() {
             }
             if (current == $location[none])
                 break;
-            tempEquipment(pearlZoneRes[current], swimmingTrunks() + bathysphere($item[none]));
+            pearlZonePrep(current);
         }
         if (have_effect($effect[Fishy]) == 0)
             abort("uts_farmPearls: out of Fishy mid-zone after " + spent + " turns with "
@@ -2315,6 +2336,7 @@ void farmPearls() {
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
         if (spent >= 90)
             abort("uts_farmPearls: 90 turns spent without finishing; something is wrong, bailing out.");
+        pearlResCheck(current);
         adv1(current);
         spent += 1;
     }
