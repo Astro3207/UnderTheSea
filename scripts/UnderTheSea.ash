@@ -393,7 +393,10 @@ import <seedfinder/seedfinder.ash>;
                         if (ef == $effect[Crunchy Steps]
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
-                            && get_property("yogUrtDefeated") == "false") continue;
+                            && (get_property("yogUrtDefeated") == "false"
+                                || to_int(get_property("_photoBoothEffects")) >= 3)) continue;
+                        if (ef == $effect[Fresh Breath]
+                            && get_property("_aug6Cast") == "true") continue;
                         if (ef == $effect[Bloodbathed]
                             && lowShiny() == true) continue;
                         if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
@@ -2174,6 +2177,7 @@ void seaMonkees() {
 void pearlResCheck(location zone) {
     string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
     mood(elem + "res");
+    mood("combat");
     if (numeric_modifier(elem + " resistance") < 18)
         abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
             + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
@@ -2181,7 +2185,20 @@ void pearlResCheck(location zone) {
 }
 
 void pearlZonePrep(location zone) {
-    tempEquipment(pearlZoneRes[zone], swimmingTrunks() + bathysphere($item[none]));
+    string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
+    // Buffs up before the maximize: their res levels count toward the 18
+    // and free gear slots for +combat.
+    mood(elem + "res");
+    mood("combat");
+    // Res to the line, then combat with the change: the 200 weight means
+    // no combat piece can outbid a needed res level, "18 max" stops the
+    // maximizer crediting res past the line, and every slot left over
+    // chases +combat -- each noncombat dodged is a turn the pearl doesn't
+    // cost. No "18 min": a hard maximizer failure would abort as
+    // "Maximizer failed" where pearlResCheck names the element and value,
+    // and it runs before the first adventure.
+    tempEquipment("200 " + pearlZoneRes[zone] + " 18 max, combat",
+        swimmingTrunks() + bathysphere($item[none]));
 }
 
 string screechFilter(int round, monster mob, string page_text) {
@@ -2285,9 +2302,14 @@ void farmPearls() {
     step("postloop: pearls sell for " + pearlPrice + " against " + (voa * 10)
         + " for ten farming turns -- farming");
     pullEverything();
+    // The Hound Dog's +combat means fewer noncombats per pearl; the
+    // maximizer never recommends familiars, so it's picked here. Not the
+    // "combat" overload: that force-swaps Hound-Dog-less accounts.
+    if (have_familiar($familiar[Jumpsuited Hound Dog]))
+        use_familiar($familiar[Jumpsuited Hound Dog]);
     // With no familiar out, bathysphere()'s equip term has nowhere to
-    // land and tempEquipment aborts. Which familiar doesn't matter --
-    // pearls are counter claims, not drops.
+    // land and tempEquipment aborts. Which familiar doesn't matter
+    // otherwise -- pearls are counter claims, not drops.
     if (my_familiar() == $familiar[none]) {
         foreach fam in $familiars[Patriotic Eagle, grouper groupie] {
             if (have_familiar(fam)) {
