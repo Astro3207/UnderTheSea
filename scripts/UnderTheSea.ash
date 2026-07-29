@@ -3,8 +3,9 @@ import <seedfinder/seedfinder.ash>;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Per-account preferences, set once with the mafia CLI; all default to off.
-// uts_godRunGuard, uts_postloopCommand, uts_runOutEagleBanish, uts_farmPearls
-// and uts_prepCodpiece -- see the README for what each does.
+// uts_godRunGuard, uts_postloopCommand, uts_postLoopRunOutEagleBanish,
+// uts_postLoopFarmPearls, uts_postLoopCloverFishy and
+// uts_postLoopPrepCodpiece -- see the README for what each does.
 //
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
@@ -2135,12 +2136,12 @@ void seaMonkees() {
     }
 }
 // ─── PEARL FARMING / EAGLE BANISH RE-AIM ─────────────────────────────────────
-// One walker serves both postloop prefs. uts_runOutEagleBanish
+// One walker serves both postloop prefs. uts_postLoopRunOutEagleBanish
 // (experimental): the Patriotic Eagle farms pearl zones until the screech
 // recharges, spends it at once on the first monster at the Smut Orc
 // Logging Camp -- the leftover construct banish moves onto the orc phylum
 // -- and hands the familiar slot to the Hound Dog, since nothing after
-// the re-aim needs the eagle. uts_farmPearls: when a pearl's mall price
+// the re-aim needs the eagle. uts_postLoopFarmPearls: when a pearl's mall price
 // beats the ten turns its farm costs at valueOfAdventure, keep walking
 // until every open zone's daily pearl is claimed. Missing pieces abort
 // loudly.
@@ -2216,22 +2217,69 @@ void pullEverything() {
         cli_execute("pull all");
 }
 
+// uts_postLoopCloverFishy: top Fishy up with a Lucky! visit to The
+// Brinier Deepers -- The Haggling grants 20 turns, and works even at
+// 0 Fishy for 2 adventures instead of 1 -- so the walk keeps going
+// where it would otherwise stop. Aug 2nd casts are free Lucky!; after
+// those, an 11-leaf clover from inventory or, when mafia may buy from
+// the hermit, his daily three.
+boolean cloverFishy(location zone) {
+    if (get_property("uts_postLoopCloverFishy") != "true")
+        return false;
+    if (my_adventures() < 3)
+        return false;
+    if (!can_adventure($location[The Brinier Deepers]))
+        return false;
+    // getLucky()'s clover branch exits the script when no clover can be
+    // had, so only enter it on a guaranteed path: Lucky! already up, a
+    // free Aug. 2nd cast, a clover in inventory, or hermit stock that
+    // mafia is permitted to buy (autoSatisfyWithCoinmasters).
+    boolean aug2Free = have_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day])
+        && get_property("_aug2Cast") == "false"
+        && to_int(get_property("_augSkillsCast")) < 5;
+    if (have_effect($effect[Lucky!]) == 0 && !aug2Free
+        && item_amount($item[11-leaf clover]) == 0
+        && !(get_property("autoSatisfyWithCoinmasters") == "true"
+            && to_int(get_property("_cloversPurchased")) < 3))
+        return false;
+    getLucky();
+    if (have_effect($effect[Lucky!]) == 0)
+        return false;
+    step("postloop pearls: Lucky! trip to The Brinier Deepers for 20 turns of Fishy");
+    // The zone is underwater: gear the player's breathing and the
+    // familiar's bathysphere before diving -- the walk may not have
+    // prepped a zone yet when this fires.
+    tempEquipment("combat", swimmingTrunks() + bathysphere($item[none]));
+    adv1($location[The Brinier Deepers]);
+    // A wanderer can spend the turn without spending the Lucky!; one
+    // more visit collects The Haggling. At 0 Fishy it costs 2 turns.
+    if (have_effect($effect[Fishy]) == 0
+        && have_effect($effect[Lucky!]) > 0 && my_adventures() > 1)
+        adv1($location[The Brinier Deepers]);
+    boolean fishy = have_effect($effect[Fishy]) > 0;
+    // The dive's maximize stripped the pearl gear; a still-live zone gets
+    // its 18-res outfit back before the walk's next turn there.
+    if (zone != $location[none] && get_property(pearlClaimed[zone]) != "true")
+        pearlZonePrep(zone);
+    return fishy;
+}
+
 void pearlPostloop() {
-    boolean rundown = get_property("uts_runOutEagleBanish") == "true"
+    boolean rundown = get_property("uts_postLoopRunOutEagleBanish") == "true"
         && contains_text(get_property("banishedPhyla"), "construct");
     boolean farm;
-    if (get_property("uts_farmPearls") == "true") {
+    if (get_property("uts_postLoopFarmPearls") == "true") {
         int pearlPrice = mall_price($item[unblemished pearl]);
         int voa = to_int(get_property("valueOfAdventure"));
         if (pearlPrice > 0 && voa <= 0) {
             // garbo's own default; an unset zero would make farming always win.
             voa = 4000;
-            print("uts_farmPearls: valueOfAdventure isn't set, assuming " + voa + ".", "blue");
+            print("uts_postLoopFarmPearls: valueOfAdventure isn't set, assuming " + voa + ".", "blue");
         }
         if (pearlPrice <= 0)
-            print("uts_farmPearls: couldn't get a mall price for the pearl; skipping the farm.", "red");
+            print("uts_postLoopFarmPearls: couldn't get a mall price for the pearl; skipping the farm.", "red");
         else if (pearlPrice <= voa * 10)
-            print("uts_farmPearls: a pearl mall-buys at " + pearlPrice
+            print("uts_postLoopFarmPearls: a pearl mall-buys at " + pearlPrice
                 + " and ten farming turns are worth " + (voa * 10)
                 + " -- buying beats farming today.", "blue");
         else {
@@ -2245,9 +2293,9 @@ void pearlPostloop() {
     if (rundown) {
         step("postloop: re-aiming the Patriotic Screech off the construct phylum");
         if (!have_familiar($familiar[Patriotic Eagle]))
-            abort("uts_runOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
+            abort("uts_postLoopRunOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
         if (!can_adventure($location[The Smut Orc Logging Camp]))
-            abort("uts_runOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
+            abort("uts_postLoopRunOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
     }
     pullEverything();
     // The eagle's combats are what recharge the screech, so it stays out
@@ -2284,10 +2332,10 @@ void pearlPostloop() {
         // farms behind the Hound Dog instead of the eagle.
         if (rundown && to_int(get_property("screechCombats")) == 0) {
             if (my_adventures() == 0)
-                abort("uts_runOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
+                abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
             adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
             if (contains_text(get_property("banishedPhyla"), "construct"))
-                abort("uts_runOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
+                abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
             print("Patriotic Screech re-aimed at smut orcs after " + spent + " pearl-farming turns; constructs are free.", "blue");
             rundown = false;
             if (have_familiar($familiar[Jumpsuited Hound Dog])) {
@@ -2312,14 +2360,14 @@ void pearlPostloop() {
         // the preflight below is suspended -- so a dry well must fail
         // here, before zone selection misreads 0 Fishy as "no zone open".
         if (rundown) {
-            if (have_effect($effect[Fishy]) == 0)
-                abort("uts_runOutEagleBanish: out of Fishy after " + spent
+            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
+                abort("uts_postLoopRunOutEagleBanish: out of Fishy after " + spent
                     + " turns with the re-aim unfinished -- constructs are still banished.");
             if (my_adventures() == 0)
-                abort("uts_runOutEagleBanish: out of adventures after " + spent
+                abort("uts_postLoopRunOutEagleBanish: out of adventures after " + spent
                     + " turns with the re-aim unfinished -- constructs are still banished.");
             if (spent >= 40)
-                abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
+                abort("uts_postLoopRunOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
         }
         if (current == $location[none]
             || get_property(pearlClaimed[current]) == "true") {
@@ -2329,6 +2377,11 @@ void pearlPostloop() {
             // Fishy supply can't finish would be all loss. The screech
             // recharge outranks that arithmetic: it keeps farming on any
             // supply and hits the mid-zone aborts if the well runs dry.
+            // The top-up itself costs adventures (2 at 0 Fishy), so it
+            // only fires when enough remain to leave a farmable zone.
+            if (!rundown && have_effect($effect[Fishy]) < 15
+                && my_adventures() >= 17)
+                cloverFishy(current);
             if (!rundown
                 && (have_effect($effect[Fishy]) < 15 || my_adventures() < 15)) {
                 print("postloop pearls: stopping before a fresh zone -- "
@@ -2345,12 +2398,12 @@ void pearlPostloop() {
             }
             if (current == $location[none]) {
                 if (rundown)
-                    abort("uts_runOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
+                    abort("uts_postLoopRunOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
                 break;
             }
             pearlZonePrep(current);
         }
-        if (have_effect($effect[Fishy]) == 0)
+        if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
             abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
         if (my_adventures() == 0)
@@ -2368,28 +2421,28 @@ void pearlPostloop() {
     if (farm) {
         foreach loc in pearlZoneRes {
             if (get_property(pearlClaimed[loc]) != "true")
-                print("uts_farmPearls: " + loc + " left unclaimed.", "red");
+                print("uts_postLoopFarmPearls: " + loc + " left unclaimed.", "red");
         }
-        print("uts_farmPearls: " + claimed + " pearls claimed in " + spent + " turns.", "blue");
+        print("uts_postLoopFarmPearls: " + claimed + " pearls claimed in " + spent + " turns.", "blue");
     }
 }
 
-// uts_prepCodpiece: leave the run with the codpiece already loaded for the
+// uts_postLoopPrepCodpiece: leave the run with the codpiece already loaded for the
 // next ascension -- five unblemished pearls, mall-bought if the farm came
 // up short. Runs after the banish rundown and the pearl farm so their
 // pearls count.
 void prepCodpiece() {
-    if (get_property("uts_prepCodpiece") != "true")
+    if (get_property("uts_postLoopPrepCodpiece") != "true")
         return;
     step("postloop: loading the codpiece with unblemished pearls");
     if (!have_item($item[The Eternity Codpiece]))
-        abort("uts_prepCodpiece: you don't own The Eternity Codpiece.");
+        abort("uts_postLoopPrepCodpiece: you don't own The Eternity Codpiece.");
     pullEverything();
     codpiece("none");
     if (item_amount($item[unblemished pearl]) < 5)
         retrieve_item(5, $item[unblemished pearl]);
     if (item_amount($item[unblemished pearl]) < 5)
-        abort("uts_prepCodpiece: couldn't get to five unblemished pearls (have "
+        abort("uts_postLoopPrepCodpiece: couldn't get to five unblemished pearls (have "
             + item_amount($item[unblemished pearl]) + ").");
     codpiece("unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl");
     print("Codpiece loaded: five unblemished pearls slotted for the next run.", "blue");
