@@ -11,6 +11,7 @@ import <seedfinder/seedfinder.ash>;
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
+    string choice1387Storage = get_property("choiceAdventure1387");
     string seaFit,boss,modes;
     string [stat] pearlRes = {
         $stat[mysticality]: "hot res",
@@ -270,6 +271,14 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
         }
+        // A still-free off-hand on a drop-farming trip carries the Kramco:
+        // its goblins are free fights that burn delay wherever they land.
+        // Anything pinned above (champagne bottle, baseball diamond, a
+        // Double-Fisted second weapon) keeps the slot.
+        if (contains_text(maximizerInput, "item drop")
+            && equipmentSelection[$slot[off-hand]] == $item[none]
+            && have_item($item[Kramco Sausage-o-Matic&trade;]))
+            equipmentSelection[$slot[off-hand]] = $item[Kramco Sausage-o-Matic&trade;];
         string maximizerString = maximizerInput;
         foreach slo in equipmentSelection{
             if (available_amount(equipmentSelection[slo]) == 0)
@@ -820,6 +829,31 @@ import <seedfinder/seedfinder.ash>;
             retrieve_item($item[handful of split pea soup]);
     }
 
+    // Mafia's autorecovery aborts the run when it cannot reach its MP target
+    // -- and with no meat it cannot buy a single restorer. Free rests are
+    // spent first (they cost nothing but compete with the Cincho), then NPC
+    // soda water only while meat covers it.
+    void topUpMp(int target) {
+        while (my_mp() < target
+            && total_free_rests() > to_int(get_property("timesRested")))
+            cli_execute("camp rest free");
+        // Same junk sale post_adv() makes when meat runs low: spare scales
+        // fund the soda water.
+        if (my_mp() < target && my_meat() < 300)
+            foreach it in $items[dull fish scale, rough fish scale]
+                autosell(item_amount(it), it);
+        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
+            int need = min((target - my_mp()) / 4 + 1,
+                my_meat() / npc_price($item[soda water]));
+            buy(need, $item[soda water]);
+            use(min(need, item_amount($item[soda water])), $item[soda water]);
+        }
+        if (my_mp() < target)
+            print("MP top-up stalled at " + my_mp() + "/" + target
+                + " -- out of free rests and meat. Autorecovery may abort;"
+                + " sell some junk or fight for meat and rerun.", "red");
+    }
+
     void adv(location loc) {
         adv1(loc);
         post_adv();
@@ -913,15 +947,20 @@ import <seedfinder/seedfinder.ash>;
             // pearls and those are smuggled in via the codpiece.
             if (have_item($item[Fourth of May Cosplay Saber])
                 && get_property("_saberMod") == "0") {
-                // mafia auto-resolves the choice this visit redirects into,
-                // using choiceAdventure1386 -- and its built-in default is 5,
-                // "Maybe Later", which skips the upgrade. Answering manually
-                // afterwards hits an already-closed choice and aborts the run
-                // with "Invalid choice", so set the property and let mafia
-                // take option 4 (the +10 familiar weight chip) itself.
+                // mafia may auto-resolve the choice this visit redirects
+                // into (choiceAdventure1386 steers it to option 4, the +10
+                // familiar weight chip). Only answer a choice that is still
+                // open, and only with an option the page actually offers --
+                // otherwise leave via Maybe Later.
                 step("initialization: saber daily upgrade (choice 1386)");
                 set_property("choiceAdventure1386", "4");
                 visit_url("main.php?action=may4");
+                if (handling_choice() && last_choice() == 1386) {
+                    if (available_choice_options() contains 4)
+                        run_choice(4);
+                    else
+                        run_choice(5);
+                }
             }
 
             // Autosell junk gems
@@ -1460,6 +1499,10 @@ import <seedfinder/seedfinder.ash>;
                     abort("mimice egg failed to extract. Rerun and if this happens again ping FS");
                 cli_execute("c2t_megg fight " + mon);
                 run_combat();
+                // A Force cast during the egg fight can strand the session
+                // in choice 1387 if nothing auto-resolved it.
+                if (handling_choice() && last_choice() == 1387)
+                    run_choice(3);
             } else if (have_skill($skill[just the facts])){
                 if (item_amount($item[pocket wish]) == 0){
                     if (my_class() == $class[accordion thief]){
@@ -1933,6 +1976,10 @@ void seaMonkees() {
                     && contains_text(get_property("mimicEggMonsters"), "745")){
                     cli_execute("c2t_megg fight unholy diver");
                     run_combat();
+                    // A Force cast during the egg fight can strand the
+                    // session in choice 1387 if nothing auto-resolved it.
+                    if (handling_choice() && last_choice() == 1387)
+                        run_choice(3);
                 } else if (timeSpinnerFight($monster[unholy diver])) {
                 } else if (count_summons() >= 1) {
                     summon($monster[unholy diver]);
@@ -2356,39 +2403,26 @@ void pearlPostloop() {
             && to_int(get_property(pearlProgress[current])) > 0;
         if (!rundown && !farm && !midPearl)
             break;
-        // While the recharge is live the walk may not pause for supply --
-        // the preflight below is suspended -- so a dry well must fail
-        // here, before zone selection misreads 0 Fishy as "no zone open".
-        if (rundown) {
-            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
-                abort("uts_postLoopRunOutEagleBanish: out of Fishy after " + spent
-                    + " turns with the re-aim unfinished -- constructs are still banished.");
-            if (my_adventures() == 0)
-                abort("uts_postLoopRunOutEagleBanish: out of adventures after " + spent
-                    + " turns with the re-aim unfinished -- constructs are still banished.");
-            if (spent >= 40)
-                abort("uts_postLoopRunOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
+        if (have_effect($effect[Fishy]) == 0)
+            abort("uts_runOutEagleBanish: out of Fishy after " + spent
+                + " turns with the re-aim unfinished.");
+        if (my_adventures() == 0) {
+            // Same pilsner ladder as the in-run diet: crack the six-pack if
+            // needed, Ode up, drink one. No pilsner left is a hard stop.
+            if (item_amount($item[astral pilsner]) == 0
+                && item_amount($item[astral six-pack]) > 0)
+                use($item[astral six-pack]);
+            if (item_amount($item[astral pilsner]) > 0) {
+                cli_execute("shrug Donho's Bubbly Ballad");
+                if (have_skill($skill[The Ode to Booze]))
+                    use_skill($skill[the ode to booze]);
+                drink($item[astral pilsner]);
+            } else
+                abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
         }
-        if (current == $location[none]
-            || get_property(pearlClaimed[current]) == "true") {
-            if (current != $location[none])
-                claimed += 1;
-            // A pearl is ~10 combats plus noncombat slack; a zone this
-            // Fishy supply can't finish would be all loss. The screech
-            // recharge outranks that arithmetic: it keeps farming on any
-            // supply and hits the mid-zone aborts if the well runs dry.
-            // The top-up itself costs adventures (2 at 0 Fishy), so it
-            // only fires when enough remain to leave a farmable zone.
-            if (!rundown && have_effect($effect[Fishy]) < 15
-                && my_adventures() >= 17)
-                cloverFishy(current);
-            if (!rundown
-                && (have_effect($effect[Fishy]) < 15 || my_adventures() < 15)) {
-                print("postloop pearls: stopping before a fresh zone -- "
-                    + have_effect($effect[Fishy]) + " turns of Fishy and "
-                    + my_adventures() + " adventures left can't finish one.", "blue");
-                break;
-            }
+        if (spent >= 40)
+            abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
+        if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
             current = $location[none];
             foreach loc in pearlZoneRes {
                 if (get_property(pearlClaimed[loc]) != "true" && can_adventure(loc)) {
@@ -2673,12 +2707,14 @@ void sorceress() {
         maximize("50 spooky res, hp",false);
         while (get_property("dreadScroll3") == "0") {
             restore_hp(1000);
+            topUpMp(150);
             use_skill($skill[deep dark visions]);
         }
     }
 
     // ── YogUrt preparation ────────────────────────────────────────────────────
     step("phase: Yog-Urt preparation");
+    topUpMp(250);
     if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
         if (get_property("isMerkinHighPriest") == "false") {
             if (isKBandSushiEnough() == false || my_path().id == 0){
@@ -2950,9 +2986,9 @@ void sorceress() {
             if (!highShiny())
                 conditional += if_equip($item[bat wings]);
 
-            use_familiar("itdrop");
+            use_familiar($familiar[none]);
             tempEquipment("moxie, hot damage, cold damage, spooky damage, sleaze damage, stench damage, -equip tiny yam cannon",
-                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + bathysphere($item[toy cupid bow]) + conditional);
+                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + conditional);
             equip($slot[acc1], $item[mer-kin prayerbeads]);
 
             if (available_amount($item[mer-kin prayerbeads]) >= 3) {
@@ -2976,8 +3012,22 @@ void sorceress() {
                     }
                 }
             }
+            // Yog-Urt's debuff deals ~90% of max HP per round and each
+            // healing item works once, so max HP must stay low enough for
+            // them to out-heal it. Gummiheart's +100 muscle inflates max HP
+            // past that line: strip it, pulling the antidote if needed.
+            if (have_effect($effect[gummiheart]) > 0) {
+                // The antidote costs a pull slot, so keep hands off the
+                // reserved ones -- the Shub deleveler slot is still live
+                // here, and losing it costs far more than this saves.
+                if (item_amount($item[soft green echo eyedrop antidote]) == 0
+                    && pulls_remaining() > reservedPulls())
+                    pullSequence($item[soft green echo eyedrop antidote]);
+                if (item_amount($item[soft green echo eyedrop antidote]) > 0)
+                    cli_execute("uneffect gummiheart");
+            }
             if (have_effect($effect[gummiheart]) > 0)
-                abort("Have gummiheart effect — drop HP somehow before fighting");
+                abort("Gummiheart is inflating max HP past what the healing items can out-heal, and the pull budget is fully reserved. Remove it (soft green echo eyedrop antidote) or burn its remaining turns, then rerun.");
             adv($location[Mer-kin Temple (Right Door)]);
         }
     }
@@ -3224,8 +3274,12 @@ void sorceress() {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
-void main(string command) {
-    if (to_lower_case(command) == "sim") {
+// Vararg rather than a plain string: mafia prompts for any missing typed
+// parameter, but collects a vararg silently, so a bare "UnderTheSea" runs
+// without a dialog.
+void main(string... args) {
+    string command = count(args) > 0 ? to_lower_case(args[0]) : "";
+    if (command == "sim") {
         // Report-only mode: the same ownership checklists the run prints at
         // startup and nothing else -- no pulls, no turns, no combat.
         iotmChecklist();
@@ -3237,12 +3291,17 @@ void main(string command) {
         abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+        // c2t_megg clears choiceAdventureScript for the span of its egg
+        // fights, so the Force's follow-up choice must also be answerable
+        // from the property alone.
+        set_property("choiceAdventure1387", "3");
         print("Starting UnderTheSea");
         initialization();
         seaMonkees();
         sorceress();
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
+        set_property("choiceAdventure1387", choice1387Storage);
         set_ccs(CCSStorage);
         print("Ending UnderTheSea");
     }
