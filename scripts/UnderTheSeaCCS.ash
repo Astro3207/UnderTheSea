@@ -13,31 +13,44 @@ void free_kill(string ptext, boolean drop) {
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
 
+    // One freeing resource per fight: once Club 'Em Back in Time lands, the
+    // fight is already turn-free, and ptext is stale for the rest of this
+    // consult pass -- without the flag, the item loop below reads the
+    // pre-club page and spends a banked brick on a fight that costs nothing.
+    boolean clubbed;
     foreach freeskill in $skills[Spit jurassic acid, Assert your Authority,
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
         BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
         if (freeskill == $skill[Club 'Em Back in Time]
-            && (my_location() != $location[mer-kin colosseum] || lowShiny()))
+            && (my_location() != $location[mer-kin colosseum] || lowShiny()
+                || to_int(get_property("_clubEmTimeUsed")) >= 5))
             continue;
         if (freeskill == $skill[BCZ: Sweat Bullets]
             && (my_basestat($stat[submoxie]) - 22500) < BCZcost("SweatBulletsCasts"))
             continue;
-        if (contains_text(ptext, to_string(freeskill)))
+        if (contains_text(ptext, to_string(freeskill))) {
             use_skill(freeskill);
+            if (freeskill == $skill[Club 'Em Back in Time]) {
+                clubbed = true;
+                break;
+            }
+        }
     }
 
-    foreach freecombat in $items[shadow brick, groveling gravel] {
-        if (item_amount(freecombat) == 0) continue;
-        if (freecombat == $item[groveling gravel] && drop) continue;
-        if (freecombat == $item[shadow brick]
-            && to_int(get_property("_shadowBricksUsed")) == 13) continue;
-        // Bank bricks for the colosseum, where each is worth exactly one
-        // turn; outside it they only fire once that reserve is safe.
-        if (freecombat == $item[shadow brick]
-            && my_location() != $location[Mer-kin Colosseum]
-            && to_int(get_property("lastColosseumRoundWon")) < 15
-            && item_amount($item[shadow brick]) <= 6) continue;
-        throw_item(freecombat);
+    if (!clubbed) {
+        foreach freecombat in $items[shadow brick, groveling gravel] {
+            if (item_amount(freecombat) == 0) continue;
+            if (freecombat == $item[groveling gravel] && drop) continue;
+            if (freecombat == $item[shadow brick]
+                && to_int(get_property("_shadowBricksUsed")) == 13) continue;
+            // Bank bricks for the colosseum, where each is worth exactly one
+            // turn; outside it they only fire once that reserve is safe.
+            if (freecombat == $item[shadow brick]
+                && my_location() != $location[Mer-kin Colosseum]
+                && to_int(get_property("lastColosseumRoundWon")) < 15
+                && item_amount($item[shadow brick]) <= 6) continue;
+            throw_item(freecombat);
+        }
     }
 
     // Last resort: Use the Force forfeits the win and any conditional drops,
@@ -813,8 +826,6 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Colosseum]:
-            if (have_skill($skill[Club 'Em Back in Time]))
-                use_skill($skill[Club 'Em Back in Time]);
             // Colosseum rounds need WINS, so this drains free kills and never
             // Use the Force (which forfeits the win); the saber is not
             // equipped here, so its last-resort clause stays dead.
