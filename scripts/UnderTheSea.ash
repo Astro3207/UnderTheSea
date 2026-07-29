@@ -2746,9 +2746,9 @@ void sorceress() {
             if (!highShiny())
                 conditional += if_equip($item[bat wings]);
 
-            use_familiar("itdrop");
+            use_familiar($familiar[none]);
             tempEquipment("moxie, hot damage, cold damage, spooky damage, sleaze damage, stench damage, -equip tiny yam cannon",
-                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + bathysphere($item[toy cupid bow]) + conditional);
+                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + conditional);
             equip($slot[acc1], $item[mer-kin prayerbeads]);
 
             if (available_amount($item[mer-kin prayerbeads]) >= 3) {
