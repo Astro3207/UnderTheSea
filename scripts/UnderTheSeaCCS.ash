@@ -500,7 +500,7 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                     }
                 }
-                if (have_equipped($item[legendary seal-clubbing club]))
+                if (have_equipped($item[legendary seal-clubbing club]) && get_property("NCtoC") == "false" && to_int(get_property("_clubEmBattlefieldUsed")) < 5)
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 cleanUp();
             }
@@ -541,7 +541,7 @@ void main(int round, monster mob, string page_text) {
         case $location[Mer-kin Elementary School]:
             if (free_monster(mob)) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
-                if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
+                if (have_equipped($item[legendary seal-clubbing club]) && get_property("NCtoC") == "false" && to_int(get_property("_clubEmBattlefieldUsed")) < 5){
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 } else {
                     cleanUp();
@@ -563,8 +563,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     if (get_property("NCtoC") != "true")
                         use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
-                    if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true")
-                        use_skill($skill[Club 'Em Across the Battlefield]);
+                if (have_equipped($item[legendary seal-clubbing club]) && get_property("NCtoC") == "false" && to_int(get_property("_clubEmBattlefieldUsed")) < 5)
+                    use_skill($skill[Club 'Em Across the Battlefield]);
                     if (free_monster(last_monster())) {
                         cleanUp();
                     } else {
