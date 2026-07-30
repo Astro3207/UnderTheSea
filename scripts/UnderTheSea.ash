@@ -2187,8 +2187,8 @@ void seaMonkees() {
 // (experimental): the Patriotic Eagle farms pearl zones until the screech
 // recharges, spends it at once on the first monster at the Smut Orc
 // Logging Camp -- the leftover construct banish moves onto the orc phylum
-// -- and hands the familiar slot to the Hound Dog, since nothing after
-// the re-aim needs the eagle. uts_postLoopFarmPearls: when a pearl's mall price
+// -- and is done; a pearl the recharge started stays where it is.
+// uts_postLoopFarmPearls: when a pearl's mall price
 // beats the ten turns its farm costs at valueOfAdventure, keep walking
 // until every open zone's daily pearl is claimed. Missing pieces abort
 // loudly.
@@ -2211,13 +2211,6 @@ void seaMonkees() {
         $location[Madness Reef]:          "_unblemishedPearlMadnessReef",
         $location[The Marinara Trench]:   "_unblemishedPearlMarinaraTrench",
         $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepests"
-    };
-    string [location] pearlProgress = {
-        $location[Anemone Mine]:          "_unblemishedPearlAnemoneMineProgress",
-        $location[The Dive Bar]:          "_unblemishedPearlDiveBarProgress",
-        $location[Madness Reef]:          "_unblemishedPearlMadnessReefProgress",
-        $location[The Marinara Trench]:   "_unblemishedPearlMarinaraTrenchProgress",
-        $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepestsProgress"
     };
 
 // Pearl progress pays its full 10% a combat only at 18+ of the zone's
@@ -2374,9 +2367,9 @@ void pearlPostloop() {
     try {
     while (true) {
         // The moment the screech is back, spend it: one fight at the Smut
-        // Orc Logging Camp moves the banish onto the orc phylum. Zone
-        // progress holds while stepping out, and everything afterward
-        // farms behind the Hound Dog instead of the eagle.
+        // Orc Logging Camp moves the banish onto the orc phylum, and the
+        // rundown is done. Zone progress holds while stepping out, so a
+        // continuing farm loses nothing to the detour.
         if (rundown && to_int(get_property("screechCombats")) == 0) {
             if (my_adventures() == 0)
                 abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
@@ -2385,7 +2378,9 @@ void pearlPostloop() {
                 abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
             print("Patriotic Screech re-aimed at smut orcs after " + spent + " pearl-farming turns; constructs are free.", "blue");
             rundown = false;
-            if (have_familiar($familiar[Jumpsuited Hound Dog])) {
+            // Only a continuing farm needs the handoff; the rundown alone
+            // is done the moment the screech is spent.
+            if (farm && have_familiar($familiar[Jumpsuited Hound Dog])) {
                 use_familiar($familiar[Jumpsuited Hound Dog]);
                 // The bathysphere is familiar equipment, so the new
                 // familiar needs it maximized back on before the next
@@ -2396,12 +2391,7 @@ void pearlPostloop() {
                     pearlZonePrep(current);
             }
         }
-        // A part-farmed pearl always gets finished: zone progress doesn't
-        // survive rollover, so walking away would throw the turns spent.
-        boolean midPearl = current != $location[none]
-            && get_property(pearlClaimed[current]) != "true"
-            && to_int(get_property(pearlProgress[current])) > 0;
-        if (!rundown && !farm && !midPearl)
+        if (!rundown && !farm)
             break;
         if (have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
