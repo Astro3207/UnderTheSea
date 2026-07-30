@@ -261,6 +261,13 @@ void main(int round, monster mob, string page_text) {
                     use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
                 }
             }
+            if (mob == $monster[unholy diver]){
+                if (my_familiar() == $familiar[Melodramedary]){
+                    use_skill($skill[%fn, spit on them!]);
+                }
+                if (have_equipped($item[Fourth of May Cosplay Saber]));
+                    use_skill($skill[Use the Force]);
+            }
             darts();
             free_kill(page_text, true);
             cleanUp();
@@ -286,6 +293,9 @@ void main(int round, monster mob, string page_text) {
             if (free_monster(mob)) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 cleanUp();
+            }
+            if (highShiny() && last_monster() == $monster[anemone combatant]){
+                use_if_have_skill(page_text, $skill[Sea *dent: Throw a Lightning Bolt]);
             }
             if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
