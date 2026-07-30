@@ -1072,6 +1072,15 @@ import <seedfinder/seedfinder.ash>;
                 }
             }
         }
+        // Asdon missile fuel: free_kill() fires the missile (one free kill
+        // a day, 100 fuel) only on mid-shiny accounts, and ronin blocks
+        // the mall, so only aftercore can top the tank up. Soda bread
+        // fuels roughly its adventure yield (~6 a loaf), hence 17.
+        if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && !highShiny()
+            && my_path().id == 0 && get_property("_missileLauncherUsed") == "false"
+            && get_property("_utsMissileFailed") != "true"
+            && get_fuel() < 100 && retrieve_item(17, $item[loaf of soda bread]))
+            cli_execute("asdonmartin fuel 17 loaf of soda bread");
     }
 
 
@@ -3085,20 +3094,20 @@ void sorceress() {
 
         // ── Colosseum ─────────────────────────────────────────────────────────────
         step("phase: colosseum");
+        // Gladiators are insta-kill immune (bricks and X-Rays glance, the
+        // Asdon missile reads UNTARGETABLE), so the club is the only free
+        // round in the building -- against immune monsters Club 'Em still
+        // deals 30% max HP and frees the fight. Past its five casts, only
+        // the bat wings proc can refund a round.
         while (to_int(get_property("lastColosseumRoundWon")) < 15) {
             string freeFight;
             if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
                 freeFight = "legendary seal-clubbing club,";
-            else if (to_int(get_property("_batWingsFreeFights")) < 5 && have_item($item[bat wings]) && !highShiny())
-                freeFight = if_equip($item[bat wings]);
-            // This is the end of the run: any Chest X-Rays left in the bag
-            // expire worthless at rollover, and a free-killed round is a whole
-            // turn. The CCS colosseum case drains the equipment-free kills
-            // (shadow bricks and friends) on its own.
-            else if (to_int(get_property("_chestXRayUsed")) < 3 && have_item($item[Lil' Doctor&trade; bag]))
-                freeFight = "Lil' Doctor™ bag,";
+            if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()
+                && if_equip($item[bat wings]) != "")
+                freeFight += if_equip($item[bat wings]);
             else if (have_item($item[Unwrapped knock-off retro superhero cape])){
-                freeFight = "unwrapped knock-off retro superhero cape,";
+                freeFight += "unwrapped knock-off retro superhero cape,";
                 modes = "retrocape heck kill";
             }
 
