@@ -45,11 +45,10 @@ void main(int whichchoice, string page) {
         case 1566:
             run_choice(1);
             break;
-
+        case 1387:
         case 1340:
             run_choice(3);
             break;
-
         case 312:
             if (get_property("intenseCurrents") == "true"){
                 run_choice(3);
