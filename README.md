@@ -40,7 +40,7 @@ of this list:
 | Command | What it does |
 |---|---|
 | `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
-| `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's, then a modeled run length for your kit. Forecast run length is experimental, no guarantees of accuracy. |
+| `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
 
 Preferences, set once in the gCLI; all default to off:
 
