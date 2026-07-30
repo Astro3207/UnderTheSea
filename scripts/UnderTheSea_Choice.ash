@@ -37,11 +37,11 @@ void main(int whichchoice, string page) {
         // ── Simple run_choice(1) cases ─────────────────────────────────────
         case 299:
         case 303:
-        case 403:
         case 701:
         case 1340:
             run_choice(3);
             break;
+        case 403:
         case 1556:
         case 1564:
         case 1565:
