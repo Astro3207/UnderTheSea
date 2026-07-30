@@ -1,5 +1,5 @@
 import iotm.ash;
-import underthesea.ash;
+import UnderTheSea.ash;
 
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
