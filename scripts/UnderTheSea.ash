@@ -1052,7 +1052,7 @@ import <seedfinder/seedfinder.ash>;
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
-        if (pulls_remaining( ) > reservedPulls())
+        if (pulls_remaining( ) > reservedPulls() && available_amount($item[skate blade]) > 0)
             pullSequence($item[skate blade]);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
@@ -1061,7 +1061,10 @@ import <seedfinder/seedfinder.ash>;
                 equip($item[skate blade]);
         } else {
             use_familiar("-combat");
-            tempEquipment("-combat","really nice swimming trunks," + bathysphere($item[toy cupid bow]) + if_equip($item[skate blade]));
+            if (available_amount($item[skate blade]) > 0){
+                equip($slot[weapon],$item[skate blade]);
+            }
+            tempEquipment("-combat","really nice swimming trunks,-weapon," + bathysphere($item[toy cupid bow]));
             mood("-combat");
         }
         adv($location[The Skate Park]);
@@ -1521,7 +1524,8 @@ void seaMonkees() {
             tempEquipment("item drop, -equip peridot of peril", swimmingTrunks() + bathysphere($item[none]) + if_equip($item[M&ouml;bius ring]));
         } else {
             use_familiar("-combat");
-            tempEquipment("item drop, -equip peridot of peril", "monodent of the sea," + swimmingTrunks() + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+            tempEquipment("-combat, -equip peridot of peril", "monodent of the sea," + swimmingTrunks() + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+            mood("-combat");
         }
         adv($location[The Wreck of the Edgar Fitzsimmons]);
     }
