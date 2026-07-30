@@ -106,7 +106,7 @@ import <seedfinder/seedfinder.ash>;
 
     boolean highShiny(){
         boolean bool;
-        if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
+        if (to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
             bool = true;
         return bool;
     }
@@ -241,6 +241,8 @@ import <seedfinder/seedfinder.ash>;
         if (mod == "itdrop"){
             if (chosenFamiliar != $familiar[none])
                 fam = chosenFamiliar;
+            else if (highShiny() && have_familiar($familiar[Melodramedary]) && to_int(get_property("camelSpit")) < 100 && to_slot(divingHelmet()) != $slot[hat])
+                fam = $familiar[Melodramedary];
             else if (have_familiar($familiar[Red-Nosed Snapper]))
                 fam = $familiar[Red-Nosed Snapper];
             else if (have_effect($effect[driving waterproofly]) > 0)
@@ -435,7 +437,7 @@ import <seedfinder/seedfinder.ash>;
             n += 1;
         if (available_amount($item[combat lover's locket]) > 0){
             string [int] lockets = split_string(get_property("_locketMonstersFought"), ",");
-            n += count(lockets);
+            n += 3-count(lockets);
         }
         if (have_familiar($familiar[chest mimic]))
             n += floor($familiar[chest mimic].experience/200);
@@ -832,7 +834,9 @@ import <seedfinder/seedfinder.ash>;
 
             if (get_property("_aprilBandInstruments") == "0"){
                 cli_execute("aprilband item tuba");
-                if (have_familiar($familiar[chest mimic])){
+                if (highShiny()){
+                    cli_execute("aprilband item quad tom");
+                } else if (have_familiar($familiar[chest mimic])){
                     use_familiar($familiar[chest mimic]);
                     cli_execute("aprilband item piccolo; aprilband play piccolo; aprilband play piccolo; aprilband play piccolo");
                 }
@@ -1441,8 +1445,8 @@ void seaMonkees() {
         mood("itdrop");
         cli_execute("recover hp");
         summon($monster[sea cowboy]);
-    }
-    
+    } 
+
     // ── Guild unlock prerequisite ─────────────────────────────────────────────
     if (get_property("questG03Ego") == "unstarted" && item_amount($item[Closed-circuit pay phone]) > 0 && my_path().id == 55 && !highShiny()) {
         unlockGuild();
@@ -1743,11 +1747,12 @@ void seaMonkees() {
                         conditional += swimmingTrunks();
                     }
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
+                    use_familiar("itdrop");
                     if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                         conditional += "spring shoes,";
                     } else if (get_property("heartstoneBanishUnlocked") == "true")
                         conditional += if_equip($item[heartstone]);
-                    tempEquipment("item drop","monodent of the sea,congressional medal of insanity," + if_equip($item[peridot of peril]) + conditional + bathysphere($item[toy cupid bow]));
+                    tempEquipment("item drop","monodent of the sea,congressional medal of insanity," + if_equip($item[peridot of peril]) + if_equip($item[Fourth of May Cosplay Saber]) + conditional + bathysphere($item[toy cupid bow]));
                     mood("itdrop");
                 } else {
                     tempEquipment("-combat", "monodent of the sea," + conditional);
