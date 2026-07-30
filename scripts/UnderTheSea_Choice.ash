@@ -39,6 +39,9 @@ void main(int whichchoice, string page) {
         case 303:
         case 403:
         case 701:
+        case 1340:
+            run_choice(3);
+            break;
         case 1556:
         case 1564:
         case 1565:
