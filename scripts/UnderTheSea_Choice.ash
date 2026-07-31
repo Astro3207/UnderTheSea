@@ -42,6 +42,9 @@ void main(int whichchoice, string page) {
         case 303:
         case 403:
         case 701:
+        case 1340:
+            run_choice(3);
+            break;
         case 1556:
         case 1564:
         case 1565:
@@ -188,34 +191,8 @@ void main(int whichchoice, string page) {
             break;
 
         case 1059:
-            run_choice(1);
-            break;
-
-        // ── Lil' Doctor™ bag quest offer ──────────────────────────────────
-        // "Is There A Doctor In The House?" fires whenever the bag is
-        // equipped and no case is active; option 3 turns the offers off for
-        // the day.
-        case 1340:
-            run_choice(3);
-            break;
-
-        // ── Fourth of May Cosplay Saber ───────────────────────────────────
-        // 1386 is the once-daily upgrade. Option 4 is the Empathy Chip
-        // (+10 familiar weight), which feeds Glover in Cyberzone 1 during
-        // the Mom rescue.
-        case 1386:
-            // Take the upgrade only if the page still offers it.
-            if (available_choice_options() contains 4)
-                run_choice(4);
-            else
-                run_choice(5);
-            break;
-
-        // 1387 is Using the Force. Option 3, "you will drop your things and
-        // walk away", hands over the monster's non-conditional drops without
-        // spending a turn.
-        case 1387:
-            run_choice(3);
+            if (get_property("choiceAdventure1059") == "")
+                run_choice(1);
             break;
 
         // ── Underwater zone run_choice(2) cases ───────────────────────────
