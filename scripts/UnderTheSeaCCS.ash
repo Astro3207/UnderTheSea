@@ -488,30 +488,40 @@ void main(int round, monster mob, string page_text) {
             }
             if ($location[The Mer-Kin Outpost].turns_spent < 24
                 || get_property("merkinLockkeyMonster") != "") {
-                // Back-up to Black Crayon Golem if available
+                // Back-up to Black Crayon Golem if available. Back-Up
+                // rewrites the CURRENT fight into the last copyable monster,
+                // so it silently eats a healer standing in front of it --
+                // and the healer is the only prayerbead source.
                 if (get_property("_monsterHabitatsFightsLeft") == "0"
                     && to_int(get_property("_monsterHabitatsRecalled")) >= 2
                     && to_int(get_property("_backUpUses")) < 7
                     && get_property("lastCopyableMonster") == "Black Crayon Golem"
+                    && !(mob == $monster[mer-kin healer] && prayerbeadsShort())
                     && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
+                // Talk to Some Fish is a CLEESH: it replaces the monster, so
+                // a healer caught by the scale grind never rolls its bead.
+                // Scales come from any Outpost monster; beads only from healers.
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)
+                    && !(mob == $monster[mer-kin healer] && prayerbeadsShort())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     cleanUp();
                 }
-                if (mob == $monster[mer-kin healer]
-                    && item_amount($item[mer-kin prayerbeads]) < 2) {
-                    if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish"
-                            && to_int(get_property("_curveballFightsLeft")) > 0))
-                        use_skill($skill[Sea *dent: Talk to Some Fish]);
+                if (mob == $monster[mer-kin healer] && prayerbeadsShort()) {
+                    // This branch exists to WIN the fight for its 4.8%
+                    // prayerbead, so nothing in it may swap the monster out.
+                    // Both Talk to Some Fish and Back-Up did exactly that,
+                    // spending the free kill on whatever replaced the healer.
                     free_kill(page_text, true);
-                    if (to_int(get_property("_backUpUses")) < 7 && have_equipped($item[backup camera])) {
-                        use_skill($skill[Back-Up to your Last Enemy]);
-                        run_combat();
-                    }
-                    free_run(page_text, false);
+                    // Only run once the lockkey is in hand (the pref is set on
+                    // the drop). Before that the healer is one of the three
+                    // carriers, so a free run forfeits the key along with the
+                    // bead; after it, the zone is a noncombat hunt and the
+                    // refunded adventure beats a 4.8% roll.
+                    if (get_property("merkinLockkeyMonster") != "")
+                        free_run(page_text, false);
                     cleanUp();
                 } else if (mob == $monster[Mer-kin burglar]
                     || mob == $monster[Mer-kin raider]) {
@@ -527,8 +537,7 @@ void main(int round, monster mob, string page_text) {
                 if (mob == $monster[mer-kin burglar] || mob == $monster[mer-kin raider])
                     free_run(page_text, true);
                 free_kill(page_text,
-                    mob == $monster[mer-kin healer]
-                    && item_amount($item[mer-kin prayerbeads]) < 2);
+                    mob == $monster[mer-kin healer] && prayerbeadsShort());
                 cleanUp();
             }
             break;

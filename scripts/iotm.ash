@@ -236,14 +236,18 @@ boolean seaCowForce(monster mob, string page_text) {
 // leaves the lockkey's turns_spent clock alone; it fires on farmPrayerbeads()
 // trips, where healerSaber() frees the weapon slot -- the lockkey grind
 // keeps the monodent.
+//
+// There is deliberately no merkinLockkeyMonster guard here. That pref is
+// written when the lockkey DROPS, not when a carrier is designated, so a test
+// for "Mer-kin healer" is only ever true after the key is already in
+// inventory -- exactly when the healer's win has stopped mattering. It
+// protected nothing (the key is not on the healer's drop table) while
+// switching the whole Force plan off for the rest of any run whose key came
+// from a healer.
 boolean healerForce(monster mob, string page_text) {
     if (mob != $monster[Mer-kin healer])
         return false;
     if (!prayerbeadsShort())
-        return false;
-    // While the healer is the designated lockkey carrier its WIN matters --
-    // the lockkey is a quest drop the Force cannot deliver.
-    if (get_property("merkinLockkeyMonster") == "Mer-kin healer")
         return false;
     if (forcesAfterDiver() <= 0)
         return false;
@@ -259,7 +263,6 @@ boolean healerForce(monster mob, string page_text) {
 // Weapon-slot pin for the bead-farming trips.
 string healerSaber() {
     if (prayerbeadsShort()
-        && get_property("merkinLockkeyMonster") != "Mer-kin healer"
         && forcesAfterDiver() > 0
         && have_item($item[Fourth of May Cosplay Saber]))
         return "Fourth of May Cosplay Saber,";

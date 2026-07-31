@@ -1577,6 +1577,15 @@ import <seedfinder/seedfinder.ash>;
         adv(lassoLoc[ps]);
     }
 
+    // The day's one prayerbead pull is free where a farming trip costs a turn,
+    // so take it before any loop starts spending adventures. Kept separate from
+    // farmPrayerbeads(): combatScrollHint() calls that purely to burn a turn,
+    // and a version that could no-op would spin it forever.
+    void pullPrayerbead(){
+        if (available_amount($item[mer-kin prayerbeads]) < 3)
+            pullSequence($item[mer-kin prayerbeads]);
+    }
+
     void farmPrayerbeads(){
         use_familiar("-combat");
         string conditional;
@@ -1586,7 +1595,9 @@ import <seedfinder/seedfinder.ash>;
         // any healer that slips through the -combat stack gets Forced for a
         // guaranteed prayerbead + thingpouch, with the turn refunded.
         conditional += healerSaber();
-        tempEquipment("-combat","really nice swimming trunks," + bathysphere($item[none]) + conditional);
+        // swimmingTrunks() picks what the path actually allows; the path-55
+        // trunks are quest-gated and abort a path-0 run outright.
+        tempEquipment("-combat", swimmingTrunks() + bathysphere($item[toy cupid bow]) + conditional);
         
         mood("-combat");
         adv($location[the mer-kin outpost]);
@@ -1908,13 +1919,12 @@ void seaMonkees() {
         cli_execute("grandpa currents");
     }
 
-    //Get 2 prayerbeads if tight on pulls
-    while (NCForceEstimate() < 4 && available_amount($item[mer-kin prayerbeads]) < 2){
-        use_familiar("-combat");
-        tempEquipment("-combat", swimmingTrunks() + bathysphere($item[toy cupid bow]));
-        mood("-combat");
-        adv($location[The Mer-Kin Outpost]);
-    }
+    // Get 2 prayerbeads if tight on pulls. farmPrayerbeads() is the same trip
+    // plus healerSaber(), so a healer that slips through the -combat stack is
+    // Forced into a guaranteed bead instead of fought for a 4.8% roll.
+    pullPrayerbead();
+    while (NCForceEstimate() < 4 && available_amount($item[mer-kin prayerbeads]) < 2)
+        farmPrayerbeads();
 
     if (get_property("questS01OldGuy") == "started") {
         oldGuy();
@@ -2820,6 +2830,7 @@ void sorceress() {
                         break;
                 }
                 take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
+                pullPrayerbead();
                 if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
                     while (available_amount($item[mer-kin prayerbeads]) < 3){
                     farmPrayerbeads();
