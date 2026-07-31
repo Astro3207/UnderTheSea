@@ -5,7 +5,10 @@ import underthesea.ash;
 // Pass drop=true to skip items that interfere with item drops.
 void free_kill(string ptext, boolean drop) {
     if (highShiny()){
-        if (contains_text(ptext, "Darts: Aim for the Bullseye"))
+        // Darts are an instakill too, so they only glance at the colosseum
+        // (see the club-only rule below) -- don't waste one there.
+        if (contains_text(ptext, "Darts: Aim for the Bullseye")
+            && my_location() != $location[mer-kin colosseum])
             use_skill($skill[Darts: Aim for the Bullseye]);
         return;
     }
@@ -20,7 +23,17 @@ void free_kill(string ptext, boolean drop) {
     boolean clubbed;
     foreach freeskill in $skills[Spit jurassic acid, Assert your Authority,
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
-        BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
+        BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit,
+        Asdon Martin: Missile Launcher] {
+        // Colosseum gladiators are insta-kill immune: damage-based
+        // instakills only glance (observed for shadow bricks; the wiki
+        // gives X-Ray and Shattering Punch the same immune-monster damage
+        // branch and has the missile read UNTARGETABLE), wasting their
+        // daily casts. Club 'Em is the exception -- against immune
+        // monsters it still deals 30% max HP and makes the fight free.
+        if (my_location() == $location[mer-kin colosseum]
+            && freeskill != $skill[Club 'Em Back in Time])
+            continue;
         if (freeskill == $skill[Club 'Em Back in Time]
             && (my_location() != $location[mer-kin colosseum] || lowShiny()
                 || to_int(get_property("_clubEmTimeUsed")) >= 5))
@@ -28,27 +41,39 @@ void free_kill(string ptext, boolean drop) {
         if (freeskill == $skill[BCZ: Sweat Bullets]
             && (my_basestat($stat[submoxie]) - 22500) < BCZcost("SweatBulletsCasts"))
             continue;
+        // A missile that fails to kill is not recorded by mafia (neither
+        // the daily pref nor the fuel), so track failure ourselves or it
+        // re-fires every fight for the rest of the day.
+        if (freeskill == $skill[Asdon Martin: Missile Launcher]
+            && (get_fuel() < 100
+                || get_property("_missileLauncherUsed") == "true"
+                || get_property("_utsMissileFailed") == "true"))
+            continue;
         if (contains_text(ptext, to_string(freeskill))) {
             use_skill(freeskill);
             if (freeskill == $skill[Club 'Em Back in Time]) {
                 clubbed = true;
                 break;
             }
+            // Fight already over: the kill landed, and any further cast
+            // would fire into a finished fight and error out.
+            if (current_round() == 0)
+                break;
+            if (freeskill == $skill[Asdon Martin: Missile Launcher])
+                set_property("_utsMissileFailed", "true");
         }
     }
 
-    if (!clubbed) {
+    if (!clubbed && current_round() > 0) {
         foreach freecombat in $items[shadow brick, groveling gravel] {
             if (item_amount(freecombat) == 0) continue;
             if (freecombat == $item[groveling gravel] && drop) continue;
             if (freecombat == $item[shadow brick]
                 && to_int(get_property("_shadowBricksUsed")) == 13) continue;
-            // Bank bricks for the colosseum, where each is worth exactly one
-            // turn; outside it they only fire once that reserve is safe.
-            if (freecombat == $item[shadow brick]
-                && my_location() != $location[Mer-kin Colosseum]
-                && to_int(get_property("lastColosseumRoundWon")) < 15
-                && item_amount($item[shadow brick]) <= 6) continue;
+            // Gladiators sit in these items' "unkillable" class: a brick
+            // glances for 400-600 (halved underwater) instead of killing,
+            // wasting both the item and the combat round.
+            if (my_location() == $location[Mer-kin Colosseum]) continue;
             throw_item(freecombat);
         }
     }
@@ -319,13 +344,13 @@ void main(int round, monster mob, string page_text) {
             }
             if (mob == $monster[tumbleweed])
                 abort("Unexpected mob encountered in shadow rift");
-            // Slab hunting: bricks are the colosseum's free rounds, so a
-            // snake or stalk draw is worth a spare Macrometeorite while
-            // bricks are short. The diver hunt keeps first claim on the
-            // casts (at least four held back while it is live).
+            // Slab hunting: bricks are ordinary free kills (they only
+            // glance at the colosseum), so a snake or stalk draw is worth
+            // a spare Macrometeorite while bricks are short. The diver
+            // hunt keeps first claim on the casts (at least four held
+            // back while it is live).
             if ($monsters[shadow snake, shadow stalk] contains mob
                 && item_amount($item[shadow brick]) < 6
-                && to_int(get_property("lastColosseumRoundWon")) < 15
                 && (!diverHuntActive() || to_int(get_property("_macrometeoriteUses")) < 6)
                 && macroReady() && contains_text(page_text, "Macrometeorite")) {
                 step("Macrometeorite: re-rolling for a shadow slab");
