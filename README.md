@@ -28,6 +28,7 @@ of this list:
 |---|---|
 | `UnderTheSea` | Runs the loop: the full run, from initialization through the sorceress. |
 | `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
+| `UnderTheSea postloop` | Runs only the postloop steps — the pearl walk, the codpiece prep and `uts_postloopCommand` — and none of the run. Use it to exercise the `uts_postLoop*` preferences on a finished account, where a bare `UnderTheSea` would start an aftercore Sea run instead. Each step still self-gates on its own preference. |
 
 Preferences, set once in the gCLI; all default to off:
 
