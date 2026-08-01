@@ -131,7 +131,7 @@ item yogDeleveler(){
 }
 
 item yogHealing(){
-    foreach it in $items[sea gel,waterlogged scroll of healing,mer-kin healscroll,soggy used band-aid,New Age healing crystal]{
+    foreach it in $items[sea gel,,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
         if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
             return it;
     }
@@ -670,8 +670,8 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Right Door)]:
-            if (my_maxhp() > 311)
-                abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
+            if (my_maxhp() > 318)
+                abort("Too much HP to beat Yogurt (need < 318 after debuff) — check what's granting HP");
             throw_items(yogDeleveler(),yogHealing());
             throw_items(yogDeleveler(),yogHealing());
             if (equipped_amount($item[mer-kin prayerbeads]) < 3)
