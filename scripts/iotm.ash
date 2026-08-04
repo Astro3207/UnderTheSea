@@ -48,6 +48,10 @@ string LastAdvTxt() {
     return substring(lastlog, nowmark);
 }
 
+boolean lastAdvWasCombat(){
+    return (contains_text(lastAdvTxt(),"Round 1"));
+}
+
 boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
         return false;
@@ -390,15 +394,15 @@ int universe() {
 boolean free_Run() {
     if (to_int(get_property("_snokebombUsed")) < 3)
         return true;
-    if (have_effect($effect[everything looks green]) == 0)
+    if (have_effect($effect[everything looks green]) == 0 && my_adventures() > 60)
         return true;
     return false;
 }
 
 boolean free_Kill(){
-    if (have_effect($effect[everything looks red]) == 0 && bullseyeReady())
+    if (have_effect($effect[everything looks red]) == 0 && bullseyeReady() && my_adventures() > 30)
         return true;
-    if (have_effect($effect[everything looks yellow]) == 0)
+    if (have_effect($effect[everything looks yellow]) == 0 && my_adventures() > 100)
         return true;
     return false;
 }
@@ -557,7 +561,7 @@ void finisher() {
     set_property("afterAdventureScript", "");
     set_property("choiceAdventureScript", "garbo_choice.js");
     set_property("betweenBattleScript", "");
-    foreach slotName in $strings[max, fam, hat, main, weapon, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
+    foreach slotName in $strings[unconditional, max, fam, hat, main, weapon, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
         set_property(slotName + "Override", "");
     }
 }

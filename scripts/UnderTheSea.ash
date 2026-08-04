@@ -2093,7 +2093,7 @@ void sorceress() {
             getSandDollar();
         cli_execute("unequip sea chaps; unequip aerated diving helmet");
         if (available_amount($item[crappy Mer-kin mask]) == 0){
-            if (available_amount($item[pristine fish scale]) < 3){
+            while (available_amount($item[pristine fish scale]) < 3){
                 if (to_int(get_property("_cloversPurchased")) < 3) {
                     use($item[11-leaf clover]);
                     equip ($slot[acc3],$item[black glass]);
@@ -2104,7 +2104,7 @@ void sorceress() {
             retrieve_item($item[crappy Mer-kin mask]);
         }
         if (available_amount($item[crappy Mer-kin tailpiece]) == 0){
-            if (available_amount($item[pristine fish scale]) < 3){
+            while (available_amount($item[pristine fish scale]) < 3){
                 if (to_int(get_property("_cloversPurchased")) < 3){
                     use($item[11-leaf clover]);
                     equip ($slot[acc3],$item[black glass]);
