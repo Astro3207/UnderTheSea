@@ -11,6 +11,11 @@ import <seedfinder/seedfinder.ash>;
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
+    // "temp" is this script's own scratch CCS. Reading it back means a previous
+    // run was killed while it was selected; restoring it would make it the
+    // user's permanent setting.
+    if (CCSStorage == "temp")
+        CCSStorage = "default";
     string choice1387Storage = get_property("choiceAdventure1387");
     string seaFit,boss,modes;
     string [stat] pearlRes = {
@@ -2268,8 +2273,22 @@ void pearlZonePrep(location zone) {
         swimmingTrunks() + bathysphere($item[none]));
 }
 
+// mafia calls a combat filter every round until something ends the fight, so
+// this has to stop offering the screech once it has been spent. The screech
+// does NOT end the fight -- the foe "running off covering his ears" is
+// flavour, and the monster keeps attacking -- it consumes itself, setting
+// screechCombats to its 11-fight recharge, and KoL drops the skill from the
+// fight's dropdown. Re-submitting a skill KoL no longer offers is rejected,
+// so the round never advances while mafia's counter climbs ("thinks it is
+// round 3 but KoL thinks it is round 2"), and nothing in mafia bounds that:
+// the filter is retried until someone stops the script by hand. Testing the
+// pref as well as the page keeps it bounded -- either the cast lands and
+// screechCombats flips, or KoL stops offering the skill.
 string screechFilter(int round, monster mob, string page_text) {
-    return "skill 7451";   // %fn, Release the Patriotic Screech!
+    if (to_int(get_property("screechCombats")) == 0
+        && contains_text(page_text, "Release the Patriotic Screech"))
+        return "skill 7451";   // %fn, Release the Patriotic Screech!
+    return "attack";
 }
 
 // Both post-run preps start by emptying Hagnk's -- the run is over, so
@@ -3300,8 +3319,37 @@ void main(string... args) {
         pullChecklist();
         return;
     }
+    if (command == "postloop") {
+        // Postloop-only mode: the finishing steps the run would have reached
+        // on its own, without initialization() or any of the run itself. A
+        // bare "UnderTheSea" on a finished account starts an aftercore Sea
+        // run, which is not what you want when exercising these prefs.
+        // Each step still self-gates on its own uts_postLoop* pref, so with
+        // none of them set this does nothing but set up and tear down.
+        try {
+            set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+            // Same defensive clear initialization() does: a run killed
+            // mid-walk can leave this set, which reduces the CCS to cleanUp().
+            set_property("_utsPearlFarm", "false");
+            // The pearl walk fights through the CCS, and pearlPostloop()
+            // hands it _utsPearlFarm to reduce it to plain kills.
+            write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
+            set_ccs("temp");
+            set_property("battleAction", "custom combat script");
+            print("Starting UnderTheSea (postloop only)");
+            pearlPostloop();
+            prepCodpiece();
+            if (get_property("uts_postloopCommand") != "")
+                cli_execute(get_property("uts_postloopCommand"));
+        } finally {
+            set_property("choiceAdventureScript", choiceStorage);
+            set_ccs(CCSStorage);
+            print("Ending UnderTheSea");
+        }
+        return;
+    }
     if (command != "")
-        abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists.");
+        abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists, \"UnderTheSea postloop\" runs only the postloop steps.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
         // c2t_megg clears choiceAdventureScript for the span of its egg
