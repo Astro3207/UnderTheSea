@@ -305,6 +305,10 @@ string LastAdvTxt() {
     return substring(lastlog, nowmark);
 }
 
+boolean lastAdvWasCombat(){
+    return (contains_text(LastAdvTxt(),"Round 1"));
+}
+
 boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
         return false;
@@ -935,7 +939,7 @@ void briefcase() {
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
-        if (to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
+        if (have_item($item[apriling band helmet]) && to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
             cli_execute("aprilband play tuba");
         // Enter the Cincho branch only if it can actually fire -- either
         // enough cinch already, or free rests left to restore it.
@@ -1511,7 +1515,8 @@ void finisher() {
     set_property("afterAdventureScript", "");
     set_property("choiceAdventureScript", "garbo_choice.js");
     set_property("betweenBattleScript", "");
-    foreach slotName in $strings[max, fam, hat, main, weapon, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
+    foreach slotName in $strings[unconditional, max, fam, hat, main, weapon, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
         set_property(slotName + "Override", "");
     }
+    set_property("inSpendAdv","false");
 }

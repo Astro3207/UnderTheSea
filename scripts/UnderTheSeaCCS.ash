@@ -1,5 +1,5 @@
 import iotm.ash;
-import underthesea.ash;
+import UnderTheSea.ash;
 
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
@@ -180,7 +180,7 @@ item yogDeleveler(){
 }
 
 item yogHealing(){
-    foreach it in $items[sea gel,waterlogged scroll of healing,mer-kin healscroll,soggy used band-aid,New Age healing crystal]{
+    foreach it in $items[sea gel,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
         if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
             return it;
     }
@@ -443,6 +443,9 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 cleanUp();
             }
+            if (highShiny() && last_monster() == $monster[anemone combatant]){
+                use_if_have_skill(page_text, $skill[Sea *dent: Throw a Lightning Bolt]);
+            }
             if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 cleanUp();
@@ -689,7 +692,11 @@ void main(int round, monster mob, string page_text) {
                 // Feel Nostalgic charge on the cow's table.
                 if (current_round() > 0)
                     feelNostalgic(mob, page_text);
-                if (have_equipped($item[legendary seal-clubbing club]))
+                // Club 'Em Across the Battlefield is 5/day and does nothing
+                // once a noncombat has already been forced into a combat.
+                if (have_equipped($item[legendary seal-clubbing club])
+                    && to_int(get_property("_clubEmBattlefieldUsed")) < 5
+                    && get_property("NCtoC") != "true")
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 cleanUp();
             }
@@ -735,7 +742,7 @@ void main(int round, monster mob, string page_text) {
                 steal();
             if (free_monster(mob)) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
-                if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
+                if (have_equipped($item[legendary seal-clubbing club]) && to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 } else {
                     cleanUp();
@@ -757,7 +764,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     if (get_property("NCtoC") != "true")
                         use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
-                    if (to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true")
+                    if (have_equipped($item[legendary seal-clubbing club]) && to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true")
                         use_skill($skill[Club 'Em Across the Battlefield]);
                     if (free_monster(last_monster())) {
                         cleanUp();
