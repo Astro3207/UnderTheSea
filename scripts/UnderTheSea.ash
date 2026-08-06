@@ -294,7 +294,7 @@ import <seedfinder/seedfinder.ash>;
                             && item_amount($item[ultra-soft ferns]) == 0) continue;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
-                        if (ef == $effect[Apriling Band Patrol Beat] && total_turns_played() < to_int(get_property("nextAprilBandTurn"))) continue;
+                        if (ef == $effect[Apriling Band Patrol Beat] && (!have_item($item[apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
@@ -312,7 +312,7 @@ import <seedfinder/seedfinder.ash>;
                             && get_property("yogUrtDefeated") == "false") continue;
                         if (ef == $effect[Bloodbathed]
                             && lowShiny == true) continue;
-                        if (ef == $effect[Apriling Band Battle Cadence] && total_turns_played() < to_int(get_property("nextAprilBandTurn"))) continue;
+                        if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
@@ -830,7 +830,7 @@ import <seedfinder/seedfinder.ash>;
                 && get_property("_sitCourseCompleted") == "false")
                 use($item[S.I.T. Course Completion Certificate]);
 
-            if (get_property("_aprilBandInstruments") == "0"){
+            if (have_item($item[apriling band helmet]) && get_property("_aprilBandInstruments") == "0"){
                 cli_execute("aprilband item tuba");
                 if (highShiny()){
                     cli_execute("aprilband item quad tom");
