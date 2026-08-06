@@ -72,7 +72,7 @@ boolean pullSequence(item it) {
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
-        if (to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
+        if (have_item($item[apriling band helmet]) && to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
             cli_execute("aprilband play tuba");
         } else if (have_item($item[Cincho de Mayo])){
             while (to_int(get_property("_cinchUsed")) > 40
