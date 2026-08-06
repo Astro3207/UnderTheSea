@@ -1066,7 +1066,7 @@ import <seedfinder/seedfinder.ash>;
             if (available_amount($item[skate blade]) > 0){
                 equip($slot[weapon],$item[skate blade]);
             }
-            tempEquipment("-combat","really nice swimming trunks,-weapon," + bathysphere($item[toy cupid bow]));
+            tempEquipment("-combat, -weapon","really nice swimming trunks," + bathysphere($item[toy cupid bow]));
             mood("-combat");
         }
         adv($location[The Skate Park]);
