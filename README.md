@@ -65,6 +65,7 @@ The script sorts your account into a resource tier and routes accordingly:
 - Have black crayon golem and unholy diver in the combat lover's locket
   (optional — the summon ladder uses fax, locket, mimic egg or genie,
   whichever is available otherwise)
+- Familiars: Grouper groupie, glover, foul ball
 - For a competitive turn count: push the noncombat A Mer-kin Graffiti out of
   the noncombat queue
 
@@ -79,6 +80,10 @@ The script sorts your account into a resource tier and routes accordingly:
 | 2002 Mr. Store Catalog | Shortcut opening The Coral Corral and finding Mom in The Caliginous Abyss. |
 | book of facts | Just the Facts wishes and Monster Habitats copy chains cut the adventures needed to find Mom in The Caliginous Abyss |
 | patriotic eagle (hatchling) | Patriotic Screech |
+
+Useful but relatively strict on item requirement Ploop alternative for this script: https://github.com/UtoTurtMcGurt/LoopTheSea
+
+If you are having the issue of it getting caught on the initial NC, there is nothing that can be done right now. You have to hit it manually or add ``visit_url("main.php"); run_choice(1);`` to the end of your preascension script.
 
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
 

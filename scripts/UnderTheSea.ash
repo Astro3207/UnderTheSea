@@ -322,6 +322,8 @@ import <seedfinder/seedfinder.ash>;
         if (mod == "itdrop"){
             if (chosenFamiliar != $familiar[none])
                 fam = chosenFamiliar;
+            else if (highShiny() && have_familiar($familiar[Melodramedary]) && to_int(get_property("camelSpit")) < 100 && to_slot(divingHelmet()) != $slot[hat])
+                fam = $familiar[Melodramedary];
             else if (have_familiar($familiar[Red-Nosed Snapper]))
                 fam = $familiar[Red-Nosed Snapper];
             else if (have_effect($effect[driving waterproofly]) > 0)
@@ -541,7 +543,7 @@ import <seedfinder/seedfinder.ash>;
             n += 1;
         if (available_amount($item[combat lover's locket]) > 0){
             string [int] lockets = split_string(get_property("_locketMonstersFought"), ",");
-            n += count(lockets);
+            n += 3-count(lockets);
         }
         if (have_familiar($familiar[chest mimic]))
             n += floor($familiar[chest mimic].experience/200);
@@ -750,9 +752,7 @@ import <seedfinder/seedfinder.ash>;
         if (get_property("autumnatonQuestLocation") == "" && item_amount($item[autumn-aton]) > 0) {
             useAutumnaton();
         }
-        if (to_int(get_property("_universeCalculated"))
-            < min(3, to_int(get_property("skillLevel144")))
-            && uniAdv <= my_adventures()) {
+        if (to_int(get_property("_universeCalculated")) < min(2, to_int(get_property("skillLevel144"))) && uniAdv <= my_adventures()) {
             if (universe() == my_adventures()) {
                 cli_execute("numberology 69");
             }
@@ -1006,7 +1006,9 @@ import <seedfinder/seedfinder.ash>;
 
             if (get_property("_aprilBandInstruments") == "0" && have_item($item[Apriling band helmet])){
                 cli_execute("aprilband item tuba");
-                if (have_familiar($familiar[chest mimic])){
+                if (highShiny()){
+                    cli_execute("aprilband item quad tom");
+                } else if (have_familiar($familiar[chest mimic])){
                     use_familiar($familiar[chest mimic]);
                     cli_execute("aprilband item piccolo; aprilband play piccolo; aprilband play piccolo; aprilband play piccolo");
                 }
@@ -1248,7 +1250,10 @@ import <seedfinder/seedfinder.ash>;
                 equip($item[skate blade]);
         } else {
             use_familiar("-combat");
-            tempEquipment("-combat","really nice swimming trunks," + bathysphere($item[toy cupid bow]) + if_equip($item[skate blade]));
+            if (available_amount($item[skate blade]) > 0){
+                equip($slot[weapon],$item[skate blade]);
+            }
+            tempEquipment("-combat, -weapon","really nice swimming trunks," + bathysphere($item[toy cupid bow]));
             mood("-combat");
         }
         adv($location[The Skate Park]);
@@ -1674,8 +1679,8 @@ void seaMonkees() {
         mood("itdrop");
         cli_execute("recover hp");
         summon($monster[sea cowboy]);
-    }
-    
+    } 
+
     // ── Guild unlock prerequisite ─────────────────────────────────────────────
     step("phase: guild unlock");
     if (get_property("questG03Ego") == "unstarted" && item_amount($item[Closed-circuit pay phone]) > 0 && my_path().id == 55 && !highShiny()) {
@@ -1766,7 +1771,8 @@ void seaMonkees() {
             tempEquipment("item drop, -equip peridot of peril", swimmingTrunks() + bathysphere($item[none]) + if_equip($item[M&ouml;bius ring]));
         } else {
             use_familiar("-combat");
-            tempEquipment("item drop, -equip peridot of peril", "monodent of the sea," + swimmingTrunks() + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+            tempEquipment("-combat, -equip peridot of peril", "monodent of the sea," + swimmingTrunks() + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+            mood("-combat");
         }
         adv($location[The Wreck of the Edgar Fitzsimmons]);
     }
@@ -2706,7 +2712,7 @@ void sorceress() {
             getSandDollar();
         cli_execute("unequip sea chaps; unequip aerated diving helmet");
         if (available_amount($item[crappy Mer-kin mask]) == 0){
-            if (available_amount($item[pristine fish scale]) < 3){
+            while (available_amount($item[pristine fish scale]) < 3){
                 if (to_int(get_property("_cloversPurchased")) < 3) {
                     getLucky();
                     equip ($slot[acc3],$item[black glass]);
@@ -2717,7 +2723,7 @@ void sorceress() {
             retrieve_item($item[crappy Mer-kin mask]);
         }
         if (available_amount($item[crappy Mer-kin tailpiece]) == 0){
-            if (available_amount($item[pristine fish scale]) < 3){
+            while (available_amount($item[pristine fish scale]) < 3){
                 if (to_int(get_property("_cloversPurchased")) < 3){
                     getLucky();
                     equip ($slot[acc3],$item[black glass]);
