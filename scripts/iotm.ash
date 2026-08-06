@@ -110,7 +110,7 @@ void candy(string action) {
     if (action == "fight"){
         int houseToVisit = index_of(get_property("_trickOrTreatBlock"), "D");
         visit_url("place.php?whichplace=town&action=town_trickortreat");
-        visit_url("choice.php?whichchoice=80&pwd=" + my_hash() + "&option=3&whichhouse=" + houseToVisit);
+        visit_url("choice.php?whichchoice=804&pwd=" + my_hash() + "&option=3&whichhouse=" + houseToVisit);
         run_combat();
     } else if (action == "treat"){
         while(contains_text(get_property("_trickOrTreatBlock"),"L")){
@@ -564,4 +564,5 @@ void finisher() {
     foreach slotName in $strings[unconditional, max, fam, hat, main, weapon, off, back, shirt, pants, acc1, acc2, acc3, famEquip] {
         set_property(slotName + "Override", "");
     }
+    set_property("inSpendAdv","false");
 }
