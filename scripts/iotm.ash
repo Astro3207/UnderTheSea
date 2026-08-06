@@ -1,7 +1,6 @@
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────
 int uniInt, uniAdv, pearlsDoneToday;
 string clan = get_clan_name();
-int estimatedTurns;
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────
 
@@ -19,6 +18,12 @@ int count_substring(string text, string sub) {
 
 boolean [monster] haveLocketMonster = get_locket_monsters();
 
+// One-line progress marker printed before every significant action, so a
+// broken run's log shows exactly where it was.
+void step(string msg) {
+    print("UTS: " + msg, "blue");
+}
+
 // Use a skill if it appears as an option on the current page
 void use_if_have_skill(string page_text, skill sk) {
     if (contains_text(page_text, to_string(sk)))
@@ -30,6 +35,258 @@ boolean have_item(item it) {
     return item_amount(it) > 0
         || have_equipped(it)
         || storage_amount(it) > 0;
+}
+
+// Like have_item(), but also sees gear equipped on terrarium familiars,
+// which have_item() misses.
+boolean have_item_anywhere(item it) {
+    if (have_item(it))
+        return true;
+    foreach fam in $familiars[] {
+        if (have_familiar(fam) && familiar_equipped_equipment(fam) == it)
+            return true;
+    }
+    return false;
+}
+
+// A function, not a global set by initialization(): the CCS runs in its own
+// interpreter where initialization() never executes, so a global set there
+// would read as its default.
+boolean lowShiny() {
+    return !have_item($item[2002 Mr. Store Catalog])
+        && !have_item($item[cursed monkey's paw])
+        && !have_item($item[august scepter]);
+}
+
+// The 9-sheet vocabulary grind is live. Mirrors getCheatsheet()'s loop
+// condition in UnderTheSea.ash.
+boolean cheatsheetsNeeded() {
+    return item_amount($item[mer-kin cheatsheet]) < 9
+        && get_property("merkinVocabularyMastery") == "0";
+}
+
+// ─── WANTED MONSTER PER ZONE ──────────────────────────────────────────────────
+// Target monster id per zone, read by all three monster-pickers: the Peridot
+// of Peril (choice 1557), Map the Monsters (1435) and the Time-Spinner (1196).
+int [location] wantedMonster = {
+    $location[An Octopus's Garden]:                 740,   // Neptune flytrap
+    $location[The Wreck of the Edgar Fitzsimmons]:  745,   // unholy diver
+    $location[The Sleazy Back Alley]:               159,
+    $location[The Haunted Pantry]:                  145,
+    $location[The Overgrown Lot]:                   1752,
+    $location[The Coral Corral]:                    775,   // sea cow
+    $location[The Marinara Trench]:                 762,
+    $location[Anemone Mine]:                        765,
+    $location[The Dive Bar]:                        768,
+    $location[Cyberzone 1]:                         2458,
+    $location[Mer-kin Library]:                     840,   // Mer-kin researcher
+    $location[the mer-kin outpost]:                 773,
+    $location[the caliginous abyss]:                1373,
+    $location[mer-kin elementary school]:           838,   // Mer-kin teacher
+    $location[The Outskirts of Cobb's Knob]:        152,
+    $location[Madness Bakery]:                      1750
+};
+
+// Need-driven wrapper the three pickers call. The cheatsheet is the monitor's
+// drop, not the teacher's, so the school targets the monitor while the sheet
+// grind is live and falls back to the static table otherwise.
+int zoneTarget(location loc) {
+    if (loc == $location[mer-kin elementary school] && cheatsheetsNeeded())
+        return 852;   // Mer-kin monitor
+    if (wantedMonster contains loc)
+        return wantedMonster[loc];
+    return 0;
+}
+
+// ─── FOURTH OF MAY COSPLAY SABER ──────────────────────────────────────────────
+// Use the Force forfeits the win and burns no turn, so saberZone() only
+// allows it where the loop is purely on an item count -- never where
+// progress gates on wins or turns spent (the outpost lockkey).
+
+boolean saberReady() {
+    return have_item($item[Fourth of May Cosplay Saber])
+        && to_int(get_property("_saberForceUses")) < 5;
+}
+
+// False in zones that gate progress on turns spent rather than on drops.
+boolean saberZone(location loc) {
+    return !($locations[The Mer-Kin Outpost] contains loc);
+}
+
+// ─── DETERMINISTIC DIVER PLAN ─────────────────────────────────────────────────
+// One Forced diver is a guaranteed 4 rivets + porthole + helmet (its whole
+// payload is non-conditional), independent of item bonus.
+
+// The rivet hunt is live while nothing that fills the diving-helmet slot is
+// owned. Mirrors divingHelmet() in UnderTheSea.ash, which parse order keeps
+// out of reach of this file.
+boolean diverHuntActive() {
+    if (item_amount($item[rusty rivet]) >= 8)
+        return false;
+    foreach it in $items[Mer-kin gladiator mask, Mer-kin scholar mask,
+        crappy Mer-kin mask, aerated diving helmet, Elf Guard SCUBA tank] {
+        if (item_amount(it) > 0 || have_equipped(it))
+            return false;
+    }
+    return true;
+}
+
+// Mirrors doneWithSeaCow() in UnderTheSea.ash, which parse order keeps out of
+// reach of this file.
+boolean seaCowNeeded() {
+    if (item_amount($item[sea leather]) + available_amount($item[sea chaps])
+        + available_amount($item[sea cowboy hat]) < 2)
+        return true;
+    if (item_amount($item[sea cowbell]) < 3)
+        return true;
+    return false;
+}
+
+boolean prayerbeadsShort() {
+    return available_amount($item[mer-kin prayerbeads]) < 3;
+}
+
+// ─── THE FORCE BUDGET ─────────────────────────────────────────────────────────
+// Five charges a day, claimed in priority order: the diver (2 while its hunt
+// is live), the outpost healer while prayerbeads are short, the sea cow while
+// its drops are owed, then the library researcher / free-run of last resort.
+// Each claim releases the moment its need-check goes false.
+int saberChargesLeft() {
+    if (!have_item($item[Fourth of May Cosplay Saber]))
+        return 0;
+    return 5 - to_int(get_property("_saberForceUses"));
+}
+
+boolean diverForceReady() {
+    return diverHuntActive() && saberChargesLeft() > 0;
+}
+
+// Charges available to each claimant, after every higher-priority claim.
+int forcesAfterDiver() {
+    return saberChargesLeft() - (diverHuntActive() ? 2 : 0);
+}
+int forcesAfterHealer() {
+    return forcesAfterDiver() - (prayerbeadsShort() ? 1 : 0);
+}
+int saberForcesFree() {
+    return forcesAfterHealer() - (seaCowNeeded() ? 1 : 0);
+}
+
+// Weapon-slot pin for the summoned diver fights, so the Force is castable.
+string diverSaber() {
+    if (diverForceReady())
+        return "Fourth of May Cosplay Saber,";
+    return "";
+}
+
+// CCS entry. On the diver: lay the insurance egg for diver #2 while the fight
+// is still open, then Force the drops. Returns true when it Forced -- the
+// combat is over and the caller must end the consult pass.
+boolean diverForce(monster mob, string page_text) {
+    if (mob != $monster[unholy diver])
+        return false;
+    if (!diverForceReady())
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    if (my_familiar() == $familiar[chest mimic])
+        use_skill($skill[%fn, lay an egg]);
+    step("Use the Force -> unholy diver (rivets " + item_amount($item[rusty rivet]) + "/8)");
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
+// ─── SEA COW: THE SAME TRICK AT THE CORRAL ────────────────────────────────────
+// One Forced cow is a guaranteed leather + cowbell (both non-conditional).
+
+// CCS entry, same contract as diverForce(): true means the fight is over and
+// the caller must end the consult pass.
+boolean seaCowForce(monster mob, string page_text) {
+    if (mob != $monster[sea cow])
+        return false;
+    if (!seaCowNeeded())
+        return false;
+    // Third claim on the budget: only charges beyond the diver's and the
+    // outpost healer's reserves.
+    if (forcesAfterHealer() <= 0)
+        return false;
+    // The skateboard's McTwist forces this table for free, once a day; let the
+    // corral branch spend that before a Force charge.
+    if (have_equipped($item[pro skateboard]) && get_property("_epicMcTwistUsed") == "false")
+        return false;
+    // The one-turn corral opener converts early fights via its own
+    // McTwist/backup-camera machinery -- stay out of its way.
+    if ($location[the coral corral].turns_spent <= 1
+        && item_amount($item[sea leather]) == 0
+        && available_amount($item[sea cowboy hat]) == 0)
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    step("Use the Force -> sea cow");
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
+// ─── OUTPOST HEALER AND LIBRARY RESEARCHER ────────────────────────────────────
+// A Forced healer is a guaranteed prayerbead + thingpouch + healscroll and
+// leaves the lockkey's turns_spent clock alone; it fires on farmPrayerbeads()
+// trips, where healerSaber() frees the weapon slot -- the lockkey grind
+// keeps the monodent.
+//
+// There is deliberately no merkinLockkeyMonster guard here. That pref is
+// written when the lockkey DROPS, not when a carrier is designated, so a test
+// for "Mer-kin healer" is only ever true after the key is already in
+// inventory -- exactly when the healer's win has stopped mattering. It
+// protected nothing (the key is not on the healer's drop table) while
+// switching the whole Force plan off for the rest of any run whose key came
+// from a healer.
+boolean healerForce(monster mob, string page_text) {
+    if (mob != $monster[Mer-kin healer])
+        return false;
+    if (!prayerbeadsShort())
+        return false;
+    if (forcesAfterDiver() <= 0)
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    step("Use the Force -> Mer-kin healer (prayerbeads)");
+    use_skill($skill[Use the Force]);
+    return true;
+}
+
+// Weapon-slot pin for the bead-farming trips.
+string healerSaber() {
+    if (prayerbeadsShort()
+        && forcesAfterDiver() > 0
+        && have_item($item[Fourth of May Cosplay Saber]))
+        return "Fourth of May Cosplay Saber,";
+    return "";
+}
+
+// The researcher's healscroll and killscroll are 10% each -- the slowest slots
+// in the library at any bonus -- and one charge lands both, freeing their
+// reserved pulls. Lowest priority: only truly unreserved charges.
+boolean researcherForce(monster mob, string page_text) {
+    if (mob != $monster[Mer-kin researcher])
+        return false;
+    if (item_amount($item[mer-kin killscroll]) > 0
+        && item_amount($item[mer-kin healscroll]) > 0)
+        return false;
+    if (saberForcesFree() <= 0)
+        return false;
+    if (!have_equipped($item[Fourth of May Cosplay Saber]))
+        return false;
+    if (!contains_text(page_text, "Use the Force"))
+        return false;
+    step("Use the Force -> Mer-kin researcher (scrolls)");
+    use_skill($skill[Use the Force]);
+    return true;
 }
 
 // Returns the number of chamois available in the clan slime tube
@@ -49,13 +306,15 @@ string LastAdvTxt() {
 }
 
 boolean lastAdvWasCombat(){
-    return (contains_text(lastAdvTxt(),"Round 1"));
+    return (contains_text(LastAdvTxt(),"Round 1"));
 }
 
 boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
         return false;
-    if (!contains_text(get_property("_roninStoragePulls"), to_int(it))) {
+    // Comma-delimited so an id cannot match inside a longer one (360 vs 3604);
+    // a false hit here silently skips the pull and callers fall back to farming.
+    if (!contains_text("," + get_property("_roninStoragePulls") + ",", "," + to_int(it) + ",")) {
         if (storage_amount(it) == 0){
             if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))){
                 if (!user_confirm("Price of " + it + " exeeds autoBuyPriceLimit, skip?"))
@@ -68,21 +327,643 @@ boolean pullSequence(item it) {
     return false;
 }
 
+// ─── CODPIECE ─────────────────────────────────────────────────────────────────
+
+void codpiece(string input) {
+    // Gem mounting is a bonus, not a requirement -- no codpiece, no-op.
+    if (!have_item($item[The Eternity Codpiece]))
+        return;
+    visit_url("inventory.php?action=docodpiece");
+    if (input == "none") {
+        string verify = visit_url("inventory.php?action=docodpiece");
+        if (!contains_text(verify, " mounted in slot #"))
+            return;
+        for slots from 1 to 5 {
+            if (contains_text(verify," Empty slot #" + slots )){
+                continue;
+            } else {
+                visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
+            }
+        }
+    } else {
+        string [int] slots = split_string(input, ",");
+        foreach num in slots {
+            if (available_amount(to_item(slots[num])) == 0 ){
+                slots[num] = "";
+                continue;
+            }
+            visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
+                + "&iid=" + to_int(to_item(slots[num])));
+        }
+        // Verify all slots mounted correctly. Entries blanked above were
+        // deliberately skipped, so they must not fail verification.
+        string verify = visit_url("inventory.php?action=docodpiece");
+        foreach num in slots {
+            if (slots[num] == "")
+                continue;
+            if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
+                abort("Codpiece slot incorrect");
+        }
+    }
+    cli_execute("refresh inv");
+}
+
+// "item name," if we can equip it, "" if we cannot. ASH resolves calls in parse
+// order and this file is imported before UnderTheSea.ash's own functions exist,
+// so if_equip has to live here, below codpiece and above its first caller.
+string if_equip(item it) {
+    if ($items[baseball diamond, peridot of peril, heartstone, blood cubic zirconia] contains it)
+        codpiece("none");
+    if (it == $item[none] || available_amount(it) == 0)
+        return "";
+    else
+        return to_string(it) + ",";
+}
+
+// ─── MAP THE MONSTERS ─────────────────────────────────────────────────────────
+// Comprehensive Cartography gives 3 casts a day. Each turns the next fight in a
+// zone into a monster of your choosing -- the same job as the Peridot of Peril,
+// answered in UnderTheSea_Choice.ash from the same wantedMonster table.
+//
+// The Peridot is once per zone per day; these are the extra charges once the
+// Peridot's is spent, longest odds first. The outpost is excluded: its
+// lockkey gates on turns spent, so a chosen encounter saves nothing there.
+
+boolean mapReady() {
+    return have_skill($skill[Map the Monsters])
+        && to_int(get_property("_monstersMapped")) < 3
+        && get_property("mappingMonsters") == "false";
+}
+
+boolean mapZone(location loc) {
+    return $locations[The Wreck of the Edgar Fitzsimmons,
+        An Octopus's Garden, The Coral Corral,
+        Mer-kin Elementary School] contains loc;
+}
+
+// Only cast once the Peridot's charge for this zone is gone, so the two do not
+// both spend themselves picking the same monster.
+void mapMonster(location loc) {
+    if (!mapReady() || !mapZone(loc))
+        return;
+    if (available_amount($item[peridot of peril]) > 0
+        && !contains_text("," + get_property("_perilLocations") + ",", "," + to_int(loc) + ","))
+        return;
+    step("Map the Monsters armed for " + loc);
+    use_skill($skill[Map the Monsters]);
+}
+
+// Roughly how many noncombat forces this account can field. Deliberately does
+// NOT count the Pill Keeper: this is the number we use to decide whether the
+// free pill needs reserving for Sneakisol, so counting it would be circular.
+int NCForceEstimate(){
+    int force = 2;
+    // Counts remaining CHARGES, not ownership.
+    if (have_item($item[Apriling band tuba]))
+        force += max(0, 3 - to_int(get_property("_aprilBandTubaUses")));
+    if (have_item($item[McHugeLarge left ski]))
+        force += max(0, 3 - to_int(get_property("_mcHugeLargeAvalancheUses")));
+    if (have_item($item[Cincho de Mayo]))
+        force += min(3, 1 + max(0, total_free_rests() - to_int(get_property("timesRested"))) / 2);
+    if (have_item($item[Jurassic Parka]))
+        force += max(0, 5 - to_int(get_property("_spikolodonSpikeUses")));
+    return force;
+}
+
+// ─── SOURCE TERMINAL ──────────────────────────────────────────────────────────
+// items.enh is re-upped wherever +item setup already happens.
+
+void sourceEnhance() {
+    if (get_campground()[$item[Source terminal]] == 0)
+        return;
+    if (have_effect($effect[items.enh]) > 0)
+        return;
+    if (to_int(get_property("_sourceTerminalEnhanceUses")) >= 3)
+        return;
+    cli_execute("terminal enhance items.enh");
+}
+
+// Keep duplicate.edu in an educate slot so Duplicate is castable in combat;
+// duplicateMonster() below spends the one daily cast.
+
+boolean duplicateEducated() {
+    return get_property("sourceTerminalEducate1") == "duplicate.edu"
+        || get_property("sourceTerminalEducate2") == "duplicate.edu";
+}
+
+boolean duplicateReady() {
+    if (get_campground()[$item[Source terminal]] == 0)
+        return false;
+    if (to_int(get_property("_sourceTerminalDuplicateUses")) >= 1)
+        return false;
+    return contains_text(get_property("sourceTerminalEducateKnown"), "duplicate.edu");
+}
+
+void sourceEducate() {
+    if (!duplicateReady() || duplicateEducated())
+        return;
+    cli_execute("terminal educate duplicate.edu");
+}
+
+// CCS entry, cast at the top of the fight so nothing ends it first.
+void duplicateMonster(monster mob, string page_text) {
+    if (!duplicateReady() || !duplicateEducated())
+        return;
+    // Doubling pays only on a WIN, so never spend the day's cast on a fight
+    // the saber is about to Force.
+    boolean aboutToForce = have_equipped($item[Fourth of May Cosplay Saber])
+        && ((mob == $monster[unholy diver] && diverForceReady())
+            || (mob == $monster[sea cow] && seaCowNeeded() && forcesAfterHealer() > 0));
+    if (aboutToForce)
+        return;
+    // Best killed tables the route meets: the golem (free fight, flat 100%
+    // crayon shavings -- the Shub deleveler), then the unForced sea cow, the
+    // sheet-grind monitor, and the diver only on saberless kits, where a
+    // doubled kill's 8 rivets end the hunt outright.
+    boolean wanted = (mob == $monster[Black Crayon Golem] && item_amount($item[crayon shavings]) < 4)
+        || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive())
+        || (mob == $monster[Mer-kin monitor] && cheatsheetsNeeded())
+        || (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8
+            && !have_item($item[Fourth of May Cosplay Saber]));
+    if (!wanted)
+        return;
+    if (!contains_text(page_text, "Duplicate"))
+        return;
+    step("Duplicate: " + mob);
+    use_skill($skill[Duplicate]);
+}
+
+// ─── SEPT-EMBER CENSER ────────────────────────────────────────────────────────
+// Claim the day's embers, then spend them all on Septapus summoning charms
+// for the CCS to throw at the shadow slab.
+void censer() {
+    if (!have_item($item[Sept-Ember Censer]))
+        return;
+    if (get_property("_septEmberBalanceChecked") == "false")
+        visit_url("shop.php?whichshop=september");
+    int wanted = 3 - item_amount($item[Septapus summoning charm]);
+    int afford = to_int(get_property("availableSeptEmbers")) / 2;
+    if (afford < wanted)
+        wanted = afford;
+    if (wanted > 0)
+        buy($coinmaster[Sept-Ember Censer], wanted, $item[Septapus summoning charm]);
+}
+
+// ─── EIGHT DAYS A WEEK PILL KEEPER ────────────────────────────────────────────
+// Take only the daily free pill -- the rest cost spleen the diet needs.
+// `pill` is a mafia pillkeeper keyword, not a pill name.
+void pillKeeper(string pill) {
+    if (!have_item($item[Eight Days a Week Pill Keeper]))
+        return;
+    if (get_property("_freePillKeeperUsed") != "false")
+        return;
+    step("Pill keeper: " + pill);
+    cli_execute("pillkeeper " + pill);
+}
+
+// ─── VAMPYRIC CLOAKE ──────────────────────────────────────────────────────────
+// Pinned to the back slot so Become a Bat stays castable; all 10 daily form
+// uses go to the bat.
+
+boolean cloakeReady() {
+    return have_item($item[vampyric cloake])
+        && to_int(get_property("_vampyreCloakeFormUses")) < 10;
+}
+
+// Only the zones we grind purely for a drop count. Anywhere gated on turns spent
+// or on finding a noncombat, a bigger item bonus buys nothing, and there are
+// only 10 charges to spread across the run.
+boolean cloakeZone(location loc) {
+    return $locations[The Wreck of the Edgar Fitzsimmons, An Octopus's Garden,
+        The Coral Corral, Mer-kin Library, Mer-kin Elementary School] contains loc;
+}
+
+// Pins the cloake into the back slot so the skill is actually available in
+// combat. Callers set gear up before adv(), so the target zone is passed in
+// explicitly -- my_location() is still the previous zone at that point.
+string cloakeEquip(location loc) {
+    if (cloakeReady() && cloakeZone(loc))
+        return "vampyric cloake,";
+    return "";
+}
+
+// Cast from the CCS at the top of every round. Cheap to call repeatedly: once
+// the form is up, have_effect() short-circuits it, which also enforces the
+// one-form-per-combat rule for free.
+void becomeBat(string page_text) {
+    if (!cloakeReady() || !cloakeZone(my_location()))
+        return;
+    if (have_effect($effect[Bat-Adjacent Form]) > 0)
+        return;
+    if (!have_equipped($item[vampyric cloake]))
+        return;
+    if (!contains_text(page_text, "Become a Bat"))
+        return;
+    use_skill($skill[Become a Bat]);
+}
+
+// ─── TIME-SPINNER ─────────────────────────────────────────────────────────────
+// mafia's "timespinner" CLI covers only food and pranks, so Travel to a
+// Recent Fight's choice chain (1195 -> 1196, monid submit) is walked by hand.
+
+boolean timeSpinnerReady() {
+    return have_item($item[Time-Spinner])
+        && to_int(get_property("_timeSpinnerMinutesUsed")) <= 7
+        && my_adventures() > 0;
+}
+
+// Re-fight `mon` for one turn, guaranteed. Only fires straight after fighting
+// that monster (last_monster()), which keeps it inside the recent-fights
+// window without guessing at the window's exact size -- and works after
+// summoned or Forced fights too, since the list records encounters, not wins.
+boolean timeSpinnerFight(monster mon) {
+    if (!timeSpinnerReady())
+        return false;
+    if (last_monster() != mon)
+        return false;
+
+    step("Time-Spinner: refighting " + mon);
+    visit_url("inv_use.php?whichitem=" + to_int($item[Time-Spinner]) + "&pwd=" + my_hash());
+    // mafia auto-resolves choices it has handling for, even on visit_url; if
+    // nothing is live any manual answer would abort with "Invalid choice".
+    if (!handling_choice()) {
+        step("Time-Spinner choice was auto-resolved or never opened; skipping");
+        return false;
+    }
+    int travel;
+    int backOut;
+    foreach num, optionText in available_choice_options() {
+        if (contains_text(optionText, "Travel to a Recent Fight"))
+            travel = num;
+        if (contains_text(optionText, "Maybe Later"))
+            backOut = num;
+    }
+    // Never leave the run parked inside a choice we could not read.
+    if (travel == 0) {
+        if (backOut > 0)
+            run_choice(backOut);
+        return false;
+    }
+    run_choice(travel);
+    run_choice(1, "monid=" + to_int(mon));
+    // The monid submit drops us into the fight; without this the session is
+    // left mid-combat and the next adv() errors out.
+    run_combat();
+    return true;
+}
+
+void timeSpinnerRefight(location loc) {
+    int target = zoneTarget(loc);
+    if (target == 0)
+        return;
+    // Only worth a turn where the target is genuinely rare; these are the same
+    // zones Map the Monsters spends its charges on.
+    if (!mapZone(loc))
+        return;
+    if (my_location() != loc)
+        return;
+    timeSpinnerFight(to_monster(target));
+}
+
+// ─── POCKET PROFESSOR ─────────────────────────────────────────────────────────
+// The next lecture needs buffed familiar weight of n^2 + 1 lbs.
+
+// Conservative: familiar_weight() of an inactive familiar is its base weight, so
+// this can under-count while Fidoxene's floor is up. Under-counting only ends the
+// swap early, which is the safe direction.
+int professorLectureLimit() {
+    int w = familiar_weight($familiar[Pocket Professor]) + weight_adjustment();
+    int n;
+    while ((n * n + 1) <= w)
+        n += 1;
+    return n;
+}
+
+boolean professorReady() {
+    return have_familiar($familiar[Pocket Professor])
+        && to_int(get_property("_pocketProfessorLectures")) < professorLectureLimit();
+}
+
+void professorFamiliar() {
+    if (!professorReady())
+        return;
+    // Rivet hunt: under the Force plan a diver pays 4 guaranteed rivets and
+    // the second one is a Time-Spinner refight away -- lecture copies add
+    // nothing, so keep the better drop familiar out.
+    if (diverHuntActive()) {
+        if (!diverForceReady())
+            use_familiar($familiar[Pocket Professor]);
+        return;
+    }
+    // Corral: once the Force budget there is spent, lecture copies of the sea
+    // cow are the next cheapest source of leather and cowbells.
+    if (seaCowNeeded() && forcesAfterHealer() <= 0)
+        use_familiar($familiar[Pocket Professor]);
+}
+
+void lectureOnRelativity(monster mob, string page_text) {
+    if (!professorReady())
+        return;
+    if (my_familiar() != $familiar[Pocket Professor])
+        return;
+    // Same targets as professorFamiliar(): the diver while rivets are owed,
+    // the sea cow while its drops are.
+    boolean wanted = (mob == $monster[unholy diver] && item_amount($item[rusty rivet]) < 8)
+        || (mob == $monster[sea cow] && seaCowNeeded());
+    if (!wanted)
+        return;
+    // The skill refuses to fire below 2 adventures, even against a free fight.
+    if (my_adventures() < 2)
+        return;
+    if (!contains_text(page_text, "lecture on relativity"))
+        return;
+    step("Lecture on Relativity: chaining a free " + mob);
+    use_skill($skill[lecture on relativity]);
+}
+
+// ─── JANUARY'S GARBAGE TOTE: BROKEN CHAMPAGNE BOTTLE ──────────────────────────
+// The bottle's ounces are spent only at the fattest rolled tables.
+
+boolean champagneReady() {
+    return have_item($item[broken champagne bottle])
+        && to_int(get_property("garbageChampagneCharge")) > 0;
+}
+
+// Only where a fat table is being ROLLED. Forced drops ignore item bonus, so
+// while a Force plan covers the zone the ounces are banked instead.
+string champagneEquip(location loc) {
+    if (!champagneReady())
+        return "";
+    if (loc == $location[The Wreck of the Edgar Fitzsimmons] && !diverForceReady())
+        return if_equip($item[broken champagne bottle]);
+    // The corral inherits the bottle once the Force budget there is spent and
+    // the cow's leather/cowbell rolls are back to probability.
+    if (loc == $location[The Coral Corral] && seaCowNeeded() && forcesAfterHealer() <= 0)
+        return if_equip($item[broken champagne bottle]);
+    return "";
+}
+
+// Pull the bottle out of the tote once, if we own a tote and have not already
+// spent its charges this ascension.
+void garbageTote() {
+    if (!have_item($item[January's Garbage Tote]))
+        return;
+    if (have_item($item[broken champagne bottle]))
+        return;
+    if (to_int(get_property("garbageChampagneCharge")) <= 0)
+        return;
+    step("Garbage tote: fetching the broken champagne bottle");
+    visit_url("inv_use.php?whichitem=" + to_int($item[January's Garbage Tote]) + "&pwd=" + my_hash());
+    // Same auto-resolution caveat as everywhere: only answer a LIVE choice.
+    if (!handling_choice()) {
+        step("Tote choice was auto-resolved or never opened; skipping");
+        return;
+    }
+    int grab;
+    int leave;
+    foreach num, optionText in available_choice_options() {
+        if (contains_text(optionText, "champagne"))
+            grab = num;
+        if (contains_text(optionText, "Ignore the garbage"))
+            leave = num;
+    }
+    // Never leave the run parked inside a choice we could not read.
+    if (grab > 0)
+        run_choice(grab);
+    else if (leave > 0)
+        run_choice(leave);
+}
+
+// ─── SPACE JELLYFISH ──────────────────────────────────────────────────────────
+// Extract stench jelly for NCforce(); jelly costs spleen the diet needs, so
+// exactly one is taken.
+
+boolean jellyfishReady() {
+    return have_familiar($familiar[Space Jellyfish]);
+}
+
+void extractJelly(monster mob, string page_text) {
+    if (my_familiar() != $familiar[Space Jellyfish])
+        return;
+    if (mob.attack_element != $element[stench] && mob.defense_element != $element[stench])
+        return;
+    // Spleen is contested; one forced noncombat is all we are after.
+    if (item_amount($item[stench jelly]) > 0)
+        return;
+    if (!contains_text(page_text, "Extract Jelly"))
+        return;
+    use_skill($skill[Extract Jelly]);
+}
+
+// ─── METEOR LORE: MACROMETEORITE ──────────────────────────────────────────────
+// Same re-roll as the glove's CHEAT CODE but from a skill; rerollEnemy()
+// spends these casts first.
+boolean macroReady() {
+    return have_skill($skill[Macrometeorite])
+        && to_int(get_property("_macrometeoriteUses")) < 10;
+}
+
+// ─── POWERFUL GLOVE ───────────────────────────────────────────────────────────
+// Equipped only at re-roll sites, and only once Macrometeorite's casts are
+// gone.
+
+boolean gloveReady() {
+    return have_item($item[Powerful Glove])
+        && to_int(get_property("_powerfulGloveBatteryPowerUsed")) <= 90;
+}
+
+string gloveEquip(location loc) {
+    // Macrometeorite does the same job from a skill slot; while it has casts
+    // left, the accessory slot goes back to the zirconia and backup camera.
+    if (macroReady())
+        return "";
+    if (gloveReady() && loc == $location[The Wreck of the Edgar Fitzsimmons])
+        return if_equip($item[Powerful Glove]);
+    return "";
+}
+
+// Returns true if this monster provides a free fight. Lives here (not the
+// CCS) so the re-roll policies below can refuse to waste a cast on one:
+// free wanderers also burn delay, advancing turns_spent wherever they land.
+boolean free_monster(monster mob) {
+    return $monsters[black crayon golem, time cop,sausage goblin,
+        kid who is too old to be Trick-or-Treating,
+        suburban security civilian, vandal kid] contains mob;
+}
+
+// Casts whichever re-roller is available: Macrometeorite (Meteor Lore, 10 a
+// day, no equipment slot) first, the glove's CHEAT CODE second. On true the
+// fight holds a NEW monster and the caller MUST re-dispatch the CCS main()
+// with last_monster() and a re-fetched fight page -- a bare return would fall
+// through to the CCS's safety abort, since mafia does not re-invoke a consult
+// script that returns mid-combat.
+boolean rerollEnemy(string page_text) {
+    if (macroReady() && contains_text(page_text, "Macrometeorite")) {
+        step("Macrometeorite: re-rolling the monster");
+        use_skill($skill[Macrometeorite]);
+        return true;
+    }
+    if (gloveReady() && have_equipped($item[Powerful Glove])
+        && contains_text(page_text, "CHEAT CODE: Replace Enemy")) {
+        step("CHEAT CODE: re-rolling the monster");
+        use_skill($skill[CHEAT CODE: Replace Enemy]);
+        return true;
+    }
+    return false;
+}
+
+// Fitzsimmons policy: re-roll anything that is not the diver while rivets are
+// still owed.
+boolean replaceEnemy(monster mob, string page_text) {
+    if (my_location() != $location[The Wreck of the Edgar Fitzsimmons])
+        return false;
+    // Never re-roll a free fight: it costs nothing, burns delay, and dies to
+    // the location logic's fall-through kill.
+    if (free_monster(mob))
+        return false;
+    // Never re-roll the monster we came for, and stop once its drops are in.
+    if (mob == $monster[unholy diver])
+        return false;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return false;
+    return rerollEnemy(page_text);
+}
+
+// ─── EMOTION CHIP: FEEL NOSTALGIC ─────────────────────────────────────────────
+// Feel Nostalgic pays only on a WIN and does nothing cast on the monster
+// being copied.
+void feelNostalgic(monster mob, string page_text) {
+    if (!have_skill($skill[Feel Nostalgic]))
+        return;
+    if (to_int(get_property("_feelNostalgicUsed")) >= 3)
+        return;
+    // The appended drops only pay out if this fight is WON. When the saber
+    // still has Force charges the rest of the script may spend, free_kill()
+    // may Use the Force out of the combat, forfeiting the win and the charge
+    // with it -- so never overlap the two.
+    if (saberForcesFree() > 0 && have_equipped($item[Fourth of May Cosplay Saber]))
+        return;
+    // Worth a charge only while the copied table still owes us something:
+    // the diver's rivets, the sea cow's leather and cowbells, or the
+    // monitor's cheatsheet (~capped at itdrop bonuses) during the grind.
+    string copied = get_property("lastCopyableMonster");
+    boolean wanted = (copied == "unholy diver" && item_amount($item[rusty rivet]) < 8)
+        || (copied == "sea cow" && seaCowNeeded())
+        || (copied == "Mer-kin monitor" && cheatsheetsNeeded());
+    if (!wanted)
+        return;
+    // Casting it on the monster we are nostalgic for does nothing.
+    if (to_string(mob) == copied)
+        return;
+    if (!contains_text(page_text, "Feel Nostalgic"))
+        return;
+    step("Feel Nostalgic: re-rolling the " + copied + " table");
+    use_skill($skill[Feel Nostalgic]);
+}
+
+// ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
+// freeKill() equips the bag for Chest X-Ray; Otoscope rides along, cast
+// early so free_kill() cannot end the fight first. Reflex Hammer is wired
+// into free_run() with the other banishes.
+void otoscope(monster mob, string page_text) {
+    // A fight the saber is about to Force has its drops forced anyway; the
+    // +200% would be a wasted charge.
+    if (diverForceReady() && have_equipped($item[Fourth of May Cosplay Saber]))
+        return;
+    if (to_int(get_property("_otoscopeUsed")) >= 3)
+        return;
+    if (!have_equipped($item[Lil' Doctor&trade; bag]))
+        return;
+    if (mob != $monster[unholy diver])
+        return;
+    if (item_amount($item[rusty rivet]) >= 8)
+        return;
+    if (!contains_text(page_text, "Otoscope"))
+        return;
+    step("Otoscope on " + mob);
+    use_skill($skill[Otoscope]);
+}
+
+// ─── MUMMING TRUNK ────────────────────────────────────────────────────────────
+// A second costume overwrites the first, so Prince George goes on whichever
+// familiar the item setup actually picks -- hence called from
+// use_familiar("itdrop") rather than at a fixed point in the run.
+void mummery() {
+    if (!have_item($item[mumming trunk]))
+        return;
+    // _mummeryMods records what has already been applied today; an Item Drop
+    // entry means Prince George is spent.
+    if (contains_text(get_property("_mummeryMods"), "Item Drop"))
+        return;
+    if (my_familiar() == $familiar[none])
+        return;
+    cli_execute("mummery item");
+}
+
+// ─── CARGO CULTIST SHORTS ─────────────────────────────────────────────────────
+// Opens pocket 494, Vinegavotte.
+void cargoPocket() {
+    if (!have_item($item[Cargo Cultist Shorts]))
+        return;
+    if (get_property("_cargoPocketEmptied") != "false")
+        return;
+    // Comma-delimited match so a pocket number cannot match inside another.
+    if (contains_text("," + get_property("cargoPocketsEmptied") + ",", ",494,"))
+        return;
+    step("Cargo shorts: opening pocket 494");
+    cli_execute("cargo pocket 494");
+}
+
+// ─── KREMLIN'S GREATEST BRIEFCASE ─────────────────────────────────────────────
+// Driven through Ezandora's Briefcase script, which owns the dial, handle
+// and tab state machine; "briefcase buff item" clicks until Items Are
+// Forever lands.
+void briefcase() {
+    if (!have_item($item[Kremlin's Greatest Briefcase]))
+        return;
+    if (have_effect($effect[Items Are Forever]) > 0)
+        return;
+    // An unopened case has no tabs to read, so asking for a buff would only
+    // burn clicks. Opening it is a two-day job and not something a run should
+    // be spending its budget on.
+    if (get_property("_kgbOpened") == "false")
+        return;
+    if (to_int(get_property("_kgbClicksUsed")) >= 22)
+        return;
+    cli_execute("briefcase buff item");
+}
+
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
+// Spend the cheapest available forcer charge; NCForceEstimate() counts what
+// remains.
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
         if (have_item($item[apriling band helmet]) && to_int(get_property("_aprilBandTubaUses")) < 3 && have_item($item[Apriling band tuba])) {
             cli_execute("aprilband play tuba");
-        } else if (have_item($item[Cincho de Mayo])){
+        // Enter the Cincho branch only if it can actually fire -- either
+        // enough cinch already, or free rests left to restore it.
+        } else if (have_item($item[Cincho de Mayo])
+            && (to_int(get_property("_cinchUsed")) <= 40
+                || to_int(get_property("timesRested")) < total_free_rests())){
             while (to_int(get_property("_cinchUsed")) > 40
                 && to_int(get_property("timesRested")) < total_free_rests()) {
-                cli_execute("unequip hat; equip apriling band helmet; camp rest free");
+                // The helmet sweetens the rest but is optional; equipping it
+                // unowned hard-errors.
+                if (have_item($item[Apriling band helmet]))
+                    cli_execute("unequip hat; equip apriling band helmet");
+                cli_execute("camp rest free");
             }
             if (to_int(get_property("_cinchUsed")) <= 40) {
                 equip($slot[acc3], $item[cincho de mayo]);
                 use_skill($skill[Cincho: Fiesta Exit]);
             }
+        } else if (have_item($item[Eight Days a Week Pill Keeper])
+            && get_property("_freePillKeeperUsed") == "false") {
+            // Sneakisol has Clara's bell's noncombat-forcing behaviour and is
+            // free, so it comes before anything that costs a pull. If the free
+            // pill already went on Fidoxene this call is a no-op.
+            pillKeeper("free noncombat");
         } else if (!have_item($item[mchugelarge duffel bag]) && !have_item($item[jurassic parka]) && !have_item($item[allied radio backpack])){
             foreach it in $items[Handheld Allied radio, Clara's bell, stench jelly]{
                 if (!contains_text(get_property("_roninStoragePulls"), to_int(it))){
@@ -144,9 +1025,11 @@ record ban {
 };
 
 ban [item] banMap = {
+    // prefs are matched inside \Q..\E against banishedMonsters, so they must
+    // be literal prefixes of the recorded banisher name -- no regex escaping.
     $item[spring shoes]:        new ban("Spring Kick",           $skill[spring kick]),
-    $item[monodent of the sea]: new ban("Sea \\*dent",           $skill[Sea *dent: Throw a Lightning Bolt]),
-    $item[Heartstone]:          new ban("Heartstone %banish",    $skill[Heartstone: %banish]),
+    $item[monodent of the sea]: new ban("Sea *dent",             $skill[Sea *dent: Throw a Lightning Bolt]),
+    $item[Heartstone]:          new ban("Heartstone",            $skill[Heartstone: %banish]),
     $item[none]:                new ban("snokebomb",             $skill[snokebomb]),
 };
 
@@ -188,8 +1071,12 @@ item banishGear(location loc) {
             break;
         }
     }
-    set_property(to_string(to_slot(it)) + "Override", ", equip " + it);
-    print(to_string(to_slot(it)) + "Override");
+    // No candidate leaves it at $item[none]; writing an override for it would
+    // create a junk "noneOverride" property.
+    if (it != $item[none]) {
+        set_property(to_string(to_slot(it)) + "Override", ", equip " + it);
+        print(to_string(to_slot(it)) + "Override");
+    }
     return it;
 }
 
@@ -284,41 +1171,6 @@ void trainset() {
         + "&slot%5B7%5D=" + slots[7]);
 }
 
-// ─── CODPIECE ─────────────────────────────────────────────────────────────────
-
-void codpiece(string input) {
-    visit_url("inventory.php?action=docodpiece");
-    if (input == "none") {
-        string verify = visit_url("inventory.php?action=docodpiece");
-        if (!contains_text(verify, " mounted in slot #"))
-            return;
-        for slots from 1 to 5 {
-            if (contains_text(verify," Empty slot #" + slots )){
-                continue;
-            } else { 
-                visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
-            }
-        }
-    } else {
-        string [int] slots = split_string(input, ",");
-        foreach num in slots {
-            if (available_amount(to_item(slots[num])) == 0 ){
-                slots[num] = "";
-                continue;
-            }
-            visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
-                + "&iid=" + to_int(to_item(slots[num])));
-        }
-        // Verify all slots mounted correctly
-        string verify = visit_url("inventory.php?action=docodpiece");
-        foreach num in slots {
-            if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
-                abort("Codpiece slot incorrect");
-        }
-    }
-    cli_execute("refresh inv");
-}
-
 // ─── LEPRECONDO ───────────────────────────────────────────────────────────────
 
 string [int] lepRoomToNum = {
@@ -394,15 +1246,15 @@ int universe() {
 boolean free_Run() {
     if (to_int(get_property("_snokebombUsed")) < 3)
         return true;
-    if (have_effect($effect[everything looks green]) == 0 && my_adventures() > 60)
+    if (have_effect($effect[everything looks green]) == 0)
         return true;
     return false;
 }
 
 boolean free_Kill(){
-    if (have_effect($effect[everything looks red]) == 0 && bullseyeReady() && my_adventures() > 30)
+    if (have_effect($effect[everything looks red]) == 0 && bullseyeReady())
         return true;
-    if (have_effect($effect[everything looks yellow]) == 0 && my_adventures() > 100)
+    if (have_effect($effect[everything looks yellow]) == 0)
         return true;
     return false;
 }
@@ -411,7 +1263,6 @@ boolean wanderer() {
     if (total_turns_played() >= to_int(get_property("clubEmNextWeekMonsterTurn")) + 8
         && get_property("clubEmNextWeekMonster") != "")
         return true;
-    // Fixed: was incorrectly checking clubEmNextWeekMonster for the VHS tape condition
     if (total_turns_played() >= to_int(get_property("spookyVHSTapeMonsterTurn")) + 8
         && get_property("spookyVHSTapeMonster") != "")
         return true;
@@ -536,6 +1387,109 @@ void baseballD() {
         for x from 1 to 9 {
             set_property("pitchNum" + x, "");
         }
+    }
+}
+
+// ─── RUN-START CHECKLISTS ─────────────────────────────────────────────────────
+// Logged once at initialization: every supported IOTM and every pull the
+// route may ask for, one per line -- blue check for present, red cross for
+// absent. Purely informational; every use in the script is ownership-guarded
+// regardless.
+void iotmChecklist() {
+    boolean [item] iotmItems = $items[monodent of the sea,
+        The Eternity Codpiece,
+        closed-circuit pay phone, 2002 Mr. Store Catalog, cursed monkey's paw,
+        august scepter, Fourth of May Cosplay Saber, Peridot of Peril,
+        blood cubic zirconia, baseball diamond, Heartstone, backup camera,
+        Jurassic Parka, spring shoes, Everfull Dart Holster, Mayam Calendar,
+        Leprecondo, Cincho de Mayo, McHugeLarge duffel bag,
+        Apriling band helmet, April Shower Thoughts shield, bat wings,
+        server room key, Time-Spinner, January's Garbage Tote, Powerful Glove,
+        combat lover's locket, Lil' Doctor&trade; bag, mumming trunk,
+        Kremlin's Greatest Briefcase, Cargo Cultist Shorts,
+        Eight Days a Week Pill Keeper, Sept-Ember Censer, vampyric cloake,
+        Unwrapped knock-off retro superhero cape, roman candelabra,
+        miniature crystal ball, latte lovers member's mug, V for Vivala mask,
+        designer sweatpants, tearaway pants, autumn-aton, cosmic bowling ball];
+    boolean [skill] iotmSkills = $skills[Just the Facts, Map the Monsters,
+        Macrometeorite, Feel Nostalgic];
+    boolean [familiar] iotmFamiliars = $familiars[Grouper Groupie,
+        Red-Nosed Snapper, Jill-of-All-Trades, Chest Mimic, Patriotic Eagle,
+        Sword of S Words, Peace Turkey, Disgeist, Jumpsuited Hound Dog,
+        Glover, Foul Ball, Space Jellyfish, Pocket Professor,
+        Tiny Plastic Santa Claus Skeleton];
+
+    print("IOTM check — supported IOTMs:");
+    int owned;
+    int total;
+    foreach it in iotmItems {
+        total += 1;
+        if (have_item_anywhere(it)) { owned += 1; print("✓ " + it, "blue"); }
+        else print("✗ " + it, "red");
+    }
+    foreach sk in iotmSkills {
+        total += 1;
+        // have_skill() can flicker at initialization; the owned guide is
+        // accepted as a second signal for Macrometeorite.
+        boolean has = have_skill(sk)
+            || (sk == $skill[Macrometeorite] && have_item($item[Pocket Meteor Guide]));
+        if (has) { owned += 1; print("✓ " + sk, "blue"); }
+        else print("✗ " + sk, "red");
+    }
+    foreach fam in iotmFamiliars {
+        total += 1;
+        if (have_familiar(fam)) { owned += 1; print("✓ " + fam, "blue"); }
+        else print("✗ " + fam, "red");
+    }
+    total += 1;
+    if (get_workshed() != $item[none]
+        || have_item($item[Asdon Martin keyfob (on ring)])
+        || have_item($item[model train set])
+        || have_item($item[portable Mayo Clinic])
+        || have_item($item[TakerSpace letter of Marque])) {
+        owned += 1; print("✓ a workshed", "blue");
+    } else
+        print("✗ a workshed", "red");
+    total += 1;
+    if (get_campground() contains $item[Source terminal]) {
+        owned += 1; print("✓ Source Terminal", "blue");
+    } else
+        print("✗ Source Terminal", "red");
+    print("IOTM check: " + owned + " of " + total + " supported IOTMs owned.");
+}
+
+void pullChecklist() {
+    boolean [item] pulls = $items[Mer-kin sneakmask, sea lasso, shark jumper,
+        scale-mail underwear, Congressional Medal of Insanity,
+        Flash Liquidizer Ultra Dousing Accessory, Mer-kin digpick, lodestone,
+        comb jelly, Elf Guard SCUBA tank, rusty rivet, sea cowbell,
+        Mer-kin prayerbeads, Mer-kin healscroll, Mer-kin killscroll,
+        Mer-kin worktea, Mer-kin knucklebone, Mer-kin cheatsheet,
+        Mer-kin hallpass, Mer-kin hidepaint, pro skateboard, software glitch,
+        pulled yellow taffy, stuffed yam stinkbomb, waffle, skate blade,
+        null-day exploit, New Age healing crystal, soggy used band-aid,
+        damp old wallet, fish sauce, Aldebaran sardines,
+        pie man was not meant to eat, Handheld Allied radio, Clara's bell,
+        stench jelly, peppermint parasol, ink bladder, Mer-kin pinkslip,
+        Louder Than Bomb, anchor bomb];
+
+    print("Pull check — Hagnk's stock:");
+    foreach it in pulls {
+        // Catalog credits create these in-run; only worth stocking without it.
+        if (have_item($item[2002 Mr. Store Catalog])
+            && $items[pro skateboard, software glitch] contains it)
+            continue;
+        // Never auto-bought (see the pull loop) -- flag it as a nice-to-have.
+        if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0) {
+            print("✗ " + it + " — optional, the script won't buy one", "red");
+            continue;
+        }
+        if (storage_amount(it) > 0)
+            print("✓ " + it, "blue");
+        else if (is_tradeable(it))
+            print("✗ " + it + " — will be mall-bought if the route needs it", "red");
+        else
+            print("✗ " + it + " — NOT mall-buyable, acquire before it's needed", "red");
     }
 }
 
