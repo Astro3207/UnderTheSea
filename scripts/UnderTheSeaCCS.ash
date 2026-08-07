@@ -226,8 +226,8 @@ void shubDelevel() {
         item d = shubDeleveler();
         if (d == $item[none])
             break;
-        float f = (d == $item[jam band bootleg]) ? 0.5
-            : (d == $item[crayon shavings]) ? 0.7 : 0.75;
+        // Factor table lives in iotm.ash, shared with the prep projection.
+        float f = shubDelevelFactor(d);
         if (item_amount(d) >= 2 && (remaining * f * f) >= 0.2
             && have_skill($skill[Ambidextrous Funkslinging])) {
             throw_items(d, d);

@@ -18,6 +18,7 @@ import <seedfinder/seedfinder.ash>;
         CCSStorage = "default";
     string choice1387Storage = get_property("choiceAdventure1387");
     string seaFit,boss,modes;
+    boolean warnedPantsFallback;
     string [stat] pearlRes = {
         $stat[mysticality]: "hot res",
         $stat[moxie]:       "sleaze res",
@@ -95,14 +96,21 @@ import <seedfinder/seedfinder.ash>;
     // pull is skipped and the trunks (free from the Old Man, +90 all stats
     // underwater) fill the slot; MP rides on topUpMp()'s free rests and soda
     // water as it already does between casts. Mirrors swimmingTrunks() under
-    // Driving Waterproofly: slot left to the maximizer. Path 0 never skips
-    // the pull, so the fallback stays path-55-only -- swimmingTrunks()'s
-    // path-0 branch is a waterbreathing container, not pants.
+    // Driving Waterproofly: slot left to the maximizer. Path 0 has no
+    // scale-mail pull at all (the storage-pull loop is path-55-only), and
+    // swimmingTrunks()'s path-0 branch is a waterbreathing container, not
+    // pants -- so a path-0 account without a stocked scale-mail leaves the
+    // slot to the maximizer, where it used to abort "Missing"; announced
+    // once so the change is observable.
     string underwaterPants(){
         if (available_amount($item[scale-mail underwear]) > 0)
             return "scale-mail underwear,";
         if (my_path().id == 55)
             return swimmingTrunks();
+        if (!warnedPantsFallback) {
+            warnedPantsFallback = true;
+            print("No scale-mail underwear in inventory -- leaving the pants slot to the maximizer.", "red");
+        }
         return "";
     }
 
@@ -214,9 +222,12 @@ import <seedfinder/seedfinder.ash>;
             n += 1;
         // One slot for the Shub deleveler while he is alive and the banked
         // delevelers cannot floor him (multiplicative test -- a raw shavings
-        // count passes mixes the CCS's product math rejects).
+        // count passes mixes the CCS's product math rejects). While Yog-Urt
+        // is still ahead, two shavings are spoken for: her deleveler ladder
+        // throws up to two before Shub is fought, so a bank that is exactly
+        // at the floor today is below it by then.
         if (get_property("shubJigguwattDefeated") == "false"
-            && shubPrepShort()
+            && shubPrepShort(get_property("yogUrtDefeated") == "false" ? 2 : 0)
             && item_amount($item[null-day exploit]) == 0
             && !contains_text(pulledToday, "," + to_int($item[null-day exploit]) + ","))
             n += 1;
