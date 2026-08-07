@@ -651,14 +651,58 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
+    // Mafia's autorecovery aborts the run when it cannot reach its MP target
+    // -- and with no meat it cannot buy a single restorer. Free rests are
+    // spent first (they cost nothing but compete with the Cincho), then NPC
+    // soda water only while meat covers it.
+    void topUpMp(int target) {
+        while (my_mp() < target
+            && total_free_rests() > to_int(get_property("timesRested")))
+            cli_execute("camp rest free");
+        // Same junk sale post_adv() makes when meat runs low: spare scales
+        // fund the soda water.
+        if (my_mp() < target && my_meat() < 300)
+            foreach it in $items[dull fish scale, rough fish scale]
+                autosell(item_amount(it), it);
+        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
+            int need = min((target - my_mp()) / 4 + 1,
+                my_meat() / npc_price($item[soda water]));
+            buy(need, $item[soda water]);
+            use(min(need, item_amount($item[soda water])), $item[soda water]);
+        }
+        if (my_mp() < target)
+            print("MP top-up stalled at " + my_mp() + "/" + target
+                + " -- out of free rests and meat. Autorecovery may abort;"
+                + " sell some junk or fight for meat and rerun.", "red");
+    }
+
+    // Lift Beaten Up by the cheapest route available. The Walrus cast needs
+    // MP the flows that lose fights often lack (Shub prep empties the pool
+    // and turns MP restore off), so top up before casting; without the
+    // skill, rest -- free rests first, then campground turns.
+    void liftBeatenUp() {
+        if (have_effect($effect[beaten up]) == 0)
+            return;
+        if (have_skill($skill[Tongue of the Walrus])) {
+            topUpMp(mp_cost($skill[Tongue of the Walrus]));
+            // A free rest inside the top-up may already have lifted it --
+            // don't dump the just-restored MP on a debuff that's gone.
+            if (have_effect($effect[beaten up]) > 0
+                && my_mp() >= mp_cost($skill[Tongue of the Walrus]))
+                use_skill($skill[Tongue of the Walrus]);
+        }
+        if (have_effect($effect[beaten up]) > 0)
+            cli_execute("rest");
+    }
+
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
-            if (have_effect($effect[beaten up]) > 0){
-                if (have_skill($skill[Tongue of the Walrus]))
-                    use_skill($skill[Tongue of the Walrus]);
-                else
-                    cli_execute("campground rest");
-            }
+            // liftBeatenUp() rather than the old inline pair: with the
+            // Walrus known, the rest fallback here was unreachable, and a
+            // Shub loss reaches this line with MP deliberately emptied and
+            // recovery off -- the cast failed and the rerun started still
+            // Beaten Up.
+            liftBeatenUp();
             set_property("_lastCombatLost", "false");
             abort("It appears you lost the last combat, look into that");
         }
@@ -848,50 +892,6 @@ import <seedfinder/seedfinder.ash>;
 
         if (item_amount($item[whirled peas]) >= 2)
             retrieve_item($item[handful of split pea soup]);
-    }
-
-    // Mafia's autorecovery aborts the run when it cannot reach its MP target
-    // -- and with no meat it cannot buy a single restorer. Free rests are
-    // spent first (they cost nothing but compete with the Cincho), then NPC
-    // soda water only while meat covers it.
-    void topUpMp(int target) {
-        while (my_mp() < target
-            && total_free_rests() > to_int(get_property("timesRested")))
-            cli_execute("camp rest free");
-        // Same junk sale post_adv() makes when meat runs low: spare scales
-        // fund the soda water.
-        if (my_mp() < target && my_meat() < 300)
-            foreach it in $items[dull fish scale, rough fish scale]
-                autosell(item_amount(it), it);
-        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
-            int need = min((target - my_mp()) / 4 + 1,
-                my_meat() / npc_price($item[soda water]));
-            buy(need, $item[soda water]);
-            use(min(need, item_amount($item[soda water])), $item[soda water]);
-        }
-        if (my_mp() < target)
-            print("MP top-up stalled at " + my_mp() + "/" + target
-                + " -- out of free rests and meat. Autorecovery may abort;"
-                + " sell some junk or fight for meat and rerun.", "red");
-    }
-
-    // Lift Beaten Up by the cheapest route available. The Walrus cast needs
-    // MP the flows that lose fights often lack (Shub prep empties the pool
-    // and turns MP restore off), so top up before casting; without the
-    // skill, rest -- free rests first, then campground turns.
-    void liftBeatenUp() {
-        if (have_effect($effect[beaten up]) == 0)
-            return;
-        if (have_skill($skill[Tongue of the Walrus])) {
-            topUpMp(mp_cost($skill[Tongue of the Walrus]));
-            // A free rest inside the top-up may already have lifted it --
-            // don't dump the just-restored MP on a debuff that's gone.
-            if (have_effect($effect[beaten up]) > 0
-                && my_mp() >= mp_cost($skill[Tongue of the Walrus]))
-                use_skill($skill[Tongue of the Walrus]);
-        }
-        if (have_effect($effect[beaten up]) > 0)
-            cli_execute("rest");
     }
 
     void adv(location loc) {
@@ -2328,17 +2328,16 @@ void pearlZonePrep(location zone) {
 }
 
 // The walker's Beaten Up guard, called before each of its adventuring
-// paths: lift the debuff, stop loudly if it will not lift, and re-prep
-// the active zone since the lift's rest can shuffle gear and buffs.
-void pearlLiftOrAbort(location current) {
+// paths: lift the debuff, stop loudly if it will not lift. No zone
+// re-prep -- nothing in the lift (rest, soda water, the Walrus cast)
+// touches equipment, and the res moods are refreshed by pearlResCheck
+// before every pearl turn anyway.
+void pearlLiftOrAbort() {
     if (have_effect($effect[beaten up]) == 0)
         return;
     liftBeatenUp();
     if (have_effect($effect[beaten up]) > 0)
         abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
-    if (current != $location[none]
-        && get_property(pearlClaimed[current]) != "true")
-        pearlZonePrep(current);
 }
 
 // mafia calls a combat filter every round until something ends the fight, so
@@ -2484,7 +2483,7 @@ void pearlPostloop() {
             if (my_adventures() == 0)
                 abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
             // A pearl loss last turn must not fight the orc at halved stats.
-            pearlLiftOrAbort(current);
+            pearlLiftOrAbort();
             adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
             if (contains_text(get_property("banishedPhyla"), "construct"))
                 abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
@@ -2535,7 +2534,7 @@ void pearlPostloop() {
         // the day's last adventure may be exactly what the lift's rest
         // needs, so adventure manufacture must come first. Zone selection
         // below maximizes -- never through halved stats.
-        pearlLiftOrAbort(current);
+        pearlLiftOrAbort();
         if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
             current = $location[none];
             foreach loc in pearlZoneRes {
@@ -2561,7 +2560,7 @@ void pearlPostloop() {
             abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
         // cloverFishy() above may have fought (and lost) a Lucky! dive --
         // never take the pearl turn with the debuff on.
-        pearlLiftOrAbort(current);
+        pearlLiftOrAbort();
         pearlResCheck(current);
         // Cleared just before the turn so the read below sees only THIS
         // fight's outcome: mafia rewrites the pref only when a fight ends,

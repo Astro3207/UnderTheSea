@@ -133,12 +133,27 @@ boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
+void attackCleanUp() {
+    int loopCount = 0;
+    while (current_round() > 0) {
+        int round = current_round();
+        attack();
+        if (round == current_round()) {
+            loopCount += 1;
+            if (loopCount > 3)
+                abort("May be stuck in an infinite attack loop");
+        }
+    }
+}
+
 // Finish off the enemy with saucegeyser, guarded against infinite loops.
 // Every cast is affordability-checked in place: mafia skips an
 // unaffordable in-combat cast WITHOUT advancing the round, so a fixed
 // MP floor that disagrees with the effective cost turns the stall guard
-// into a mid-fight abort. Breaking instead hands the open fight back to
-// the caller (the pearl farm finishes it with attackCleanUp()).
+// into a mid-fight abort. When no cast is affordable the fight finishes
+// on plain attacks INSIDE this function: most callers sit in a
+// generated CCS whose next line is a hard abort, so handing back an
+// open fight would kill the run mid-combat.
 void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
     while (current_round() > 0) {
@@ -156,6 +171,7 @@ void cleanUp() {
                 use_skill($skill[Stuffed Mortar Shell]);
             use_skill($skill[saucestorm]);
         } else {
+            attackCleanUp();
             break;
         }
         if (round == current_round()) {
@@ -166,18 +182,7 @@ void cleanUp() {
     }
 }
 
-void attackCleanUp() {
-    int loopCount = 0;
-    while (current_round() > 0) {
-        int round = current_round();
-        attack();
-        if (round == current_round()) {
-            loopCount += 1;
-            if (loopCount > 3)
-                abort("May be stuck in an infinite attack loop");
-        }
-    }
-}
+
 
 item yogDeleveler(){
     if (my_buffedstat($stat[moxie]) + 10 > monster_attack( ) )
@@ -257,14 +262,10 @@ void main(int round, monster mob, string page_text) {
     // copies advance neither a zone's pearl progress nor screechCombats,
     // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
-        // cleanUp() breaks out pre-cast when the next cast is
-        // unaffordable; left there, the fight would run on with no
-        // actions and end Beaten Up -- and the walker then marches the
-        // debuffed character straight back in. Plain attacks need no MP,
-        // and these are fights the walker already priced as winnable at
-        // full strength.
+        // cleanUp() finishes MP-dry fights on plain attacks itself now;
+        // these are fights the walker already priced as winnable at full
+        // strength, and only a plain win ticks pearl progress.
         cleanUp();
-        attackCleanUp();
         return;
     }
     // Re-roll dispatch loop. A monster swap restarts this pass with the new
