@@ -133,6 +133,31 @@ boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
+// Free-ish delevel openers before the damage loop: Micrometeorite costs
+// 0 MP, the Time-Spinner's combat toss is free (its minutes only gate
+// the travel menu), and Curse of Weaksauce is 8 MP. Each fires only
+// while the monster can still hurt us -- the same moxie-vs-attack test
+// yogDeleveler() uses -- so trivial fights skip straight to damage,
+// already-deleveled bosses (Yog after her own CCS phase) are left
+// alone, and a consult re-entry after the delevel landed is a no-op.
+// monster_attack() tracks in-fight delevels, so each landed opener
+// re-tightens the gate for the next.
+void develOpeners() {
+    if (have_skill($skill[Micrometeorite])
+        && current_round() > 0
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack())
+        use_skill($skill[Micrometeorite]);
+    if (item_amount($item[Time-Spinner]) > 0
+        && current_round() > 0
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack())
+        throw_item($item[Time-Spinner]);
+    if (have_skill($skill[Curse of Weaksauce])
+        && my_mp() >= mp_cost($skill[Curse of Weaksauce])
+        && current_round() > 0
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack())
+        use_skill($skill[Curse of Weaksauce]);
+}
+
 void attackCleanUp() {
     int loopCount = 0;
     while (current_round() > 0) {
@@ -155,13 +180,24 @@ void attackCleanUp() {
 // generated CCS whose next line is a hard abort, so handing back an
 // open fight would kill the run mid-combat.
 void cleanUp() {
+    develOpeners();
     int loopCount = 0;  // declared outside loop so the guard actually works
     while (current_round() > 0) {
         int round = current_round();
         // Affordability ladder, not a skill-ownership fork: a geyser-knower
         // whose MP has dropped into saucestorm range still storms instead
-        // of handing the fight to plain attacks.
-        if (have_skill($skill[saucegeyser])
+        // of handing the fight to plain attacks. A Seal Clubber smacks
+        // with muscle instead of casting off a dump stat -- Lunging
+        // Thrust-Smack hits harder and more often -- EXCEPT when the
+        // current outfit was built as a spell nuke (the Sorceress phase
+        // maximizes "spell damage percent, mys"): buffed mys above buffed
+        // muscle means the geyser is the prepared weapon, keep it.
+        if (my_class() == $class[seal clubber]
+            && have_skill($skill[Lunging Thrust-Smack])
+            && my_buffedstat($stat[muscle]) >= my_buffedstat($stat[mysticality])
+            && my_mp() >= mp_cost($skill[Lunging Thrust-Smack])) {
+            use_skill($skill[Lunging Thrust-Smack]);
+        } else if (have_skill($skill[saucegeyser])
             && my_mp() >= mp_cost($skill[saucegeyser])) {
             use_skill($skill[saucegeyser]);
         } else if (have_skill($skill[saucestorm])
