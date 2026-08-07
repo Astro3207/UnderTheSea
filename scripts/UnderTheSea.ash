@@ -884,7 +884,10 @@ import <seedfinder/seedfinder.ash>;
             return;
         if (have_skill($skill[Tongue of the Walrus])) {
             topUpMp(mp_cost($skill[Tongue of the Walrus]));
-            if (my_mp() >= mp_cost($skill[Tongue of the Walrus]))
+            // A free rest inside the top-up may already have lifted it --
+            // don't dump the just-restored MP on a debuff that's gone.
+            if (have_effect($effect[beaten up]) > 0
+                && my_mp() >= mp_cost($skill[Tongue of the Walrus]))
                 use_skill($skill[Tongue of the Walrus]);
         }
         if (have_effect($effect[beaten up]) > 0)
@@ -1229,10 +1232,10 @@ import <seedfinder/seedfinder.ash>;
         visit_url("mining.php?mine=3&which=" + mineNum());
         if (my_hp() == 0)
             cli_execute("restore HP");
-        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus]))
-            use_skill($skill[Tongue of the Walrus]);
-        else if (have_effect($effect[beaten up]) > 0)
-            cli_execute("rest");
+        // liftBeatenUp() rather than the old inline pair: that version made
+        // the rest fallback unreachable whenever the Walrus was known, so a
+        // walrus-owning character at 0 MP left here still Beaten Up.
+        liftBeatenUp();
         post_adv();
     }
 
@@ -2324,6 +2327,20 @@ void pearlZonePrep(location zone) {
         swimmingTrunks() + bathysphere($item[none]));
 }
 
+// The walker's Beaten Up guard, called before each of its adventuring
+// paths: lift the debuff, stop loudly if it will not lift, and re-prep
+// the active zone since the lift's rest can shuffle gear and buffs.
+void pearlLiftOrAbort(location current) {
+    if (have_effect($effect[beaten up]) == 0)
+        return;
+    liftBeatenUp();
+    if (have_effect($effect[beaten up]) > 0)
+        abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
+    if (current != $location[none]
+        && get_property(pearlClaimed[current]) != "true")
+        pearlZonePrep(current);
+}
+
 // mafia calls a combat filter every round until something ends the fight, so
 // this has to stop offering the screech once it has been spent. The screech
 // does NOT end the fight -- the foe "running off covering his ears" is
@@ -2460,19 +2477,6 @@ void pearlPostloop() {
     location current = $location[none];
     try {
     while (true) {
-        // First thing each iteration, before ANY adventuring path -- the
-        // screech fight, a cloverFishy dive, the pearl turn itself: a loss
-        // last turn applied Beaten Up (every stat halved), and fighting or
-        // maximizing through it loses again and re-applies it. The lift
-        // sits up here so no path below sees the debuff.
-        if (have_effect($effect[beaten up]) > 0) {
-            liftBeatenUp();
-            if (have_effect($effect[beaten up]) > 0)
-                abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
-            if (current != $location[none]
-                && get_property(pearlClaimed[current]) != "true")
-                pearlZonePrep(current);
-        }
         // The moment the screech is back, spend it: one fight at the Smut
         // Orc Logging Camp moves the banish onto the orc phylum, and the
         // rundown is done. Zone progress holds while stepping out, so a
@@ -2480,6 +2484,8 @@ void pearlPostloop() {
         if (rundown && to_int(get_property("screechCombats")) == 0) {
             if (my_adventures() == 0)
                 abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
+            // A pearl loss last turn must not fight the orc at halved stats.
+            pearlLiftOrAbort(current);
             adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
             if (contains_text(get_property("banishedPhyla"), "construct"))
                 abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
@@ -2519,6 +2525,11 @@ void pearlPostloop() {
         }
         if (spent >= 40)
             abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
+        // Lift here, after the rundown-done break and the pilsner ladder:
+        // the day's last adventure may be exactly what the lift's rest
+        // needs, so adventure manufacture must come first. Zone selection
+        // below maximizes -- never through halved stats.
+        pearlLiftOrAbort(current);
         if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
             current = $location[none];
             foreach loc in pearlZoneRes {
@@ -2542,6 +2553,9 @@ void pearlPostloop() {
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
         if (spent >= 90)
             abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
+        // cloverFishy() above may have fought (and lost) a Lucky! dive --
+        // never take the pearl turn with the debuff on.
+        pearlLiftOrAbort(current);
         pearlResCheck(current);
         // Cleared just before the turn so the read below sees only THIS
         // fight's outcome: mafia rewrites the pref only when a fight ends,
@@ -2561,7 +2575,9 @@ void pearlPostloop() {
                 abort("postloop pearls: " + lost + " straight combats lost after " + spent
                     + " turns; the fights aren't finishing -- check HP/MP recovery"
                     + " and gear, then rerun.");
-        } else {
+        } else if (lastAdvWasCombat()) {
+            // Only a WON combat is evidence the fights are finishing; a
+            // noncombat says nothing and must not launder the streak.
             lost = 0;
         }
     }

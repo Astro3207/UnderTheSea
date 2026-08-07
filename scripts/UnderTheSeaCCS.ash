@@ -143,17 +143,20 @@ void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
     while (current_round() > 0) {
         int round = current_round();
-        if (have_skill($skill[saucegeyser])){
-            if (my_mp() < mp_cost($skill[saucegeyser]))
-                break;
+        // Affordability ladder, not a skill-ownership fork: a geyser-knower
+        // whose MP has dropped into saucestorm range still storms instead
+        // of handing the fight to plain attacks.
+        if (have_skill($skill[saucegeyser])
+            && my_mp() >= mp_cost($skill[saucegeyser])) {
             use_skill($skill[saucegeyser]);
-        } else {
+        } else if (have_skill($skill[saucestorm])
+            && my_mp() >= mp_cost($skill[saucestorm])) {
             if (have_skill($skill[Stuffed Mortar Shell])
                 && my_mp() >= mp_cost($skill[Stuffed Mortar Shell]) + mp_cost($skill[saucestorm]))
                 use_skill($skill[Stuffed Mortar Shell]);
-            if (my_mp() < mp_cost($skill[saucestorm]))
-                break;
             use_skill($skill[saucestorm]);
+        } else {
+            break;
         }
         if (round == current_round()) {
             loopCount += 1;
