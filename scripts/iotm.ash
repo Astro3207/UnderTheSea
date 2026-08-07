@@ -309,6 +309,57 @@ boolean lastAdvWasCombat(){
     return (contains_text(LastAdvTxt(),"Round 1"));
 }
 
+// The one place the Kramco-covers-scale-mail rule lives: an account-level
+// config switch. The trade is the trunks' +90 underwater stats against the
+// scale-mail's 8-12 MP regen, with MP topped up by topUpMp()'s free rests
+// and soda water either way. have_item() is the same test tempEquipment's
+// off-hand insertion uses, so every account the run can actually field a
+// Kramco on is covered by the same predicate.
+boolean kramcoCoversScaleMail() {
+    return have_item($item[Kramco Sausage-o-Matic&trade;]);
+}
+
+// The per-throw factor shubDelevel() applies, shared with the projection
+// below so the combat loop and the prep test cannot drift apart.
+float shubDelevelFactor(item it) {
+    if (it == $item[jam band bootleg])
+        return 0.5;
+    if (it == $item[crayon shavings])
+        return 0.7;
+    return 0.75;
+}
+
+// Projected attack/defense multiplier left on Shub-Jigguwatt after
+// throwing the whole deleveler family, chasing shubDelevel()'s 0.25
+// floor. A linear "shaving-equivalents" count diverges from this product
+// exactly where it matters -- four 0.75-class items sum to 4 "units" but
+// only reach 0.316. shavingsSpokenFor discounts shavings an earlier fight
+// will consume: Yog-Urt's deleveler ladder throws up to two before Shub
+// is ever fought.
+float shubDelevelProjection(int shavingsSpokenFor) {
+    float remaining = 1.0;
+    int n = item_amount($item[jam band bootleg]);
+    while (n > 0) { remaining = remaining * shubDelevelFactor($item[jam band bootleg]); n -= 1; }
+    n = max(0, item_amount($item[crayon shavings]) - shavingsSpokenFor);
+    while (n > 0) { remaining = remaining * shubDelevelFactor($item[crayon shavings]); n -= 1; }
+    n = item_amount($item[rattler rattle]) + item_amount($item[electronics kit]);
+    while (n > 0) { remaining = remaining * shubDelevelFactor($item[rattler rattle]); n -= 1; }
+    return remaining;
+}
+
+// True while the banked delevelers cannot floor Shub and no Null Afternoon
+// covers the gap -- shared by the prep ladder and the null-day reservation
+// in reservedPulls() so the two cannot drift apart. (The post-Yog late
+// pull keeps its own broader shavings test: it stocks for a possible Shub
+// RETRY, which re-spends everything already thrown.)
+boolean shubPrepShort(int shavingsSpokenFor) {
+    return shubDelevelProjection(shavingsSpokenFor) > 0.25
+        && have_effect($effect[null afternoon]) == 0;
+}
+boolean shubPrepShort() {
+    return shubPrepShort(0);
+}
+
 boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
         return false;
@@ -1479,6 +1530,12 @@ void pullChecklist() {
         if (have_item($item[2002 Mr. Store Catalog])
             && $items[pro skateboard, software glitch] contains it)
             continue;
+        // Announced rather than silently dropped: a stocking checklist that
+        // hides a row is telling the user "don't stock this", so say why.
+        if (it == $item[scale-mail underwear] && kramcoCoversScaleMail()) {
+            print("– " + it + " — skipped, the Kramco opts this account into trunks instead", "blue");
+            continue;
+        }
         // Never auto-bought (see the pull loop) -- flag it as a nice-to-have.
         if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0) {
             print("✗ " + it + " — optional, the script won't buy one", "red");

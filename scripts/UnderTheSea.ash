@@ -18,6 +18,7 @@ import <seedfinder/seedfinder.ash>;
         CCSStorage = "default";
     string choice1387Storage = get_property("choiceAdventure1387");
     string seaFit,boss,modes;
+    boolean warnedPantsFallback;
     string [stat] pearlRes = {
         $stat[mysticality]: "hot res",
         $stat[moxie]:       "sleaze res",
@@ -89,6 +90,28 @@ import <seedfinder/seedfinder.ash>;
         } else if (my_path().id == 0){
             equip($item[Elf Guard SCUBA tank]);
         }
+    }
+    // Pants for the underwater combat outfits. On a path-55 run whose account
+    // opted in via the Kramco (see kramcoCoversScaleMail), the scale-mail
+    // pull is skipped and the trunks (free from the Old Man, +90 all stats
+    // underwater) fill the slot; MP rides on topUpMp()'s free rests and soda
+    // water as it already does between casts. Mirrors swimmingTrunks() under
+    // Driving Waterproofly: slot left to the maximizer. Path 0 has no
+    // scale-mail pull at all (the storage-pull loop is path-55-only), and
+    // swimmingTrunks()'s path-0 branch is a waterbreathing container, not
+    // pants -- so a path-0 account without a stocked scale-mail leaves the
+    // slot to the maximizer, where it used to abort "Missing"; announced
+    // once so the change is observable.
+    string underwaterPants(){
+        if (available_amount($item[scale-mail underwear]) > 0)
+            return "scale-mail underwear,";
+        if (my_path().id == 55)
+            return swimmingTrunks();
+        if (!warnedPantsFallback) {
+            warnedPantsFallback = true;
+            print("No scale-mail underwear in inventory -- leaving the pants slot to the maximizer.", "red");
+        }
+        return "";
     }
 
     void buyScholarGear() {
@@ -197,9 +220,14 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[skate blade]) == 0
             && !contains_text(pulledToday, "," + to_int($item[skate blade]) + ","))
             n += 1;
-        // One slot for the Shub deleveler while he is alive and unbanked.
+        // One slot for the Shub deleveler while he is alive and the banked
+        // delevelers cannot floor him (multiplicative test -- a raw shavings
+        // count passes mixes the CCS's product math rejects). While Yog-Urt
+        // is still ahead, two shavings are spoken for: her deleveler ladder
+        // throws up to two before Shub is fought, so a bank that is exactly
+        // at the floor today is below it by then.
         if (get_property("shubJigguwattDefeated") == "false"
-            && item_amount($item[crayon shavings]) < 4
+            && shubPrepShort(get_property("yogUrtDefeated") == "false" ? 2 : 0)
             && item_amount($item[null-day exploit]) == 0
             && !contains_text(pulledToday, "," + to_int($item[null-day exploit]) + ","))
             n += 1;
@@ -798,7 +826,7 @@ import <seedfinder/seedfinder.ash>;
                 use_familiar($familiar[sword of s words]);
             else
                 use_familiar("itdrop");
-            tempEquipment(pearlRes[my_primestat()],if_equip(divingHelmet()) + if_equip($item[legendary seal-clubbing club]) + "shark jumper,scale-mail underwear," + bathysphere($item[none]));
+            tempEquipment(pearlRes[my_primestat()],if_equip(divingHelmet()) + if_equip($item[legendary seal-clubbing club]) + "shark jumper," + underwaterPants() + bathysphere($item[none]));
             adv1(pearlLoc[my_primestat()]);
         }
 
@@ -811,7 +839,7 @@ import <seedfinder/seedfinder.ash>;
             string conditional;
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += "monodent of the sea,";
-            tempEquipment("item drop",if_equip(divingHelmet()) + "shark jumper,scale-mail underwear,black glass,"+ if_equip($item[peridot of peril]) 
+            tempEquipment("item drop",if_equip(divingHelmet()) + "shark jumper," + underwaterPants() + "black glass," + if_equip($item[peridot of peril]) 
                 + freeKill() + bathysphere($item[toy cupid bow]) + conditional);
             adv1($location[The Caliginous Abyss]);
         }
@@ -1074,6 +1102,12 @@ import <seedfinder/seedfinder.ash>;
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
                     if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
+                    // Path-55 only, so path-0 outfits keep their scale-mail
+                    // untouched; underwaterPants() wears the trunks in its
+                    // place everywhere it was hard-named.
+                    if (it == $item[scale-mail underwear] && my_path().id == 55
+                        && kramcoCoversScaleMail())
+                        continue;
                     if (storage_amount(it) == 0){
                         if (it == $item[Congressional Medal of Insanity])
                             { print("No Congressional Medal of Insanity in storage -- skipping it (optional, the script won't buy one).", "red"); continue; }
@@ -1292,7 +1326,7 @@ import <seedfinder/seedfinder.ash>;
         if (available_amount($item[black glass]) == 0) 
             buy($coinmaster[Big Brother], 1, $item[black glass]);
         use_familiar("-combat");
-        tempEquipment("item drop", if_equip(divingHelmet()) + "shark jumper,scale-mail underwear,black glass,peridot of peril,monodent of the sea,"
+        tempEquipment("item drop", if_equip(divingHelmet()) + "shark jumper," + underwaterPants() + "black glass,peridot of peril,monodent of the sea,"
             + bathysphere($item[none]) + freeKill());
         if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) 
             use($item[comb jelly]);
@@ -1312,7 +1346,7 @@ import <seedfinder/seedfinder.ash>;
         string conditional;
         if (!contains_text(get_property("banishedMonsters"), "school of many"))
             conditional += "monodent of the sea,";
-        tempEquipment("mys","shark jumper,scale-mail underwear,black glass," + if_equip($item[Congressional Medal of Insanity])
+        tempEquipment("mys","shark jumper," + underwaterPants() + "black glass," + if_equip($item[Congressional Medal of Insanity])
             + if_equip(divingHelmet()) + bathysphere($item[none]) + if_equip($item[blood cubic zirconia]) + conditional);
         adv($location[The Caliginous Abyss]);
     }
@@ -1915,7 +1949,7 @@ void seaMonkees() {
                 conditional += if_equip($item[Congressional Medal of Insanity]);
 
             if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
-                conditional += "shark jumper,scale-mail underwear,elf guard scuba,";
+                conditional += "shark jumper," + underwaterPants() + "elf guard scuba,";
             else 
                 conditional += swimmingTrunks();
         if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
@@ -2065,7 +2099,7 @@ void seaMonkees() {
             while (item_amount($item[rusty rivet]) < 8 || available_amount($item[rusty broken diving helmet]) == 0 || item_amount($item[rusty porthole]) == 0){
                 string conditional;
                     if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0){
-                        conditional += "shark jumper,scale-mail underwear,elf guard scuba tank,";
+                        conditional += "shark jumper," + underwaterPants() + "elf guard scuba tank,";
                     } else {
                         conditional += swimmingTrunks();
                     }
@@ -2139,7 +2173,7 @@ void seaMonkees() {
                     pullSequence($item[elf guard scuba tank]);
                     conditional += "elf guard scuba tank,";
                 }
-                tempEquipment("item drop", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
+                tempEquipment("item drop", "shark jumper," + underwaterPants() + "black glass," + conditional + bathysphere($item[toy cupid bow]));
                 mood("itdrop");
                 adv($location[The Caliginous Abyss]);
             }
@@ -2165,7 +2199,7 @@ void seaMonkees() {
                 && to_int(get_property("_cyberFreeFights")) < 10
                 && to_int(get_property("momSeaMonkeeProgress")) < 40) {
                 use_familiar($familiar[glover]);
-                tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
+                tempEquipment("moxie", "shark jumper," + underwaterPants() + "monodent of the sea");
                 if (my_buffedstat($stat[moxie]) < 500)
                     abort("Need 500 moxie here to be safe");
                 adv($location[Cyberzone 1]);
@@ -2191,7 +2225,7 @@ void seaMonkees() {
             pullSequence($item[pro skateboard]);
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
           && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
-            tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
+            tempEquipment("item drop", "shark jumper," + underwaterPants() + if_equip(divingHelmet())
                 + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
             mood("itdrop");
             adv($location[The Coral Corral]);
@@ -3216,25 +3250,26 @@ void sorceress() {
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
-            else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // The need is 4 shaving-EQUIVALENTS: shubDelevel() throws
-                // the whole deleveler family -- jam band bootleg counts
-                // double (50%), rattler rattle and electronics kit count one
-                // (25%) -- and a refused paw wish ("That wish is quite
-                // impossible") consumes nothing, so testing wishes is free.
-                // Ladder: pull the exploit in place, then free golem fights
-                // (they drop shavings), then an abort naming every exit.
+            if (shubPrepShort()){
+                // shubPrepShort() mirrors shubDelevel()'s multiplicative
+                // math (bootleg 0.5, shavings 0.7, rattle/kit 0.75, floor
+                // 0.25), so the ladder and the null-day reservation agree
+                // on what "prepped" means. (The insurance below keys on
+                // account tier and stat margin instead -- the fight is
+                // always prepped by this point; what varies is whether the
+                // account clears a floored Shub's defense.) A refused paw
+                // wish ("That wish is quite impossible") consumes nothing,
+                // so testing wishes is free. Ladder: pull the exploit in
+                // place, then free golem fights (they drop shavings), then
+                // an abort naming every exit. Path 0 lands here too when
+                // the retrieve above comes back short -- same ladder, same
+                // exits.
                 if (item_amount($item[null-day exploit]) == 0)
                     pullSequence($item[null-day exploit]);
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
-                int delevelUnits = item_amount($item[crayon shavings])
-                    + 2 * item_amount($item[jam band bootleg])
-                    + item_amount($item[rattler rattle])
-                    + item_amount($item[electronics kit]);
                 int golemTries;
-                while (delevelUnits < 4
-                    && have_effect($effect[null afternoon]) == 0
+                while (shubPrepShort()
                     && count_summons() >= 1 && golemTries < 6) {
                     golemTries += 1;
                     use_familiar("itdrop");
@@ -3242,18 +3277,15 @@ void sorceress() {
                     mood("itdrop");
                     summon($monster[black crayon golem]);
                     run_combat();
-                    delevelUnits = item_amount($item[crayon shavings])
-                        + 2 * item_amount($item[jam band bootleg])
-                        + item_amount($item[rattler rattle])
-                        + item_amount($item[electronics kit]);
                 }
-                if (delevelUnits < 4
-                    && have_effect($effect[null afternoon]) == 0)
-                    abort("Shub prep is short: need 4 shaving-equivalents"
-                        + " (crayon shavings x1, jam band bootleg x2, rattler"
-                        + " rattle / electronics kit x1) or Null Afternoon."
-                        + " Paw wishes, golem fights and rollover pulls all"
-                        + " work; acquire and rerun.");
+                if (shubPrepShort())
+                    abort("Shub prep is short: need delevelers that floor his"
+                        + " attack (two jam band bootlegs, four crayon"
+                        + " shavings, or a mix -- bootlegs count double,"
+                        + " rattler rattle / electronics kit slightly less"
+                        + " than a shaving) or Null Afternoon. Paw wishes,"
+                        + " golem fights and rollover pulls all work;"
+                        + " acquire and rerun.");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
@@ -3274,11 +3306,20 @@ void sorceress() {
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            // Miss/fumble insurance, both one-fight pulls.
-            if (item_amount($item[gremlin juice]) == 0)
-                pullSequence($item[gremlin juice]);
-            if (item_amount($item[handful of hand chalk]) == 0)
-                pullSequence($item[handful of hand chalk]);
+            // Miss/fumble insurance, both one-fight pulls. The ladder above
+            // floors Shub or aborts, but a floored Shub still keeps ~1000
+            // defense (0.25 of 4000): accounts that clear that by a wide
+            // margin waste two pulls here, accounts that don't genuinely
+            // need them. Insure the low-shelf tier (lowShiny) and anyone
+            // whose post-maximize muscle is short of the floor plus margin;
+            // everyone else skips both pulls. The maximize above has already
+            // run, so buffed muscle here is what the fight will see.
+            if (lowShiny() || my_buffedstat($stat[muscle]) < 1250) {
+                if (item_amount($item[gremlin juice]) == 0)
+                    pullSequence($item[gremlin juice]);
+                if (item_amount($item[handful of hand chalk]) == 0)
+                    pullSequence($item[handful of hand chalk]);
+            }
             if (item_amount($item[gremlin juice]) > 0)
                 use($item[gremlin juice]);
             if (item_amount($item[handful of hand chalk]) > 0)
