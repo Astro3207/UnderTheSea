@@ -2526,7 +2526,10 @@ void pearlPostloop() {
             } else
                 abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
         }
-        if (spent >= 40)
+        // Rundown-only, like the Fishy stop above: a five-zone farm
+        // legitimately needs ~50 turns, and the farm has its own 90-turn
+        // guard at the mid-zone checks -- ungated, this cap strangled it.
+        if (rundown && spent >= 40)
             abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
         // Lift here, after the rundown-done break and the pilsner ladder:
         // the day's last adventure may be exactly what the lift's rest
