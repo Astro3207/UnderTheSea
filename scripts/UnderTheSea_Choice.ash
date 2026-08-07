@@ -247,20 +247,19 @@ void main(int whichchoice, string page) {
             break;
 
         // ── Mobius strip ──────────────────────────────────────────────────
+        // Meat first, in descending value. Investment tips leaves a Stock
+        // Certificate that appreciates to 5,000 meat over 500 turns; Repay
+        // yourself (offered after a borrow) trades 10 meat for Gaining
+        // Interest, +30% Meat from Monsters for 50 turns; Borrow meat is a
+        // flat +1,000 now. ("from your future self" was dropped: that
+        // keyword matched the STEAL option -- random food and booze, no
+        // meat.) Mind your own business is the do-nothing exit when every
+        // meat option is spent.
         case 1562:
-            string [int] mobiusKeywords = {
-                1: "arch-nemesis",
-                2: "trifecta",
-                3: "Go back and write a best-seller",
-                4: "Replace your novel with AI drivel"
-            };
-            int encounter = to_int(get_property("_mobiusStripEncounters"));
-            if (mobiusKeywords contains encounter)
-                pickChoice(mobiusKeywords[encounter]);
-            else{
-                if (!pickChoice("investment tips"))
-                    pickChoice("from your future self");
-            }
+            if (!pickChoice("investment tips")
+                && !pickChoice("Repay yourself in the past")
+                && !pickChoice("Borrow meat from your future"))
+                pickChoice("Mind your own business");
             break;
 
         // ── Peridot monsters ───────────────────────────────────────
