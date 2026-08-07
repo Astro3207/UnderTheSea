@@ -2329,21 +2329,6 @@ void seaMonkees() {
         $location[The Briniest Deepests]: "_unblemishedPearlTheBriniestDeepests"
     };
 
-// Pearl progress pays its full 10% a combat only at 18+ of the zone's
-// element; below that the game pays partial credit and the ten-combat
-// pearl stretches. Checked every turn, not just at zone entry -- the res
-// buffs run out mid-zone -- re-upping expired buffs and refusing to farm
-// slower than the economics were priced at.
-void pearlResCheck(location zone) {
-    string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
-    mood(elem + "res");
-    mood("combat");
-    if (numeric_modifier(elem + " resistance") < 18)
-        abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
-            + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
-            + " is up; add " + elem + " resistance gear or buffs and rerun.");
-}
-
 void pearlZonePrep(location zone) {
     string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
     // Buffs up before the maximize: their res levels count toward the 18
@@ -2359,6 +2344,37 @@ void pearlZonePrep(location zone) {
     // and it runs before the first adventure.
     tempEquipment("200 " + pearlZoneRes[zone] + " 18 max, combat",
         swimmingTrunks() + bathysphere($item[none]));
+}
+
+// Pearl progress pays its full 10% a combat only at 18+ of the zone's
+// element; below that the game pays partial credit and the ten-combat
+// pearl stretches. Checked every turn, not just at zone entry -- the res
+// buffs run out mid-zone -- re-upping expired buffs and refusing to farm
+// slower than the economics were priced at.
+//
+// The shortfall self-heals in two steps before aborting, because both
+// failure modes are transient. The mood's recast only fires when a buff
+// is at zero turns and its cast fails silently when the fights have
+// drained MP, so step one is an MP top-up and a re-mood. And the
+// maximize ran under "18 max" while buffs were live, crediting them and
+// putting zero res on the gear -- so when the buffs lapse the OUTFIT is
+// the gap, and step two re-dresses the zone with the buffs' true state
+// visible to the maximizer. This is exactly why a manual rerun used to
+// work where the walker aborted.
+void pearlResCheck(location zone) {
+    string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
+    mood(elem + "res");
+    mood("combat");
+    if (numeric_modifier(elem + " resistance") < 18) {
+        topUpMp(30);
+        mood(elem + "res");
+    }
+    if (numeric_modifier(elem + " resistance") < 18)
+        pearlZonePrep(zone);
+    if (numeric_modifier(elem + " resistance") < 18)
+        abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
+            + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
+            + " is up; add " + elem + " resistance gear or buffs and rerun.");
 }
 
 // The walker's Beaten Up guard, called before each of its adventuring
