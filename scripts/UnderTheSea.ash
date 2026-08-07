@@ -187,7 +187,12 @@ import <seedfinder/seedfinder.ash>;
         // Sides instead, so the park costs an extra turn and an extra forced
         // noncombat. Unreserved, a discretionary pull elsewhere takes the slot
         // and the phase is left to chance.
-        if (get_property("skateParkStatus") == "war"
+        // Path check first: skatePark() is only reachable on path 55 or on a
+        // path-0 Yogurt run, and skateParkStatus defaults to "war", so without
+        // it a path-0 Shub/Dad run would hold the slot all run for a pull it
+        // never makes.
+        if ((my_path().id == 55 || boss == "Yogurt")
+            && get_property("skateParkStatus") == "war"
             && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")
             && available_amount($item[skate blade]) == 0
             && !contains_text(pulledToday, "," + to_int($item[skate blade]) + ","))
@@ -1254,8 +1259,9 @@ import <seedfinder/seedfinder.ash>;
             cli_execute("alliedradio sniper");
         // The blade now holds one of the reserved slots, so spending down TO
         // the line is the point -- ">" would leave the reservation blocking its
-        // own pull. Skip once a blade is in hand: pullSequence only consults
-        // _roninStoragePulls, so it would spend a slot on a second one.
+        // own pull. Skip once a blade is in hand: a blade that arrived without
+        // a pull (drop, mall, closet) leaves the id absent from
+        // _roninStoragePulls, so pullSequence would happily buy a second one.
         if (available_amount($item[skate blade]) == 0
             && pulls_remaining( ) >= reservedPulls())
             pullSequence($item[skate blade]);
