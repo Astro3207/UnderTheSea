@@ -3159,7 +3159,10 @@ void sorceress() {
                     && item_amount($item[null-day exploit]) > 0
                     && have_effect($effect[null afternoon]) == 0)
                     use($item[null-day exploit]);
-                if (have_familiar($familiar[foul ball])) {
+                if (have_familiar($familiar[patriotic eagle]) && to_int(get_property("screechCombats")) > 0 && have_item($item[Congressional Medal of Insanity])) {
+                    use_familiar($familiar[patriotic eagle]);
+                }
+                else if (have_familiar($familiar[foul ball])) {
                     use_familiar($familiar[foul ball]);
                 }
                 mood("colosseum");
