@@ -2505,7 +2505,11 @@ void pearlPostloop() {
         }
         if (!rundown && !farm)
             break;
-        if (have_effect($effect[Fishy]) == 0)
+        // Rundown-only: its message is rundown-specific, and hard-stopping
+        // here made the farm's cloverFishy() fallback (at the mid-zone
+        // check below) unreachable -- a farm-only run that exhausted Fishy
+        // aborted instead of restocking via a Lucky! trip.
+        if (rundown && have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
                 + " turns with the re-aim unfinished.");
         if (my_adventures() == 0) {
@@ -2572,6 +2576,12 @@ void pearlPostloop() {
             abort("postloop pearls: lost a combat in " + current + " after "
                 + spent + " turns with " + claimed + " pearls claimed; check"
                 + " HP/MP recovery and gear, then rerun -- progress is saved.");
+        // The claim flips the zone's daily pref; count it here (the only
+        // place a pearl can land) so the progress and abort messages stop
+        // reporting a permanent zero.
+        if (current != $location[none]
+            && get_property(pearlClaimed[current]) == "true")
+            claimed += 1;
     }
     } finally {
         set_property("_utsPearlFarm", "false");
