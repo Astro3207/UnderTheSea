@@ -2535,6 +2535,10 @@ void pearlPostloop() {
         // burn. One loss is bad luck; three says the fights aren't
         // finishing -- stop instead of feeding the day's turns into it.
         if (get_property("_lastCombatLost") == "true") {
+            // Mafia only rewrites this when a fight ends, so a noncombat
+            // turn would re-read the same loss; post_adv() resets it after
+            // reading for the same reason.
+            set_property("_lastCombatLost", "false");
             lost += 1;
             if (lost >= 3)
                 abort("postloop pearls: " + lost + " combats lost after " + spent

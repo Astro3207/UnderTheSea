@@ -246,7 +246,15 @@ void main(int round, monster mob, string page_text) {
     // copies advance neither a zone's pearl progress nor screechCombats,
     // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
-        cleanUp();
+        // cleanUp()'s Saucegeyser branch casts a 40-MP skill but only
+        // stops below 24 MP: in the 24-39 band mafia skips the
+        // unaffordable cast without advancing the round, and cleanUp's
+        // stall guard aborts the whole farm mid-fight. Only enter it
+        // with an affordable cast (the saucestorm branch's costs sit
+        // safely under the 24 floor).
+        if (!have_skill($skill[saucegeyser])
+            || my_mp() >= mp_cost($skill[saucegeyser]))
+            cleanUp();
         // cleanUp() bails out mid-fight when MP runs dry; left there, the
         // fight runs on with no actions and ends Beaten Up -- and the
         // walker then marches the debuffed character straight back in.
