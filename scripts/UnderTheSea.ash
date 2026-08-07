@@ -3253,8 +3253,11 @@ void sorceress() {
             if (shubPrepShort()){
                 // shubPrepShort() mirrors shubDelevel()'s multiplicative
                 // math (bootleg 0.5, shavings 0.7, rattle/kit 0.75, floor
-                // 0.25), so the ladder, the reservation and the insurance
-                // below all agree on what "prepped" means. A refused paw
+                // 0.25), so the ladder and the null-day reservation agree
+                // on what "prepped" means. (The insurance below keys on
+                // account tier and stat margin instead -- the fight is
+                // always prepped by this point; what varies is whether the
+                // account clears a floored Shub's defense.) A refused paw
                 // wish ("That wish is quite impossible") consumes nothing,
                 // so testing wishes is free. Ladder: pull the exploit in
                 // place, then free golem fights (they drop shavings), then
