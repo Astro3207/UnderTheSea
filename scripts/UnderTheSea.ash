@@ -181,6 +181,22 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[comb jelly]) == 0
             && !contains_text(pulledToday, "," + to_int($item[comb jelly]) + ","))
             n += 1;
+        // One slot for the skate blade while the war is still open -- same test
+        // the cleanup loop uses to decide it has work left. Holey Rollers only
+        // fires with a blade equipped; without one the zone serves Picking
+        // Sides instead, so the park costs an extra turn and an extra forced
+        // noncombat. Unreserved, a discretionary pull elsewhere takes the slot
+        // and the phase is left to chance.
+        // Path check first: skatePark() is only reachable on path 55 or on a
+        // path-0 Yogurt run, and skateParkStatus defaults to "war", so without
+        // it a path-0 Shub/Dad run would hold the slot all run for a pull it
+        // never makes.
+        if ((my_path().id == 55 || boss == "Yogurt")
+            && get_property("skateParkStatus") == "war"
+            && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")
+            && available_amount($item[skate blade]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[skate blade]) + ","))
+            n += 1;
         // One slot for the Shub deleveler while he is alive and unbanked.
         if (get_property("shubJigguwattDefeated") == "false"
             && item_amount($item[crayon shavings]) < 4
@@ -1207,7 +1223,14 @@ import <seedfinder/seedfinder.ash>;
     void gymnasium(){
         use_familiar("combat");
         string conditional;
-            if (!contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")){
+            // Only bank a noncombat here while the park still has a use for
+            // one. skateParkStatus is the reliable test: the queue stops
+            // listing Holey Rollers once the zone flips to Ice Skate
+            // Territory, so gating on the queue alone re-arms the ski for a
+            // park that is already resolved -- and the next pass through the
+            // gladiator grind then aborts on the forcer this call banked.
+            if (get_property("skateParkStatus") == "war"
+                && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")){
                 if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
                 else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
@@ -1241,7 +1264,13 @@ import <seedfinder/seedfinder.ash>;
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
-        if (pulls_remaining( ) > reservedPulls())
+        // The blade now holds one of the reserved slots, so spending down TO
+        // the line is the point -- ">" would leave the reservation blocking its
+        // own pull. Skip once a blade is in hand: a blade that arrived without
+        // a pull (drop, mall, closet) leaves the id absent from
+        // _roninStoragePulls, so pullSequence would happily buy a second one.
+        if (available_amount($item[skate blade]) == 0
+            && pulls_remaining( ) >= reservedPulls())
             pullSequence($item[skate blade]);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
