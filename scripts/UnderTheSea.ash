@@ -3162,7 +3162,7 @@ void sorceress() {
                 if (have_familiar($familiar[patriotic eagle]) && to_int(get_property("screechCombats")) > 0 && have_item($item[Congressional Medal of Insanity])) {
                     use_familiar($familiar[patriotic eagle]);
                 }
-                if (have_familiar($familiar[foul ball])) {
+                else if (have_familiar($familiar[foul ball])) {
                     use_familiar($familiar[foul ball]);
                 }
                 mood("colosseum");
