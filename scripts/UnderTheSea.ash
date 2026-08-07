@@ -1223,7 +1223,14 @@ import <seedfinder/seedfinder.ash>;
     void gymnasium(){
         use_familiar("combat");
         string conditional;
-            if (!contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")){
+            // Only bank a noncombat here while the park still has a use for
+            // one. skateParkStatus is the reliable test: the queue stops
+            // listing Holey Rollers once the zone flips to Ice Skate
+            // Territory, so gating on the queue alone re-arms the ski for a
+            // park that is already resolved -- and the next pass through the
+            // gladiator grind then aborts on the forcer this call banked.
+            if (get_property("skateParkStatus") == "war"
+                && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")){
                 if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
                 else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
