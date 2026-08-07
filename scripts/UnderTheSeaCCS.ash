@@ -137,13 +137,17 @@ boolean bcz_gaze_ready() {
 // 0 MP, the Time-Spinner's combat toss is free (its minutes only gate
 // the travel menu), and Curse of Weaksauce is 8 MP. Each fires only
 // while the monster can still hurt us -- the same moxie-vs-attack test
-// yogDeleveler() uses -- so trivial fights skip straight to damage,
+// yogDeleveler() uses -- so trivial fights skip straight to damage and
 // already-deleveled bosses (Yog after her own CCS phase) are left
-// alone, and a consult re-entry after the delevel landed is a no-op.
-// monster_attack() tracks in-fight delevels, so each landed opener
-// re-tightens the gate for the next.
+// alone. monster_attack() tracks in-fight delevels, so each landed
+// opener re-tightens the gate for the next. Re-entry safety comes from
+// the current_round() guards (a finished fight casts nothing), NOT
+// from the attack gate -- a caller that re-enters mid-fight before the
+// delevel lands would re-cast Weaksauce, so keep cleanUp() the only
+// caller and keep it finishing its fights.
 void develOpeners() {
     if (have_skill($skill[Micrometeorite])
+        && to_int(get_property("_micrometeoriteUses")) < 10
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack())
         use_skill($skill[Micrometeorite]);
@@ -195,6 +199,10 @@ void cleanUp() {
         if (my_class() == $class[seal clubber]
             && have_skill($skill[Lunging Thrust-Smack])
             && my_buffedstat($stat[muscle]) >= my_buffedstat($stat[mysticality])
+            // Physical-resistant monsters (shadow rift creatures are 100%,
+            // vs a 90% elemental cap) turn LTS into a ~1-damage grind to
+            // the 30-round loss; leave them to the spells.
+            && last_monster().physical_resistance < 50
             && my_mp() >= mp_cost($skill[Lunging Thrust-Smack])) {
             use_skill($skill[Lunging Thrust-Smack]);
         } else if (have_skill($skill[saucegeyser])
