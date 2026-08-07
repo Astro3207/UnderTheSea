@@ -1479,6 +1479,11 @@ void pullChecklist() {
         if (have_item($item[2002 Mr. Store Catalog])
             && $items[pro skateboard, software glitch] contains it)
             continue;
+        // A Kramco covers the scale-mail's MP regen, so the pull is skipped
+        // and the trunks wear in its place -- nothing to stock.
+        if (it == $item[scale-mail underwear]
+            && have_item($item[Kramco Sausage-o-Matic&trade;]))
+            continue;
         // Never auto-bought (see the pull loop) -- flag it as a nice-to-have.
         if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0) {
             print("✗ " + it + " — optional, the script won't buy one", "red");

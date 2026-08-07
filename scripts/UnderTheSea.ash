@@ -90,6 +90,17 @@ import <seedfinder/seedfinder.ash>;
             equip($item[Elf Guard SCUBA tank]);
         }
     }
+    // Pants for the underwater combat outfits. The scale-mail's MP regen is
+    // the only thing its pull buys; a Kramco's sausages cover MP many times
+    // over, so with one owned the init loop skips the pull and the trunks
+    // (free from the Old Man, +90 all stats underwater) fill the slot.
+    // Mirrors swimmingTrunks() under Driving Waterproofly: slot left to the
+    // maximizer.
+    string underwaterPants(){
+        if (available_amount($item[scale-mail underwear]) > 0)
+            return "scale-mail underwear,";
+        return swimmingTrunks();
+    }
 
     void buyScholarGear() {
         if (available_amount($item[Mer-kin scholar mask]) == 0
@@ -798,7 +809,7 @@ import <seedfinder/seedfinder.ash>;
                 use_familiar($familiar[sword of s words]);
             else
                 use_familiar("itdrop");
-            tempEquipment(pearlRes[my_primestat()],if_equip(divingHelmet()) + if_equip($item[legendary seal-clubbing club]) + "shark jumper,scale-mail underwear," + bathysphere($item[none]));
+            tempEquipment(pearlRes[my_primestat()],if_equip(divingHelmet()) + if_equip($item[legendary seal-clubbing club]) + "shark jumper," + underwaterPants() + bathysphere($item[none]));
             adv1(pearlLoc[my_primestat()]);
         }
 
@@ -811,7 +822,7 @@ import <seedfinder/seedfinder.ash>;
             string conditional;
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += "monodent of the sea,";
-            tempEquipment("item drop",if_equip(divingHelmet()) + "shark jumper,scale-mail underwear,black glass,"+ if_equip($item[peridot of peril]) 
+            tempEquipment("item drop",if_equip(divingHelmet()) + "shark jumper," + underwaterPants() + "black glass," + if_equip($item[peridot of peril]) 
                 + freeKill() + bathysphere($item[toy cupid bow]) + conditional);
             adv1($location[The Caliginous Abyss]);
         }
@@ -1074,6 +1085,11 @@ import <seedfinder/seedfinder.ash>;
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
                     if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
+                    // The scale-mail only buys MP regen; a Kramco covers that
+                    // for free, and underwaterPants() falls back to the
+                    // trunks everywhere it was worn.
+                    if (it == $item[scale-mail underwear] && have_item($item[Kramco Sausage-o-Matic&trade;]))
+                        continue;
                     if (storage_amount(it) == 0){
                         if (it == $item[Congressional Medal of Insanity])
                             { print("No Congressional Medal of Insanity in storage -- skipping it (optional, the script won't buy one).", "red"); continue; }
@@ -1292,7 +1308,7 @@ import <seedfinder/seedfinder.ash>;
         if (available_amount($item[black glass]) == 0) 
             buy($coinmaster[Big Brother], 1, $item[black glass]);
         use_familiar("-combat");
-        tempEquipment("item drop", if_equip(divingHelmet()) + "shark jumper,scale-mail underwear,black glass,peridot of peril,monodent of the sea,"
+        tempEquipment("item drop", if_equip(divingHelmet()) + "shark jumper," + underwaterPants() + "black glass,peridot of peril,monodent of the sea,"
             + bathysphere($item[none]) + freeKill());
         if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) 
             use($item[comb jelly]);
@@ -1312,7 +1328,7 @@ import <seedfinder/seedfinder.ash>;
         string conditional;
         if (!contains_text(get_property("banishedMonsters"), "school of many"))
             conditional += "monodent of the sea,";
-        tempEquipment("mys","shark jumper,scale-mail underwear,black glass," + if_equip($item[Congressional Medal of Insanity])
+        tempEquipment("mys","shark jumper," + underwaterPants() + "black glass," + if_equip($item[Congressional Medal of Insanity])
             + if_equip(divingHelmet()) + bathysphere($item[none]) + if_equip($item[blood cubic zirconia]) + conditional);
         adv($location[The Caliginous Abyss]);
     }
@@ -1915,7 +1931,7 @@ void seaMonkees() {
                 conditional += if_equip($item[Congressional Medal of Insanity]);
 
             if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
-                conditional += "shark jumper,scale-mail underwear,elf guard scuba,";
+                conditional += "shark jumper," + underwaterPants() + "elf guard scuba,";
             else 
                 conditional += swimmingTrunks();
         if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
@@ -2065,7 +2081,7 @@ void seaMonkees() {
             while (item_amount($item[rusty rivet]) < 8 || available_amount($item[rusty broken diving helmet]) == 0 || item_amount($item[rusty porthole]) == 0){
                 string conditional;
                     if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0){
-                        conditional += "shark jumper,scale-mail underwear,elf guard scuba tank,";
+                        conditional += "shark jumper," + underwaterPants() + "elf guard scuba tank,";
                     } else {
                         conditional += swimmingTrunks();
                     }
@@ -2139,7 +2155,7 @@ void seaMonkees() {
                     pullSequence($item[elf guard scuba tank]);
                     conditional += "elf guard scuba tank,";
                 }
-                tempEquipment("item drop", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
+                tempEquipment("item drop", "shark jumper," + underwaterPants() + "black glass," + conditional + bathysphere($item[toy cupid bow]));
                 mood("itdrop");
                 adv($location[The Caliginous Abyss]);
             }
@@ -2165,7 +2181,7 @@ void seaMonkees() {
                 && to_int(get_property("_cyberFreeFights")) < 10
                 && to_int(get_property("momSeaMonkeeProgress")) < 40) {
                 use_familiar($familiar[glover]);
-                tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
+                tempEquipment("moxie", "shark jumper," + underwaterPants() + "monodent of the sea");
                 if (my_buffedstat($stat[moxie]) < 500)
                     abort("Need 500 moxie here to be safe");
                 adv($location[Cyberzone 1]);
@@ -2191,7 +2207,7 @@ void seaMonkees() {
             pullSequence($item[pro skateboard]);
         if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
           && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
-            tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
+            tempEquipment("item drop", "shark jumper," + underwaterPants() + if_equip(divingHelmet())
                 + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
             mood("itdrop");
             adv($location[The Coral Corral]);
@@ -3274,11 +3290,22 @@ void sorceress() {
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            // Miss/fumble insurance, both one-fight pulls.
-            if (item_amount($item[gremlin juice]) == 0)
-                pullSequence($item[gremlin juice]);
-            if (item_amount($item[handful of hand chalk]) == 0)
-                pullSequence($item[handful of hand chalk]);
+            // Miss/fumble insurance, both one-fight pulls -- but only when the
+            // delevel prep is short. With 4 shaving-equivalents banked the
+            // opening funkslings strip him to where attacks can't miss and a
+            // fumble costs one ~100 HP round against a cocooned pool, so the
+            // insurance earns its two pulls only on a fight he'd contest:
+            // prep short of 4 units with no Null Afternoon to lean on.
+            int prepUnits = item_amount($item[crayon shavings])
+                + 2 * item_amount($item[jam band bootleg])
+                + item_amount($item[rattler rattle])
+                + item_amount($item[electronics kit]);
+            if (prepUnits < 4 && have_effect($effect[null afternoon]) == 0) {
+                if (item_amount($item[gremlin juice]) == 0)
+                    pullSequence($item[gremlin juice]);
+                if (item_amount($item[handful of hand chalk]) == 0)
+                    pullSequence($item[handful of hand chalk]);
+            }
             if (item_amount($item[gremlin juice]) > 0)
                 use($item[gremlin juice]);
             if (item_amount($item[handful of hand chalk]) > 0)
