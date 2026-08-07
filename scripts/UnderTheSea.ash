@@ -2473,7 +2473,6 @@ void pearlPostloop() {
     set_property("_utsPearlFarm", "true");
     int spent;
     int claimed;
-    int lost;
     location current = $location[none];
     try {
     while (true) {
@@ -2564,22 +2563,15 @@ void pearlPostloop() {
         set_property("_lastCombatLost", "false");
         adv1(current);
         spent += 1;
-        // Only a plain win ticks pearl progress, so losses are pure turn
-        // burn. One loss is bad luck; three IN A ROW says the fights
-        // aren't finishing -- stop instead of feeding the day's turns
-        // into it. (The Beaten Up lift at the top of the loop handles the
-        // debuff before the next attempt.)
-        if (get_property("_lastCombatLost") == "true") {
-            lost += 1;
-            if (lost >= 3)
-                abort("postloop pearls: " + lost + " straight combats lost after " + spent
-                    + " turns; the fights aren't finishing -- check HP/MP recovery"
-                    + " and gear, then rerun.");
-        } else if (lastAdvWasCombat()) {
-            // Only a WON combat is evidence the fights are finishing; a
-            // noncombat says nothing and must not launder the streak.
-            lost = 0;
-        }
+        // Only a plain win ticks pearl progress, so a lost fight is pure
+        // turn burn -- and a full-strength walker should essentially never
+        // lose one, so a single loss is evidence enough. Stop immediately:
+        // zone progress lives in daily prefs, and a rerun lifts Beaten Up
+        // on entry and resumes exactly where this stopped.
+        if (get_property("_lastCombatLost") == "true")
+            abort("postloop pearls: lost a combat in " + current + " after "
+                + spent + " turns with " + claimed + " pearls claimed; check"
+                + " HP/MP recovery and gear, then rerun -- progress is saved.");
     }
     } finally {
         set_property("_utsPearlFarm", "false");
