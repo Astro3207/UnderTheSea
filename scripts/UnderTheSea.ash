@@ -181,6 +181,17 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[comb jelly]) == 0
             && !contains_text(pulledToday, "," + to_int($item[comb jelly]) + ","))
             n += 1;
+        // One slot for the skate blade while the war is still open -- same test
+        // the cleanup loop uses to decide it has work left. Holey Rollers only
+        // fires with a blade equipped; without one the zone serves Picking
+        // Sides instead, so the park costs an extra turn and an extra forced
+        // noncombat. Unreserved, a discretionary pull elsewhere takes the slot
+        // and the phase is left to chance.
+        if (get_property("skateParkStatus") == "war"
+            && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")
+            && available_amount($item[skate blade]) == 0
+            && !contains_text(pulledToday, "," + to_int($item[skate blade]) + ","))
+            n += 1;
         // One slot for the Shub deleveler while he is alive and unbanked.
         if (get_property("shubJigguwattDefeated") == "false"
             && item_amount($item[crayon shavings]) < 4
@@ -1241,7 +1252,12 @@ import <seedfinder/seedfinder.ash>;
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
-        if (pulls_remaining( ) > reservedPulls())
+        // The blade now holds one of the reserved slots, so spending down TO
+        // the line is the point -- ">" would leave the reservation blocking its
+        // own pull. Skip once a blade is in hand: pullSequence only consults
+        // _roninStoragePulls, so it would spend a slot on a second one.
+        if (available_amount($item[skate blade]) == 0
+            && pulls_remaining( ) >= reservedPulls())
             pullSequence($item[skate blade]);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
