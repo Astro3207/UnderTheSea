@@ -133,28 +133,6 @@ boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
-// Finish off the enemy with saucegeyser, guarded against infinite loops
-void cleanUp() {
-    int loopCount = 0;  // declared outside loop so the guard actually works
-    while (current_round() > 0) {
-        int round = current_round();
-        if (have_skill($skill[saucegeyser])){
-            use_skill($skill[saucegeyser]);
-        } else {
-            if (have_skill($skill[Stuffed Mortar Shell]))
-                use_skill($skill[Stuffed Mortar Shell]);
-            use_skill($skill[saucestorm]);
-        }
-        if (round == current_round()) {
-            loopCount += 1;
-            if (loopCount > 3)
-                abort("May be stuck in an infinite saucegeyser loop");
-        }
-        if (my_mp() < 24)
-            break;
-    }
-}
-
 void attackCleanUp() {
     int loopCount = 0;
     while (current_round() > 0) {
@@ -167,6 +145,44 @@ void attackCleanUp() {
         }
     }
 }
+
+// Finish off the enemy with saucegeyser, guarded against infinite loops.
+// Every cast is affordability-checked in place: mafia skips an
+// unaffordable in-combat cast WITHOUT advancing the round, so a fixed
+// MP floor that disagrees with the effective cost turns the stall guard
+// into a mid-fight abort. When no cast is affordable the fight finishes
+// on plain attacks INSIDE this function: most callers sit in a
+// generated CCS whose next line is a hard abort, so handing back an
+// open fight would kill the run mid-combat.
+void cleanUp() {
+    int loopCount = 0;  // declared outside loop so the guard actually works
+    while (current_round() > 0) {
+        int round = current_round();
+        // Affordability ladder, not a skill-ownership fork: a geyser-knower
+        // whose MP has dropped into saucestorm range still storms instead
+        // of handing the fight to plain attacks.
+        if (have_skill($skill[saucegeyser])
+            && my_mp() >= mp_cost($skill[saucegeyser])) {
+            use_skill($skill[saucegeyser]);
+        } else if (have_skill($skill[saucestorm])
+            && my_mp() >= mp_cost($skill[saucestorm])) {
+            if (have_skill($skill[Stuffed Mortar Shell])
+                && my_mp() >= mp_cost($skill[Stuffed Mortar Shell]) + mp_cost($skill[saucestorm]))
+                use_skill($skill[Stuffed Mortar Shell]);
+            use_skill($skill[saucestorm]);
+        } else {
+            attackCleanUp();
+            break;
+        }
+        if (round == current_round()) {
+            loopCount += 1;
+            if (loopCount > 3)
+                abort("May be stuck in an infinite saucegeyser loop");
+        }
+    }
+}
+
+
 
 item yogDeleveler(){
     if (my_buffedstat($stat[moxie]) + 10 > monster_attack( ) )
@@ -246,6 +262,9 @@ void main(int round, monster mob, string page_text) {
     // copies advance neither a zone's pearl progress nor screechCombats,
     // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
+        // cleanUp() finishes MP-dry fights on plain attacks itself now;
+        // these are fights the walker already priced as winnable at full
+        // strength, and only a plain win ticks pearl progress.
         cleanUp();
         return;
     }

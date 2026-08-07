@@ -679,14 +679,58 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
+    // Mafia's autorecovery aborts the run when it cannot reach its MP target
+    // -- and with no meat it cannot buy a single restorer. Free rests are
+    // spent first (they cost nothing but compete with the Cincho), then NPC
+    // soda water only while meat covers it.
+    void topUpMp(int target) {
+        while (my_mp() < target
+            && total_free_rests() > to_int(get_property("timesRested")))
+            cli_execute("camp rest free");
+        // Same junk sale post_adv() makes when meat runs low: spare scales
+        // fund the soda water.
+        if (my_mp() < target && my_meat() < 300)
+            foreach it in $items[dull fish scale, rough fish scale]
+                autosell(item_amount(it), it);
+        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
+            int need = min((target - my_mp()) / 4 + 1,
+                my_meat() / npc_price($item[soda water]));
+            buy(need, $item[soda water]);
+            use(min(need, item_amount($item[soda water])), $item[soda water]);
+        }
+        if (my_mp() < target)
+            print("MP top-up stalled at " + my_mp() + "/" + target
+                + " -- out of free rests and meat. Autorecovery may abort;"
+                + " sell some junk or fight for meat and rerun.", "red");
+    }
+
+    // Lift Beaten Up by the cheapest route available. The Walrus cast needs
+    // MP the flows that lose fights often lack (Shub prep empties the pool
+    // and turns MP restore off), so top up before casting; without the
+    // skill, rest -- free rests first, then campground turns.
+    void liftBeatenUp() {
+        if (have_effect($effect[beaten up]) == 0)
+            return;
+        if (have_skill($skill[Tongue of the Walrus])) {
+            topUpMp(mp_cost($skill[Tongue of the Walrus]));
+            // A free rest inside the top-up may already have lifted it --
+            // don't dump the just-restored MP on a debuff that's gone.
+            if (have_effect($effect[beaten up]) > 0
+                && my_mp() >= mp_cost($skill[Tongue of the Walrus]))
+                use_skill($skill[Tongue of the Walrus]);
+        }
+        if (have_effect($effect[beaten up]) > 0)
+            cli_execute("rest");
+    }
+
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
-            if (have_effect($effect[beaten up]) > 0){
-                if (have_skill($skill[Tongue of the Walrus]))
-                    use_skill($skill[Tongue of the Walrus]);
-                else
-                    cli_execute("campground rest");
-            }
+            // liftBeatenUp() rather than the old inline pair: with the
+            // Walrus known, the rest fallback here was unreachable, and a
+            // Shub loss reaches this line with MP deliberately emptied and
+            // recovery off -- the cast failed and the rerun started still
+            // Beaten Up.
+            liftBeatenUp();
             set_property("_lastCombatLost", "false");
             abort("It appears you lost the last combat, look into that");
         }
@@ -876,31 +920,6 @@ import <seedfinder/seedfinder.ash>;
 
         if (item_amount($item[whirled peas]) >= 2)
             retrieve_item($item[handful of split pea soup]);
-    }
-
-    // Mafia's autorecovery aborts the run when it cannot reach its MP target
-    // -- and with no meat it cannot buy a single restorer. Free rests are
-    // spent first (they cost nothing but compete with the Cincho), then NPC
-    // soda water only while meat covers it.
-    void topUpMp(int target) {
-        while (my_mp() < target
-            && total_free_rests() > to_int(get_property("timesRested")))
-            cli_execute("camp rest free");
-        // Same junk sale post_adv() makes when meat runs low: spare scales
-        // fund the soda water.
-        if (my_mp() < target && my_meat() < 300)
-            foreach it in $items[dull fish scale, rough fish scale]
-                autosell(item_amount(it), it);
-        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
-            int need = min((target - my_mp()) / 4 + 1,
-                my_meat() / npc_price($item[soda water]));
-            buy(need, $item[soda water]);
-            use(min(need, item_amount($item[soda water])), $item[soda water]);
-        }
-        if (my_mp() < target)
-            print("MP top-up stalled at " + my_mp() + "/" + target
-                + " -- out of free rests and meat. Autorecovery may abort;"
-                + " sell some junk or fight for meat and rerun.", "red");
     }
 
     void adv(location loc) {
@@ -1247,10 +1266,10 @@ import <seedfinder/seedfinder.ash>;
         visit_url("mining.php?mine=3&which=" + mineNum());
         if (my_hp() == 0)
             cli_execute("restore HP");
-        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus]))
-            use_skill($skill[Tongue of the Walrus]);
-        else if (have_effect($effect[beaten up]) > 0)
-            cli_execute("rest");
+        // liftBeatenUp() rather than the old inline pair: that version made
+        // the rest fallback unreachable whenever the Walrus was known, so a
+        // walrus-owning character at 0 MP left here still Beaten Up.
+        liftBeatenUp();
         post_adv();
     }
 
@@ -2342,6 +2361,19 @@ void pearlZonePrep(location zone) {
         swimmingTrunks() + bathysphere($item[none]));
 }
 
+// The walker's Beaten Up guard, called before each of its adventuring
+// paths: lift the debuff, stop loudly if it will not lift. No zone
+// re-prep -- nothing in the lift (rest, soda water, the Walrus cast)
+// touches equipment, and the res moods are refreshed by pearlResCheck
+// before every pearl turn anyway.
+void pearlLiftOrAbort() {
+    if (have_effect($effect[beaten up]) == 0)
+        return;
+    liftBeatenUp();
+    if (have_effect($effect[beaten up]) > 0)
+        abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
+}
+
 // mafia calls a combat filter every round until something ends the fight, so
 // this has to stop offering the screech once it has been spent. The screech
 // does NOT end the fight -- the foe "running off covering his ears" is
@@ -2484,6 +2516,8 @@ void pearlPostloop() {
         if (rundown && to_int(get_property("screechCombats")) == 0) {
             if (my_adventures() == 0)
                 abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
+            // A pearl loss last turn must not fight the orc at halved stats.
+            pearlLiftOrAbort();
             adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
             if (contains_text(get_property("banishedPhyla"), "construct"))
                 abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
@@ -2504,7 +2538,11 @@ void pearlPostloop() {
         }
         if (!rundown && !farm)
             break;
-        if (have_effect($effect[Fishy]) == 0)
+        // Rundown-only: its message is rundown-specific, and hard-stopping
+        // here made the farm's cloverFishy() fallback (at the mid-zone
+        // check below) unreachable -- a farm-only run that exhausted Fishy
+        // aborted instead of restocking via a Lucky! trip.
+        if (rundown && have_effect($effect[Fishy]) == 0)
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
                 + " turns with the re-aim unfinished.");
         if (my_adventures() == 0) {
@@ -2521,8 +2559,16 @@ void pearlPostloop() {
             } else
                 abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
         }
-        if (spent >= 40)
+        // Rundown-only, like the Fishy stop above: a five-zone farm
+        // legitimately needs ~50 turns, and the farm has its own 90-turn
+        // guard at the mid-zone checks -- ungated, this cap strangled it.
+        if (rundown && spent >= 40)
             abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
+        // Lift here, after the rundown-done break and the pilsner ladder:
+        // the day's last adventure may be exactly what the lift's rest
+        // needs, so adventure manufacture must come first. Zone selection
+        // below maximizes -- never through halved stats.
+        pearlLiftOrAbort();
         if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
             current = $location[none];
             foreach loc in pearlZoneRes {
@@ -2546,9 +2592,32 @@ void pearlPostloop() {
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
         if (spent >= 90)
             abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
+        // cloverFishy() above may have fought (and lost) a Lucky! dive --
+        // never take the pearl turn with the debuff on.
+        pearlLiftOrAbort();
         pearlResCheck(current);
+        // Cleared just before the turn so the read below sees only THIS
+        // fight's outcome: mafia rewrites the pref only when a fight ends,
+        // so a stale "true" from a pre-loop loss, the screech fight or a
+        // cloverFishy dive would otherwise book a phantom pearl loss.
+        set_property("_lastCombatLost", "false");
         adv1(current);
         spent += 1;
+        // Only a plain win ticks pearl progress, so a lost fight is pure
+        // turn burn -- and a full-strength walker should essentially never
+        // lose one, so a single loss is evidence enough. Stop immediately:
+        // zone progress lives in daily prefs, and a rerun lifts Beaten Up
+        // on entry and resumes exactly where this stopped.
+        if (get_property("_lastCombatLost") == "true")
+            abort("postloop pearls: lost a combat in " + current + " after "
+                + spent + " turns with " + claimed + " pearls claimed; check"
+                + " HP/MP recovery and gear, then rerun -- progress is saved.");
+        // The claim flips the zone's daily pref; count it here (the only
+        // place a pearl can land) so the progress and abort messages stop
+        // reporting a permanent zero.
+        if (current != $location[none]
+            && get_property(pearlClaimed[current]) == "true")
+            claimed += 1;
     }
     } finally {
         set_property("_utsPearlFarm", "false");
