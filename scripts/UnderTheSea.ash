@@ -875,6 +875,22 @@ import <seedfinder/seedfinder.ash>;
                 + " sell some junk or fight for meat and rerun.", "red");
     }
 
+    // Lift Beaten Up by the cheapest route available. The Walrus cast needs
+    // MP the flows that lose fights often lack (Shub prep empties the pool
+    // and turns MP restore off), so top up before casting; without the
+    // skill, rest -- free rests first, then campground turns.
+    void liftBeatenUp() {
+        if (have_effect($effect[beaten up]) == 0)
+            return;
+        if (have_skill($skill[Tongue of the Walrus])) {
+            topUpMp(mp_cost($skill[Tongue of the Walrus]));
+            if (my_mp() >= mp_cost($skill[Tongue of the Walrus]))
+                use_skill($skill[Tongue of the Walrus]);
+        }
+        if (have_effect($effect[beaten up]) > 0)
+            cli_execute("rest");
+    }
+
     void adv(location loc) {
         adv1(loc);
         post_adv();
@@ -2444,6 +2460,19 @@ void pearlPostloop() {
     location current = $location[none];
     try {
     while (true) {
+        // First thing each iteration, before ANY adventuring path -- the
+        // screech fight, a cloverFishy dive, the pearl turn itself: a loss
+        // last turn applied Beaten Up (every stat halved), and fighting or
+        // maximizing through it loses again and re-applies it. The lift
+        // sits up here so no path below sees the debuff.
+        if (have_effect($effect[beaten up]) > 0) {
+            liftBeatenUp();
+            if (have_effect($effect[beaten up]) > 0)
+                abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
+            if (current != $location[none]
+                && get_property(pearlClaimed[current]) != "true")
+                pearlZonePrep(current);
+        }
         // The moment the screech is back, spend it: one fight at the Smut
         // Orc Logging Camp moves the banish onto the orc phylum, and the
         // rundown is done. Zone progress holds while stepping out, so a
@@ -2513,37 +2542,27 @@ void pearlPostloop() {
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
         if (spent >= 90)
             abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
-        // A lost fight applies Beaten Up (every stat halved) and each
-        // further loss re-applies it; unremoved, the walker marches the
-        // debuffed character back in and the rest of the farm becomes a
-        // loss loop -- turns spent, no progress ticks, no pearl. Lift it
-        // the way teflon() does, then re-prep the zone in case the rest
-        // shuffled gear or buffs.
-        if (have_effect($effect[beaten up]) > 0) {
-            if (have_skill($skill[Tongue of the Walrus]))
-                use_skill($skill[Tongue of the Walrus]);
-            else
-                cli_execute("rest");
-            if (have_effect($effect[beaten up]) > 0)
-                abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
-            pearlZonePrep(current);
-        }
         pearlResCheck(current);
+        // Cleared just before the turn so the read below sees only THIS
+        // fight's outcome: mafia rewrites the pref only when a fight ends,
+        // so a stale "true" from a pre-loop loss, the screech fight or a
+        // cloverFishy dive would otherwise book a phantom pearl loss.
+        set_property("_lastCombatLost", "false");
         adv1(current);
         spent += 1;
         // Only a plain win ticks pearl progress, so losses are pure turn
-        // burn. One loss is bad luck; three says the fights aren't
-        // finishing -- stop instead of feeding the day's turns into it.
+        // burn. One loss is bad luck; three IN A ROW says the fights
+        // aren't finishing -- stop instead of feeding the day's turns
+        // into it. (The Beaten Up lift at the top of the loop handles the
+        // debuff before the next attempt.)
         if (get_property("_lastCombatLost") == "true") {
-            // Mafia only rewrites this when a fight ends, so a noncombat
-            // turn would re-read the same loss; post_adv() resets it after
-            // reading for the same reason.
-            set_property("_lastCombatLost", "false");
             lost += 1;
             if (lost >= 3)
-                abort("postloop pearls: " + lost + " combats lost after " + spent
+                abort("postloop pearls: " + lost + " straight combats lost after " + spent
                     + " turns; the fights aren't finishing -- check HP/MP recovery"
                     + " and gear, then rerun.");
+        } else {
+            lost = 0;
         }
     }
     } finally {

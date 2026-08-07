@@ -133,16 +133,26 @@ boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
-// Finish off the enemy with saucegeyser, guarded against infinite loops
+// Finish off the enemy with saucegeyser, guarded against infinite loops.
+// Every cast is affordability-checked in place: mafia skips an
+// unaffordable in-combat cast WITHOUT advancing the round, so a fixed
+// MP floor that disagrees with the effective cost turns the stall guard
+// into a mid-fight abort. Breaking instead hands the open fight back to
+// the caller (the pearl farm finishes it with attackCleanUp()).
 void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
     while (current_round() > 0) {
         int round = current_round();
         if (have_skill($skill[saucegeyser])){
+            if (my_mp() < mp_cost($skill[saucegeyser]))
+                break;
             use_skill($skill[saucegeyser]);
         } else {
-            if (have_skill($skill[Stuffed Mortar Shell]))
+            if (have_skill($skill[Stuffed Mortar Shell])
+                && my_mp() >= mp_cost($skill[Stuffed Mortar Shell]) + mp_cost($skill[saucestorm]))
                 use_skill($skill[Stuffed Mortar Shell]);
+            if (my_mp() < mp_cost($skill[saucestorm]))
+                break;
             use_skill($skill[saucestorm]);
         }
         if (round == current_round()) {
@@ -150,8 +160,6 @@ void cleanUp() {
             if (loopCount > 3)
                 abort("May be stuck in an infinite saucegeyser loop");
         }
-        if (my_mp() < 24)
-            break;
     }
 }
 
@@ -246,20 +254,13 @@ void main(int round, monster mob, string page_text) {
     // copies advance neither a zone's pearl progress nor screechCombats,
     // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
-        // cleanUp()'s Saucegeyser branch casts a 40-MP skill but only
-        // stops below 24 MP: in the 24-39 band mafia skips the
-        // unaffordable cast without advancing the round, and cleanUp's
-        // stall guard aborts the whole farm mid-fight. Only enter it
-        // with an affordable cast (the saucestorm branch's costs sit
-        // safely under the 24 floor).
-        if (!have_skill($skill[saucegeyser])
-            || my_mp() >= mp_cost($skill[saucegeyser]))
-            cleanUp();
-        // cleanUp() bails out mid-fight when MP runs dry; left there, the
-        // fight runs on with no actions and ends Beaten Up -- and the
-        // walker then marches the debuffed character straight back in.
-        // Plain attacks need no MP, and these are fights the walker
-        // already priced as winnable at full strength.
+        // cleanUp() breaks out pre-cast when the next cast is
+        // unaffordable; left there, the fight would run on with no
+        // actions and end Beaten Up -- and the walker then marches the
+        // debuffed character straight back in. Plain attacks need no MP,
+        // and these are fights the walker already priced as winnable at
+        // full strength.
+        cleanUp();
         attackCleanUp();
         return;
     }
