@@ -3303,16 +3303,20 @@ void sorceress() {
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            // The gremlin juice / hand chalk pulls are gone, not gated: the
-            // ladder above either floors Shub (shubPrepShort false) or
-            // aborts, so no fight this line can see is ever contested --
-            // a floored Shub can't dodge the attack chain, and a fumble
-            // costs one ~100 HP round against a cocooned pool. The old
-            // unconditional pulls fired after that same abort too, so they
-            // never actually rescued an unprepped fight; they only taxed
-            // prepped ones two pulls. Bottles already in inventory are
-            // still drunk -- they cost nothing and Never Fumble is free
-            // insurance if the user acquired them by hand.
+            // Miss/fumble insurance, both one-fight pulls. The ladder above
+            // floors Shub or aborts, but a floored Shub still keeps ~1000
+            // defense (0.25 of 4000): accounts that clear that by a wide
+            // margin waste two pulls here, accounts that don't genuinely
+            // need them. Insure the low-shelf tier (lowShiny) and anyone
+            // whose post-maximize muscle is short of the floor plus margin;
+            // everyone else skips both pulls. The maximize above has already
+            // run, so buffed muscle here is what the fight will see.
+            if (lowShiny() || my_buffedstat($stat[muscle]) < 1250) {
+                if (item_amount($item[gremlin juice]) == 0)
+                    pullSequence($item[gremlin juice]);
+                if (item_amount($item[handful of hand chalk]) == 0)
+                    pullSequence($item[handful of hand chalk]);
+            }
             if (item_amount($item[gremlin juice]) > 0)
                 use($item[gremlin juice]);
             if (item_amount($item[handful of hand chalk]) > 0)
