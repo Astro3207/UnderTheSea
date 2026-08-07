@@ -2340,8 +2340,10 @@ void pearlZonePrep(location zone) {
     // maximizer crediting res past the line, and every slot left over
     // chases +combat -- each noncombat dodged is a turn the pearl doesn't
     // cost. No "18 min": a hard maximizer failure would abort as
-    // "Maximizer failed" where pearlResCheck names the element and value,
-    // and it runs before the first adventure.
+    // "Maximizer failed" where pearlResCheck names the element and value.
+    // Runs at zone entry AND as pearlResCheck's mid-zone recovery when a
+    // lapsed buff leaves the outfit short -- so its generic "Missing"
+    // abort can surface mid-zone where the res abort used to.
     tempEquipment("200 " + pearlZoneRes[zone] + " 18 max, combat",
         swimmingTrunks() + bathysphere($item[none]));
 }
@@ -2352,23 +2354,22 @@ void pearlZonePrep(location zone) {
 // buffs run out mid-zone -- re-upping expired buffs and refusing to farm
 // slower than the economics were priced at.
 //
-// The shortfall self-heals in two steps before aborting, because both
-// failure modes are transient. The mood's recast only fires when a buff
-// is at zero turns and its cast fails silently when the fights have
-// drained MP, so step one is an MP top-up and a re-mood. And the
-// maximize ran under "18 max" while buffs were live, crediting them and
-// putting zero res on the gear -- so when the buffs lapse the OUTFIT is
-// the gap, and step two re-dresses the zone with the buffs' true state
-// visible to the maximizer. This is exactly why a manual rerun used to
-// work where the walker aborted.
+// The shortfall self-heals before aborting, because both failure modes
+// are transient. The mood casts fail silently when the fights have
+// drained MP -- and the pearl fights routinely end near zero -- so the
+// top-up comes BEFORE the moods; after it, the res buffs land, and so
+// do the +combat buffs that would otherwise stay silently down all
+// zone whenever gear happens to carry the res. And the entry maximize
+// ran under "18 max" while buffs were live, crediting them and putting
+// zero res on the gear -- when they lapse the OUTFIT is the gap, so
+// one pearlZonePrep re-dress with the true state visible fixes what a
+// manual rerun used to.
 void pearlResCheck(location zone) {
     string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
+    if (my_mp() < 30)
+        topUpMp(30);
     mood(elem + "res");
     mood("combat");
-    if (numeric_modifier(elem + " resistance") < 18) {
-        topUpMp(30);
-        mood(elem + "res");
-    }
     if (numeric_modifier(elem + " resistance") < 18)
         pearlZonePrep(zone);
     if (numeric_modifier(elem + " resistance") < 18)
