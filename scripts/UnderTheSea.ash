@@ -411,8 +411,8 @@ import <seedfinder/seedfinder.ash>;
                         if (ef == $effect[Fresh Breath]
                             && get_property("_aug6Cast") == "true") continue;
                         if (ef == $effect[Bloodbathed]
-                            && lowShiny == true) continue;
-                        if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
+                            && lowShiny() == true) continue;
+                        if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
@@ -447,7 +447,7 @@ import <seedfinder/seedfinder.ash>;
                     Tubes of Universal Meat, Mariachi Moisture,Everybody Calls Him Gorgon] {
                     if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                     if (ef == $effect[Ultraheart] && get_property("heartstoneBuffUnlocked") == false) continue;
-                    if (ef == $effect[Everybody Calls Him Gorgon] && !lowShiny) continue;
+                    if (ef == $effect[Everybody Calls Him Gorgon] && !lowShiny()) continue;
                     if (have_effect(ef) == 0) cli_execute(ef.default);
                 }
                 break;
@@ -643,7 +643,7 @@ import <seedfinder/seedfinder.ash>;
             abort("It appears you lost the last combat, look into that");
         }
         modes = "";
-        if ((get_property("dolphinItem") == "Mer-kin prayerbeads" || get_property("dolphinItem") == "rusty rivet") && have_item($item[durable dolphin whistle]) && lowShiny)
+        if ((get_property("dolphinItem") == "Mer-kin prayerbeads" || get_property("dolphinItem") == "rusty rivet") && have_item($item[durable dolphin whistle]) && lowShiny())
             use($item[durable dolphin whistle]);
         if (have_effect($effect[really quite poisoned]) > 0)
             cli_execute("uneffect really quite poisoned");
@@ -949,6 +949,7 @@ import <seedfinder/seedfinder.ash>;
                 autosell(item_amount(it), it);
             }
 
+            step("initialization: Mayam rings");
             // MAYAM rings
             if (get_property("_mayamSymbolsUsed") == "" && have_item($item[Mayam Calendar])) {
                 if (!use_familiar($familiar[chest mimic]))
@@ -1210,7 +1211,7 @@ import <seedfinder/seedfinder.ash>;
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
-        if (pulls_remaining( ) > reservedPulls() && available_amount($item[skate blade]) > 0)
+        if (pulls_remaining( ) > reservedPulls() && item_amount($item[skate blade]) == 0)
             pullSequence($item[skate blade]);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
@@ -1446,27 +1447,27 @@ import <seedfinder/seedfinder.ash>;
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("hot res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("hot res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar("itdrop");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("sleaze res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("sleaze res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + "the eternity codpiece,monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else {
             tempEquipment("item drop","monodent of the sea");
@@ -1709,7 +1710,7 @@ void seaMonkees() {
                 conditional += cloakeEquip($location[An octopus's garden]);
                 if (to_int(get_property("_assertYourAuthorityCast")) < 3) {
                     tempEquipment("item drop", swimmingTrunks()
-                        + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]));
+                        + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]) + conditional);
                 } else {
                     tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
                         + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
@@ -2108,7 +2109,7 @@ void seaMonkees() {
 
     // ── Attempt at 1 turn coral corral
     if (get_property("corralUnlocked") == "true" && ($location[the coral corral].turns_spent == 0 || last_monster() == $monster[wild seahorse]) && get_property("seahorseName") == "" && my_path().id == 55 && highShiny() == false) {
-        if (have_effect($effect[shadow waters]) == 0 && lowShiny == false)
+        if (have_effect($effect[shadow waters]) == 0 && lowShiny() == false)
             shadowRift();
         use_familiar("itdrop");
         if (my_familiar() == $familiar[red-nosed snapper])
@@ -2484,6 +2485,7 @@ void prepCodpiece() {
 void sorceress() {
 
     // ── Shadow rift prep ─────────────────────────────────────────────────────
+    step("phase: shadow rift prep");
     if (my_path().id == 55){
         if (to_int(get_property("encountersUntilSRChoice")) > 9
             && get_property("questRufus") == "unstarted"
@@ -2595,6 +2597,7 @@ void sorceress() {
     }
 
     // ── Seahorse taming ───────────────────────────────────────────────────────
+    step("phase: seahorse taming");
     while (get_property("seahorseName") == "") {
         if (my_path().id == 0){
             retrieve_item(3, $item[sea cowbell]);
@@ -2707,6 +2710,7 @@ void sorceress() {
     }
 
     // ── YogUrt preparation ────────────────────────────────────────────────────
+    step("phase: Yog-Urt preparation");
     if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
         if (get_property("isMerkinHighPriest") == "false") {
             if (isKBandSushiEnough() == false || my_path().id == 0){
@@ -2809,6 +2813,7 @@ void sorceress() {
                         break;
                 }
                 take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
+                pullPrayerbead();
                 if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
                     while (available_amount($item[mer-kin prayerbeads]) < 3){
                     farmPrayerbeads();
@@ -2894,7 +2899,7 @@ void sorceress() {
 
             step("phase: becoming High Priest");
             while (get_property("isMerkinHighPriest") == "false") {
-                if (turns_played() <= 17 && my_id() == 2813285 && get_property("dreadScroll7") == "0"){
+                if (turns_played() <= 17 && get_property("uts_godRunGuard") == "true" && get_property("dreadScroll7") == "0"){
                     if (item_amount($item[mer-kin worktea]) > 0){
                         retrieve_item($item[white rice]);
                         eatSushi();
