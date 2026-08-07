@@ -309,6 +309,40 @@ boolean lastAdvWasCombat(){
     return (contains_text(LastAdvTxt(),"Round 1"));
 }
 
+// The one place the Kramco-covers-scale-mail rule lives: an account-level
+// config switch, deliberately storage-inclusive. The trade is the trunks'
+// +90 underwater stats against the scale-mail's 8-12 MP regen, with MP
+// topped up by topUpMp()'s free rests and soda water either way; the
+// Kramco marks the account as opted in.
+boolean kramcoCoversScaleMail() {
+    return have_item($item[Kramco Sausage-o-Matic&trade;]);
+}
+
+// Projected attack multiplier left on Shub-Jigguwatt after throwing the
+// whole deleveler family, mirroring shubDelevel()'s multipliers exactly:
+// jam band bootleg 0.5, crayon shavings 0.7, rattler rattle / electronics
+// kit 0.75, chasing the 0.25 floor. A linear "shaving-equivalents" count
+// diverges from this product exactly where it matters -- four 0.75-class
+// items sum to 4 "units" but only reach 0.316.
+float shubDelevelProjection() {
+    float remaining = 1.0;
+    int n = item_amount($item[jam band bootleg]);
+    while (n > 0) { remaining = remaining * 0.5; n -= 1; }
+    n = item_amount($item[crayon shavings]);
+    while (n > 0) { remaining = remaining * 0.7; n -= 1; }
+    n = item_amount($item[rattler rattle]) + item_amount($item[electronics kit]);
+    while (n > 0) { remaining = remaining * 0.75; n -= 1; }
+    return remaining;
+}
+
+// True while the banked delevelers cannot floor Shub and no Null Afternoon
+// covers the gap -- the one predicate behind the prep ladder and the
+// null-day pull reservation, so the two cannot drift apart.
+boolean shubPrepShort() {
+    return shubDelevelProjection() > 0.25
+        && have_effect($effect[null afternoon]) == 0;
+}
+
 boolean pullSequence(item it) {
     if (pulls_remaining() == 0)
         return false;
@@ -1479,11 +1513,12 @@ void pullChecklist() {
         if (have_item($item[2002 Mr. Store Catalog])
             && $items[pro skateboard, software glitch] contains it)
             continue;
-        // A Kramco covers the scale-mail's MP regen, so the pull is skipped
-        // and the trunks wear in its place -- nothing to stock.
-        if (it == $item[scale-mail underwear]
-            && have_item($item[Kramco Sausage-o-Matic&trade;]))
+        // Announced rather than silently dropped: a stocking checklist that
+        // hides a row is telling the user "don't stock this", so say why.
+        if (it == $item[scale-mail underwear] && kramcoCoversScaleMail()) {
+            print("– " + it + " — skipped, the Kramco opts this account into trunks instead", "blue");
             continue;
+        }
         // Never auto-bought (see the pull loop) -- flag it as a nice-to-have.
         if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0) {
             print("✗ " + it + " — optional, the script won't buy one", "red");

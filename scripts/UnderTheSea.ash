@@ -90,16 +90,20 @@ import <seedfinder/seedfinder.ash>;
             equip($item[Elf Guard SCUBA tank]);
         }
     }
-    // Pants for the underwater combat outfits. The scale-mail's MP regen is
-    // the only thing its pull buys; a Kramco's sausages cover MP many times
-    // over, so with one owned the init loop skips the pull and the trunks
-    // (free from the Old Man, +90 all stats underwater) fill the slot.
-    // Mirrors swimmingTrunks() under Driving Waterproofly: slot left to the
-    // maximizer.
+    // Pants for the underwater combat outfits. On a path-55 run whose account
+    // opted in via the Kramco (see kramcoCoversScaleMail), the scale-mail
+    // pull is skipped and the trunks (free from the Old Man, +90 all stats
+    // underwater) fill the slot; MP rides on topUpMp()'s free rests and soda
+    // water as it already does between casts. Mirrors swimmingTrunks() under
+    // Driving Waterproofly: slot left to the maximizer. Path 0 never skips
+    // the pull, so the fallback stays path-55-only -- swimmingTrunks()'s
+    // path-0 branch is a waterbreathing container, not pants.
     string underwaterPants(){
         if (available_amount($item[scale-mail underwear]) > 0)
             return "scale-mail underwear,";
-        return swimmingTrunks();
+        if (my_path().id == 55)
+            return swimmingTrunks();
+        return "";
     }
 
     void buyScholarGear() {
@@ -208,9 +212,11 @@ import <seedfinder/seedfinder.ash>;
             && available_amount($item[skate blade]) == 0
             && !contains_text(pulledToday, "," + to_int($item[skate blade]) + ","))
             n += 1;
-        // One slot for the Shub deleveler while he is alive and unbanked.
+        // One slot for the Shub deleveler while he is alive and the banked
+        // delevelers cannot floor him (multiplicative test -- a raw shavings
+        // count passes mixes the CCS's product math rejects).
         if (get_property("shubJigguwattDefeated") == "false"
-            && item_amount($item[crayon shavings]) < 4
+            && shubPrepShort()
             && item_amount($item[null-day exploit]) == 0
             && !contains_text(pulledToday, "," + to_int($item[null-day exploit]) + ","))
             n += 1;
@@ -1085,10 +1091,11 @@ import <seedfinder/seedfinder.ash>;
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
                     if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
-                    // The scale-mail only buys MP regen; a Kramco covers that
-                    // for free, and underwaterPants() falls back to the
-                    // trunks everywhere it was worn.
-                    if (it == $item[scale-mail underwear] && have_item($item[Kramco Sausage-o-Matic&trade;]))
+                    // Path-55 only, so path-0 outfits keep their scale-mail
+                    // untouched; underwaterPants() wears the trunks in its
+                    // place everywhere it was hard-named.
+                    if (it == $item[scale-mail underwear] && my_path().id == 55
+                        && kramcoCoversScaleMail())
                         continue;
                     if (storage_amount(it) == 0){
                         if (it == $item[Congressional Medal of Insanity])
@@ -3232,25 +3239,23 @@ void sorceress() {
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
-            else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // The need is 4 shaving-EQUIVALENTS: shubDelevel() throws
-                // the whole deleveler family -- jam band bootleg counts
-                // double (50%), rattler rattle and electronics kit count one
-                // (25%) -- and a refused paw wish ("That wish is quite
-                // impossible") consumes nothing, so testing wishes is free.
-                // Ladder: pull the exploit in place, then free golem fights
-                // (they drop shavings), then an abort naming every exit.
+            if (shubPrepShort()){
+                // shubPrepShort() mirrors shubDelevel()'s multiplicative
+                // math (bootleg 0.5, shavings 0.7, rattle/kit 0.75, floor
+                // 0.25), so the ladder, the reservation and the insurance
+                // below all agree on what "prepped" means. A refused paw
+                // wish ("That wish is quite impossible") consumes nothing,
+                // so testing wishes is free. Ladder: pull the exploit in
+                // place, then free golem fights (they drop shavings), then
+                // an abort naming every exit. Path 0 lands here too when
+                // the retrieve above comes back short -- same ladder, same
+                // exits.
                 if (item_amount($item[null-day exploit]) == 0)
                     pullSequence($item[null-day exploit]);
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
-                int delevelUnits = item_amount($item[crayon shavings])
-                    + 2 * item_amount($item[jam band bootleg])
-                    + item_amount($item[rattler rattle])
-                    + item_amount($item[electronics kit]);
                 int golemTries;
-                while (delevelUnits < 4
-                    && have_effect($effect[null afternoon]) == 0
+                while (shubPrepShort()
                     && count_summons() >= 1 && golemTries < 6) {
                     golemTries += 1;
                     use_familiar("itdrop");
@@ -3258,18 +3263,15 @@ void sorceress() {
                     mood("itdrop");
                     summon($monster[black crayon golem]);
                     run_combat();
-                    delevelUnits = item_amount($item[crayon shavings])
-                        + 2 * item_amount($item[jam band bootleg])
-                        + item_amount($item[rattler rattle])
-                        + item_amount($item[electronics kit]);
                 }
-                if (delevelUnits < 4
-                    && have_effect($effect[null afternoon]) == 0)
-                    abort("Shub prep is short: need 4 shaving-equivalents"
-                        + " (crayon shavings x1, jam band bootleg x2, rattler"
-                        + " rattle / electronics kit x1) or Null Afternoon."
-                        + " Paw wishes, golem fights and rollover pulls all"
-                        + " work; acquire and rerun.");
+                if (shubPrepShort())
+                    abort("Shub prep is short: need delevelers that floor his"
+                        + " attack (two jam band bootlegs, four crayon"
+                        + " shavings, or a mix -- bootlegs count double,"
+                        + " rattler rattle / electronics kit slightly less"
+                        + " than a shaving) or Null Afternoon. Paw wishes,"
+                        + " golem fights and rollover pulls all work;"
+                        + " acquire and rerun.");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
@@ -3290,22 +3292,16 @@ void sorceress() {
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            // Miss/fumble insurance, both one-fight pulls -- but only when the
-            // delevel prep is short. With 4 shaving-equivalents banked the
-            // opening funkslings strip him to where attacks can't miss and a
-            // fumble costs one ~100 HP round against a cocooned pool, so the
-            // insurance earns its two pulls only on a fight he'd contest:
-            // prep short of 4 units with no Null Afternoon to lean on.
-            int prepUnits = item_amount($item[crayon shavings])
-                + 2 * item_amount($item[jam band bootleg])
-                + item_amount($item[rattler rattle])
-                + item_amount($item[electronics kit]);
-            if (prepUnits < 4 && have_effect($effect[null afternoon]) == 0) {
-                if (item_amount($item[gremlin juice]) == 0)
-                    pullSequence($item[gremlin juice]);
-                if (item_amount($item[handful of hand chalk]) == 0)
-                    pullSequence($item[handful of hand chalk]);
-            }
+            // The gremlin juice / hand chalk pulls are gone, not gated: the
+            // ladder above either floors Shub (shubPrepShort false) or
+            // aborts, so no fight this line can see is ever contested --
+            // a floored Shub can't dodge the attack chain, and a fumble
+            // costs one ~100 HP round against a cocooned pool. The old
+            // unconditional pulls fired after that same abort too, so they
+            // never actually rescued an unprepped fight; they only taxed
+            // prepped ones two pulls. Bottles already in inventory are
+            // still drunk -- they cost nothing and Never Fumble is free
+            // insurance if the user acquired them by hand.
             if (item_amount($item[gremlin juice]) > 0)
                 use($item[gremlin juice]);
             if (item_amount($item[handful of hand chalk]) > 0)
