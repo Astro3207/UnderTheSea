@@ -221,7 +221,7 @@ item shubDeleveler() {
 // shavings, or a mix all land in 2-4 rounds.
 void shubDelevel() {
     float remaining = 1.0;
-    while (remaining > 0.25 && current_round() > 0) {
+    while (remaining > 0.05 && current_round() > 0) {
         item d = shubDeleveler();
         if (d == $item[none])
             break;
