@@ -2440,6 +2440,7 @@ void pearlPostloop() {
     set_property("_utsPearlFarm", "true");
     int spent;
     int claimed;
+    int lost;
     location current = $location[none];
     try {
     while (true) {
@@ -2512,9 +2513,34 @@ void pearlPostloop() {
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
         if (spent >= 90)
             abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
+        // A lost fight applies Beaten Up (every stat halved) and each
+        // further loss re-applies it; unremoved, the walker marches the
+        // debuffed character back in and the rest of the farm becomes a
+        // loss loop -- turns spent, no progress ticks, no pearl. Lift it
+        // the way teflon() does, then re-prep the zone in case the rest
+        // shuffled gear or buffs.
+        if (have_effect($effect[beaten up]) > 0) {
+            if (have_skill($skill[Tongue of the Walrus]))
+                use_skill($skill[Tongue of the Walrus]);
+            else
+                cli_execute("rest");
+            if (have_effect($effect[beaten up]) > 0)
+                abort("postloop pearls: Beaten Up won't lift; heal up and rerun.");
+            pearlZonePrep(current);
+        }
         pearlResCheck(current);
         adv1(current);
         spent += 1;
+        // Only a plain win ticks pearl progress, so losses are pure turn
+        // burn. One loss is bad luck; three says the fights aren't
+        // finishing -- stop instead of feeding the day's turns into it.
+        if (get_property("_lastCombatLost") == "true") {
+            lost += 1;
+            if (lost >= 3)
+                abort("postloop pearls: " + lost + " combats lost after " + spent
+                    + " turns; the fights aren't finishing -- check HP/MP recovery"
+                    + " and gear, then rerun.");
+        }
     }
     } finally {
         set_property("_utsPearlFarm", "false");

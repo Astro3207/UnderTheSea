@@ -247,6 +247,12 @@ void main(int round, monster mob, string page_text) {
     // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
         cleanUp();
+        // cleanUp() bails out mid-fight when MP runs dry; left there, the
+        // fight runs on with no actions and ends Beaten Up -- and the
+        // walker then marches the debuffed character straight back in.
+        // Plain attacks need no MP, and these are fights the walker
+        // already priced as winnable at full strength.
+        attackCleanUp();
         return;
     }
     // Re-roll dispatch loop. A monster swap restarts this pass with the new
