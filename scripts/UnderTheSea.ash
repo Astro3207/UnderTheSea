@@ -2368,6 +2368,16 @@ void pearlResCheck(location zone) {
     string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
     if (my_mp() < 30)
         topUpMp(30);
+    // Health needs a floor of its own, for the same reason MP does. Mafia only
+    // heals below its hpAutoRecovery threshold, and that is a per-account
+    // setting the walk cannot lean on -- set low, it leaves the farm adventuring
+    // at a few hundred HP while these zones take 100-180 a fight and hand back
+    // about eight, so health ratchets down over dozens of turns until an
+    // ordinary round kills a walker that was never in a fight it could lose.
+    // Half of max absorbs several rounds and costs a Cocoon, which is a skill
+    // rather than anything the run is short of.
+    if (my_hp() * 2 < my_maxhp())
+        restore_hp(my_maxhp() / 2);
     mood(elem + "res");
     mood("combat");
     // Same lapsed-buff trap as the resistance below, one step nastier.
