@@ -321,26 +321,6 @@ void cleanUp() {
             }
             continue;
         }
-        // A bladeswitcher's reflect has a blind spot no check can close: it can
-        // go live in the same round the action is committed, after the last
-        // look at the page and before the damage lands. So the thing to control
-        // is not the timing but the SIZE of what falls into it. A geyser
-        // returns enough to kill outright from full; the smack returns a
-        // fraction of that and leaves the stall room to arm on the next look.
-        // Three swings instead of one cast is the price, and the monster is
-        // taking 1 a round during a reflect either way.
-        //
-        // This is not the older, wrong idea that physical dodges the reflect --
-        // it does not, everything reflects. It is only that a smaller hit comes
-        // back smaller.
-        if (isBladeswitcher()) {
-            if (have_skill($skill[Lunging Thrust-Smack])
-                && last_monster().physical_resistance < 50
-                && my_mp() >= mp_cost($skill[Lunging Thrust-Smack]))
-                use_skill($skill[Lunging Thrust-Smack]);
-            else
-                attack();
-        }
         // Affordability ladder, not a skill-ownership fork: a geyser-knower
         // whose MP has dropped into saucestorm range still storms instead
         // of handing the fight to plain attacks. A Seal Clubber smacks
@@ -349,7 +329,7 @@ void cleanUp() {
         // current outfit was built as a spell nuke (the Sorceress phase
         // maximizes "spell damage percent, mys"): buffed mys above buffed
         // muscle means the geyser is the prepared weapon, keep it.
-        else if (my_class() == $class[seal clubber]
+        if (my_class() == $class[seal clubber]
             && have_skill($skill[Lunging Thrust-Smack])
             && my_buffedstat($stat[muscle]) >= my_buffedstat($stat[mysticality])
             // The colosseum phase maximizes spell damage, but on a Seal
