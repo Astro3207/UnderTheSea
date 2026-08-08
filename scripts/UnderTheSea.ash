@@ -1125,7 +1125,7 @@ import <seedfinder/seedfinder.ash>;
                 scale-mail underwear, Congressional Medal of Insanity,
                 Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
-                    if (it == $item[sea lasso] && (lowShiny == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
+                    if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
                     // Path-55 only, so path-0 outfits keep their scale-mail
                     // untouched; underwaterPants() wears the trunks in its
@@ -1871,7 +1871,7 @@ void seaMonkees() {
     step("phase: Grandpa unlock (step 4)");
     if (get_property("questS02Monkees") == "step4") {
         use_familiar("-combat");
-        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny == false) {
+        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
             if (pullSequence($item[mer-kin hidepaint]));
                 use($item[mer-kin hidepaint]);
         }
@@ -3371,7 +3371,7 @@ void sorceress() {
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
 
-        if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny || pulls_remaining() == 0)){
+        if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny() || pulls_remaining() == 0)){
             while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
                 farmPrayerbeads();
             }
