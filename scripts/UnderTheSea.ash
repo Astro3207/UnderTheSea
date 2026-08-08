@@ -2769,30 +2769,114 @@ void prepCodpiece() {
 
 // ─── SORCERESS ────────────────────────────────────────────────────────────────
 
-// The places the run can spend a turn that it owed anyway, tried in the same
-// order the Deep-Tainted Mind loop in sorceress() uses them. A blocking effect
-// only ticks down on turns actually spent, so this is how the script waits one
-// out without wasting anything. Returns false when there is nowhere left to
-// run, or when a pass burned no turn at all (free fights cannot tick an effect
-// down, so a caller that kept asking would spin forever) -- either way the
-// caller's cue to stop asking and say so out loud.
-// TODO: the Deep-Tainted Mind loop still open-codes this same ladder; it wants
-// a "no sink" / "no turn" distinction of its own before it can share this.
+// One pass of the gladiator-gear grind: a gymnasium turn, then the Grandma
+// trade once both raw drops are in hand. Split out of the loop in sorceress()
+// so a caller waiting an effect out can take one step and re-check between.
+void gladiatorGearStep() {
+    gymnasium();
+    if (item_amount($item[Mer-kin thighguard]) > 0
+        && item_amount($item[Mer-kin headguard]) > 0) {
+        equip($slot[hat], $item[none]);
+        equip($slot[pants], $item[none]);
+        equipSwimTrunks();
+        if (item_amount($item[Mer-kin scholar mask]) > 0){
+            visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=131");
+        }
+        if (item_amount($item[Mer-kin scholar tailpiece]) > 0){
+            visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=1619");
+        }
+        foreach it in $items[Mer-kin gladiator mask,Mer-kin gladiator tailpiece]{
+            if (available_amount(it) == 0)
+                buy($coinmaster[Grandma Sea Monkey],1,it);
+        }
+    }
+}
+
+// One colosseum round. Gladiators are insta-kill immune (bricks and X-Rays
+// glance, the Asdon missile reads UNTARGETABLE), so the club is the only free
+// round in the building -- against immune monsters Club 'Em still deals 30% max
+// HP and frees the fight. Past its five casts, only the bat wings proc can
+// refund a round. Split out of the loop in sorceress() for the same reason as
+// gladiatorGearStep().
+void colosseumRound() {
+    string freeFight;
+    if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
+        freeFight = "legendary seal-clubbing club,";
+    if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()
+        && if_equip($item[bat wings]) != "")
+        freeFight += if_equip($item[bat wings]);
+    else if (have_item($item[Unwrapped knock-off retro superhero cape])){
+        freeFight += "unwrapped knock-off retro superhero cape,";
+        modes = "retrocape heck kill";
+    }
+
+    if (to_int(get_property("lastColosseumRoundWon")) >= 3
+        && have_effect($effect[Up To 11]) == 0)
+        cli_execute($effect[Up To 11].default);
+    if (to_int(get_property("lastColosseumRoundWon")) >= 6) {
+        if (item_amount($item[crayon shavings]) < 8
+            && item_amount($item[null-day exploit]) > 0
+            && have_effect($effect[null afternoon]) == 0)
+            use($item[null-day exploit]);
+        if (have_familiar($familiar[patriotic eagle]) && to_int(get_property("screechCombats")) > 0 && have_item($item[Congressional Medal of Insanity])) {
+            use_familiar($familiar[patriotic eagle]);
+        }
+        else if (have_familiar($familiar[foul ball])) {
+            use_familiar($familiar[foul ball]);
+        }
+        mood("colosseum");
+    }
+    float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
+    tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
+        + if_equip($item[Congressional Medal of Insanity]) + freeFight + bathysphere($item[none]));
+    adv($location[Mer-kin Colosseum]);
+    if (get_property("lastEncounter") == "Been There, Won That"){
+        set_property("lastColosseumRoundWon","15");
+        set_property("isMerkinGladiatorChampion","true");
+    }
+}
+
+// The places the run can spend a turn it owed anyway, tried in the order
+// sorceress() works them. A blocking effect only ticks down on turns actually
+// spent, so this is how the script waits one out without wasting anything.
+//
+// Returns false only when every sink is finished. Whether a pass consumed a
+// turn is a separate question, and the caller's to ask: underwater combats are
+// routinely free (banishes, free fights, noncombat forcers), so a single
+// turnless pass says nothing about whether work remains.
+// TODO: the Deep-Tainted Mind loop still open-codes an older, shorter version
+// of this ladder.
 boolean burnTurnElsewhere() {
-    int before = my_adventures();
     if (get_property("skateParkStatus") == "war"
         && !contains_text($location[The Skate Park].noncombat_queue,
             "Holey Rollers")) {
         skatePark();
-    } else if (item_amount($item[Mer-kin thighguard]) == 0
-        || item_amount($item[Mer-kin headguard]) == 0) {
-        gymnasium();
-        if (get_property("_skateBuff1") == "false")
-            visit_url("sea_skatepark.php?action=state2buff1");
-    } else if (get_property("questS02Monkees") == "step12") {
+        return true;
+    }
+    if (my_path().id == 55 || boss == "Shub") {
+        // The gear grind comes first and runs long enough to outlast any effect
+        // worth waiting out, so the colosseum is the backstop for a run that
+        // already holds its gear. Winning it early cannot strand a boss: this
+        // path fights both elder gods, so the temple keeps a separate door per
+        // boss (Right/Left/center for Yog-Urt/Shub/Dad) and the colosseum only
+        // unlocks Shub's.
+        if (available_amount($item[Mer-kin gladiator mask]) == 0
+            || available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
+            gladiatorGearStep();
+            if (get_property("_skateBuff1") == "false")
+                visit_url("sea_skatepark.php?action=state2buff1");
+            return true;
+        }
+        if (to_int(get_property("lastColosseumRoundWon")) < 15) {
+            colosseumRound();
+            return true;
+        }
+    }
+    if (get_property("questS02Monkees") == "step12") {
         finishCaliginous();
-    } else return false;
-    return my_adventures() < before;
+        return true;
+    }
+    return false;
 }
 
 void sorceress() {
@@ -3279,17 +3363,22 @@ void sorceress() {
             // Gummiheart's +100 Muscle inflates max HP, and Yog-Urt's debuff
             // scales with max HP while the healing items below heal fixed
             // amounts -- so it has to go before the cocoon is cast, not after.
-            // Every real source is short (the PYEC grants 5 turns, a gummi
+            // Every source is short (the PYEC grants 5 turns, a gummi
             // trick-or-treat monster 10) while the gladiator-gear grind that
-            // follows this fight ran 28 turns last run, so wait it out on work
-            // the run already owes rather than spend a pull slot on an antidote.
-            // Path 55 is the gate: a path-0 Yog-Urt run never reaches that
-            // grind, so it has nowhere to burn and the abort below is all we
-            // have for it.
+            // follows this fight runs far longer, so wait it out on work the run
+            // already owes rather than spend a pull slot on an antidote. Path 55
+            // is the gate: a path-0 Yog-Urt run never reaches that grind, so it
+            // has nowhere to burn and the abort below is all we have for it.
             if (have_effect($effect[gummiheart]) > 0 && my_path().id == 55) {
+                // Free combats spend no turn yet still make progress, so only a
+                // run of turnless passes means genuinely stuck.
+                int stalled = 0;
                 while (have_effect($effect[gummiheart]) > 0
-                    && my_adventures() > 0) {
+                    && my_adventures() > 0 && stalled < 8) {
+                    int before = my_adventures();
                     if (!burnTurnElsewhere()) break;
+                    if (my_adventures() < before) stalled = 0;
+                    else stalled = stalled + 1;
                 }
             }
             cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
@@ -3400,70 +3489,15 @@ void sorceress() {
         // while either is missing.
         while (available_amount($item[Mer-kin gladiator mask]) == 0
             || available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
-            gymnasium();
-            if (item_amount($item[Mer-kin thighguard]) > 0
-                && item_amount($item[Mer-kin headguard]) > 0) {
-                equip($slot[hat], $item[none]);
-                equip($slot[pants], $item[none]);
-                equipSwimTrunks();
-                if (item_amount($item[Mer-kin scholar mask]) > 0){
-                    visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=131");
-                }
-                if (item_amount($item[Mer-kin scholar tailpiece]) > 0){
-                    visit_url("shop.php?whichshop=grandma&action=buyitem&quantity=1&whichrow=1619");
-                }
-                foreach it in $items[Mer-kin gladiator mask,Mer-kin gladiator tailpiece]{
-                    if (available_amount(it) == 0)
-                        buy($coinmaster[Grandma Sea Monkey],1,it);
-                }
-            }
+            gladiatorGearStep();
         }
 
         refresh_status();
 
         // ── Colosseum ─────────────────────────────────────────────────────────────
         step("phase: colosseum");
-        // Gladiators are insta-kill immune (bricks and X-Rays glance, the
-        // Asdon missile reads UNTARGETABLE), so the club is the only free
-        // round in the building -- against immune monsters Club 'Em still
-        // deals 30% max HP and frees the fight. Past its five casts, only
-        // the bat wings proc can refund a round.
         while (to_int(get_property("lastColosseumRoundWon")) < 15) {
-            string freeFight;
-            if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
-                freeFight = "legendary seal-clubbing club,";
-            if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()
-                && if_equip($item[bat wings]) != "")
-                freeFight += if_equip($item[bat wings]);
-            else if (have_item($item[Unwrapped knock-off retro superhero cape])){
-                freeFight += "unwrapped knock-off retro superhero cape,";
-                modes = "retrocape heck kill";
-            }
-
-            if (to_int(get_property("lastColosseumRoundWon")) >= 3
-                && have_effect($effect[Up To 11]) == 0)
-                cli_execute($effect[Up To 11].default);
-            if (to_int(get_property("lastColosseumRoundWon")) >= 6) {
-                if (item_amount($item[crayon shavings]) < 8
-                    && item_amount($item[null-day exploit]) > 0
-                    && have_effect($effect[null afternoon]) == 0)
-                    use($item[null-day exploit]);
-                if (have_familiar($familiar[patriotic eagle]) && to_int(get_property("screechCombats")) > 0 && have_item($item[Congressional Medal of Insanity])) {
-                    use_familiar($familiar[patriotic eagle]);
-                }
-                else if (have_familiar($familiar[foul ball])) {
-                    use_familiar($familiar[foul ball]);
-                }
-                mood("colosseum");
-            }
-            float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
-            tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
-                + if_equip($item[Congressional Medal of Insanity]) + freeFight + bathysphere($item[none]));
-            adv($location[Mer-kin Colosseum]);
-            if (get_property("lastEncounter") == "Been There, Won That"){
-                set_property("lastColosseumRoundWon","15");
-                set_property("isMerkinGladiatorChampion","true");
-            }
+            colosseumRound();
         }
 
         if (to_int(get_property("lastColosseumRoundWon")) < 15)
