@@ -182,11 +182,81 @@ void attackCleanUp() {
 // on plain attacks INSIDE this function: most callers sit in a
 // generated CCS whose next line is a hard abort, so handing back an
 // open fight would kill the run mid-combat.
+// The Mer-kin bladeswitcher's "bust" special caps its own incoming damage at 1
+// and returns the full amount the attack would have dealt to the caster, for ten
+// rounds. Countering it needs Ball Bust, which unlocks on the fifth underwater
+// critical hit with a Mer-kin dodgeball equipped and so is out of reach here, and
+// switching to physical does not help: the reflect covers all damage sources.
+// The only answer is to stop dealing damage until it lapses.
+//
+// It has to be read off the fight page rather than inferred from a health drop:
+// main()'s page_text is the round the consult opened on, while cleanUp() runs
+// many rounds inside one invocation, so a stale copy would never show the
+// special. Re-reading is confined to the colosseum -- every other zone would pay
+// a page load per round for a message that cannot appear there.
+boolean reflectActivated() {
+    if (my_location() != $location[Mer-kin Colosseum] || current_round() == 0)
+        return false;
+    return contains_text(to_string(visit_url("fight.php")),
+        "twirling his blade around himself");
+}
+
+// yogHealing()'s no-abort twin. Each healing item works once per combat, so this
+// walks the same list and reports honestly when the fight has used them all
+// rather than killing the run mid-stall.
+item stallHealing() {
+    foreach it in $items[sea gel,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
+        if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
+            return it;
+    }
+    return $item[none];
+}
+
+// One round of dealing no damage, cheapest first. The delevelers deal none at
+// all and shrink the hits still to come (the gladiators are immune to stagger,
+// so that is all they do here); healing items each buy a round and undo one hit;
+// a plain attack is the floor, reflecting only weapon damage, which is a
+// fraction of a geyser's. Every branch must advance the round -- cleanUp()'s
+// stall guard is what catches it if one does not.
+void stallRound() {
+    if (have_skill($skill[Micrometeorite])
+        && to_int(get_property("_micrometeoriteUses")) < 10) {
+        use_skill($skill[Micrometeorite]);
+        return;
+    }
+    if (item_amount($item[Time-Spinner]) > 0) {
+        throw_item($item[Time-Spinner]);
+        return;
+    }
+    if (have_skill($skill[Curse of Weaksauce])
+        && my_mp() >= mp_cost($skill[Curse of Weaksauce])) {
+        use_skill($skill[Curse of Weaksauce]);
+        return;
+    }
+    item heal = stallHealing();
+    if (heal != $item[none] && my_hp() * 2 < my_maxhp()) {
+        throw_item(heal);
+        return;
+    }
+    attack();
+}
+
 void cleanUp() {
     develOpeners();
     int loopCount = 0;  // declared outside loop so the guard actually works
+    int stallLeft = 0;  // rounds of reflect still to wait out
     while (current_round() > 0) {
         int round = current_round();
+        if (stallLeft > 0) {
+            stallRound();
+            stallLeft -= 1;
+            if (round == current_round()) {
+                loopCount += 1;
+                if (loopCount > 3)
+                    abort("May be stuck in an infinite saucegeyser loop");
+            }
+            continue;
+        }
         // Affordability ladder, not a skill-ownership fork: a geyser-knower
         // whose MP has dropped into saucestorm range still storms instead
         // of handing the fight to plain attacks. A Seal Clubber smacks
@@ -224,6 +294,12 @@ void cleanUp() {
             attackCleanUp();
             break;
         }
+        // Checked after acting, not before: the special resolves in the
+        // monster's half of the round, so this is the first moment it can be
+        // seen -- and seeing it here is what stops the SECOND cast into it,
+        // which is the one that turns a survivable hit into a lost fight.
+        if (stallLeft == 0 && reflectActivated())
+            stallLeft = 10;
         if (round == current_round()) {
             loopCount += 1;
             if (loopCount > 3)
