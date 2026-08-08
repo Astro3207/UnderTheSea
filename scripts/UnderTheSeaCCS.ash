@@ -166,11 +166,18 @@ boolean isBladeswitcher() {
 // many rounds inside one invocation, so a stale copy would never show it. The
 // page carries only the most recent round's narrative, which is why this is
 // called as actions are submitted rather than once at the end.
-boolean reflectActivated() {
+//
+// Two messages, not one. The twirl is the reflect going live; the dope move is
+// the wind-up a round earlier, and catching that is a round of warning the
+// activation alone cannot give. Stalling on the wind-up costs at most one round
+// of damage we might have been allowed, and the countdown re-arms off the twirl
+// when it lands, so an early stall corrects itself.
+boolean reflectImminent() {
     if (!isBladeswitcher() || current_round() == 0)
         return false;
-    return contains_text(to_string(visit_url("fight.php")),
-        "twirling his blade around himself");
+    string p = to_string(visit_url("fight.php"));
+    return contains_text(p, "twirling his blade around himself")
+        || contains_text(p, "an especially dope move");
 }
 
 boolean develOpeners() {
@@ -179,20 +186,20 @@ boolean develOpeners() {
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
         use_skill($skill[Micrometeorite]);
-        if (reflectActivated()) return true;
+        if (reflectImminent()) return true;
     }
     if (item_amount($item[Time-Spinner]) > 0
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
         throw_item($item[Time-Spinner]);
-        if (reflectActivated()) return true;
+        if (reflectImminent()) return true;
     }
     if (have_skill($skill[Curse of Weaksauce])
         && my_mp() >= mp_cost($skill[Curse of Weaksauce])
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack())
         use_skill($skill[Curse of Weaksauce]);
-    return reflectActivated();
+    return reflectImminent();
 }
 
 void attackCleanUp() {
@@ -287,7 +294,7 @@ void cleanUp() {
         // kill both spend rounds ahead of this loop, so the special can already
         // be live when the ladder takes its first swing -- and that first cast
         // is the one that loses the fight, not the second.
-        if (stallLeft == 0 && reflectActivated())
+        if (stallLeft == 0 && reflectImminent())
             stallLeft = 10;
         if (stallLeft > 0) {
             stallRound();
@@ -305,7 +312,7 @@ void cleanUp() {
                 // which feeds the reflect -- better to take the fight back and
                 // let it end one way or the other than to idle out the round
                 // limit.
-                if (current_round() > 0 && stalled < 14 && reflectActivated())
+                if (current_round() > 0 && stalled < 14 && reflectImminent())
                     stallLeft = 10;
             } else {
                 loopCount += 1;
@@ -361,7 +368,7 @@ void cleanUp() {
         // and catches the reflect from its signature alone: a single round that
         // takes a large bite out of us is one we just paid for ourselves.
         if (stallLeft == 0 && isBladeswitcher()
-            && (hpBefore - my_hp() > 400 || reflectActivated()))
+            && (hpBefore - my_hp() > 400 || reflectImminent()))
             stallLeft = 10;
         if (round == current_round()) {
             loopCount += 1;
