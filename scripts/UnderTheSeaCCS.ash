@@ -212,29 +212,24 @@ item stallHealing() {
     return $item[none];
 }
 
-// One round of dealing no damage, cheapest first. The delevelers deal none at
-// all and shrink the hits still to come (the gladiators are immune to stagger,
-// so that is all they do here); healing items each buy a round and undo one hit;
-// a plain attack is the floor, reflecting only weapon damage, which is a
-// fraction of a geyser's. Every branch must advance the round -- cleanUp()'s
-// stall guard is what catches it if one does not.
+// One round of dealing no damage. Every branch here MUST advance the round: a
+// stall round that does not is indistinguishable from a hung fight, and the
+// guard that catches it aborts while the fight is still open -- the one thing
+// cleanUp() promises never to do.
+//
+// That rules out the free delevelers, tempting as they look. Micrometeorite and
+// the Time-Spinner are once per combat and develOpeners() has already thrown
+// both at the top of this same cleanUp(), so a second submission is refused by
+// KoL without the round moving. (Their daily counters say nothing about it --
+// _micrometeoriteUses tracks potency decay across fights, not use within one.)
+//
+// What is left always advances: a healing item, which also undoes a round of
+// hits, and a plain attack, whose reflected weapon damage is a fraction of a
+// geyser's. Heal first while the items last -- each works once per combat, so
+// there are only ever a few, and spending them beats reflecting ourselves.
 void stallRound() {
-    if (have_skill($skill[Micrometeorite])
-        && to_int(get_property("_micrometeoriteUses")) < 10) {
-        use_skill($skill[Micrometeorite]);
-        return;
-    }
-    if (item_amount($item[Time-Spinner]) > 0) {
-        throw_item($item[Time-Spinner]);
-        return;
-    }
-    if (have_skill($skill[Curse of Weaksauce])
-        && my_mp() >= mp_cost($skill[Curse of Weaksauce])) {
-        use_skill($skill[Curse of Weaksauce]);
-        return;
-    }
     item heal = stallHealing();
-    if (heal != $item[none] && my_hp() * 2 < my_maxhp()) {
+    if (heal != $item[none]) {
         throw_item(heal);
         return;
     }
@@ -247,10 +242,17 @@ void cleanUp() {
     int stallLeft = 0;  // rounds of reflect still to wait out
     while (current_round() > 0) {
         int round = current_round();
+        int hpBefore = my_hp();
         if (stallLeft > 0) {
             stallRound();
-            stallLeft -= 1;
-            if (round == current_round()) {
+            // Only a round that actually happened burns the countdown, and the
+            // special can land again mid-stall -- a blind ten would resume
+            // casting into a reflect that had been renewed under it.
+            if (current_round() > round) {
+                stallLeft -= 1;
+                if (reflectActivated())
+                    stallLeft = 10;
+            } else {
                 loopCount += 1;
                 if (loopCount > 3)
                     abort("May be stuck in an infinite saucegeyser loop");
@@ -298,7 +300,13 @@ void cleanUp() {
         // monster's half of the round, so this is the first moment it can be
         // seen -- and seeing it here is what stops the SECOND cast into it,
         // which is the one that turns a survivable hit into a lost fight.
-        if (stallLeft == 0 && reflectActivated())
+        //
+        // The health test is not redundant with the page read. It costs nothing,
+        // needs no assumption about what a re-fetched fight page still shows,
+        // and catches the reflect from its signature alone: a single round that
+        // takes a large bite out of us is one we just paid for ourselves.
+        if (stallLeft == 0 && my_location() == $location[Mer-kin Colosseum]
+            && (hpBefore - my_hp() > 400 || reflectActivated()))
             stallLeft = 10;
         if (round == current_round()) {
             loopCount += 1;
