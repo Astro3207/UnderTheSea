@@ -211,15 +211,13 @@ boolean reflectActivated() {
 // colosseum round while she is pending.
 //
 // No once-per-combat filter, unlike yogHealing(): an ordinary fight takes a
-// second unguent quite happily, so stock is the only limit. `thrown` is what
-// this stall has already used, subtracted because mafia's inventory count may
-// not fall until the fight ends -- erring toward believing we have fewer than
-// we do costs a plain attack, while erring the other way would submit a throw
-// for an item we no longer hold, and a refused action does not advance the
-// round.
-item stallHealing(int thrown) {
+// second unguent quite happily, so stock is the only limit. item_amount() is
+// read straight -- combat items are deducted as the fight page is parsed, which
+// shubDelevel() below already relies on when it re-checks its stock between
+// funkslings.
+item stallHealing() {
     int reserved = get_property("yogUrtDefeated") == "false" ? 1 : 0;
-    if (item_amount($item[Doc Galaktik's Pungent Unguent]) - thrown > reserved)
+    if (item_amount($item[Doc Galaktik's Pungent Unguent]) > reserved)
         return $item[Doc Galaktik's Pungent Unguent];
     return $item[none];
 }
@@ -235,38 +233,44 @@ item stallHealing(int thrown) {
 // KoL without the round moving. (Their daily counters say nothing about it --
 // _micrometeoriteUses tracks potency decay across fights, not use within one.)
 //
-// What is left always advances: a healing item, which also undoes a round of
-// hits, and a plain attack, whose reflected weapon damage is a fraction of a
-// geyser's. Throw while the stock lasts: an unguent undoes a round of hits
-// and costs nothing the run needs, where a plain attack pays its own weapon
-// damage straight back into us.
-boolean stallRound(int thrown) {
-    item heal = stallHealing(thrown);
-    if (heal != $item[none]) {
-        throw_item(heal);
-        return true;
+// What is left always advances: throwing an item, and a plain attack. Throw
+// while the stock lasts -- NOT for the healing, which is 3-5 HP and beneath
+// notice, but because a thrown item deals no damage and so reflects none.
+// A plain attack pays its own weapon damage straight back into us, which is why
+// it is the floor rather than the choice.
+void stallRound() {
+    item filler = stallHealing();
+    if (filler != $item[none]) {
+        throw_item(filler);
+        return;
     }
     attack();
-    return false;
 }
 
 void cleanUp() {
     develOpeners();
     int loopCount = 0;  // declared outside loop so the guard actually works
-    int stallLeft = 0;    // rounds of reflect still to wait out
-    int stallThrown = 0;  // unguents this stall has already spent
+    int stallLeft = 0;  // rounds of reflect still to wait out
     while (current_round() > 0) {
         int round = current_round();
         int hpBefore = my_hp();
+        // Before acting, not only after. develOpeners() and the colosseum's free
+        // kill both spend rounds ahead of this loop, so the special can already
+        // be live when the ladder takes its first swing -- and that first cast
+        // is the one that loses the fight, not the second.
+        if (stallLeft == 0 && reflectActivated())
+            stallLeft = 10;
         if (stallLeft > 0) {
-            if (stallRound(stallThrown))
-                stallThrown += 1;
+            stallRound();
             // Only a round that actually happened burns the countdown, and the
             // special can land again mid-stall -- a blind ten would resume
-            // casting into a reflect that had been renewed under it.
-            if (current_round() > round) {
+            // casting into a reflect that had been renewed under it. A fight
+            // won on a stall round leaves current_round() at 0, which is
+            // progress, not a stuck round: scoring it as one would abort a
+            // fight we just finished.
+            if (current_round() != round) {
                 stallLeft -= 1;
-                if (reflectActivated())
+                if (current_round() > 0 && reflectActivated())
                     stallLeft = 10;
             } else {
                 loopCount += 1;
