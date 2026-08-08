@@ -7,7 +7,7 @@ import <seedfinder/seedfinder.ash>;
 // uts_postLoopFarmPearls, uts_postLoopCloverFishy and
 // uts_postLoopPrepCodpiece -- see the README for what each does.
 //
-// ─── GLOBALS ──────────────────────────────────────────────────────────────────
+// ─── GLOBALS ──────────────────────────────────────────────────────────────────   
     familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
@@ -126,7 +126,7 @@ import <seedfinder/seedfinder.ash>;
     string saberEquip(location loc) {
         if (saberReady() && saberZone(loc))
             return if_equip($item[Fourth of May Cosplay Saber]);
-        return "";
+            return "";
     }
 
     // Lucky! for the hermit-clover adventures. The august scepter grants it free
@@ -147,7 +147,7 @@ import <seedfinder/seedfinder.ash>;
 
     boolean highShiny(){
         boolean bool;
-        if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
+        if (to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
             bool = true;
         return bool;
     }
@@ -352,8 +352,6 @@ import <seedfinder/seedfinder.ash>;
                     continue;
                 if (ef == $effect[Party Soundtrack] && !have_item($item[Cincho de Mayo]))
                     continue;
-                if (ef == $effect[Who's Going to Pay This Drunken Sailor?] && !have_item($item[Cincho de Mayo]))
-                    continue;
                 if (have_effect(ef) == 0)
                     cli_execute(ef.default);
             }
@@ -393,9 +391,7 @@ import <seedfinder/seedfinder.ash>;
                             && item_amount($item[ultra-soft ferns]) == 0) continue;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
-                        // Ownership first: the cli command hard-errors
-                        // without the helmet.
-                        if (ef == $effect[Apriling Band Patrol Beat] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
+                        if (ef == $effect[Apriling Band Patrol Beat] && (!have_item($item[apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
@@ -834,31 +830,6 @@ import <seedfinder/seedfinder.ash>;
             retrieve_item($item[handful of split pea soup]);
     }
 
-    // Mafia's autorecovery aborts the run when it cannot reach its MP target
-    // -- and with no meat it cannot buy a single restorer. Free rests are
-    // spent first (they cost nothing but compete with the Cincho), then NPC
-    // soda water only while meat covers it.
-    void topUpMp(int target) {
-        while (my_mp() < target
-            && total_free_rests() > to_int(get_property("timesRested")))
-            cli_execute("camp rest free");
-        // Same junk sale post_adv() makes when meat runs low: spare scales
-        // fund the soda water.
-        if (my_mp() < target && my_meat() < 300)
-            foreach it in $items[dull fish scale, rough fish scale]
-                autosell(item_amount(it), it);
-        while (my_mp() < target && my_meat() >= npc_price($item[soda water])) {
-            int need = min((target - my_mp()) / 4 + 1,
-                my_meat() / npc_price($item[soda water]));
-            buy(need, $item[soda water]);
-            use(min(need, item_amount($item[soda water])), $item[soda water]);
-        }
-        if (my_mp() < target)
-            print("MP top-up stalled at " + my_mp() + "/" + target
-                + " -- out of free rests and meat. Autorecovery may abort;"
-                + " sell some junk or fight for meat and rerun.", "red");
-    }
-
     void adv(location loc) {
         adv1(loc);
         post_adv();
@@ -890,7 +861,6 @@ import <seedfinder/seedfinder.ash>;
         write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
         set_ccs("temp");
         set_property("battleAction", "custom combat script");
-        // lowShiny() is now a function in iotm.ash; see the note there.
         if (get_property("questS01OldGuy") == "unstarted"){
             set_property("ascensionTime",time_to_string( ));
             visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman");
@@ -1056,11 +1026,11 @@ import <seedfinder/seedfinder.ash>;
                 scale-mail underwear, Congressional Medal of Insanity,
                 Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
-                    if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
+                    if (it == $item[sea lasso] && (lowShiny == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
                     if (storage_amount(it) == 0){
                         if (it == $item[Congressional Medal of Insanity])
-                            { print("No Congressional Medal of Insanity in storage -- skipping it (optional, the script won't buy one).", "red"); continue; }
+                            abort("Get yer own CMOI, ya filthy animal!");
                         buy_using_storage(it);
                     }
                     take_storage(1, it);
@@ -1241,7 +1211,7 @@ import <seedfinder/seedfinder.ash>;
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio sniper");
-        if (pulls_remaining( ) > reservedPulls())
+        if (pulls_remaining( ) > reservedPulls() && item_amount($item[skate blade]) == 0)
             pullSequence($item[skate blade]);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
@@ -1545,9 +1515,6 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
-    // NCForceEstimate() now lives in iotm.ash so initialization() can consult it
-    // when deciding whether to reserve the free pill for Sneakisol.
-
     boolean MomNCyber(){
         if (have_familiar($familiar[patriotic eagle]) && have_item($item[server room key]) && have_skill($skill[Overclock(10)]) && have_skill($skill[Just the Facts]))
             return true;
@@ -1786,12 +1753,8 @@ void seaMonkees() {
     step("phase: Grandpa unlock (step 4)");
     if (get_property("questS02Monkees") == "step4") {
         use_familiar("-combat");
-        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
-            // The Outpost burglar drops this anyway, so yield the slot if a
-            // reserved item still needs it.
-            if (pulls_remaining() > reservedPulls())
-                pullSequence($item[mer-kin hidepaint]);
-            if (item_amount($item[mer-kin hidepaint]) > 0)
+        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny == false) {
+            if (pullSequence($item[mer-kin hidepaint]));
                 use($item[mer-kin hidepaint]);
         }
         while (get_property("questS02Monkees") == "step4") {
@@ -1969,10 +1932,7 @@ void seaMonkees() {
                 // and doubling the bonus pays most on this table.
                 if (!diverForceReady()) {
                     yellowRayPrep();
-                    if (have_effect($effect[everything looks yellow]) > 0
-                        || (!have_item($item[jurassic parka])
-                            && !have_item($item[April Shower Thoughts shield])))
-                        mood("superitdrop");
+                    mood("superitdrop");
                 }
                 summon($monster[unholy diver]);
             }
@@ -1993,12 +1953,12 @@ void seaMonkees() {
                 && diverTries < 4) {
                 diverTries += 1;
                 if (diverForceReady() || item_amount($item[rusty rivet]) < 4){
-                    if (!use_familiar($familiar[chest mimic]))
-                        use_familiar("itdrop");
-                } else {
-                    if (!use_familiar($familiar[jill-of-all-trades]))
-                        use_familiar("itdrop");
-                }
+                if (!use_familiar($familiar[chest mimic]))
+                    use_familiar("itdrop");
+            } else {
+                if (!use_familiar($familiar[jill-of-all-trades]))
+                    use_familiar("itdrop");
+            }
                 tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
                 if (!diverForceReady()){
                     // Probabilistic roll: now the squint and the ray earn
@@ -2016,14 +1976,13 @@ void seaMonkees() {
                         run_choice(3);
                 } else if (timeSpinnerFight($monster[unholy diver])) {
                 } else if (count_summons() >= 1) {
-                    summon($monster[unholy diver]);
-                    run_combat();
+                summon($monster[unholy diver]);
+                run_combat();
                 } else {
                     break;
                 }
             }
             if (item_amount($item[rusty rivet]) < 8
-                && pulls_remaining() > reservedPulls()
                 && !contains_text(get_property("_roninStoragePulls"), "3604"))
                 pullSequence($item[rusty rivet]);
         } else {
@@ -2048,6 +2007,7 @@ void seaMonkees() {
                 // familiar we give up. Reverts itself once the rivets are in.
                 professorFamiliar();
                 if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
+                    use_familiar("itdrop");
                     if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                         conditional += "spring shoes,";
                     } else if (get_property("heartstoneBanishUnlocked") == "true")
@@ -2591,7 +2551,7 @@ void sorceress() {
         while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
             shadowRift();
 
-        if ((my_turncount( ) > 25 || !have_item_anywhere($item[Miniature crystal ball])) && !highShiny() && have_item($item[closed-circuit pay phone])){
+        if ((my_turncount( ) > 25 || !have_item($item[Miniature crystal ball])) && !highShiny() && have_item($item[closed-circuit pay phone])){
             while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false"))
                 shadowRift();
         }
@@ -2655,7 +2615,7 @@ void sorceress() {
             pullSequence($item[waffle]);
             conditional += "monodent of the sea,";
             conditional += if_equip($item[heartstone]);
-        } else if (have_item_anywhere($item[Miniature crystal ball])){
+        } else if (have_item($item[Miniature crystal ball])){
             conditional += "Miniature crystal ball,";
         }
         if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish")
@@ -2683,10 +2643,10 @@ void sorceress() {
         // Burn shadow affinity if crystal ball shows non-seahorse incoming
         if (contains_text(get_property("crystalBallPredictions"), "The Coral Corral")
             && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse")
-            && have_effect($effect[shadow affinity]) > 0 && have_item_anywhere($item[miniature crystal ball]))
+            && have_effect($effect[shadow affinity]) > 0 && available_amount($item[miniature crystal ball]) > 0)
             shadowRift();
         while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0
-            && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && have_item_anywhere($item[miniature crystal ball]))
+            && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
             shadowRift();
     }
 
@@ -2745,14 +2705,12 @@ void sorceress() {
         maximize("50 spooky res, hp",false);
         while (get_property("dreadScroll3") == "0") {
             restore_hp(1000);
-            topUpMp(150);
             use_skill($skill[deep dark visions]);
         }
     }
 
     // ── YogUrt preparation ────────────────────────────────────────────────────
     step("phase: Yog-Urt preparation");
-    topUpMp(250);
     if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
         if (get_property("isMerkinHighPriest") == "false") {
             if (isKBandSushiEnough() == false || my_path().id == 0){
@@ -2990,15 +2948,14 @@ void sorceress() {
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
 
-        if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny() || pulls_remaining() == 0)){
+        if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny || pulls_remaining() == 0)){
             while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
                 farmPrayerbeads();
             }
         }
 
         // Healscroll pull
-        if (item_amount($item[mer-kin healscroll]) == 0
-            && pulls_remaining() > reservedPulls())
+        if (item_amount($item[mer-kin healscroll]) == 0)
             pullSequence($item[mer-kin healscroll]);
 
         // YogUrt fight
@@ -3025,9 +2982,9 @@ void sorceress() {
             if (!highShiny())
                 conditional += if_equip($item[bat wings]);
 
-            use_familiar($familiar[none]);
+            use_familiar("itdrop");
             tempEquipment("moxie, hot damage, cold damage, spooky damage, sleaze damage, stench damage, -equip tiny yam cannon",
-                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + conditional);
+                "Mer-kin scholar mask, Mer-kin scholar tailpiece," + bathysphere($item[toy cupid bow]) + conditional);
             equip($slot[acc1], $item[mer-kin prayerbeads]);
 
             if (available_amount($item[mer-kin prayerbeads]) >= 3) {
@@ -3050,20 +3007,6 @@ void sorceress() {
                         equip($slot[acc3], $item[mer-kin prayerbeads]);
                     }
                 }
-            }
-            // Yog-Urt's debuff deals ~90% of max HP per round and each
-            // healing item works once, so max HP must stay low enough for
-            // them to out-heal it. Gummiheart's +100 muscle inflates max HP
-            // past that line: strip it, pulling the antidote if needed.
-            if (have_effect($effect[gummiheart]) > 0) {
-                // The antidote costs a pull slot, so keep hands off the
-                // reserved ones -- the Shub deleveler slot is still live
-                // here, and losing it costs far more than this saves.
-                if (item_amount($item[soft green echo eyedrop antidote]) == 0
-                    && pulls_remaining() > reservedPulls())
-                    pullSequence($item[soft green echo eyedrop antidote]);
-                if (item_amount($item[soft green echo eyedrop antidote]) > 0)
-                    cli_execute("uneffect gummiheart");
             }
             if (have_effect($effect[gummiheart]) > 0)
                 abort("Gummiheart is inflating max HP past what the healing items can out-heal, and the pull budget is fully reserved. Remove it (soft green echo eyedrop antidote) or burn its remaining turns, then rerun.");
@@ -3089,7 +3032,6 @@ void sorceress() {
         if (pulls_remaining() > 0) {
             if (item_amount($item[crayon shavings]) < 8)
                 pullSequence($item[null-day exploit]);
-            if (get_property("shubJigguwattDefeated") == "true")
             foreach num in $strings[5401, 3679, 3775, 11583, 7014, 11706] {
                 if (!contains_text(get_property("_roninStoragePulls"), num)) {
                     pullSequence(to_item(num));
@@ -3190,83 +3132,20 @@ void sorceress() {
         if (get_property("shubJigguwattDefeated") == "false") {
             if (my_path().id == 0)
                 retrieve_item(8,$item[crayon shavings]);
-            else if (item_amount($item[crayon shavings]) < 4 && have_effect($effect[null afternoon]) == 0){
-                // The need is 4 shaving-EQUIVALENTS: shubDelevel() throws
-                // the whole deleveler family -- jam band bootleg counts
-                // double (50%), rattler rattle and electronics kit count one
-                // (25%) -- and a refused paw wish ("That wish is quite
-                // impossible") consumes nothing, so testing wishes is free.
-                // Ladder: pull the exploit in place, then free golem fights
-                // (they drop shavings), then an abort naming every exit.
-                if (item_amount($item[null-day exploit]) == 0)
-                    pullSequence($item[null-day exploit]);
+            else if (item_amount($item[crayon shavings]) < 8 && have_effect($effect[null afternoon]) == 0){
                 if (item_amount($item[null-day exploit]) > 0)
                     use($item[null-day exploit]);
-                int delevelUnits = item_amount($item[crayon shavings])
-                    + 2 * item_amount($item[jam band bootleg])
-                    + item_amount($item[rattler rattle])
-                    + item_amount($item[electronics kit]);
-                int golemTries;
-                while (delevelUnits < 4
-                    && have_effect($effect[null afternoon]) == 0
-                    && count_summons() >= 1 && golemTries < 6) {
-                    golemTries += 1;
-                    use_familiar("itdrop");
-                    tempEquipment("item drop", if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
-                    mood("itdrop");
-                    summon($monster[black crayon golem]);
-                    run_combat();
-                    delevelUnits = item_amount($item[crayon shavings])
-                        + 2 * item_amount($item[jam band bootleg])
-                        + item_amount($item[rattler rattle])
-                        + item_amount($item[electronics kit]);
-                }
-                if (delevelUnits < 4
-                    && have_effect($effect[null afternoon]) == 0)
-                    abort("Shub prep is short: need 4 shaving-equivalents"
-                        + " (crayon shavings x1, jam band bootleg x2, rattler"
-                        + " rattle / electronics kit x1) or Null Afternoon."
-                        + " Paw wishes, golem fights and rollover pulls all"
-                        + " work; acquire and rerun.");
             }
             foreach ef in $effects[scarysauce]{
                 if (have_effect(ef) > 0)
-                    cli_execute("uneffect " + ef);
+                    cli_execute("uneffect" + ef);
             }
-            // NO familiar against Shub: he retaliates against familiar
-            // actions, escalating each time, and "itdrop" can resolve to a
-            // familiar that acts.
-            use_familiar($familiar[none]);
-            // Fight rules: damage from any source other than a standard
-            // attack draws 20% of max HP, DOUBLING each instance (hence no
-            // familiar); damage past 500 is crushed to 500+(Z-500)^0.6, so
-            // reliability beats big swings; maxed Damage Absorption still
-            // helps; and the pre-fight bolt hits for half your CURRENT MP,
-            // so walk in empty.
-            tempEquipment("weapon damage, mus, moxie, damage absorption",
-                "mer-kin gladiator mask,mer-kin gladiator tailpiece," + if_equip($item[legendary seal-clubbing club]));
+            use_familiar("itdrop");
+            tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece,");
             set_property("hpAutoRecoveryTarget", "1");
             set_property("mpAutoRecovery", "-0.05");
             set_property("mpAutoRecoveryTarget", "-0.05");
-            // Miss/fumble insurance, both one-fight pulls.
-            if (item_amount($item[gremlin juice]) == 0)
-                pullSequence($item[gremlin juice]);
-            if (item_amount($item[handful of hand chalk]) == 0)
-                pullSequence($item[handful of hand chalk]);
-            if (item_amount($item[gremlin juice]) > 0)
-                use($item[gremlin juice]);
-            if (item_amount($item[handful of hand chalk]) > 0)
-                use($item[handful of hand chalk]);
-            cli_execute("recover hp");
-            // Ruthless Efficiency sharpens the shavings delevel. Cast before
-            // the MP dump while there is still a pool to pay for it; a
-            // redundant recast just feeds the dump.
-            if (have_skill($skill[Ruthless Efficiency]))
-                use_skill($skill[Ruthless Efficiency]);
-            // The MP dump. Empathy is a cheap repeatable sink -- its buff is
-            // irrelevant with no familiar, but emptying the pool blunts the
-            // pre-fight bolt to nothing.
-            cli_execute("cast * empathy");
+            cli_execute("recover hp; cast * empathy");
             adv($location[Mer-kin Temple (Left Door)]);
         }
     }
@@ -3335,8 +3214,8 @@ void main(string... args) {
         // run, which is not what you want when exercising these prefs.
         // Each step still self-gates on its own uts_postLoop* pref, so with
         // none of them set this does nothing but set up and tear down.
-        try {
-            set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+    try {
+        set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
             // Same defensive clear initialization() does: a run killed
             // mid-walk can leave this set, which reduces the CCS to cleanUp().
             set_property("_utsPearlFarm", "false");
