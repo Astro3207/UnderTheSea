@@ -144,21 +144,55 @@ boolean bcz_gaze_ready() {
 // from the attack gate -- a caller that re-enters mid-fight before the
 // delevel lands would re-cast Weaksauce, so keep cleanUp() the only
 // caller and keep it finishing its fights.
-void develOpeners() {
+// Only the bladeswitchers reflect. Scoping on the monster and not the zone
+// matters: the netdragger's runner special deals half your max HP in one round,
+// which is a bigger single hit than the threshold below, and stalling ten rounds
+// against a netdragger -- which heals ~1000 a round -- loses a fight that
+// otherwise ends in four.
+boolean isBladeswitcher() {
+    return last_monster() == $monster[Mer-kin bladeswitcher]
+        || last_monster() == $monster[Ringogeorge, the Bladeswitcher];
+}
+
+// The bladeswitcher's "bust" makes it take 1 damage from all sources and returns
+// the full amount the attack would have dealt to the caster, for ten rounds.
+// Countering it needs Ball Bust, which unlocks on the fifth underwater critical
+// hit with a Mer-kin dodgeball equipped and so is out of reach here, and going
+// physical does not help: the reflect covers every damage source. The answer is
+// to stop dealing damage until it lapses.
+//
+// It has to be read off the fight page rather than inferred from a health drop:
+// main()'s page_text is the round the consult opened on, while cleanUp() runs
+// many rounds inside one invocation, so a stale copy would never show it. The
+// page carries only the most recent round's narrative, which is why this is
+// called as actions are submitted rather than once at the end.
+boolean reflectActivated() {
+    if (!isBladeswitcher() || current_round() == 0)
+        return false;
+    return contains_text(to_string(visit_url("fight.php")),
+        "twirling his blade around himself");
+}
+
+boolean develOpeners() {
     if (have_skill($skill[Micrometeorite])
         && to_int(get_property("_micrometeoriteUses")) < 10
         && current_round() > 0
-        && my_buffedstat($stat[moxie]) + 10 < monster_attack())
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
         use_skill($skill[Micrometeorite]);
+        if (reflectActivated()) return true;
+    }
     if (item_amount($item[Time-Spinner]) > 0
         && current_round() > 0
-        && my_buffedstat($stat[moxie]) + 10 < monster_attack())
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
         throw_item($item[Time-Spinner]);
+        if (reflectActivated()) return true;
+    }
     if (have_skill($skill[Curse of Weaksauce])
         && my_mp() >= mp_cost($skill[Curse of Weaksauce])
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack())
         use_skill($skill[Curse of Weaksauce]);
+    return reflectActivated();
 }
 
 void attackCleanUp() {
@@ -182,11 +216,104 @@ void attackCleanUp() {
 // on plain attacks INSIDE this function: most callers sit in a
 // generated CCS whose next line is a hard abort, so handing back an
 // open fight would kill the run mid-combat.
+// Is there one of these to spare? Yog-Urt's fight throws a sea gel and a
+// Pungent Unguent among others, and the colosseum does not reliably come after
+// her -- the Gummiheart wait can reach a colosseum round while she is pending --
+// so one of each is held back while she is still ahead. Her pulled items (the
+// healscroll, the New Age healing crystal, the soggy used band-aid) are never
+// touched at all.
+//
+// No once-per-combat filter, unlike yogHealing(): an ordinary fight takes a
+// second unguent quite happily, so stock is the only limit. item_amount() is
+// read straight -- combat items are deducted as the fight page is parsed, which
+// shubDelevel() below already relies on when it re-checks its stock between
+// funkslings.
+boolean stallSpare(item it) {
+    int reserved = get_property("yogUrtDefeated") == "false" ? 1 : 0;
+    return item_amount(it) > reserved;
+}
+
+// One round of dealing no damage. Every branch here MUST advance the round: a
+// stall round that does not is indistinguishable from a hung fight, and the
+// guard that catches it aborts while the fight is still open -- the one thing
+// cleanUp() promises never to do.
+//
+// That rules out the free delevelers, tempting as they look. Micrometeorite and
+// the Time-Spinner are once per combat and develOpeners() may already have
+// thrown both at the top of this same cleanUp(), so a second submission risks
+// being refused by KoL without the round moving. (Their daily counters say nothing about it --
+// _micrometeoriteUses tracks potency decay across fights, not use within one.)
+//
+// What is left always advances: throwing an item, and a plain attack. Both
+// thrown items are chosen because a thrown item deals no damage and so reflects
+// none; the difference between them is what they give back.
+//
+// Sea gel restores 500 HP, which is the only thing here that outpaces a stall
+// costing 110-175 a round over ten rounds -- so it leads once the damage has
+// bitten. The unguent heals 3-5, beneath notice, and is simply the cheap way to
+// spend a round; at 30 meat it is the one to burn while HP holds. Gel again
+// when the unguent runs out, since even a wasted heal beats a swing that comes
+// straight back. A plain attack pays its own weapon damage into us, which is
+// why it is the floor rather than a choice.
+void stallRound() {
+    if (my_hp() * 2 < my_maxhp() && stallSpare($item[sea gel])) {
+        throw_item($item[sea gel]);
+        return;
+    }
+    if (stallSpare($item[Doc Galaktik's Pungent Unguent])) {
+        throw_item($item[Doc Galaktik's Pungent Unguent]);
+        return;
+    }
+    if (stallSpare($item[sea gel])) {
+        throw_item($item[sea gel]);
+        return;
+    }
+    attack();
+}
+
 void cleanUp() {
-    develOpeners();
     int loopCount = 0;  // declared outside loop so the guard actually works
+    int stallLeft = 0;  // rounds of reflect still to wait out
+    int stalled = 0;    // stall rounds spent in total, across re-arms
+    // The openers report a reflect that went up while they were being thrown --
+    // the case that loses the fight, since the ladder's first cast would
+    // otherwise go into it.
+    if (develOpeners())
+        stallLeft = 10;
     while (current_round() > 0) {
         int round = current_round();
+        int hpBefore = my_hp();
+        // Before acting, not only after. develOpeners() and the colosseum's free
+        // kill both spend rounds ahead of this loop, so the special can already
+        // be live when the ladder takes its first swing -- and that first cast
+        // is the one that loses the fight, not the second.
+        if (stallLeft == 0 && reflectActivated())
+            stallLeft = 10;
+        if (stallLeft > 0) {
+            stallRound();
+            // Only a round that actually happened burns the countdown, and the
+            // special can land again mid-stall -- a blind ten would resume
+            // casting into a reflect that had been renewed under it. A fight
+            // won on a stall round leaves current_round() at 0, which is
+            // progress, not a stuck round: scoring it as one would abort a
+            // fight we just finished.
+            if (current_round() != round) {
+                stallLeft -= 1;
+                stalled += 1;
+                // Re-arm only while there is still something to stall WITH.
+                // Past the item budget every further round is a plain attack,
+                // which feeds the reflect -- better to take the fight back and
+                // let it end one way or the other than to idle out the round
+                // limit.
+                if (current_round() > 0 && stalled < 14 && reflectActivated())
+                    stallLeft = 10;
+            } else {
+                loopCount += 1;
+                if (loopCount > 3)
+                    abort("May be stuck in an infinite saucegeyser loop");
+            }
+            continue;
+        }
         // Affordability ladder, not a skill-ownership fork: a geyser-knower
         // whose MP has dropped into saucestorm range still storms instead
         // of handing the fight to plain attacks. A Seal Clubber smacks
@@ -224,6 +351,18 @@ void cleanUp() {
             attackCleanUp();
             break;
         }
+        // Checked after acting, not before: the special resolves in the
+        // monster's half of the round, so this is the first moment it can be
+        // seen -- and seeing it here is what stops the SECOND cast into it,
+        // which is the one that turns a survivable hit into a lost fight.
+        //
+        // The health test is not redundant with the page read. It costs nothing,
+        // needs no assumption about what a re-fetched fight page still shows,
+        // and catches the reflect from its signature alone: a single round that
+        // takes a large bite out of us is one we just paid for ourselves.
+        if (stallLeft == 0 && isBladeswitcher()
+            && (hpBefore - my_hp() > 400 || reflectActivated()))
+            stallLeft = 10;
         if (round == current_round()) {
             loopCount += 1;
             if (loopCount > 3)

@@ -2799,6 +2799,29 @@ void gladiatorGearStep() {
 // refund a round. Split out of the loop in sorceress() for the same reason as
 // gladiatorGearStep().
 void colosseumRound() {
+    // Fund the bladeswitcher stall. Its reflect costs ten rounds of dealing no
+    // damage, and the unguent is 30 meat over the counter in Market Square --
+    // restockable, and clear of both the pulled scrolls and the sand-penny items
+    // Yog-Urt is fought with. Eleven: ten to stall on, one left for her fight.
+    //
+    // Here rather than before the loop in sorceress() because that is not the
+    // only way in: the Gummiheart wait reaches colosseum rounds through
+    // burnTurnElsewhere(), which never passes that line. Restocking per round
+    // also refills between fights, and costs an inventory check once the stock
+    // is up.
+    if (item_amount($item[Doc Galaktik's Pungent Unguent]) < 11)
+        cli_execute("acquire 11 Doc Galaktik's Pungent Unguent");
+    // The unguent only buys rounds; sea gel is what keeps us alive through them
+    // at 500 HP a throw, against a stall costing 110-175 a round. Five: four to
+    // spend, one left for Yog-Urt. Ten sand pennies each, and pennies drop from
+    // every combat, but the buy still waits for a full price so a thin purse is
+    // left for the ladder that spends it later.
+    while (item_amount($item[sea gel]) < 5
+        && item_amount($item[sand penny]) >= 10) {
+        // Both conditions only move on a successful buy, so a refused one would
+        // spin here -- and this runs every colosseum round, not once.
+        if (!buy($coinmaster[Wet Crap For Sale], 1, $item[sea gel])) break;
+    }
     string freeFight;
     if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
         freeFight = "legendary seal-clubbing club,";
