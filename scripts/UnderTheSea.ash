@@ -2370,8 +2370,22 @@ void pearlResCheck(location zone) {
         topUpMp(30);
     mood(elem + "res");
     mood("combat");
-    if (numeric_modifier(elem + " resistance") < 18)
+    // Same lapsed-buff trap as the resistance below, one step nastier.
+    // Driving Waterproofly is what lets swimmingTrunks() and
+    // bathysphere() hand their slots to the maximizer, so a zone prepped
+    // while it was up carries no breathing gear at all -- and when it
+    // runs out mid-zone the next dive dies on "You can't breathe
+    // underwater". Fishy does not cover this: it is what gets you into
+    // the Sea, not what lets you breathe there. Re-dressing re-pins the
+    // trunks and the bathysphere now that the effect is gone.
+    if (!boolean_modifier("Adventure Underwater")
+        || numeric_modifier(elem + " resistance") < 18)
         pearlZonePrep(zone);
+    if (!boolean_modifier("Adventure Underwater"))
+        abort("Pearl farming can't breathe in " + zone
+            + ": Driving Waterproofly has lapsed and no underwater gear could be"
+            + " equipped in its place. Re-drive Waterproofly or free up the pants"
+            + " slot for the swimming trunks, then rerun.");
     if (numeric_modifier(elem + " resistance") < 18)
         abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
             + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
@@ -2417,12 +2431,6 @@ void pullEverything() {
         cli_execute("pull all");
 }
 
-// uts_postLoopCloverFishy: top Fishy up with a Lucky! visit to The
-// Brinier Deepers -- The Haggling grants 20 turns, and works even at
-// 0 Fishy for 2 adventures instead of 1 -- so the walk keeps going
-// where it would otherwise stop. Aug 2nd casts are free Lucky!; after
-// those, an 11-leaf clover from inventory or, when mafia may buy from
-// the hermit, his daily three.
 // The postloop's adventure top-up: crack the six-pack if needed, Ode up,
 // drink pilsners until the target is met. Returns whether it got there,
 // so callers can tell "topped up" from "genuinely dry". Bails the moment
@@ -2486,6 +2494,12 @@ string cloverFishyBlocker() {
     return "";
 }
 
+// uts_postLoopCloverFishy: top Fishy up with a Lucky! visit to The
+// Brinier Deepers -- The Haggling grants 20 turns, and works even at
+// 0 Fishy for 2 adventures instead of 1 -- so the walk keeps going
+// where it would otherwise stop. Aug 2nd casts are free Lucky!; after
+// those, an 11-leaf clover from inventory or, when mafia may buy from
+// the hermit, his daily three.
 boolean cloverFishy(location zone) {
     if (cloverFishyBlocker() != "")
         return false;
@@ -2509,8 +2523,12 @@ boolean cloverFishy(location zone) {
     adv1($location[The Brinier Deepers]);
     // A wanderer can spend the turn without spending the Lucky!; one
     // more visit collects The Haggling. At 0 Fishy it costs 2 turns.
+    // > 2, not > 1: this second dive plus the pearl turn it exists to
+    // enable is the same "cost + 1" budget the blocker enforces. At
+    // exactly 2 the dive would land 20 Fishy and leave nothing to spend
+    // it on, throwing the clover away.
     if (have_effect($effect[Fishy]) == 0
-        && have_effect($effect[Lucky!]) > 0 && my_adventures() > 1)
+        && have_effect($effect[Lucky!]) > 0 && my_adventures() > 2)
         adv1($location[The Brinier Deepers]);
     boolean fishy = have_effect($effect[Fishy]) > 0;
     // The dive's maximize stripped the pearl gear; a still-live zone gets
@@ -2619,9 +2637,12 @@ void pearlPostloop() {
             abort("uts_runOutEagleBanish: out of Fishy after " + spent
                 + " turns with the re-aim unfinished.");
         // Same pilsner ladder as the in-run diet, shared with cloverFishy().
-        if (!gainAdventures(1))
-            abort("postloop: out of adventures, and no astral pilsner could be drunk"
-                + " (none left, or the liver is full).");
+        // Deliberately not fatal: a farm that spends its last adventure on
+        // its last pearl arrives here dry with a liver full of the pilsners
+        // that got it this far, and that is a finished farm, not a failure.
+        // Zone selection below breaks cleanly when nothing is unclaimed, and
+        // the mid-zone stop after it aborts if work really does remain.
+        gainAdventures(1);
         // Rundown-only, like the Fishy stop above: a five-zone farm
         // legitimately needs ~50 turns, and the farm has its own 90-turn
         // guard at the mid-zone checks -- ungated, this cap strangled it.
