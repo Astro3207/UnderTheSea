@@ -201,25 +201,21 @@ boolean reflectActivated() {
         "twirling his blade around himself");
 }
 
-// What the stall spends: Doc Galaktik's Pungent Unguent, 30 meat over the
-// counter in Market Square and restockable at will. Deliberately not
-// yogHealing()'s list -- her fight also wants a healscroll, a New Age healing
-// crystal and a soggy used band-aid, each of which costs a pull, and her sea gel
-// and waterlogged scroll are capped by the sand pennies on hand. One unguent is
-// still held back while she is ahead, since her fight throws one too and the
-// colosseum does not reliably come after her: the Gummiheart wait can reach a
-// colosseum round while she is pending.
+// Is there one of these to spare? Yog-Urt's fight throws a sea gel and a
+// Pungent Unguent among others, and the colosseum does not reliably come after
+// her -- the Gummiheart wait can reach a colosseum round while she is pending --
+// so one of each is held back while she is still ahead. Her pulled items (the
+// healscroll, the New Age healing crystal, the soggy used band-aid) are never
+// touched at all.
 //
 // No once-per-combat filter, unlike yogHealing(): an ordinary fight takes a
 // second unguent quite happily, so stock is the only limit. item_amount() is
 // read straight -- combat items are deducted as the fight page is parsed, which
 // shubDelevel() below already relies on when it re-checks its stock between
 // funkslings.
-item stallHealing() {
+boolean stallSpare(item it) {
     int reserved = get_property("yogUrtDefeated") == "false" ? 1 : 0;
-    if (item_amount($item[Doc Galaktik's Pungent Unguent]) > reserved)
-        return $item[Doc Galaktik's Pungent Unguent];
-    return $item[none];
+    return item_amount(it) > reserved;
 }
 
 // One round of dealing no damage. Every branch here MUST advance the round: a
@@ -233,15 +229,28 @@ item stallHealing() {
 // KoL without the round moving. (Their daily counters say nothing about it --
 // _micrometeoriteUses tracks potency decay across fights, not use within one.)
 //
-// What is left always advances: throwing an item, and a plain attack. Throw
-// while the stock lasts -- NOT for the healing, which is 3-5 HP and beneath
-// notice, but because a thrown item deals no damage and so reflects none.
-// A plain attack pays its own weapon damage straight back into us, which is why
-// it is the floor rather than the choice.
+// What is left always advances: throwing an item, and a plain attack. Both
+// thrown items are chosen because a thrown item deals no damage and so reflects
+// none; the difference between them is what they give back.
+//
+// Sea gel restores 500 HP, which is the only thing here that outpaces a stall
+// costing 110-175 a round over ten rounds -- so it leads once the damage has
+// bitten. The unguent heals 3-5, beneath notice, and is simply the cheap way to
+// spend a round; at 30 meat it is the one to burn while HP holds. Gel again
+// when the unguent runs out, since even a wasted heal beats a swing that comes
+// straight back. A plain attack pays its own weapon damage into us, which is
+// why it is the floor rather than a choice.
 void stallRound() {
-    item filler = stallHealing();
-    if (filler != $item[none]) {
-        throw_item(filler);
+    if (my_hp() * 2 < my_maxhp() && stallSpare($item[sea gel])) {
+        throw_item($item[sea gel]);
+        return;
+    }
+    if (stallSpare($item[Doc Galaktik's Pungent Unguent])) {
+        throw_item($item[Doc Galaktik's Pungent Unguent]);
+        return;
+    }
+    if (stallSpare($item[sea gel])) {
+        throw_item($item[sea gel]);
         return;
     }
     attack();
