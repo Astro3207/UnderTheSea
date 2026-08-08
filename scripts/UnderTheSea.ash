@@ -3496,6 +3496,13 @@ void sorceress() {
 
         // ── Colosseum ─────────────────────────────────────────────────────────────
         step("phase: colosseum");
+        // Fund the bladeswitcher stall before stepping in. Its reflect costs ten
+        // rounds of dealing no damage, and the unguent is 30 meat from Doc
+        // Galaktik's -- restockable, and clear of both the pulled scrolls and the
+        // sand-penny items Yog-Urt is fought with. Eleven: ten to stall on, one
+        // left for her own fight.
+        if (item_amount($item[Doc Galaktik's Pungent Unguent]) < 11)
+            cli_execute("acquire 11 Doc Galaktik's Pungent Unguent");
         while (to_int(get_property("lastColosseumRoundWon")) < 15) {
             colosseumRound();
         }

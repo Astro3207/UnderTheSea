@@ -201,25 +201,26 @@ boolean reflectActivated() {
         "twirling his blade around himself");
 }
 
-// What the stall may spend, which is deliberately not yogHealing()'s list.
-// Yog-Urt is fought with one sea gel, one waterlogged scroll, a healscroll, a
-// New Age healing crystal and a soggy used band-aid, and the last three each
-// cost a pull -- so the stall takes none of them. It spends only the two the
-// Old Man restocks for sand pennies, which drop from every combat, and only the
-// surplus above the one of each Yog-Urt still has to be fought with. The order
-// matters because the colosseum does not always come after her: the Gummiheart
-// wait can reach a colosseum round while she is still ahead.
+// What the stall spends: Doc Galaktik's Pungent Unguent, 30 meat over the
+// counter in Market Square and restockable at will. Deliberately not
+// yogHealing()'s list -- her fight also wants a healscroll, a New Age healing
+// crystal and a soggy used band-aid, each of which costs a pull, and her sea gel
+// and waterlogged scroll are capped by the sand pennies on hand. One unguent is
+// still held back while she is ahead, since her fight throws one too and the
+// colosseum does not reliably come after her: the Gummiheart wait can reach a
+// colosseum round while she is pending.
 //
-// Each healing item also works only once per combat, so this reports honestly
-// when the fight has used what it can rather than killing the run mid-stall --
-// the stall falls through to plain attacks, which is a safe floor.
-item stallHealing() {
+// No once-per-combat filter, unlike yogHealing(): an ordinary fight takes a
+// second unguent quite happily, so stock is the only limit. `thrown` is what
+// this stall has already used, subtracted because mafia's inventory count may
+// not fall until the fight ends -- erring toward believing we have fewer than
+// we do costs a plain attack, while erring the other way would submit a throw
+// for an item we no longer hold, and a refused action does not advance the
+// round.
+item stallHealing(int thrown) {
     int reserved = get_property("yogUrtDefeated") == "false" ? 1 : 0;
-    foreach it in $items[sea gel,waterlogged scroll of healing]{
-        if (item_amount(it) > reserved
-            && !contains_text(get_property("_lastCombatActions"),to_int(it)))
-            return it;
-    }
+    if (item_amount($item[Doc Galaktik's Pungent Unguent]) - thrown > reserved)
+        return $item[Doc Galaktik's Pungent Unguent];
     return $item[none];
 }
 
@@ -236,26 +237,30 @@ item stallHealing() {
 //
 // What is left always advances: a healing item, which also undoes a round of
 // hits, and a plain attack, whose reflected weapon damage is a fraction of a
-// geyser's. Heal first while the items last -- each works once per combat, so
-// there are only ever a few, and spending them beats reflecting ourselves.
-void stallRound() {
-    item heal = stallHealing();
+// geyser's. Throw while the stock lasts: an unguent undoes a round of hits
+// and costs nothing the run needs, where a plain attack pays its own weapon
+// damage straight back into us.
+boolean stallRound(int thrown) {
+    item heal = stallHealing(thrown);
     if (heal != $item[none]) {
         throw_item(heal);
-        return;
+        return true;
     }
     attack();
+    return false;
 }
 
 void cleanUp() {
     develOpeners();
     int loopCount = 0;  // declared outside loop so the guard actually works
-    int stallLeft = 0;  // rounds of reflect still to wait out
+    int stallLeft = 0;    // rounds of reflect still to wait out
+    int stallThrown = 0;  // unguents this stall has already spent
     while (current_round() > 0) {
         int round = current_round();
         int hpBefore = my_hp();
         if (stallLeft > 0) {
-            stallRound();
+            if (stallRound(stallThrown))
+                stallThrown += 1;
             // Only a round that actually happened burns the countdown, and the
             // special can land again mid-stall -- a blind ten would resume
             // casting into a reflect that had been renewed under it.
