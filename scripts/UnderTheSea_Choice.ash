@@ -247,19 +247,39 @@ void main(int whichchoice, string page) {
             break;
 
         // ── Mobius strip ──────────────────────────────────────────────────
-        // Meat first, in descending value. Investment tips leaves a Stock
-        // Certificate that appreciates to 5,000 meat over 500 turns; Repay
-        // yourself (offered after a borrow) trades 10 meat for Gaining
-        // Interest, +30% Meat from Monsters for 50 turns; Borrow meat is a
-        // flat +1,000 now. ("from your future self" was dropped: that
-        // keyword matched the STEAL option -- random food and booze, no
-        // meat.) Mind your own business is the do-nothing exit when every
-        // meat option is spent.
+        // Meat, in descending value, one option per encounter. Fixing the
+        // race outranks everything while the trifecta's Marked by the Don
+        // (-HP per combat) is up: it clears the bleed and Favored by the
+        // Don pays meat per combat for 100 turns. Then the trifecta's flat
+        // 5,000, selling a banked gun (2,546), the certificate that
+        // appreciates to 5,000 over 500 turns, the +30% meat buff, the
+        // flat 1,000 borrow, and grabbing the gun to sell next encounter.
+        // ("from your future self" was dropped: that keyword matched the
+        // STEAL option -- random food and booze, no meat.) A priority
+        // list, not a per-encounter table: every option is offered every
+        // encounter, so the order IS the strategy.
         case 1562:
-            if (!pickChoice("investment tips")
-                && !pickChoice("Repay yourself in the past")
-                && !pickChoice("Borrow meat from your future"))
-                pickChoice("Mind your own business");
+            string [int] mobiusMeat = {
+                0: "Fix the race",
+                1: "long odds on the trifecta",
+                2: "Sell the gun",
+                3: "investment tips",
+                4: "Repay yourself in the past",
+                5: "Borrow meat from your future",
+                6: "free gun",
+                7: "Mind your own business"
+            };
+            boolean mobiusAnswered;
+            foreach i in mobiusMeat {
+                if (pickChoice(mobiusMeat[i])) {
+                    mobiusAnswered = true;
+                    break;
+                }
+            }
+            // Never leave the page live: an unanswered choice drops mafia
+            // to manual control mid-automation (same guard as case 1525).
+            if (!mobiusAnswered)
+                run_choice(1);
             break;
 
         // ── Peridot monsters ───────────────────────────────────────
