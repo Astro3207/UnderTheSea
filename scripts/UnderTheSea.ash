@@ -2817,8 +2817,11 @@ void colosseumRound() {
     // every combat, but the buy still waits for a full price so a thin purse is
     // left for the ladder that spends it later.
     while (item_amount($item[sea gel]) < 5
-        && item_amount($item[sand penny]) >= 10)
-        buy($coinmaster[Wet Crap For Sale], 1, $item[sea gel]);
+        && item_amount($item[sand penny]) >= 10) {
+        // Both conditions only move on a successful buy, so a refused one would
+        // spin here -- and this runs every colosseum round, not once.
+        if (!buy($coinmaster[Wet Crap For Sale], 1, $item[sea gel])) break;
+    }
     string freeFight;
     if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
         freeFight = "legendary seal-clubbing club,";
