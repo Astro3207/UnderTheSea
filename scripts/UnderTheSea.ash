@@ -723,6 +723,33 @@ import <seedfinder/seedfinder.ash>;
             cli_execute("rest");
     }
 
+    // Mafia's recovery thresholds are ratios of max HP, but what this script
+    // actually wants is an absolute floor -- 570 HP, or 800 in the gymnasium,
+    // or full in the colosseum. Storing an absolute as a ratio means the ratio
+    // is only true for the gear it was computed in, so it has to be recomputed
+    // whenever the outfit moves max HP. post_adv() does that after every adv();
+    // the pearl walk has to ask for it, because adv1() does not go through
+    // post_adv() and its per-zone re-dress swings max HP by about half.
+    void setRecoveryTargets() {
+        float mpTar = min(1, 250 / to_float(my_maxmp()));
+        float hpTar;
+        if (my_location() == $location[mer-kin colosseum]){
+            hpTar = 1;
+        } else if (my_location() == $location[mer-kin gymnasium]){
+            hpTar = min(1, 800 / to_float(my_maxhp()));
+        } else {
+            hpTar = min(1, 570 / to_float(my_maxhp()));
+        }
+        string hpAutoRecovery = to_float(round(hpTar * 0.75 * 10000))/10000;
+        string hpAutoRecoveryTarget = to_float(round(hpTar * 10000))/10000;
+        string mpAutoRecovery = to_float(round(mpTar * 0.5 * 10000))/10000;
+        string mpAutoRecoveryTarget = to_float(round(mpTar * 10000))/10000;
+        set_property("hpAutoRecovery",       hpAutoRecovery);
+        set_property("hpAutoRecoveryTarget", hpAutoRecoveryTarget);
+        set_property("mpAutoRecovery",       mpAutoRecovery);
+        set_property("mpAutoRecoveryTarget", mpAutoRecoveryTarget);
+    }
+
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
             // liftBeatenUp() rather than the old inline pair: with the
@@ -900,23 +927,7 @@ import <seedfinder/seedfinder.ash>;
             }
         }
 
-        float mpTar = min(1, 250 / to_float(my_maxmp()));
-        float hpTar;
-        if (my_location() == $location[mer-kin colosseum]){
-            hpTar = 1;
-        } else if (my_location() == $location[mer-kin gymnasium]){
-            hpTar = min(1, 800 / to_float(my_maxhp()));
-        } else {
-            hpTar = min(1, 570 / to_float(my_maxhp()));
-        }
-        string hpAutoRecovery = to_float(round(hpTar * 0.75 * 10000))/10000;
-        string hpAutoRecoveryTarget = to_float(round(hpTar * 10000))/10000;
-        string mpAutoRecovery = to_float(round(mpTar * 0.5 * 10000))/10000;
-        string mpAutoRecoveryTarget = to_float(round(mpTar * 10000))/10000;
-        set_property("hpAutoRecovery",       hpAutoRecovery);
-        set_property("hpAutoRecoveryTarget", hpAutoRecoveryTarget);
-        set_property("mpAutoRecovery",       mpAutoRecovery);
-        set_property("mpAutoRecoveryTarget", mpAutoRecoveryTarget);
+        setRecoveryTargets();
 
         if (item_amount($item[whirled peas]) >= 2)
             retrieve_item($item[handful of split pea soup]);
@@ -2394,6 +2405,13 @@ void pearlResCheck(location zone) {
         abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
             + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
             + " is up; add " + elem + " resistance gear or buffs and rerun.");
+    // Last, once the gear above is settled: the walk's outfit carries no HP
+    // weight, so max HP here is roughly half what it is in the run proper, and
+    // a threshold computed back then leaves mafia waiting until a couple of
+    // hundred HP to heal. These zones take 100-180 a fight and give back about
+    // eight, so that is a slow slide into a lost combat rather than a fight
+    // anyone could see coming.
+    setRecoveryTargets();
 }
 
 // The walker's Beaten Up guard, called before each of its adventuring
