@@ -2433,7 +2433,8 @@ boolean gainAdventures(int target) {
         if (item_amount($item[astral pilsner]) == 0
             && item_amount($item[astral six-pack]) > 0)
             use($item[astral six-pack]);
-        if (item_amount($item[astral pilsner]) == 0)
+        if (item_amount($item[astral pilsner]) == 0
+            || my_inebriety() >= inebriety_limit())
             return false;
         cli_execute("shrug Donho's Bubbly Ballad");
         if (have_skill($skill[The Ode to Booze]))
@@ -2445,6 +2446,15 @@ boolean gainAdventures(int target) {
     return true;
 }
 
+// What the Lucky! dive costs. The Haggling grants its full 20 turns
+// either way, but encountering it with no Fishy left costs two
+// adventures instead of one -- so topping up on the LAST turn of Fishy
+// is strictly cheaper, and keeps The Brinier Deepers reachable while we
+// are still fishy rather than betting on gear for underwater access.
+int cloverFishyCost() {
+    return have_effect($effect[Fishy]) > 0 ? 1 : 2;
+}
+
 // Why a Lucky! Fishy top-up could not run, or "" when it can. Named
 // rather than folded into cloverFishy's boolean so the caller's abort
 // can say which precondition failed: "out of Fishy" while the pref is
@@ -2453,11 +2463,16 @@ boolean gainAdventures(int target) {
 string cloverFishyBlocker() {
     if (get_property("uts_postLoopCloverFishy") != "true")
         return "uts_postLoopCloverFishy is not set";
-    // The dive spends one turn, or two when it starts at 0 Fishy, so two
-    // is the true floor -- and a pilsner can supply them.
-    if (my_adventures() < 2 && item_amount($item[astral pilsner]) == 0
-        && item_amount($item[astral six-pack]) == 0)
-        return "only " + my_adventures() + " adventures left and no astral pilsner to drink";
+    // The dive itself, plus the pearl turn it exists to enable -- a top
+    // up that leaves nothing to spend afterwards burns the clover for
+    // no progress.
+    int need = cloverFishyCost() + 1;
+    if (my_adventures() < need
+        && !(my_inebriety() < inebriety_limit()
+            && (item_amount($item[astral pilsner]) > 0
+                || item_amount($item[astral six-pack]) > 0)))
+        return "needs " + need + " adventures, has " + my_adventures()
+            + ", and no drinkable astral pilsner to cover the difference";
     if (!can_adventure($location[The Brinier Deepers]))
         return "The Brinier Deepers isn't reachable (underwater access -- check the swimming trunks)";
     if (have_effect($effect[Lucky!]) == 0
@@ -2476,21 +2491,12 @@ boolean cloverFishy(location zone) {
         return false;
     // Adventures are topped up rather than treated as a hard block: the
     // walker's own pilsner ladder sits further down the loop and only
-    // fires at exactly zero, so a farm two adventures short aborted
-    // "out of Fishy" with pilsners still in the inventory.
-    if (!gainAdventures(2))
-        return false;
-    // getLucky()'s clover branch exits the script when no clover can be
-    // had, so only enter it on a guaranteed path: Lucky! already up, a
-    // free Aug. 2nd cast, a clover in inventory, or hermit stock that
-    // mafia is permitted to buy (autoSatisfyWithCoinmasters).
-    boolean aug2Free = have_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day])
-        && get_property("_aug2Cast") == "false"
-        && to_int(get_property("_augSkillsCast")) < 5;
-    if (have_effect($effect[Lucky!]) == 0 && !aug2Free
-        && item_amount($item[11-leaf clover]) == 0
-        && !(get_property("autoSatisfyWithCoinmasters") == "true"
-            && to_int(get_property("_cloversPurchased")) < 3))
+    // fires at exactly zero, so a farm a turn or two short aborted "out
+    // of Fishy" with pilsners still in the inventory. The Lucky! source
+    // was already proved by the blocker above -- getLucky()'s clover
+    // branch exits the script when none can be had, which is why that
+    // check has to happen before we call it.
+    if (!gainAdventures(cloverFishyCost() + 1))
         return false;
     getLucky();
     if (have_effect($effect[Lucky!]) == 0)
@@ -2614,7 +2620,8 @@ void pearlPostloop() {
                 + " turns with the re-aim unfinished.");
         // Same pilsner ladder as the in-run diet, shared with cloverFishy().
         if (!gainAdventures(1))
-            abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
+            abort("postloop: out of adventures, and no astral pilsner could be drunk"
+                + " (none left, or the liver is full).");
         // Rundown-only, like the Fishy stop above: a five-zone farm
         // legitimately needs ~50 turns, and the farm has its own 90-turn
         // guard at the mid-zone checks -- ungated, this cap strangled it.
@@ -2640,12 +2647,20 @@ void pearlPostloop() {
             }
             pearlZonePrep(current);
         }
-        if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
-            abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
-                + claimed + " pearls claimed; today's zone progress won't survive rollover."
-                + (cloverFishyBlocker() == ""
-                    ? " The Lucky! top-up was available but didn't land -- check The Brinier Deepers by hand."
-                    : " The Lucky! top-up couldn't run: " + cloverFishyBlocker() + "."));
+        // Top up on the LAST turn of Fishy, not after it runs out: The
+        // Haggling costs one adventure while fishy and two from zero.
+        // Read the blocker first -- cloverFishy() spends the very things
+        // it names (the clover, the pilsner), so asking afterwards
+        // reports the aftermath instead of the cause.
+        if (have_effect($effect[Fishy]) <= 1) {
+            string fishyBlocker = cloverFishyBlocker();
+            if (!cloverFishy(current) && have_effect($effect[Fishy]) == 0)
+                abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
+                    + claimed + " pearls claimed; today's zone progress won't survive rollover."
+                    + (fishyBlocker == ""
+                        ? " The Lucky! top-up was available but didn't land -- check The Brinier Deepers by hand."
+                        : " The Lucky! top-up couldn't run: " + fishyBlocker + "."));
+        }
         if (my_adventures() == 0)
             abort("postloop pearls: out of adventures mid-zone after " + spent + " turns with "
                 + claimed + " pearls claimed; today's zone progress won't survive rollover.");
