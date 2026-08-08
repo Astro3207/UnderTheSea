@@ -199,6 +199,13 @@ void cleanUp() {
         if (my_class() == $class[seal clubber]
             && have_skill($skill[Lunging Thrust-Smack])
             && my_buffedstat($stat[muscle]) >= my_buffedstat($stat[mysticality])
+            // The colosseum phase maximizes spell damage, but on a Seal
+            // Clubber whose muscle still leads -- so the stat test above
+            // cannot see that build and has to be told. Measured in the
+            // same trip: a geyser hit a gladiator for 1880 where the smack
+            // did 480, and a netdragger heals ~1000 a round, which is the
+            // difference between killing it and never touching it.
+            && my_location() != $location[Mer-kin Colosseum]
             // Physical-resistant monsters (shadow rift creatures are 100%,
             // vs a 90% elemental cap) turn LTS into a ~1-damage grind to
             // the 30-round loss; leave them to the spells.
