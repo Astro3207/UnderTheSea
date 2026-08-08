@@ -2769,6 +2769,32 @@ void prepCodpiece() {
 
 // ─── SORCERESS ────────────────────────────────────────────────────────────────
 
+// The places the run can spend a turn that it owed anyway, tried in the same
+// order the Deep-Tainted Mind loop in sorceress() uses them. A blocking effect
+// only ticks down on turns actually spent, so this is how the script waits one
+// out without wasting anything. Returns false when there is nowhere left to
+// run, or when a pass burned no turn at all (free fights cannot tick an effect
+// down, so a caller that kept asking would spin forever) -- either way the
+// caller's cue to stop asking and say so out loud.
+// TODO: the Deep-Tainted Mind loop still open-codes this same ladder; it wants
+// a "no sink" / "no turn" distinction of its own before it can share this.
+boolean burnTurnElsewhere() {
+    int before = my_adventures();
+    if (get_property("skateParkStatus") == "war"
+        && !contains_text($location[The Skate Park].noncombat_queue,
+            "Holey Rollers")) {
+        skatePark();
+    } else if (item_amount($item[Mer-kin thighguard]) == 0
+        || item_amount($item[Mer-kin headguard]) == 0) {
+        gymnasium();
+        if (get_property("_skateBuff1") == "false")
+            visit_url("sea_skatepark.php?action=state2buff1");
+    } else if (get_property("questS02Monkees") == "step12") {
+        finishCaliginous();
+    } else return false;
+    return my_adventures() < before;
+}
+
 void sorceress() {
 
     // ── Shadow rift prep ─────────────────────────────────────────────────────
@@ -3250,6 +3276,22 @@ void sorceress() {
 
         // YogUrt fight
         if (get_property("yogUrtDefeated") == "false") {
+            // Gummiheart's +100 Muscle inflates max HP, and Yog-Urt's debuff
+            // scales with max HP while the healing items below heal fixed
+            // amounts -- so it has to go before the cocoon is cast, not after.
+            // Every real source is short (the PYEC grants 5 turns, a gummi
+            // trick-or-treat monster 10) while the gladiator-gear grind that
+            // follows this fight ran 28 turns last run, so wait it out on work
+            // the run already owes rather than spend a pull slot on an antidote.
+            // Path 55 is the gate: a path-0 Yog-Urt run never reaches that
+            // grind, so it has nowhere to burn and the abort below is all we
+            // have for it.
+            if (have_effect($effect[gummiheart]) > 0 && my_path().id == 55) {
+                while (have_effect($effect[gummiheart]) > 0
+                    && my_adventures() > 0) {
+                    if (!burnTurnElsewhere()) break;
+                }
+            }
             cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
             if (delevelers() < 2 && !contains_text(get_property("_roninStoragePulls"), "10641") && pulls_remaining() > 0){
                 pullSequence($item[null-day exploit]);
@@ -3313,7 +3355,7 @@ void sorceress() {
                     cli_execute("uneffect gummiheart");
             }
             if (have_effect($effect[gummiheart]) > 0)
-                abort("Gummiheart is inflating max HP past what the healing items can out-heal, and the pull budget is fully reserved. Remove it (soft green echo eyedrop antidote) or burn its remaining turns, then rerun.");
+                abort("Gummiheart is inflating max HP past what the healing items can out-heal, there was nowhere left to burn its remaining turns, and the pull budget is fully reserved. Spend them anywhere, or remove it (soft green echo eyedrop antidote), then rerun.");
             adv($location[Mer-kin Temple (Right Door)]);
         }
     }
