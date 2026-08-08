@@ -2381,10 +2381,14 @@ void pearlResCheck(location zone) {
     if (!boolean_modifier("Adventure Underwater")
         || numeric_modifier(elem + " resistance") < 18)
         pearlZonePrep(zone);
+    // Backstop only: when the trunks are simply absent, the re-dress
+    // above already died inside tempEquipment with "Missing <item>".
+    // This catches the quieter case -- a path where swimmingTrunks() has
+    // nothing to offer at all -- rather than diving and failing.
     if (!boolean_modifier("Adventure Underwater"))
         abort("Pearl farming can't breathe in " + zone
-            + ": Driving Waterproofly has lapsed and no underwater gear could be"
-            + " equipped in its place. Re-drive Waterproofly or free up the pants"
+            + ": Driving Waterproofly has lapsed and nothing in the outfit grants"
+            + " underwater access. Re-drive Waterproofly or free up the pants"
             + " slot for the swimming trunks, then rerun.");
     if (numeric_modifier(elem + " resistance") < 18)
         abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
@@ -2438,11 +2442,14 @@ void pullEverything() {
 boolean gainAdventures(int target) {
     while (my_adventures() < target) {
         int before = my_adventures();
+        // Liver first: no point breaking the seal on a six-pack we could
+        // not drink from anyway.
+        if (my_inebriety() >= inebriety_limit())
+            return false;
         if (item_amount($item[astral pilsner]) == 0
             && item_amount($item[astral six-pack]) > 0)
             use($item[astral six-pack]);
-        if (item_amount($item[astral pilsner]) == 0
-            || my_inebriety() >= inebriety_limit())
+        if (item_amount($item[astral pilsner]) == 0)
             return false;
         cli_execute("shrug Donho's Bubbly Ballad");
         if (have_skill($skill[The Ode to Booze]))
@@ -2522,13 +2529,15 @@ boolean cloverFishy(location zone) {
     tempEquipment("combat", swimmingTrunks() + bathysphere($item[none]));
     adv1($location[The Brinier Deepers]);
     // A wanderer can spend the turn without spending the Lucky!; one
-    // more visit collects The Haggling. At 0 Fishy it costs 2 turns.
-    // > 2, not > 1: this second dive plus the pearl turn it exists to
-    // enable is the same "cost + 1" budget the blocker enforces. At
-    // exactly 2 the dive would land 20 Fishy and leave nothing to spend
-    // it on, throwing the clover away.
+    // more visit collects The Haggling. Fund the retry the same way the
+    // first dive was funded rather than testing the counter raw: the
+    // Lucky! is already paid for, so giving up here with pilsners still
+    // drinkable throws the clover away. cloverFishyCost() now reads 2 --
+    // the first dive spent the last of the Fishy -- so this asks for the
+    // retry plus the pearl turn it exists to enable.
     if (have_effect($effect[Fishy]) == 0
-        && have_effect($effect[Lucky!]) > 0 && my_adventures() > 2)
+        && have_effect($effect[Lucky!]) > 0
+        && gainAdventures(cloverFishyCost() + 1))
         adv1($location[The Brinier Deepers]);
     boolean fishy = have_effect($effect[Fishy]) > 0;
     // The dive's maximize stripped the pearl gear; a still-live zone gets
@@ -2643,6 +2652,14 @@ void pearlPostloop() {
         // Zone selection below breaks cleanly when nothing is unclaimed, and
         // the mid-zone stop after it aborts if work really does remain.
         gainAdventures(1);
+        // The rundown, unlike the farm, has nothing useful to break out
+        // to: falling through with no adventures lands on the "no open
+        // pearl zone" abort, which blames a missing zone for what is
+        // really an empty turn budget.
+        if (rundown && my_adventures() == 0)
+            abort("uts_runOutEagleBanish: out of adventures with the re-aim"
+                + " unfinished, and no astral pilsner could be drunk"
+                + " (none left, or the liver is full).");
         // Rundown-only, like the Fishy stop above: a five-zone farm
         // legitimately needs ~50 turns, and the farm has its own 90-turn
         // guard at the mid-zone checks -- ungated, this cap strangled it.
@@ -2679,7 +2696,10 @@ void pearlPostloop() {
                 abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
                     + claimed + " pearls claimed; today's zone progress won't survive rollover."
                     + (fishyBlocker == ""
-                        ? " The Lucky! top-up was available but didn't land -- check The Brinier Deepers by hand."
+                        ? " The Lucky! top-up cleared its preconditions but didn't land --"
+                            + " the clover may not have been obtainable (the hermit wants"
+                            + " worthless items), or wanderers ate the dive; check The"
+                            + " Brinier Deepers by hand."
                         : " The Lucky! top-up couldn't run: " + fishyBlocker + "."));
         }
         if (my_adventures() == 0)
