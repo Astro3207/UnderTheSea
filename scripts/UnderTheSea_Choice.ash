@@ -247,20 +247,39 @@ void main(int whichchoice, string page) {
             break;
 
         // ── Mobius strip ──────────────────────────────────────────────────
+        // Meat, in descending value, one option per encounter. Fixing the
+        // race outranks everything while the trifecta's Marked by the Don
+        // (-HP per combat) is up: it clears the bleed and Favored by the
+        // Don pays meat per combat for 100 turns. Then the trifecta's flat
+        // 5,000, selling a banked gun (2,546), the certificate that
+        // appreciates to 5,000 over 500 turns, the +30% meat buff, the
+        // flat 1,000 borrow, and grabbing the gun to sell next encounter.
+        // ("from your future self" was dropped: that keyword matched the
+        // STEAL option -- random food and booze, no meat.) A priority
+        // list, not a per-encounter table: every option is offered every
+        // encounter, so the order IS the strategy.
         case 1562:
-            string [int] mobiusKeywords = {
-                1: "arch-nemesis",
-                2: "trifecta",
-                3: "Go back and write a best-seller",
-                4: "Replace your novel with AI drivel"
+            string [int] mobiusMeat = {
+                0: "Fix the race",
+                1: "long odds on the trifecta",
+                2: "Sell the gun",
+                3: "investment tips",
+                4: "Repay yourself in the past",
+                5: "Borrow meat from your future",
+                6: "free gun",
+                7: "Mind your own business"
             };
-            int encounter = to_int(get_property("_mobiusStripEncounters"));
-            if (mobiusKeywords contains encounter)
-                pickChoice(mobiusKeywords[encounter]);
-            else{
-                if (!pickChoice("investment tips"))
-                    pickChoice("from your future self");
+            boolean mobiusAnswered;
+            foreach i in mobiusMeat {
+                if (pickChoice(mobiusMeat[i])) {
+                    mobiusAnswered = true;
+                    break;
+                }
             }
+            // Never leave the page live: an unanswered choice drops mafia
+            // to manual control mid-automation (same guard as case 1525).
+            if (!mobiusAnswered)
+                run_choice(1);
             break;
 
         // ── Peridot monsters ───────────────────────────────────────

@@ -118,26 +118,74 @@ boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
-// Finish off the enemy with saucegeyser, guarded against infinite loops
-void cleanUp() {
-    int loopCount = 0;  // declared outside loop so the guard actually works
-    while (current_round() > 0) {
-        int round = current_round();
-        if (have_skill($skill[saucegeyser])){
-            use_skill($skill[saucegeyser]);
-        } else {
-            if (have_skill($skill[Stuffed Mortar Shell]))
-                use_skill($skill[Stuffed Mortar Shell]);
-            use_skill($skill[saucestorm]);
-        }
-        if (round == current_round()) {
-            loopCount += 1;
-            if (loopCount > 3)
-                abort("May be stuck in an infinite saucegeyser loop");
-        }
-        if (my_mp() < 24)
-            break;
+// Free-ish delevel openers before the damage loop: Micrometeorite costs
+// 0 MP, the Time-Spinner's combat toss is free (its minutes only gate
+// the travel menu), and Curse of Weaksauce is 8 MP. Each fires only
+// while the monster can still hurt us -- the same moxie-vs-attack test
+// yogDeleveler() uses -- so trivial fights skip straight to damage and
+// already-deleveled bosses (Yog after her own CCS phase) are left
+// alone. monster_attack() tracks in-fight delevels, so each landed
+// opener re-tightens the gate for the next. Re-entry safety comes from
+// the current_round() guards (a finished fight casts nothing), NOT
+// from the attack gate -- a caller that re-enters mid-fight before the
+// delevel lands would re-cast Weaksauce, so keep cleanUp() the only
+// caller and keep it finishing its fights.
+// Only the bladeswitchers reflect. Scoping on the monster and not the zone
+// matters: the netdragger's runner special deals half your max HP in one round,
+// which is a bigger single hit than the threshold below, and stalling ten rounds
+// against a netdragger -- which heals ~1000 a round -- loses a fight that
+// otherwise ends in four.
+boolean isBladeswitcher() {
+    return last_monster() == $monster[Mer-kin bladeswitcher]
+        || last_monster() == $monster[Ringogeorge, the Bladeswitcher];
+}
+
+// The bladeswitcher's "bust" makes it take 1 damage from all sources and returns
+// the full amount the attack would have dealt to the caster, for ten rounds.
+// Countering it needs Ball Bust, which unlocks on the fifth underwater critical
+// hit with a Mer-kin dodgeball equipped and so is out of reach here, and going
+// physical does not help: the reflect covers every damage source. The answer is
+// to stop dealing damage until it lapses.
+//
+// It has to be read off the fight page rather than inferred from a health drop:
+// main()'s page_text is the round the consult opened on, while cleanUp() runs
+// many rounds inside one invocation, so a stale copy would never show it. The
+// page carries only the most recent round's narrative, which is why this is
+// called as actions are submitted rather than once at the end.
+//
+// Two messages, not one. The twirl is the reflect going live; the dope move is
+// the wind-up a round earlier, and catching that is a round of warning the
+// activation alone cannot give. Stalling on the wind-up costs at most one round
+// of damage we might have been allowed, and the countdown re-arms off the twirl
+// when it lands, so an early stall corrects itself.
+boolean reflectImminent() {
+    if (!isBladeswitcher() || current_round() == 0)
+        return false;
+    string p = to_string(visit_url("fight.php"));
+    return contains_text(p, "twirling his blade around himself")
+        || contains_text(p, "an especially dope move");
+}
+
+boolean develOpeners() {
+    if (have_skill($skill[Micrometeorite])
+        && to_int(get_property("_micrometeoriteUses")) < 10
+        && current_round() > 0
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
+        use_skill($skill[Micrometeorite]);
+        if (reflectImminent()) return true;
     }
+    if (item_amount($item[Time-Spinner]) > 0
+        && current_round() > 0
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
+        throw_item($item[Time-Spinner]);
+        if (reflectImminent()) return true;
+    }
+    if (have_skill($skill[Curse of Weaksauce])
+        && my_mp() >= mp_cost($skill[Curse of Weaksauce])
+        && current_round() > 0
+        && my_buffedstat($stat[moxie]) + 10 < monster_attack())
+        use_skill($skill[Curse of Weaksauce]);
+    return reflectImminent();
 }
 
 void attackCleanUp() {
@@ -152,6 +200,171 @@ void attackCleanUp() {
         }
     }
 }
+
+// Finish off the enemy with saucegeyser, guarded against infinite loops.
+// Every cast is affordability-checked in place: mafia skips an
+// unaffordable in-combat cast WITHOUT advancing the round, so a fixed
+// MP floor that disagrees with the effective cost turns the stall guard
+// into a mid-fight abort. When no cast is affordable the fight finishes
+// on plain attacks INSIDE this function: most callers sit in a
+// generated CCS whose next line is a hard abort, so handing back an
+// open fight would kill the run mid-combat.
+// Is there one of these to spare? Yog-Urt's fight throws a sea gel and a
+// Pungent Unguent among others, and the colosseum does not reliably come after
+// her -- the Gummiheart wait can reach a colosseum round while she is pending --
+// so one of each is held back while she is still ahead. Her pulled items (the
+// healscroll, the New Age healing crystal, the soggy used band-aid) are never
+// touched at all.
+//
+// No once-per-combat filter, unlike yogHealing(): an ordinary fight takes a
+// second unguent quite happily, so stock is the only limit. item_amount() is
+// read straight -- combat items are deducted as the fight page is parsed, which
+// shubDelevel() below already relies on when it re-checks its stock between
+// funkslings.
+boolean stallSpare(item it) {
+    int reserved = get_property("yogUrtDefeated") == "false" ? 1 : 0;
+    return item_amount(it) > reserved;
+}
+
+// One round of dealing no damage. Every branch here MUST advance the round: a
+// stall round that does not is indistinguishable from a hung fight, and the
+// guard that catches it aborts while the fight is still open -- the one thing
+// cleanUp() promises never to do.
+//
+// That rules out the free delevelers, tempting as they look. Micrometeorite and
+// the Time-Spinner are once per combat and develOpeners() may already have
+// thrown both at the top of this same cleanUp(), so a second submission risks
+// being refused by KoL without the round moving. (Their daily counters say nothing about it --
+// _micrometeoriteUses tracks potency decay across fights, not use within one.)
+//
+// What is left always advances: throwing an item, and a plain attack. Both
+// thrown items are chosen because a thrown item deals no damage and so reflects
+// none; the difference between them is what they give back.
+//
+// Sea gel restores 500 HP, which is the only thing here that outpaces a stall
+// costing 110-175 a round over ten rounds -- so it leads once the damage has
+// bitten. The unguent heals 3-5, beneath notice, and is simply the cheap way to
+// spend a round; at 30 meat it is the one to burn while HP holds. Gel again
+// when the unguent runs out, since even a wasted heal beats a swing that comes
+// straight back. A plain attack pays its own weapon damage into us, which is
+// why it is the floor rather than a choice.
+void stallRound() {
+    if (my_hp() * 2 < my_maxhp() && stallSpare($item[sea gel])) {
+        throw_item($item[sea gel]);
+        return;
+    }
+    if (stallSpare($item[Doc Galaktik's Pungent Unguent])) {
+        throw_item($item[Doc Galaktik's Pungent Unguent]);
+        return;
+    }
+    if (stallSpare($item[sea gel])) {
+        throw_item($item[sea gel]);
+        return;
+    }
+    attack();
+}
+
+void cleanUp() {
+    int loopCount = 0;  // declared outside loop so the guard actually works
+    int stallLeft = 0;  // rounds of reflect still to wait out
+    int stalled = 0;    // stall rounds spent in total, across re-arms
+    // The openers report a reflect that went up while they were being thrown --
+    // the case that loses the fight, since the ladder's first cast would
+    // otherwise go into it.
+    if (develOpeners())
+        stallLeft = 10;
+    while (current_round() > 0) {
+        int round = current_round();
+        int hpBefore = my_hp();
+        // Before acting, not only after. develOpeners() and the colosseum's free
+        // kill both spend rounds ahead of this loop, so the special can already
+        // be live when the ladder takes its first swing -- and that first cast
+        // is the one that loses the fight, not the second.
+        if (stallLeft == 0 && reflectImminent())
+            stallLeft = 10;
+        if (stallLeft > 0) {
+            stallRound();
+            // Only a round that actually happened burns the countdown, and the
+            // special can land again mid-stall -- a blind ten would resume
+            // casting into a reflect that had been renewed under it. A fight
+            // won on a stall round leaves current_round() at 0, which is
+            // progress, not a stuck round: scoring it as one would abort a
+            // fight we just finished.
+            if (current_round() != round) {
+                stallLeft -= 1;
+                stalled += 1;
+                // Re-arm only while there is still something to stall WITH.
+                // Past the item budget every further round is a plain attack,
+                // which feeds the reflect -- better to take the fight back and
+                // let it end one way or the other than to idle out the round
+                // limit.
+                if (current_round() > 0 && stalled < 14 && reflectImminent())
+                    stallLeft = 10;
+            } else {
+                loopCount += 1;
+                if (loopCount > 3)
+                    abort("May be stuck in an infinite saucegeyser loop");
+            }
+            continue;
+        }
+        // Affordability ladder, not a skill-ownership fork: a geyser-knower
+        // whose MP has dropped into saucestorm range still storms instead
+        // of handing the fight to plain attacks. A Seal Clubber smacks
+        // with muscle instead of casting off a dump stat -- Lunging
+        // Thrust-Smack hits harder and more often -- EXCEPT when the
+        // current outfit was built as a spell nuke (the Sorceress phase
+        // maximizes "spell damage percent, mys"): buffed mys above buffed
+        // muscle means the geyser is the prepared weapon, keep it.
+        if (my_class() == $class[seal clubber]
+            && have_skill($skill[Lunging Thrust-Smack])
+            && my_buffedstat($stat[muscle]) >= my_buffedstat($stat[mysticality])
+            // The colosseum phase maximizes spell damage, but on a Seal
+            // Clubber whose muscle still leads -- so the stat test above
+            // cannot see that build and has to be told. Measured in the
+            // same trip: a geyser hit a gladiator for 1880 where the smack
+            // did 480, and a netdragger heals ~1000 a round, which is the
+            // difference between killing it and never touching it.
+            && my_location() != $location[Mer-kin Colosseum]
+            // Physical-resistant monsters (shadow rift creatures are 100%,
+            // vs a 90% elemental cap) turn LTS into a ~1-damage grind to
+            // the 30-round loss; leave them to the spells.
+            && last_monster().physical_resistance < 50
+            && my_mp() >= mp_cost($skill[Lunging Thrust-Smack])) {
+            use_skill($skill[Lunging Thrust-Smack]);
+        } else if (have_skill($skill[saucegeyser])
+            && my_mp() >= mp_cost($skill[saucegeyser])) {
+            use_skill($skill[saucegeyser]);
+        } else if (have_skill($skill[saucestorm])
+            && my_mp() >= mp_cost($skill[saucestorm])) {
+            if (have_skill($skill[Stuffed Mortar Shell])
+                && my_mp() >= mp_cost($skill[Stuffed Mortar Shell]) + mp_cost($skill[saucestorm]))
+                use_skill($skill[Stuffed Mortar Shell]);
+            use_skill($skill[saucestorm]);
+        } else {
+            attackCleanUp();
+            break;
+        }
+        // Checked after acting, not before: the special resolves in the
+        // monster's half of the round, so this is the first moment it can be
+        // seen -- and seeing it here is what stops the SECOND cast into it,
+        // which is the one that turns a survivable hit into a lost fight.
+        //
+        // The health test is not redundant with the page read. It costs nothing,
+        // needs no assumption about what a re-fetched fight page still shows,
+        // and catches the reflect from its signature alone: a single round that
+        // takes a large bite out of us is one we just paid for ourselves.
+        if (stallLeft == 0 && isBladeswitcher()
+            && (hpBefore - my_hp() > 400 || reflectImminent()))
+            stallLeft = 10;
+        if (round == current_round()) {
+            loopCount += 1;
+            if (loopCount > 3)
+                abort("May be stuck in an infinite saucegeyser loop");
+        }
+    }
+}
+
+
 
 item yogDeleveler(){
     if (my_buffedstat($stat[moxie]) + 10 > monster_attack( ) )
@@ -189,6 +402,41 @@ item bangB(){
     return $item[none];
 }
 
+// Shub's percentage delevelers, strongest first: jam band bootleg 50%,
+// crayon shavings 30%, rattler rattle and electronics kit 25%.
+// All multiplicative, none deal damage (which would trigger his doubling
+// 20%-max-HP retaliation).
+item shubDeleveler() {
+    foreach it in $items[jam band bootleg, crayon shavings, rattler rattle,
+        electronics kit] {
+        if (item_amount(it) > 0)
+            return it;
+    }
+    return $item[none];
+}
+
+// Throw delevelers until his attack multiplier is floored (~x0.25),
+// funkslinging same-item pairs while worthwhile. Two bootlegs, four
+// shavings, or a mix all land in 2-4 rounds.
+void shubDelevel() {
+    float remaining = 1.0;
+    while (remaining > 0.05 && current_round() > 0) {
+        item d = shubDeleveler();
+        if (d == $item[none])
+            break;
+        // Factor table lives in iotm.ash, shared with the prep projection.
+        float f = shubDelevelFactor(d);
+        if (item_amount(d) >= 2 && (remaining * f * f) >= 0.2
+            && have_skill($skill[Ambidextrous Funkslinging])) {
+            throw_items(d, d);
+            remaining = remaining * f * f;
+        } else {
+            throw_item(d);
+            remaining = remaining * f;
+        }
+    }
+}
+
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
@@ -196,6 +444,9 @@ void main(int round, monster mob, string page_text) {
     // copies advance neither a zone's pearl progress nor screechCombats,
     // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
+        // cleanUp() finishes MP-dry fights on plain attacks itself now;
+        // these are fights the walker already priced as winnable at full
+        // strength, and only a plain win ticks pearl progress.
         cleanUp();
         return;
     }
@@ -826,10 +1077,8 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Left Door)]:
-            if (have_effect($effect[null afternoon]) == 0){
-                for i from 1 to 4
-                    throw_items($item[crayon shavings], $item[crayon shavings]);
-            }
+            if (have_effect($effect[null afternoon]) == 0)
+                shubDelevel();
             while (current_round() > 0)
                 attack();
             break;
@@ -838,8 +1087,8 @@ void main(int round, monster mob, string page_text) {
             // Raise Backup Dancer is a Pastamancer skill; it is only a damage boost
             // here, so skip it rather than erroring out on accounts without it.
             if (have_skill($skill[raise backup dancer])) {
-            use_skill($skill[raise backup dancer]);
-            use_skill($skill[raise backup dancer]);
+                use_skill($skill[raise backup dancer]);
+                use_skill($skill[raise backup dancer]);
             }
             cleanUp();
             break;
@@ -864,8 +1113,8 @@ void main(int round, monster mob, string page_text) {
                 attack();
             }
             if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
-                for i from 1 to 4
-                    throw_items($item[crayon shavings], $item[crayon shavings]);
+                if (have_effect($effect[null afternoon]) == 0)
+                    shubDelevel();
                 while (current_round() > 0)
                     attack();
             }
