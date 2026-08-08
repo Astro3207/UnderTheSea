@@ -201,12 +201,23 @@ boolean reflectActivated() {
         "twirling his blade around himself");
 }
 
-// yogHealing()'s no-abort twin. Each healing item works once per combat, so this
-// walks the same list and reports honestly when the fight has used them all
-// rather than killing the run mid-stall.
+// What the stall may spend, which is deliberately not yogHealing()'s list.
+// Yog-Urt is fought with one sea gel, one waterlogged scroll, a healscroll, a
+// New Age healing crystal and a soggy used band-aid, and the last three each
+// cost a pull -- so the stall takes none of them. It spends only the two the
+// Old Man restocks for sand pennies, which drop from every combat, and only the
+// surplus above the one of each Yog-Urt still has to be fought with. The order
+// matters because the colosseum does not always come after her: the Gummiheart
+// wait can reach a colosseum round while she is still ahead.
+//
+// Each healing item also works only once per combat, so this reports honestly
+// when the fight has used what it can rather than killing the run mid-stall --
+// the stall falls through to plain attacks, which is a safe floor.
 item stallHealing() {
-    foreach it in $items[sea gel,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
-        if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
+    int reserved = get_property("yogUrtDefeated") == "false" ? 1 : 0;
+    foreach it in $items[sea gel,waterlogged scroll of healing]{
+        if (item_amount(it) > reserved
+            && !contains_text(get_property("_lastCombatActions"),to_int(it)))
             return it;
     }
     return $item[none];
