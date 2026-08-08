@@ -2799,6 +2799,18 @@ void gladiatorGearStep() {
 // refund a round. Split out of the loop in sorceress() for the same reason as
 // gladiatorGearStep().
 void colosseumRound() {
+    // Fund the bladeswitcher stall. Its reflect costs ten rounds of dealing no
+    // damage, and the unguent is 30 meat over the counter in Market Square --
+    // restockable, and clear of both the pulled scrolls and the sand-penny items
+    // Yog-Urt is fought with. Eleven: ten to stall on, one left for her fight.
+    //
+    // Here rather than before the loop in sorceress() because that is not the
+    // only way in: the Gummiheart wait reaches colosseum rounds through
+    // burnTurnElsewhere(), which never passes that line. Restocking per round
+    // also refills between fights, and costs an inventory check once the stock
+    // is up.
+    if (item_amount($item[Doc Galaktik's Pungent Unguent]) < 11)
+        cli_execute("acquire 11 Doc Galaktik's Pungent Unguent");
     string freeFight;
     if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
         freeFight = "legendary seal-clubbing club,";
@@ -3496,13 +3508,6 @@ void sorceress() {
 
         // ── Colosseum ─────────────────────────────────────────────────────────────
         step("phase: colosseum");
-        // Fund the bladeswitcher stall before stepping in. Its reflect costs ten
-        // rounds of dealing no damage, and the unguent is 30 meat from Doc
-        // Galaktik's -- restockable, and clear of both the pulled scrolls and the
-        // sand-penny items Yog-Urt is fought with. Eleven: ten to stall on, one
-        // left for her own fight.
-        if (item_amount($item[Doc Galaktik's Pungent Unguent]) < 11)
-            cli_execute("acquire 11 Doc Galaktik's Pungent Unguent");
         while (to_int(get_property("lastColosseumRoundWon")) < 15) {
             colosseumRound();
         }
