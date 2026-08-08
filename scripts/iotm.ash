@@ -1537,11 +1537,11 @@ void pullChecklist() {
             continue;
         }
         // Never auto-bought (see the pull loop) -- flag it as a nice-to-have.
-        if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0) {
+        if (it == $item[Congressional Medal of Insanity] && storage_amount(it) == 0 && get_inventory()[it] == 0) {
             print("✗ " + it + " — optional, the script won't buy one", "red");
             continue;
         }
-        if (storage_amount(it) > 0)
+        if (storage_amount(it) > 0 || get_inventory()[it] > 0)
             print("✓ " + it, "blue");
         else if (is_tradeable(it))
             print("✗ " + it + " — will be mall-bought if the route needs it", "red");

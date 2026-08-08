@@ -23,8 +23,7 @@ void free_kill(string ptext, boolean drop) {
     boolean clubbed;
     foreach freeskill in $skills[Spit jurassic acid, Assert your Authority,
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
-        BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit,
-        Asdon Martin: Missile Launcher] {
+        BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
         // Colosseum gladiators are insta-kill immune: damage-based
         // instakills only glance (observed for shadow bricks; the wiki
         // gives X-Ray and Shattering Punch the same immune-monster damage
@@ -289,7 +288,7 @@ item shubDeleveler() {
 // shavings, or a mix all land in 2-4 rounds.
 void shubDelevel() {
     float remaining = 1.0;
-    while (remaining > 0.25 && current_round() > 0) {
+    while (remaining > 0.05 && current_round() > 0) {
         item d = shubDeleveler();
         if (d == $item[none])
             break;
