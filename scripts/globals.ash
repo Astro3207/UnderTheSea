@@ -68,6 +68,65 @@ import <seedfinder/seedfinder.ash>;
         return false;
     }
 
+    // Returns true if this monster can prvoide a free fight
+    boolean free_monster(monster mob) {
+        return $monsters[black crayon golem, time cop, sausage goblin,
+            kid who is too old to be Trick-or-Treating,
+            suburban security civilian, vandal kid] contains mob;
+    }
+
+// Account states
+    boolean highShiny() {
+        return to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure"));
+    }
+
+    boolean lowShiny() {
+        return !have_item($item[2002 Mr. Store Catalog])
+            && !have_item($item[cursed monkey's paw])
+            && !have_item($item[august scepter]);
+    }
+
+    int count_summons(){
+        int n;
+        if (get_property("_photocopyUsed") == "false")
+            n += 1;
+        if (available_amount($item[combat lover's locket]) > 0){
+            string [int] lockets = split_string(get_property("_locketMonstersFought"), ",");
+            n += 3-count(lockets);
+        }
+        if (have_familiar($familiar[chest mimic]))
+            n += floor($familiar[chest mimic].experience/200);
+        return n;
+    }
+
+    boolean gotPeriled (location loc){
+        string [int] perilLoc = split_string(get_property("_perilLocations"),",");
+        foreach num in perilLoc{
+            if (perilLoc[num].to_int().to_location() == loc)
+                return true;
+        }
+        return false;
+    }
+
+    int seedPoss(){
+        SeedData[int] possibleSeeds=find_seeds();
+        return count(possibleSeeds);
+    }
+
+    boolean isKBandSushiEnough(){
+        SeedData[int] possibleSeeds=find_seeds();
+        boolean bool = true;
+        string DS4to7poss;
+        foreach idx, seed in possibleSeeds {
+            if (!contains_text(DS4to7poss,possibleSeeds[idx].dreadscroll[4]+":"+possibleSeeds[idx].dreadscroll[7])){
+                DS4to7poss += possibleSeeds[idx].dreadscroll[4]+":"+possibleSeeds[idx].dreadscroll[7];
+            } else {
+                bool = false;
+            }
+        }
+        return bool;
+    }
+
 // Game Mechanics
     boolean pulledToday(item it) {
         string [int] pulledToday = split_string(get_property("_roninStoragePulls"), ",");
@@ -131,31 +190,43 @@ import <seedfinder/seedfinder.ash>;
         print("UTS: " + msg, "blue");
     }
 
-// Account states
-    boolean highShiny() {
-        return to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure"));
-    }
-
-    boolean lowShiny() {
-        return !have_item($item[2002 Mr. Store Catalog])
-            && !have_item($item[cursed monkey's paw])
-            && !have_item($item[august scepter]);
-    }
-
-    int count_summons(){
-        int n;
-        if (get_property("_photocopyUsed") == "false")
-            n += 1;
-        if (available_amount($item[combat lover's locket]) > 0){
-            string [int] lockets = split_string(get_property("_locketMonstersFought"), ",");
-            n += 3-count(lockets);
-        }
-        if (have_familiar($familiar[chest mimic]))
-            n += floor($familiar[chest mimic].experience/200);
-        return n;
-    }
-
 // ─── EQUIPMENT AND OUTFIT HELPERS ───────────────────────────────────────────
+        void codpiece(string input) {
+        if (!have_item($item[The Eternity Codpiece]))
+            return;
+        visit_url("inventory.php?action=docodpiece");
+        if (input == "none") {
+            string verify = visit_url("inventory.php?action=docodpiece");
+            if (!contains_text(verify, " mounted in slot #"))
+                return;
+            for slots from 1 to 5 {
+                if (contains_text(verify," Empty slot #" + slots )){
+                    continue;
+                } else {
+                    visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
+                }
+            }
+        } else {
+            string [int] slots = split_string(input, ",");
+            foreach num in slots {
+                if (available_amount(to_item(slots[num])) == 0 ){
+                    slots[num] = "";
+                    continue;
+                }
+                visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
+                    + "&iid=" + to_int(to_item(slots[num])));
+            }
+            string verify = visit_url("inventory.php?action=docodpiece");
+            foreach num in slots {
+                if (slots[num] == "")
+                    continue;
+                if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
+                    abort("Codpiece slot incorrect");
+            }
+        }
+        cli_execute("refresh inv");
+    }
+
     // Return equip text or empty if unavailable.
     string if_equip(item it) {
         if ($items[baseball diamond, peridot of peril, heartstone, blood cubic zirconia] contains it)
@@ -248,42 +319,6 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
-    void codpiece(string input) {
-        if (!have_item($item[The Eternity Codpiece]))
-            return;
-        visit_url("inventory.php?action=docodpiece");
-        if (input == "none") {
-            string verify = visit_url("inventory.php?action=docodpiece");
-            if (!contains_text(verify, " mounted in slot #"))
-                return;
-            for slots from 1 to 5 {
-                if (contains_text(verify," Empty slot #" + slots )){
-                    continue;
-                } else {
-                    visit_url("choice.php?whichchoice=1588&option=2&which=" + slots);
-                }
-            }
-        } else {
-            string [int] slots = split_string(input, ",");
-            foreach num in slots {
-                if (available_amount(to_item(slots[num])) == 0 ){
-                    slots[num] = "";
-                    continue;
-                }
-                visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
-                    + "&iid=" + to_int(to_item(slots[num])));
-            }
-            string verify = visit_url("inventory.php?action=docodpiece");
-            foreach num in slots {
-                if (slots[num] == "")
-                    continue;
-                if (!contains_text(verify, to_item(slots[num]) + " mounted in slot #" + (num + 1)))
-                    abort("Codpiece slot incorrect");
-            }
-        }
-        cli_execute("refresh inv");
-    }
-
     int baseballPlayers(){
         string [int] lineup = split_string(get_property("baseballTeam"), ",");
         int players;
@@ -303,6 +338,23 @@ import <seedfinder/seedfinder.ash>;
             else if (have_item($item[April Shower Thoughts shield]))
                 create($item[spitball]);
         }
+    }
+
+    int BCZcost(string BCZskill) {
+        int cast = to_int(get_property("_bcz" + BCZskill));
+        if (cast == 12) return 420000;
+        if (cast > 12) cast -= 1;
+        int castMathFloor = floor(cast / 3);
+        int castMathModulo = cast % 3;
+        int substatBase;
+        switch (castMathModulo) {
+            case 0: substatBase = 11; break;
+            case 1: substatBase = 23; break;
+            case 2: substatBase = 37; break;
+        }
+        // Pattern: 11, 23, 37, 110, 230, 370, ... 13th cast handled separately but unreachable
+        return substatBase * 10 ** ((cast < 12 || (cast > 12 && castMathModulo == 0))
+            ? castMathFloor : castMathFloor + 1);
     }
 
     string freeKill() {
@@ -389,14 +441,6 @@ import <seedfinder/seedfinder.ash>;
     }
 
 // Quest Related Functions
-    void blackGlass(){
-        use_familiar("itdrop");
-        equip($item[really, really nice swimming trunks]);
-        visit_url("monkeycastle.php?who=1");
-        if (available_amount($item[black glass]) == 0) 
-            buy($coinmaster[Big Brother], 1, $item[black glass]);
-    }
-
     string adjacentCaverns(int x_coor, int y_coor) {
         buffer buf;
         int [int] nums = {
@@ -523,16 +567,6 @@ import <seedfinder/seedfinder.ash>;
     }
 
 //Non-equipment iotm related functions
-    void useMapIfAvailable() {
-        if (highShiny()) return;
-        if (!have_equipped($item[backup camera])) return;
-        if (free_monster(get_property("lastCopyableMonster").to_monster())) return;
-        if (get_property("_mapToACandyRichBlockUsed") == "false" && item_amount($item[map to a candy-rich block]) > 0) 
-            use($item[map to a candy-rich block]);
-        if (get_property("_mapToACandyRichBlockUsed") == "true")
-            candy("fight");
-    }
-
     boolean parkaForceAvailable(){
         if (have_item($item[jurassic parka]) && to_int(get_property("_spikolodonSpikeUses")) < 5)
             return true;
@@ -1184,15 +1218,6 @@ void extractJelly(monster mob, string page_text) {
     use_skill($skill[Extract Jelly]);
 }
 
-// Returns true if this monster provides a free fight. Lives here (not the
-// CCS) so the re-roll policies below can refuse to waste a cast on one:
-// free wanderers also burn delay, advancing turns_spent wherever they land.
-boolean free_monster(monster mob) {
-    return $monsters[black crayon golem, time cop, sausage goblin,
-        kid who is too old to be Trick-or-Treating,
-        suburban security civilian, vandal kid] contains mob;
-}
-
 // Casts whichever re-roller is available: Macrometeorite (Meteor Lore, 10 a
 // day, no equipment slot) first, the glove's CHEAT CODE second. On true the
 // fight holds a NEW monster and the caller MUST re-dispatch the CCS main()
@@ -1418,6 +1443,16 @@ void candy(string action) {
     }
 }
 
+void useMapIfAvailable() {
+    if (highShiny()) return;
+    if (!have_equipped($item[backup camera])) return;
+    if (free_monster(get_property("lastCopyableMonster").to_monster())) return;
+    if (get_property("_mapToACandyRichBlockUsed") == "false" && item_amount($item[map to a candy-rich block]) > 0) 
+        use($item[map to a candy-rich block]);
+    if (get_property("_mapToACandyRichBlockUsed") == "true")
+        candy("fight");
+}
+
 int [string] clan_to_ID {
     "Hyrule" : 72876,
     "Dread and Final" : 2047010985,
@@ -1544,23 +1579,6 @@ void darts() {
 }
 
 // ─── DARTS, BCZ, TRAINSET, AND LEPRECONDO ──────────────────────────────────
-
-int BCZcost(string BCZskill) {
-    int cast = to_int(get_property("_bcz" + BCZskill));
-    if (cast == 12) return 420000;
-    if (cast > 12) cast -= 1;
-    int castMathFloor = floor(cast / 3);
-    int castMathModulo = cast % 3;
-    int substatBase;
-    switch (castMathModulo) {
-        case 0: substatBase = 11; break;
-        case 1: substatBase = 23; break;
-        case 2: substatBase = 37; break;
-    }
-    // Pattern: 11, 23, 37, 110, 230, 370, ... 13th cast handled separately but unreachable
-    return substatBase * 10 ** ((cast < 12 || (cast > 12 && castMathModulo == 0))
-        ? castMathFloor : castMathFloor + 1);
-}
 
 // ─── TRAINSET ─────────────────────────────────────────────────────────────────
 
@@ -1751,26 +1769,6 @@ void censer() {
     if (wanted > 0)
         buy($coinmaster[Sept-Ember Censer], wanted, $item[Septapus summoning charm]);
 }
-
-// Seeding
-    int seedPoss(){
-        SeedData[int] possibleSeeds=find_seeds();
-        return count(possibleSeeds);
-    }
-
-    boolean isKBandSushiEnough(){
-        SeedData[int] possibleSeeds=find_seeds();
-        boolean bool = true;
-        string DS4to7poss;
-        foreach idx, seed in possibleSeeds {
-            if (!contains_text(DS4to7poss,possibleSeeds[idx].dreadscroll[4]+":"+possibleSeeds[idx].dreadscroll[7])){
-                DS4to7poss += possibleSeeds[idx].dreadscroll[4]+":"+possibleSeeds[idx].dreadscroll[7];
-            } else {
-                bool = false;
-            }
-        }
-        return bool;
-    }
 
 // ─── RUN-START CHECKLISTS ─────────────────────────────────────────────────────
 // Logged once at initialization: every supported IOTM and every pull the

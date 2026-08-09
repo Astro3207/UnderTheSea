@@ -184,54 +184,47 @@ item bangB(){
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
-    // Pearl farming spends plain turns: free kills, free runs, Forces and
-    // copies advance neither a zone's pearl progress nor screechCombats,
-    // so every trick below would burn a charge for zero progress.
     if (get_property("_utsPearlFarm") == "true") {
+        free_kill();
         cleanUp();
         return;
     }
-    // Re-roll dispatch loop. A monster swap restarts this pass with the new
-    // monster and a re-fetched page. ASH cannot call main() from inside its
-    // own definition (the name is not bound until the definition completes),
-    // so the loop, not recursion, is the dispatch mechanism.
-    while (true) {
     // One extra roll of a fat drop table, once a day, on fights that will be
     // WON; duplicateMonster() refuses fights the saber is about to Force.
-    duplicateMonster(mob, page_text);
+    duplicateMonster(last_monster(), page_text);
     // Deterministic diver: insurance egg, then Use the Force hands over every
     // non-conditional drop and ends the fight -- nothing below applies.
-    if (diverForce(mob, page_text))
+    if (diverForce(last_monster(), page_text))
         return;
     // Same trick down the Force priority ladder: the outpost healer's
     // prayerbeads, the sea cow's leather and cowbells, the researcher's
     // scrolls -- each from its own tier of the budget.
-    if (healerForce(mob, page_text))
+    if (healerForce(last_monster(), page_text))
         return;
-    if (seaCowForce(mob, page_text))
+    if (seaCowForce(last_monster(), page_text))
         return;
-    if (researcherForce(mob, page_text))
+    if (researcherForce(last_monster(), page_text))
         return;
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
     // +200% item on the diver itself, three a day, before free_kill can end it.
-    otoscope(mob, page_text);
+    otoscope(last_monster(), page_text);
     // Free stench jelly off any stench monster; NCforce() spends it as a sneak.
-    extractJelly(mob, page_text);
+    extractJelly(last_monster(), page_text);
     // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
     // On a re-roll the fight holds a NEW monster. Returning would fall through
     // to the CCS's safety abort line -- mafia does NOT re-invoke a consult
     // script that returns mid-combat -- so restart the dispatch loop with the
     // new monster and a re-fetched page, which also resyncs mafia's round
     // counter after the swap.
-    if (replaceEnemy(mob, page_text)) {
+    if (replaceEnemy(last_monster(), page_text)) {
         mob = last_monster();
         page_text = to_string(visit_url("fight.php"));
         continue;
     }
     // Chain another free diver off this one.
-    lectureOnRelativity(mob, page_text);
-    while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
+    lectureOnRelativity(last_monster(), page_text);
+    while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && last_monster() != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
             throw_items(bangA(),bangB());
         else
@@ -251,7 +244,7 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 cleanUp();
             }
-            if (!free_monster(mob))
+            if (!free_monster(last_monster()))
                 free_run(page_text, false);
             use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
@@ -274,7 +267,7 @@ void main(int round, monster mob, string page_text) {
                 && to_int(get_property("lassoTrainingCount")) < 20
                 && item_amount($item[sea lasso]) > 0)
                 throw_item($item[sea lasso]);
-            if (mob == $monster[shadow slab]) {
+            if (last_monster() == $monster[shadow slab]) {
                 if (item_amount($item[Septapus summoning charm]) > 0)
                     throw_item($item[Septapus summoning charm]);
                 use_if_have_skill(page_text, $skill[swoop like a bat]);
@@ -284,7 +277,7 @@ void main(int round, monster mob, string page_text) {
                     && current_round() < 25)
                     use_skill($skill[douse foe]);
             }
-            if (mob == $monster[tumbleweed])
+            if (last_monster() == $monster[tumbleweed])
                 abort("Unexpected mob encountered in shadow rift");
             if (!can_still_steal() || available_amount($item[pristine fish scale]) < 6)
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
@@ -295,7 +288,7 @@ void main(int round, monster mob, string page_text) {
         case $location[an octopus's garden]:
             if (have_effect($effect[Citizen of a Zone]) == 0 && my_familiar() == $familiar[patriotic eagle])
                 use_skill($skill[%fn, let's pledge allegiance to a Zone]);
-            if (mob == $monster[neptune flytrap]) {
+            if (last_monster() == $monster[neptune flytrap]) {
                 if (have_effect($effect[Everything Looks Red, White and Blue]) == 0 && my_familiar() == $familiar[patriotic eagle])
                     use_skill($skill[%fn, fire a Red, White and Blue Blast]);
                 if (my_familiar() == $familiar[sword of s words])
@@ -309,7 +302,7 @@ void main(int round, monster mob, string page_text) {
                 }
                 free_kill(page_text, true);
                 cleanUp();
-            } else if (!free_monster(mob)) {
+            } else if (!free_monster(last_monster())) {
                 if (have_equipped($item[spring shoes]) && !banishUsedAtYourLocation("Spring Kick") && highShiny()) {
                     use_skill($skill[spring kick]);
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
@@ -323,21 +316,21 @@ void main(int round, monster mob, string page_text) {
             // Free wanderers burn delay -- they advance the zone's turns_spent
             // for free -- and their fight costs nothing, so they are killed by
             // the fall-through below, never run from or re-rolled.
-            if (mob != $monster[unholy diver] && !free_monster(mob)){
+            if (last_monster() != $monster[unholy diver] && !free_monster(last_monster())){
                 free_run(page_text, true);
-                if (mob == $monster[Mer-kin scavenger]){
+                if (last_monster() == $monster[Mer-kin scavenger]){
                     if (have_equipped($item[spring shoes]))
                         use_skill($skill[spring kick]);
                     else 
                         use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                 }
-                if (mob == $monster[Mine crab]){
+                if (last_monster() == $monster[Mine crab]){
                     use_skill($skill[Heartstone: %banish]);
                     use_if_have_skill(page_text,$skill[Sea *dent: Throw a Lightning Bolt]);
                 }
             }
-            if (mob == $monster[unholy diver]){
+            if (last_monster() == $monster[unholy diver]){
                 if (my_familiar() == $familiar[Melodramedary]){
                     use_skill($skill[%fn, spit on them!]);
                 }
@@ -345,7 +338,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Use the Force]);
             }
             if (current_round() > 0)
-                feelNostalgic(mob, page_text);
+                feelNostalgic(last_monster(), page_text);
             darts();
             free_kill(page_text, true);
             cleanUp();
@@ -357,20 +350,20 @@ void main(int round, monster mob, string page_text) {
             if (have_equipped($item[sea cowboy hat]) && have_equipped($item[sea chaps])) {
                 throw_item($item[sea lasso]);
             }
-            if (mob == $monster[mer-kin miner]){
+            if (last_monster() == $monster[mer-kin miner]){
                 steal();
                 use_if_have_skill(page_text,$skill[swoop like a bat]);
             }
             // The corral gate applies to both targets: sniffing feeds the
             // step4 pearl hunt, which is over once the corral has started.
-            if (((mob == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
-                || (mob == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")))
+            if (((last_monster() == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
+                || (last_monster() == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")))
                 && $location[The coral corral].turns_spent == 0) {
                 foreach sk in $skills[transcendent olfaction,
                     Gallapagosian Mating Call, MCHUGELARGE SLASH]
                     use_if_have_skill(page_text, sk);
             }
-            if (free_monster(mob)) {
+            if (free_monster(last_monster())) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 cleanUp();
             }
@@ -381,9 +374,9 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 cleanUp();
             }
-            if ((mob != $monster[giant squid] || item_amount($item[comb jelly]) > 0)
-                && mob != $monster[Mer-kin tippler]
-                && (mob != $monster[Mer-kin miner] || item_amount($item[mer-kin digpick]) > 0)) {
+            if ((last_monster() != $monster[giant squid] || item_amount($item[comb jelly]) > 0)
+                && last_monster() != $monster[Mer-kin tippler]
+                && (last_monster() != $monster[Mer-kin miner] || item_amount($item[mer-kin digpick]) > 0)) {
                 if (have_item($item[cosmic bowling ball]))
                     free_run(page_text, true);
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
@@ -399,12 +392,12 @@ void main(int round, monster mob, string page_text) {
         case $location[The Mer-Kin Outpost]:
             if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
                 throw_item($item[sea lasso]);
-            if (mob == $monster[time cop]) {
+            if (last_monster() == $monster[time cop]) {
                 darts();
                 cleanUp();
                 break;
             }
-            if (mob == $monster[black crayon golem]) {
+            if (last_monster() == $monster[black crayon golem]) {
                 if (get_property("_monsterHabitatsFightsLeft") == "0"
                     && have_effect($effect[everything looks purple]) == 0
                     && to_int(get_property("_monsterHabitatsRecalled")) == 2)
@@ -431,11 +424,11 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     cleanUp();
                 }
-                if (mob == $monster[mer-kin healer]
+                if (last_monster() == $monster[mer-kin healer]
                     && item_amount($item[mer-kin prayerbeads]) < 2) {
                     if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish"
                             && to_int(get_property("_curveballFightsLeft")) > 0))
@@ -447,21 +440,21 @@ void main(int round, monster mob, string page_text) {
                     }
                     free_run(page_text, false);
                     cleanUp();
-                } else if (mob == $monster[Mer-kin burglar]
-                    || mob == $monster[Mer-kin raider]) {
+                } else if (last_monster() == $monster[Mer-kin burglar]
+                    || last_monster() == $monster[Mer-kin raider]) {
                     if ((highShiny() || !have_item($item[closed-circuit pay phone])) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
                         use_skill($skill[sea *dent: throw a lightning bolt]);
                     free_run(page_text, true);
                 }
-                if (!free_monster(mob))
+                if (!free_monster(last_monster()))
                     free_kill(page_text, false);
                 cleanUp();
             } else {
                 // turns_spent >= 24 and no lockkey monster
-                if (mob == $monster[mer-kin burglar] || mob == $monster[mer-kin raider])
+                if (last_monster() == $monster[mer-kin burglar] || last_monster() == $monster[mer-kin raider])
                     free_run(page_text, true);
                 free_kill(page_text,
-                    mob == $monster[mer-kin healer]
+                    last_monster() == $monster[mer-kin healer]
                     && item_amount($item[mer-kin prayerbeads]) < 2);
                 cleanUp();
             }
@@ -474,7 +467,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[cyberzone 1]:
-            if (mob == $monster[eye in the darkness] || mob == $monster[slithering thing]) {
+            if (last_monster() == $monster[eye in the darkness] || last_monster() == $monster[slithering thing]) {
                 while (current_round() > 0)
                     use_skill($skill[Throw Cyber Rock]);
             } else {
@@ -492,12 +485,12 @@ void main(int round, monster mob, string page_text) {
             }
             if (($location[the coral corral].turns_spent <= 1 && item_amount($item[sea leather]) == 0 && available_amount($item[sea cowboy hat]) == 0) || get_property("_lastCombatWon") == false) {
                 if (highShiny() && get_property("swordOfSWordsMonster") != "775"){
-                    if (mob == $monster[sea cow]){
+                    if (last_monster() == $monster[sea cow]){
                         use_skill($skill[%fn, kill a lot of these guys]);
                         cleanUp();
                     }
                 } else if (have_equipped($item[backup camera])) {
-                    if (mob == $monster[mer-kin rustler])
+                    if (last_monster() == $monster[mer-kin rustler])
                         use_skill($skill[spring kick]);
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
@@ -505,7 +498,7 @@ void main(int round, monster mob, string page_text) {
                     free_kill(page_text, true);
                     cleanUp();
                 } else {
-                    if (mob == $monster[mer-kin rustler]){
+                    if (last_monster() == $monster[mer-kin rustler]){
                         use_if_have_skill(page_text, $skill[spring kick]);
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
@@ -529,7 +522,7 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 }
             } else if (item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea cowbell]) > 0 && to_int(get_property("lassoTrainingCount")) == 20) {
-                if (mob.phylum == $phylum[plant])
+                if (last_monster().phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
                 if (get_property("seahorseName") == "") {
                     if ((!contains_text(get_property("banishedMonsters"), "sea cow:")
@@ -538,19 +531,19 @@ void main(int round, monster mob, string page_text) {
                         && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
                         || (!contains_text(get_property("banishedMonsters"), "sea cow:")
                         && !contains_text(get_property("banishedMonsters"), "Mer-kin rustler"))){
-                            if (mob == $monster[Mer-kin rustler] && get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
+                            if (last_monster() == $monster[Mer-kin rustler] && get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
                                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                                 if (last_monster() == $monster[some fish])
                                     cleanUp();
                             }
                             free_run(page_text, true);
-                            if (mob == $monster[mer-kin rustler]){
+                            if (last_monster() == $monster[mer-kin rustler]){
                                 if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
                                     use_skill($skill[heartstone: %banish]);
                                 } 
-                            } else if (mob == $monster[sea cowboy]){
+                            } else if (last_monster() == $monster[sea cowboy]){
                                 use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
-                            } else if (mob == $monster[sea cow]){
+                            } else if (last_monster() == $monster[sea cow]){
                                 use_skill($skill[Sea *dent: Throw a Lightning Bolt]);
                             }
                         }
@@ -569,9 +562,9 @@ void main(int round, monster mob, string page_text) {
                 free_kill(page_text, false);
                 cleanUp();
             } else {
-                if (mob == $monster[wild seahorse]) {
+                if (last_monster() == $monster[wild seahorse]) {
                     runaway( );
-                } else if (mob == $monster[mer-kin rustler]){
+                } else if (last_monster() == $monster[mer-kin rustler]){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
@@ -580,31 +573,31 @@ void main(int round, monster mob, string page_text) {
                         // rather than killing a monster that owes us nothing.
                         if (current_round() > 0 && rerollEnemy(page_text)) {
                             // Re-dispatch: see the replaceEnemy note up top.
-                            mob = last_monster();
+                            last_monster() = last_monster();
                             page_text = to_string(visit_url("fight.php"));
                             continue;
                         }
                     }
-                } else if (mob == $monster[sea cow] && doneWithSeaCow()){
+                } else if (last_monster() == $monster[sea cow] && doneWithSeaCow()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
                         if (current_round() > 0 && rerollEnemy(page_text)) {
                             // Re-dispatch: see the replaceEnemy note up top.
-                            mob = last_monster();
+                            last_monster() = last_monster();
                             page_text = to_string(visit_url("fight.php"));
                             continue;
                         }
                     }
-                } else if (mob == $monster[sea cowboy] && doneWithCowboy()){
+                } else if (last_monster() == $monster[sea cowboy] && doneWithCowboy()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
                         if (current_round() > 0 && rerollEnemy(page_text)) {
                             // Re-dispatch: see the replaceEnemy note up top.
-                            mob = last_monster();
+                            last_monster() = last_monster();
                             page_text = to_string(visit_url("fight.php"));
                             continue;
                     }
@@ -613,7 +606,7 @@ void main(int round, monster mob, string page_text) {
                 // Fight being killed from here on -- the one safe moment for a
                 // Feel Nostalgic charge on the cow's table.
                 if (current_round() > 0)
-                    feelNostalgic(mob, page_text);
+                    feelNostalgic(last_monster(), page_text);
                 // Club 'Em Across the Battlefield is 5/day and does nothing
                 // once a noncombat has already been forced into a combat.
                 if (have_equipped($item[legendary seal-clubbing club])
@@ -627,26 +620,26 @@ void main(int round, monster mob, string page_text) {
         case $location[The Caliginous Abyss]:
             if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
                 throw_item($item[sea lasso]);
-            if (mob == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
+            if (last_monster() == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
                 if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]) && (available_amount($item[waffle]) > 1 || (available_amount($item[waffle]) == 1 && get_property("seahorseName") != "")))
                     throw_item($item[waffle]);
                 else 
                     cleanUp();
                 run_combat();
-            } else if (free_monster(mob)) {
+            } else if (free_monster(last_monster())) {
                 cleanUp();
             } else {
                 if (item_amount($item[spooky VHS tape]) > 0
                     && get_property("spookyVHSTapeMonster") == ""
                     && to_int(get_property("momSeaMonkeeProgress")) < 36
                     && $monsters[slithering thing, eye in the darkness,
-                        school of many] contains mob)
+                        school of many] contains last_monster())
                     throw_item($item[spooky VHS tape]);
                 if (get_property("_monsterHabitatsRecalled") != "3" && get_property("_monsterHabitatsFightsLeft") == "0" && !highShiny() && (have_item($item[server room key]) || $location[The Mer-Kin Outpost].turns_spent < 29)) {
-                    if ($monsters[slithering thing, eye in the darkness] contains mob)
+                    if ($monsters[slithering thing, eye in the darkness] contains last_monster())
                         use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
                 }
-                if (mob == $monster[school of many]) {
+                if (last_monster() == $monster[school of many]) {
                     use_if_have_skill(page_text, $skill[Sea *dent: Throw a Lightning Bolt]);
                     for i from 1 to 4
                         use_skill($skill[garbage nova]);
@@ -657,21 +650,21 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Elementary School]:
-            if (free_monster(mob)) {
+            if (free_monster(last_monster())) {
                 use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 if (have_equipped($item[legendary seal-clubbing club]) && to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 } else {
                     cleanUp();
                 }
-            } else if (mob == $monster[Mer-kin teacher]
-                || mob == $monster[Mer-kin punisher]
-                || mob == $monster[Mer-kin monitor]) {
+            } else if (last_monster() == $monster[Mer-kin teacher]
+                || last_monster() == $monster[Mer-kin punisher]
+                || last_monster() == $monster[Mer-kin monitor]) {
                 if (have_equipped($item[spring shoes])
                     && !banishUsedAtYourLocation("Spring Kick")) {
-                    if ((mob == $monster[mer-kin teacher]
+                    if ((last_monster() == $monster[mer-kin teacher]
                         && item_amount($item[mer-kin bunwig]) > 0)
-                        || (mob == $monster[mer-kin punisher]
+                        || (last_monster() == $monster[mer-kin punisher]
                         && item_amount($item[mer-kin mouthsoap]) > 0))
                         use_skill($skill[spring kick]);
                 }
@@ -694,18 +687,18 @@ void main(int round, monster mob, string page_text) {
             // banish attempt is worth re-rolling into a fresh 1-in-3 draw at
             // the monitor rather than killing for nothing. Never the golem
             // stat-fights, and forced-victim fights are already monitors.
-            if (cheatsheetsNeeded() && mob != $monster[Mer-kin monitor]
-                && !free_monster(mob) && current_round() > 0
+            if (cheatsheetsNeeded() && last_monster() != $monster[Mer-kin monitor]
+                && !free_monster(last_monster()) && current_round() > 0
                 && rerollEnemy(page_text)) {
                 // Re-dispatch: see the replaceEnemy note up top.
-                mob = last_monster();
+                last_monster() = last_monster();
                 page_text = to_string(visit_url("fight.php"));
                 continue;
             }
             // Kill path from here on -- the safe spot for a Feel Nostalgic
             // charge on the monitor's cheatsheet table.
             if (current_round() > 0)
-                feelNostalgic(mob, page_text);
+                feelNostalgic(last_monster(), page_text);
             if (bcz_gaze_ready() && get_property("NCtoC") != "true") {
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
                 if (to_monster(get_property("lastEncounter")) != $monster[none] && item_amount($item[mer-kin cheatsheet]) < 10)
@@ -716,7 +709,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Library]:
-            if (free_monster(mob)) {
+            if (free_monster(last_monster())) {
                 if (bcz_gaze_ready())
                     use_skill($skill[BCZ: Refracted Gaze]);
                 cleanUp();
@@ -730,7 +723,7 @@ void main(int round, monster mob, string page_text) {
                     && item_amount($item[mer-kin killscroll]) > 0
                     && current_round() > 0 && last_monster().phylum == $phylum[mer-kin])
                     throw_item($item[mer-kin killscroll]);
-                if (free_monster(mob)) {
+                if (free_monster(last_monster())) {
                     if (bcz_gaze_ready())
                         use_skill($skill[BCZ: Refracted Gaze]);
                 } else {
@@ -739,9 +732,9 @@ void main(int round, monster mob, string page_text) {
                             use_skill($skill[Sea *dent: Talk to Some Fish]);
                             use_skill($skill[BCZ: Refracted Gaze]);
                         }
-                    } else if (mob == $monster[Mer-kin alphabetizer]) {
+                    } else if (last_monster() == $monster[Mer-kin alphabetizer]) {
                         use_skill($skill[spring kick]);
-                    } else if (mob == $monster[Mer-kin drifter]) {
+                    } else if (last_monster() == $monster[Mer-kin drifter]) {
                         free_run(page_text, true);
                     }
                     free_kill(page_text, true);
@@ -776,7 +769,7 @@ void main(int round, monster mob, string page_text) {
                 throw_item($item[mer-kin killscroll]);
             foreach sk in $skills[Launch spikolodon spikes, MCHUGELARGE avalanche]
                 use_if_have_skill(page_text, sk);
-            if (free_monster(mob)) {
+            if (free_monster(last_monster())) {
                 if (bcz_gaze_ready())
                     use_skill($skill[BCZ: Refracted Gaze]);
             } else {
@@ -837,7 +830,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple]:
-            if (mob == $monster[Yog-Urt, Elder Goddess of Hatred]){
+            if (last_monster() == $monster[Yog-Urt, Elder Goddess of Hatred]){
                 if (my_maxhp() > 311)
                     abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
                 if (available_amount($item[crayon shavings]) >= 9)
@@ -855,13 +848,13 @@ void main(int round, monster mob, string page_text) {
                 attack();
                 attack();
             }
-            if (mob == $monster[Shub-Jigguwatt, Elder God of Violence]){
+            if (last_monster() == $monster[Shub-Jigguwatt, Elder God of Violence]){
                 for i from 1 to 4
                     throw_items($item[crayon shavings], $item[crayon shavings]);
                 while (current_round() > 0)
                     attack();
             }
-            if (mob == $monster[Dad Sea Monkee]){
+            if (last_monster() == $monster[Dad Sea Monkee]){
                 cli_execute("dad");
                 abort("execute spells in the above order, can use shrap instead of toynado and volcanometeor instead of awesome balls of fire");
             }
@@ -869,7 +862,7 @@ void main(int round, monster mob, string page_text) {
     }
 
     // ── Monster-based logic (runs after location logic) ───────────────────────
-    switch (mob) {
+    switch (last_monster()) {
         case $monster[black crayon golem]:
             if (get_property("_monsterHabitatsFightsLeft") == "0"
                 && to_int(get_property("_monsterHabitatsRecalled")) < 3)
@@ -908,6 +901,4 @@ void main(int round, monster mob, string page_text) {
             cleanUp();
             break;
     }
-    return;
-    } // dispatch loop
 }

@@ -153,6 +153,14 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
 // ─── POST ADVENTURE ───────────────────────────────────────────────────────────
+    void blackGlass(){
+        use_familiar("itdrop");
+        equip($item[really, really nice swimming trunks]);
+        visit_url("monkeycastle.php?who=1");
+        if (available_amount($item[black glass]) == 0) 
+            buy($coinmaster[Big Brother], 1, $item[black glass]);
+    }
+
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
             if (have_effect($effect[beaten up]) > 0){
@@ -527,34 +535,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
 // ─── Questing ─────────────────────────────────────────────────────────────
-    void unlockGuild(){
-        if (get_property(questProp[ps]) != "finished") {
-            // Moxie shortcut — tearaway pants skip the grind
-            if (ps == $stat[moxie] && have_item($item[tearaway pants])) {
-                equip($item[tearaway pants]);
-                visit_url("guild.php?place=challenge");
-                return;
-            }
-            if (get_property(questProp[ps]) == "unstarted")
-                visit_url("guild.php?place=challenge");
-            if (doSWord() == true)
-                use_familiar($familiar[Sword of S Words]);
-            else if (have_familiar($familiar[red-nosed snapper]))
-                use_familiar("itdrop");
-            else
-                use_familiar("-combat");
-            if (my_familiar() == $familiar[red-nosed snapper])
-                cli_execute("snapper fish");
-            while (get_property(questProp[ps]) == "started") {
-                tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                    + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + if_equip($item[designer sweatpants]) + baseball_equip());
-                mood("itdrop");
-                adv1(questLoc[ps]);
-            }
-            visit_url("guild.php?place=challenge");
-        }
-    }
-
     void teflon(){
         equip($item[mer-kin digpick]);
         equipSwimTrunks();
@@ -993,95 +973,131 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         }
     }
 
-// ─── SEA MONKEES ──────────────────────────────────────────────────────────────
-void seaMonkees() {
-    //Use Sword of S Words to get sea lasso
-    if (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3 && to_float(get_property("swordOfSWordsMonster")) < 10 && (highShiny() || !have_item($item[closed-circuit pay phone]))){
-        use_familiar($familiar[Sword of S Words]);
-        tempEquipment("item drop", baseball_equip() + freeKill());
-        mood("itdrop");
-        cli_execute("recover hp");
-        summon($monster[sea cowboy]);
-    } 
+// Quest Handling Part 2
+    void SWordLasso(){
+        if (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3 && to_float(get_property("swordOfSWordsMonster")) < 10 && 
+            (highShiny() || !have_item($item[closed-circuit pay phone]))){
+            use_familiar($familiar[Sword of S Words]);
+            tempEquipment("item drop", baseball_equip() + freeKill());
+            mood("itdrop");
+            cli_execute("recover hp");
+            summon($monster[sea cowboy]);
+        } 
+    }
 
-    // ── Guild unlock prerequisite ─────────────────────────────────────────────
-    step("phase: guild unlock");
-    if (get_property("questG03Ego") == "unstarted" && item_amount($item[Closed-circuit pay phone]) > 0 && my_path().id == 55 && !highShiny()) {
-        unlockGuild();
-        if (get_property("questG03Ego") == "unstarted") {
-            visit_url("guild.php?place=ocg");
-            visit_url("guild.php?place=ocg");
+    void unlockGuild(){
+        if (get_property("questG03Ego") == "unstarted" && item_amount($item[Closed-circuit pay phone]) > 0 && my_path().id == 55 && !highShiny()) {
+            step("phase: guild unlock");
+            if (get_property(questProp[ps]) != "finished") {
+                // Moxie shortcut — tearaway pants skip the grind
+                if (ps == $stat[moxie] && have_item($item[tearaway pants])) {
+                    equip($item[tearaway pants]);
+                    visit_url("guild.php?place=challenge");
+                    return;
+                }
+                if (get_property(questProp[ps]) == "unstarted")
+                    visit_url("guild.php?place=challenge");
+                if (doSWord() == true)
+                    use_familiar($familiar[Sword of S Words]);
+                else if (have_familiar($familiar[red-nosed snapper]))
+                    use_familiar("itdrop");
+                else
+                    use_familiar("-combat");
+                if (my_familiar() == $familiar[red-nosed snapper])
+                    cli_execute("snapper fish");
+                while (get_property(questProp[ps]) == "started") {
+                    tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
+                        + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + if_equip($item[designer sweatpants]) + baseball_equip());
+                    mood("itdrop");
+                    adv1(questLoc[ps]);
+                }
+                visit_url("guild.php?place=challenge");
+            }
+            if (get_property("questG03Ego") == "unstarted") {
+                visit_url("guild.php?place=ocg");
+                visit_url("guild.php?place=ocg");
+            }
         }
     }
-    post_adv();
-    // ── Step: Flytrap pellet ──────────────────────────────────────────────────
-    step("phase: flytrap pellet (Sea Monkees start)");
-    if (get_property("questS02Monkees") == "unstarted") {
-        // Get citizen/RWB ray on neptune flytrap
-        while (item_amount($item[wriggling flytrap pellet]) == 0 && have_effect($effect[Citizen of a Zone]) == 0
-            && have_effect($effect[Everything Looks Red, White and Blue]) == 0 && have_familiar($familiar[patriotic eagle])) {
-            use_familiar($familiar[patriotic eagle]);
-            string conditional;
-            if (lowShiny())
-                conditional += if_equip($item[Congressional Medal of Insanity]);
-            tempEquipment("item drop", swimmingTrunks() + "peridot of peril,"
-                + bathysphere($item[none]) + baseball_equip() + freeKill() + conditional);
-            adv($location[An octopus's garden]);
-        }
-        // Collect pellet while RWB is active
-        while (item_amount($item[wriggling flytrap pellet]) == 0
-            && to_int(get_property("rwbMonsterCount")) > 0) {
-            if (!highShiny() && have_familiar($familiar[sword of s words]) && have_item($item[Archaeologist's Spade]) && to_int(get_property("_archSpadeDigs")) < 11){
-                use_familiar($familiar[sword of s words]);
-                if (get_property("swordOfSWordsMonster") != "740"){
-                    tempEquipment("item drop", swimmingTrunks() + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
+
+    void flytrap(){
+        if (get_property("questS02Monkees") == "unstarted") {
+            //SWord --> skeleton store for flytrap
+            if (!highShiny() && have_familiar($familiar[sword of s words]) && available_amount($item[archaeologist's spade]) > 0){
+                while (get_property("swordOfSWordsMonster") != "740"){
+                    use_familiar($familiar[sword of s words]);
+                    tempEquipment("item drop", swimmingTrunks() + if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
                     adv($location[An octopus's garden]);
-                } else if (my_location() != $location[the skeleton store]){
+                }
+                while (my_location() != $location[the skeleton store] && item_amount($item[wriggling flytrap pellet]) == 0){
                     if (get_property("skeletonStoreAvailable") == false)
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
-                } else {
+                }
+                while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
                     maximize("item drop",false);
                     use($item[Archaeologist's Spade]);
                 }
-            } else {
-                use_familiar("itdrop");
-                if (to_int(get_property("rwbMonsterCount")) == 1) {
-                    tempEquipment("item drop", swimmingTrunks() + if_equip($item[McHugeLarge left pole])
-                        + bathysphere($item[toy cupid bow]) + freeKill());
-                } else {
-                    tempEquipment("item drop", swimmingTrunks() + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
-                }
-                adv($location[An octopus's garden]);
             }
-        }
-        // Banish fallback if pellet still didn't drop
-        if (item_amount($item[wriggling flytrap pellet]) == 0) {
-            print("Pellet failed to drop 3x, initiating banishes", "red");
+            // Get citizen/RWB ray on neptune flytrap
+            if (have_familiar($familiar[patriotic eagle]) && item_amount($item[wriggling flytrap pellet]) == 0){
+                while (have_effect($effect[Citizen of a Zone]) == 0 && have_effect($effect[Everything Looks Red, White and Blue]) == 0) {
+                    use_familiar($familiar[patriotic eagle]);
+                    string conditional;
+                    if (!gotPerilled())
+                        conditional += if_equip($item[peridot of peril]);
+                    tempEquipment("item drop", swimmingTrunks() + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
+                    adv($location[An octopus's garden]);
+                }
+            }
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
                 use_familiar("itdrop");
                 string conditional;
-                if (highShiny())
-                    conditional += "monodent of the sea,";
-                conditional += cloakeEquip($location[An octopus's garden]);
-                if (to_int(get_property("_assertYourAuthorityCast")) < 3) {
-                    tempEquipment("item drop", swimmingTrunks()
-                        + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]) + conditional);
-                } else {
-                    tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
-                        + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
-                }
-                // Reached only after the pellet has already failed to drop three
-                // times, so the Peridot charge here is long gone and the flytrap
-                // is 1 of 4. Worth a map charge to stop the bleeding.
-                mapMonster($location[An octopus's garden]);
+                if (to_int(get_property("rwbMonsterCount")) <= 1 && !get_property("trackedMonsters").contains_text("Neptune flytrap"))
+                    conditional += if_equip($item[McHugeLarge left pole]);
+                else 
+                    conditional += baseball_equip();
+                tempEquipment("item drop", swimmingTrunks() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
                 adv($location[An octopus's garden]);
-                timeSpinnerRefight($location[An octopus's garden]);
             }
-        }
-        if (item_amount($item[wriggling flytrap pellet]) > 0)
-            use($item[wriggling flytrap pellet]);}
+            // Banish fallback if pellet still didn't drop
+            if (item_amount($item[wriggling flytrap pellet]) == 0) {
+                print("Initiating banishes in Octopus Garden", "red");
+                while (item_amount($item[wriggling flytrap pellet]) == 0) {
+                    use_familiar("itdrop");
+                    string conditional;
+                    if (highShiny())
+                        conditional += "monodent of the sea,";
+                    conditional += cloakeEquip($location[An octopus's garden]);
+                    if (to_int(get_property("_assertYourAuthorityCast")) < 3) {
+                        tempEquipment("item drop", swimmingTrunks()
+                            + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]) + conditional);
+                    } else {
+                        tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
+                            + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
+                    }
+                    // Reached only after the pellet has already failed to drop three
+                    // times, so the Peridot charge here is long gone and the flytrap
+                    // is 1 of 4. Worth a map charge to stop the bleeding.
+                    mapMonster($location[An octopus's garden]);
+                    adv($location[An octopus's garden]);
+                    timeSpinnerRefight($location[An octopus's garden]);
+                }
+            }
+            if (item_amount($item[wriggling flytrap pellet]) > 0)
+                use($item[wriggling flytrap pellet]);}
+    }
 
+// ─── SEA MONKEES ──────────────────────────────────────────────────────────────
+void seaMonkees() {
+    //Use Sword of S Words to get sea lasso early if you can't use shadow rift to lasso train
+    SWordLasso();
+    //Unlock guild to gain access to shadow brick if you have payphone
+    unlockGuild();
+    //Priming with post_adv in case there was an abort in a combat
+    post_adv();
+    step("phase: flytrap pellet (Sea Monkees start)");
+    flytrap();
     if (get_property("questS02Monkees") == "started")
         visit_url("monkeycastle.php?who=1");
 
