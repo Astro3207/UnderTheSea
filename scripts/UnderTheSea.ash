@@ -1053,6 +1053,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
                 use_familiar("itdrop");
                 string conditional;
+                if (to_int(get_property("rwbMonsterCount")) == 0){
+                    print("Initiating banishes in Octopus Garden", "red");
+                    if (highShiny())
+                        conditional += "monodent of the sea,";
+                }
                 if (to_int(get_property("rwbMonsterCount")) <= 1 && !get_property("trackedMonsters").contains_text("Neptune flytrap"))
                     conditional += if_equip($item[McHugeLarge left pole]);
                 else 
