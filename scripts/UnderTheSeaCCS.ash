@@ -106,13 +106,6 @@ void free_run(string ptext, boolean banish) {
     }
 }
 
-// Returns true if this monster provides a free fight
-boolean free_monster(monster mob) {
-    return $monsters[black crayon golem, time cop,sausage goblin,
-        kid who is too old to be Trick-or-Treating,
-        suburban security civilian, vandal kid] contains mob;
-}
-
 // BCZ refracted gaze helper — checks stat threshold before casting
 boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
