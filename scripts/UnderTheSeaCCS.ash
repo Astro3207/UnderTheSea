@@ -1,4 +1,4 @@
-import iotm.ash;
+import globals.ash;
 import UnderTheSea.ash;
 
 // Attempt a free kill using available skills/items.
@@ -47,14 +47,12 @@ void free_kill(string ptext, boolean drop) {
     foreach freecombat in $items[shadow brick, groveling gravel] {
         if (item_amount(freecombat) == 0) continue;
         if (freecombat == $item[groveling gravel] && drop) continue;
-        if (freecombat == $item[shadow brick]
-            && to_int(get_property("_shadowBricksUsed")) == 13) continue;
+        if (freecombat == $item[shadow brick] && to_int(get_property("_shadowBricksUsed")) == 13) continue;
             // Gladiators sit in these items' "unkillable" class: a brick
             // glances for 400-600 (halved underwater) instead of killing,
             // wasting both the item and the combat round.
             if (my_location() == $location[Mer-kin Colosseum]) continue;
         throw_item(freecombat);
-        }
     }
 
     // Last resort: Use the Force forfeits the win and any conditional drops,
@@ -105,13 +103,6 @@ void free_run(string ptext, boolean banish) {
             && last_monster().phylum != $phylum[mer-kin]) continue;
         throw_item(freecombat);
     }
-}
-
-// Returns true if this monster provides a free fight
-boolean free_monster(monster mob) {
-    return $monsters[black crayon golem, time cop,sausage goblin,
-        kid who is too old to be Trick-or-Treating,
-        suburban security civilian, vandal kid] contains mob;
 }
 
 // BCZ refracted gaze helper — checks stat threshold before casting
@@ -440,7 +431,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(mob)){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     cleanUp();
                 }
@@ -917,4 +908,6 @@ void main(int round, monster mob, string page_text) {
             cleanUp();
             break;
     }
+    return;
+    } // dispatch loop
 }

@@ -1,4 +1,4 @@
-import iotm.ash;
+import globals.ash;
 import <seedfinder/seedfinder.ash>;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
@@ -6,18 +6,15 @@ import <seedfinder/seedfinder.ash>;
 // uts_godRunGuard, uts_postloopCommand, uts_postLoopRunOutEagleBanish,
 // uts_postLoopFarmPearls, uts_postLoopCloverFishy and
 // uts_postLoopPrepCodpiece -- see the README for what each does.
-//
+familiar chosenFamiliar = $familiar[none]; //For kidoblivious
+
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────   
-    familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
-    // "temp" is this script's own scratch CCS. Reading it back means a previous
-    // run was killed while it was selected; restoring it would make it the
-    // user's permanent setting.
     if (CCSStorage == "temp")
         CCSStorage = "default";
     string choice1387Storage = get_property("choiceAdventure1387");
-    string seaFit,boss,modes;
+    string boss,modes;
     string [stat] pearlRes = {
         $stat[mysticality]: "hot res",
         $stat[moxie]:       "sleaze res",
@@ -33,138 +30,16 @@ import <seedfinder/seedfinder.ash>;
         pasta_prices[it] = mall_price(it);
     }
 
-// ─── ITEM/OUTFIT UTILITIES ────────────────────────────────────────────────────
-
-    boolean seaOutfit() {
-        foreach str in $strings[Crappy Mer-kin Disguise,
-            Mer-kin Gladiatorial Gear, Mer-kin Scholar's Vestments] {
-            if (have_outfit(str)) {
-                seaFit = str;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    item divingHelmet() {
-        item it;
-        foreach ite in $items[Mer-kin gladiator mask,
-            Mer-kin scholar mask, crappy Mer-kin mask, aerated diving helmet, Elf Guard SCUBA tank] {
-            if (item_amount(ite) > 0 || have_equipped(ite)){
-                it = ite;
-                break;
-            }
-        }
-        return it;
-    }
-
-    item tailpiece() {
-        item it;
-        foreach ite in $items[Mer-kin gladiator tailpiece,
-            Mer-kin scholar tailpiece, crappy Mer-kin tailpiece, teflon swim fins] {
-            if (item_amount(ite) > 0 || have_equipped(ite)){
-                it = ite;
-                break;
-            }
-        }
-        return it;
-    }
-
-    string swimmingTrunks(){
-        string str;
-        if (have_effect($effect[driving waterproofly]) > 0)
-            return "";
-        if (my_path().id == 55){
-            str = "really nice swimming trunks,";
-        } else if (my_path().id == 0){
-            str = "Elf Guard SCUBA tank,";
-        }
-        return str;
-    }
-    void equipSwimTrunks(){
-        if (have_effect($effect[driving waterproofly]) > 0)
-            return;
-        if (my_path().id == 55){
-            equip($item[really, really nice swimming trunks]);
-        } else if (my_path().id == 0){
-            equip($item[Elf Guard SCUBA tank]);
-        }
-    }
-
-    void buyScholarGear() {
-        if (available_amount($item[Mer-kin scholar mask]) == 0
-            && !have_equipped($item[Mer-kin scholar mask])) {
-            equip($slot[hat], $item[none]);
-            equipSwimTrunks();
-            buy($coinmaster[Grandma Sea Monkey],1,$item[Mer-kin scholar mask]);
-        }
-        if (available_amount($item[Mer-kin scholar tailpiece]) == 0
-            && !have_equipped($item[Mer-kin scholar tailpiece])) {
-            equip($slot[pants], $item[none]);
-            equipSwimTrunks();
-            buy($coinmaster[Grandma Sea Monkey],1,$item[Mer-kin scholar tailpiece]);
-        }
-    }
-
-    // if_equip() now lives in iotm.ash: champagneEquip() and gloveEquip() there
-    // call it, and imports are parsed before this file's own functions exist.
-
-    // Arm a yellow ray for the next fight if Everything Looks Yellow allows:
-    // the parka's dilophosaur ray, or a spitball as the shieldless fallback.
-    void yellowRayPrep(){
-        if (have_effect($effect[everything looks yellow]) == 0){
-            if (have_item($item[jurassic parka]))
-                cli_execute("parka dilophosaur; equip jurassic parka");
-            else if (have_item($item[April Shower Thoughts shield]))
-                create($item[spitball]);
-        }
-    }
-
-    // Equip the saber only where a turn-free exit actually buys us something.
-    // Takes the target location explicitly because callers set equipment up
-    // before adv(), so my_location() is still the previous zone here.
-    string saberEquip(location loc) {
-        if (saberReady() && saberZone(loc))
-            return if_equip($item[Fourth of May Cosplay Saber]);
-            return "";
-    }
-
-    // Lucky! for the hermit-clover adventures. The august scepter grants it free
-    // (5 scepter casts per day, and we only spend one on Waffle Day), so reach
-    // for that before burning one of the three purchasable 11-leaf clovers.
-    void getLucky() {
-        if (have_effect($effect[Lucky!]) > 0)
-            return;
-        if (have_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day])
-            && get_property("_aug2Cast") == "false"
-            && to_int(get_property("_augSkillsCast")) < 5) {
-            use_skill($skill[Aug. 2nd: Find an Eleven-Leaf Clover Day]);
-            if (have_effect($effect[Lucky!]) > 0)
-                return;
-        }
-        use($item[11-leaf clover]);
-    }
-
-    boolean highShiny(){
-        boolean bool;
-        if (to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure")))
-            bool = true;
-        return bool;
-    }
-
     // How many of the day's 20 pulls must be held back rather than spent on
     // whatever asks first. Only one of each unique item may be pulled per
     // day, so every entry reserves at most ONE slot.
     int reservedPulls(){
+        string [int] pulledToday = split_string(get_property("_roninStoragePulls"), ",");
         int n;
-        if (available_amount($item[peppermint parasol]) == 0 && available_amount($item[navel ring of navel gazing]) == 0 && available_amount($item[greatest american pants]) == 0)
+        if (!lowShiny() && available_amount($item[peppermint parasol]) == 0 && available_amount($item[navel ring of navel gazing]) == 0 && available_amount($item[greatest american pants]) == 0)
             n += 1;
         if (available_amount($item[crayon shavings]) < 9)
             n += 1;
-        // One slot each, held only while the item is BOTH still wanted and still
-        // pullable today. Comma-delimited match so an id cannot match inside a
-        // longer one.
-        string pulledToday = "," + get_property("_roninStoragePulls") + ",";
         if (available_amount($item[mer-kin pinkslip]) == 0
             && !contains_text(pulledToday, "," + to_int($item[mer-kin pinkslip]) + ","))
             n += 1;
@@ -1026,7 +901,7 @@ import <seedfinder/seedfinder.ash>;
                 scale-mail underwear, Congressional Medal of Insanity,
                 Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !contains_text(get_property("_roninStoragePulls"), to_int(it))) {
-                    if (it == $item[sea lasso] && (lowShiny == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
+                    if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
                     if (storage_amount(it) == 0){
                         if (it == $item[Congressional Medal of Insanity])
@@ -1753,7 +1628,7 @@ void seaMonkees() {
     step("phase: Grandpa unlock (step 4)");
     if (get_property("questS02Monkees") == "step4") {
         use_familiar("-combat");
-        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny == false) {
+        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
             if (pullSequence($item[mer-kin hidepaint]));
                 use($item[mer-kin hidepaint]);
         }
@@ -2948,7 +2823,7 @@ void sorceress() {
         if (get_property("_skateBuff1") == "false")
             visit_url("sea_skatepark.php?action=state2buff1");
 
-        if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny || pulls_remaining() == 0)){
+        if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny() || pulls_remaining() == 0)){
             while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
                 farmPrayerbeads();
             }
