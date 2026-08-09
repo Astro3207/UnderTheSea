@@ -963,19 +963,13 @@ boolean mapReady() {
         && get_property("mappingMonsters") == "false";
 }
 
-boolean mapZone(location loc) {
-    return $locations[The Wreck of the Edgar Fitzsimmons,
-        An Octopus's Garden, The Coral Corral,
-        Mer-kin Elementary School] contains loc;
-}
-
 // Only cast once the Peridot's charge for this zone is gone, so the two do not
 // both spend themselves picking the same monster.
-void mapMonster(location loc) {
-    if (!mapReady() || !mapZone(loc))
+void mapMonster() {
+    if (!mapReady())
         return;
     if (available_amount($item[peridot of peril]) > 0
-        && !contains_text("," + get_property("_perilLocations") + ",", "," + to_int(loc) + ","))
+        && !gotPeriled(loc))
         return;
     step("Map the Monsters armed for " + loc);
     use_skill($skill[Map the Monsters]);

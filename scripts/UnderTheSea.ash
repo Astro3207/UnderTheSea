@@ -1053,44 +1053,175 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
                 use_familiar("itdrop");
                 string conditional;
-                if (to_int(get_property("rwbMonsterCount")) == 0){
-                    print("Initiating banishes in Octopus Garden", "red");
-                    if (highShiny())
-                        conditional += "monodent of the sea,";
-                }
                 if (to_int(get_property("rwbMonsterCount")) <= 1 && !get_property("trackedMonsters").contains_text("Neptune flytrap"))
                     conditional += if_equip($item[McHugeLarge left pole]);
                 else 
                     conditional += baseball_equip();
-                tempEquipment("item drop", swimmingTrunks() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
-                adv($location[An octopus's garden]);
-            }
-            // Banish fallback if pellet still didn't drop
-            if (item_amount($item[wriggling flytrap pellet]) == 0) {
-                print("Initiating banishes in Octopus Garden", "red");
-                while (item_amount($item[wriggling flytrap pellet]) == 0) {
-                    use_familiar("itdrop");
-                    string conditional;
+
+                if (to_int(get_property("rwbMonsterCount")) == 0 && !mapReady()){
+                    print("Initiating banishes in Octopus Garden", "red");
                     if (highShiny())
                         conditional += "monodent of the sea,";
-                    conditional += cloakeEquip($location[An octopus's garden]);
-                    if (to_int(get_property("_assertYourAuthorityCast")) < 3) {
-                        tempEquipment("item drop", swimmingTrunks()
-                            + "Sheriff moustache,Sheriff badge,Sheriff pistol," + bathysphere($item[toy cupid bow]) + conditional);
-                    } else {
-                        tempEquipment("item drop", swimmingTrunks() + if_equip(banishGear($location[An octopus's garden]))
-                            + bathysphere($item[toy cupid bow]) + conditional + freeKill() );
-                    }
-                    // Reached only after the pellet has already failed to drop three
-                    // times, so the Peridot charge here is long gone and the flytrap
-                    // is 1 of 4. Worth a map charge to stop the bleeding.
-                    mapMonster($location[An octopus's garden]);
-                    adv($location[An octopus's garden]);
-                    timeSpinnerRefight($location[An octopus's garden]);
                 }
+
+                if (get_property("_assertYourAuthorityCast").to_int() < 3) 
+                    conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,"
+
+                tempEquipment("item drop", swimmingTrunks() + bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                if (to_int(get_property("rwbMonsterCount")) == 0)
+                    mapMonster();
+                adv($location[An octopus's garden]);
+                timeSpinnerRefight($location[An octopus's garden]);
             }
             if (item_amount($item[wriggling flytrap pellet]) > 0)
                 use($item[wriggling flytrap pellet]);}
+    }
+
+    void fitzsimmons(){
+        while (get_property("questS02Monkees") == "step1") {
+            if (NCForceEstimate() >= 4){
+                if (get_property("noncombatForcerActive") != "true")
+                    NCforce();
+                tempEquipment("item drop, -equip peridot of peril", swimmingTrunks() + bathysphere($item[none]) + if_equip($item[M&ouml;bius ring]));
+            } else {
+                use_familiar("-combat");
+                tempEquipment("-combat, -equip peridot of peril", "monodent of the sea," + swimmingTrunks() + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+                mood("-combat");
+            }
+            adv($location[The Wreck of the Edgar Fitzsimmons]);
+        }
+    }
+
+    void grandpa(){
+        if (get_property("questS02Monkees") == "step4") {
+            use_familiar("-combat");
+            if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
+                if (pullSequence($item[mer-kin hidepaint]));
+                    use($item[mer-kin hidepaint]);
+            }
+            while (get_property("questS02Monkees") == "step4") {
+                string conditional;
+
+                if (doSWord() == true){
+                    use_familiar($familiar[Sword of S Words]);
+                    mood("itdrop");
+                } else {
+                    use_familiar("itdrop");
+                }
+                if (baseballPlayers() < 9 && available_amount($item[baseball diamond]) > 0) {
+                    conditional += baseball_equip();
+                } else if ((ps == $stat[mysticality] && !contains_text(get_property("trackedMonsters"), "giant squid"))
+                        || (ps == $stat[moxie] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler"))) {
+                    conditional += if_equip($item[McHugeLarge left pole]);
+                }
+                if (baseballPlayers() >= 9 && to_int(get_property("_baseballInnings")) <= 2)
+                    baseballD();
+                if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
+                    conditional += if_equip($item[blood cubic zirconia]);
+                mood(pearlRes[ps]);
+                tempEquipment("item drop, -100 combat","monodent of the sea," + swimmingTrunks() + delay()
+                    + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
+                mood("-combat");
+                adv(pearlLoc[ps]);
+            }
+        }
+    }
+
+    void golemRecall(){
+        if (get_property("questS02Monkees") == "step6" && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55 && !highShiny() && have_skill($skill[just the facts])) {
+            if (have_familiar($familiar[red-nosed snapper]))
+                use_familiar("itdrop");
+            else
+                use_familiar("-combat");
+            if (my_familiar() == $familiar[red-nosed snapper])
+                cli_execute("snapper construct");
+            tempEquipment("item drop",if_equip($item[legendary seal-clubbing club]) + if_equip($item[McHugeLarge left pole]) + bathysphere($item[toy cupid bow]));
+            summon($monster[black crayon golem]);
+        }
+    }
+
+    void outpost(){
+        if (NCForceEstimate() >= 5 && have_effect($effect[driving waterproofly]) > 0)
+            pillKeeper("free familiar");
+        while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || 
+            contains_text("step6,step7,step8",get_property("questS02Monkees"))){
+            if ($location[The Mer-Kin Outpost].turns_spent < 5)
+                set_property("stashboxChecked", "0");
+            if (contains_text(get_property("stashboxChecked"), "1")
+                && contains_text(get_property("stashboxChecked"), "2")
+                && contains_text(get_property("stashboxChecked"), "3"))
+                abort("All stashbox locations checked but no stashbox — something went wrong");
+            
+            // Familiar choice
+            if (get_property("_monsterHabitatsFightsLeft") == "1" && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_familiar($familiar[patriotic eagle]))
+                use_familiar($familiar[patriotic eagle]);
+            else if (doSWord() == true && $location[The Mer-Kin Outpost].turns_spent < 26 && 
+                (get_property("_monsterHabitatsFightsLeft") == "0" || available_amount($item[crayon shavings]) >= 9)){
+                use_familiar($familiar[Sword of S Words]);
+                mood("itdrop");
+            } else if ((highShiny() || lowShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[pristine fish scale]) < 6)
+                use_familiar("itdrop");
+            else
+                use_familiar("-combat");
+
+            // Conditional gear
+            string conditional;
+            if (get_property("_monsterHabitatsFightsLeft") == "1" && have_effect($effect[Everything Looks Purple]) == 0
+                && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_item($item[roman candelabra]))
+                conditional += "roman candelabra,";
+            else 
+                conditional += baseball_equip();
+            if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+                conditional += "sea cowboy hat,sea chaps,";
+
+            if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && have_item($item[backup camera])
+                && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
+                conditional += "backup camera,";
+            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
+                conditional += if_equip($item[blood cubic zirconia]);
+            else
+                conditional += if_equip($item[Congressional Medal of Insanity]);
+        }
+        while () {
+
+            
+
+                if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
+                    conditional += "shark jumper,scale-mail underwear,elf guard scuba,";
+                else 
+                    conditional += swimmingTrunks();
+            if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
+                mood("itdrop");
+            if (get_property("merkinLockkeyMonster") != "") {
+                mood("-combat");
+                tempEquipment("-combat", "monodent of the sea," + bathysphere($item[none]) + freeRun() + conditional);
+            } else {
+                tempEquipment("item drop", "monodent of the sea," + bathysphere($item[toy cupid bow]) + conditional + freeKill());
+            }
+            adv($location[The Mer-Kin Outpost]);
+
+            if (item_amount($item[Grandma's Note]) > 0
+                && item_amount($item[Grandma's Fuchsia Yarn]) > 0
+                && item_amount($item[Grandma's Chartreuse Yarn]) > 0){
+                use_familiar("itdrop");
+                equip($item[really, really nice swimming trunks]);
+                cli_execute("grandpa note");
+            }
+            if (my_path().id == 55){
+                if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
+                    baseballD();
+                while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 
+                    && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40
+                    && contains_text("step9,step10,step11,step12",get_property("questS02Monkees"))){
+                    if (available_amount($item[black glass]) == 0)
+                        oldGuy();
+                    if (available_amount($item[Elf Guard SCUBA tank]) == 0)
+                        pullSequence($item[Elf Guard SCUBA tank]);
+                    recallCaliginous();
+                }
+            }
+        }
+        refresh_status();
     }
 
 // ─── SEA MONKEES ──────────────────────────────────────────────────────────────
@@ -1103,164 +1234,29 @@ void seaMonkees() {
     post_adv();
     step("phase: flytrap pellet (Sea Monkees start)");
     flytrap();
+
     if (get_property("questS02Monkees") == "started")
         visit_url("monkeycastle.php?who=1");
-
-    // ── Step 1: Edgar Fitzsimmons wreck ──────────────────────────────────────
     step("phase: Wreck of the Edgar Fitzsimmons (step 1)");
-    while (get_property("questS02Monkees") == "step1") {
-        if (NCForceEstimate() >= 4){
-            if (get_property("noncombatForcerActive") != "true")
-                NCforce();
-            tempEquipment("item drop, -equip peridot of peril", swimmingTrunks() + bathysphere($item[none]) + if_equip($item[M&ouml;bius ring]));
-        } else {
-            use_familiar("-combat");
-            tempEquipment("-combat, -equip peridot of peril", "monodent of the sea," + swimmingTrunks() + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
-            mood("-combat");
-        }
-        adv($location[The Wreck of the Edgar Fitzsimmons]);
-    }
+    fitzsimmons();
 
     if (get_property("questS02Monkees") == "step2") {
         visit_url("monkeycastle.php?who=2");
         visit_url("monkeycastle.php?who=1");
     }
 
-    // ── Step 4: Unlocking Grandpa ──────────────────────────────────
     step("phase: Grandpa unlock (step 4)");
-    if (get_property("questS02Monkees") == "step4") {
-        use_familiar("-combat");
-        if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
-            if (pullSequence($item[mer-kin hidepaint]));
-                use($item[mer-kin hidepaint]);
-        }
-        while (get_property("questS02Monkees") == "step4") {
-            string conditional;
-
-            if (doSWord() == true){
-                use_familiar($familiar[Sword of S Words]);
-                mood("itdrop");
-            } else {
-                use_familiar("itdrop");
-            }
-            if (baseballPlayers() < 9 && available_amount($item[baseball diamond]) > 0) {
-                conditional += baseball_equip();
-            } else if ((ps == $stat[mysticality] && !contains_text(get_property("trackedMonsters"), "giant squid"))
-                    || (ps == $stat[moxie] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler"))) {
-                // if_equip() is the ownership check for the pole; both class
-                // arms need it.
-                conditional += if_equip($item[McHugeLarge left pole]);
-            }
-            if (baseballPlayers() >= 9 && to_int(get_property("_baseballInnings")) <= 2)
-                baseballD();
-            if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
-                conditional += if_equip($item[blood cubic zirconia]);
-            mood(pearlRes[ps]);
-            tempEquipment("item drop, -100 combat","monodent of the sea," + swimmingTrunks() + freeRun()
-                + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
-            mood("-combat");
-            adv(pearlLoc[ps]);
-        }
-    }
+    grandpa();
 
     if (get_property("questS02Monkees") == "step5")
         cli_execute("grandpa grandma");
 
-    // ── Step 6: Black Crayon Golem recall ────────────────────────────────────
     step("phase: golem recall (step 6)");
-    if (get_property("questS02Monkees") == "step6" && get_property("_monsterHabitatsMonster") == "" && my_path().id == 55 && !highShiny() && have_skill($skill[just the facts])) {
-        if (have_familiar($familiar[red-nosed snapper]))
-            use_familiar("itdrop");
-        else
-            use_familiar("-combat");
-        if (my_familiar() == $familiar[red-nosed snapper])
-            cli_execute("snapper construct");
-        tempEquipment("item drop",if_equip($item[legendary seal-clubbing club]) + if_equip($item[McHugeLarge left pole]) + bathysphere($item[toy cupid bow]));
-        summon($monster[black crayon golem]);
-    }
+    golemRecall();
 
     // ── Mer-kin Outpost stashbox hunt ─────────────────────────────────────────
     step("phase: Mer-kin Outpost (stashbox / lockkey)");
-    // Fidoxene only when the forcer inventory means Sneakisol will not be
-    // needed; otherwise the free pill stays banked for NCforce(), since a
-    // forcer fires on the FIRST noncombat after it is taken.
-    if (NCForceEstimate() >= 4)
-        pillKeeper("free familiar");
-    while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || contains_text("step6,step7,step8",get_property("questS02Monkees"))) {
-        if ($location[The Mer-Kin Outpost].turns_spent < 5)
-            set_property("stashboxChecked", "0");
-        // stashboxChecked accumulates in whatever order the lock monsters
-        // appeared (e.g. "3,1,2"), so test membership, not the exact string.
-        if (contains_text(get_property("stashboxChecked"), "1")
-            && contains_text(get_property("stashboxChecked"), "2")
-            && contains_text(get_property("stashboxChecked"), "3"))
-            abort("All stashbox locations checked but no stashbox — something went wrong");
-
-        // Familiar choice
-        if (get_property("_monsterHabitatsFightsLeft") == "1" && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_familiar($familiar[patriotic eagle]))
-            use_familiar($familiar[patriotic eagle]);
-        else if (doSWord() == true && $location[The Mer-Kin Outpost].turns_spent < 26 && (get_property("_monsterHabitatsFightsLeft") == "0" || available_amount($item[crayon shavings]) > 9)){
-            use_familiar($familiar[Sword of S Words]);
-            mood("itdrop");
-        } else if (((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6) || have_familiar($familiar[red-nosed snapper]))
-            use_familiar("itdrop");
-        else
-            use_familiar("-combat");
-
-        // Conditional gear
-            string conditional;
-            if (get_property("_monsterHabitatsFightsLeft") == "1" && have_effect($effect[Everything Looks Purple]) == 0
-                && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_item($item[roman candelabra]))
-                conditional += "roman candelabra,";
-            else if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
-                conditional += "sea cowboy hat,sea chaps,";
-            else 
-                conditional += baseball_equip();
-
-            if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && have_item($item[backup camera])
-                && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
-                conditional += "backup camera,";
-            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
-                conditional += if_equip($item[blood cubic zirconia]);
-            else
-                conditional += if_equip($item[Congressional Medal of Insanity]);
-
-            if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
-                conditional += "shark jumper,scale-mail underwear,elf guard scuba,";
-            else 
-                conditional += swimmingTrunks();
-        if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
-            mood("itdrop");
-        if (get_property("merkinLockkeyMonster") != "") {
-            mood("-combat");
-            tempEquipment("-combat", "monodent of the sea," + bathysphere($item[none]) + freeRun() + conditional);
-        } else {
-            tempEquipment("item drop", "monodent of the sea," + bathysphere($item[toy cupid bow]) + conditional + freeKill());
-        }
-        adv($location[The Mer-Kin Outpost]);
-
-        if (item_amount($item[Grandma's Note]) > 0
-            && item_amount($item[Grandma's Fuchsia Yarn]) > 0
-            && item_amount($item[Grandma's Chartreuse Yarn]) > 0){
-            use_familiar("itdrop");
-            equip($item[really, really nice swimming trunks]);
-            cli_execute("grandpa note");
-        }
-        if (my_path().id == 55){
-            if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
-                baseballD();
-            while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 
-                && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40
-                && contains_text("step9,step10,step11,step12",get_property("questS02Monkees"))){
-                if (available_amount($item[black glass]) == 0)
-                    oldGuy();
-                if (available_amount($item[Elf Guard SCUBA tank]) == 0)
-                    pullSequence($item[Elf Guard SCUBA tank]);
-                recallCaliginous();
-            }
-        }
-    }
-    refresh_status();
+    outpost();
 
     // ── Stashbox use and trail unlock ─────────────────────────────────────────
     if (item_amount($item[Mer-kin stashbox]) == 1) {
