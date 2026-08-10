@@ -3170,6 +3170,9 @@ void sorceress() {
             float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
             tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
                 + if_equip($item[Congressional Medal of Insanity]) + freeFight + bathysphere($item[none]));
+                if(have($effect[Driving Waterproofly]) && get_property("screechCombats") >= 1) {
+                    use_familiar($familiar[patriotic eagle]);
+                } 
             adv($location[Mer-kin Colosseum]);
             if (get_property("lastEncounter") == "Been There, Won That"){
                 set_property("lastColosseumRoundWon","15");
