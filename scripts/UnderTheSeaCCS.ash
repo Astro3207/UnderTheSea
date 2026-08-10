@@ -161,6 +161,39 @@ boolean isBladeswitcher() {
     return last_monster() == $monster[Mer-kin bladeswitcher];
 }
 
+// How many opening rounds of this fight no special can reach.
+//
+// Every colosseum special needs a wind-up: the monster spends one action
+// setting it up and a later one resolving it. Its first action of the fight can
+// therefore only ever be the wind-up, never the payoff -- which makes the
+// opening round free of specials, and a nuke thrown into it lands before the
+// monster has shown what it was going to do.
+//
+// One round, not more, and deliberately so. The player does NOT reliably act
+// first here: these monsters carry an initiative that is supposed to hand the
+// jump over every time, and a small share of fights still open on a lost one,
+// giving the monster an action before the first submitted round. That is enough
+// to move every subsequent special a round earlier, so anything past the first
+// round is only conditionally free and is left to the reflect read and the
+// stall rather than assumed.
+//
+// The championship monsters count too. Two of the three have no specials at all
+// and the third telegraphs nothing that is written down, so there is no wind-up
+// to outrun in the first place; what makes the opening nuke right for them is
+// the arithmetic. Their health is within reach of one cast, while the openers
+// take perhaps a tenth off attack power in the low thousands at a cost of two
+// rounds in the hundreds -- a trade that does not pay even when it works.
+int freeRounds() {
+    if (last_monster() == $monster[Mer-kin balldodger]
+        || last_monster() == $monster[Mer-kin netdragger]
+        || last_monster() == $monster[Mer-kin bladeswitcher]
+        || last_monster() == $monster[Georgepaul, the Balldodger]
+        || last_monster() == $monster[Johnringo, the Netdragger]
+        || last_monster() == $monster[Ringogeorge, the Bladeswitcher])
+        return 1;
+    return 0;
+}
+
 // The bladeswitcher's "bust" makes it take 1 damage from all sources and returns
 // the full amount the attack would have dealt to the caster, for ten rounds.
 // Countering it needs Ball Bust, which unlocks on the fifth underwater critical
@@ -366,33 +399,30 @@ void cleanUp() {
             }
             continue;
         }
-        // Against the one monster that reflects, the nuke leads and the openers
-        // wait behind it for the first two rounds.
+        // In a monster's free opening rounds the nuke leads and the openers
+        // wait behind it. Deleveling there spends the rounds no special can
+        // reach on buying a lower attack for rounds that a finished fight then
+        // never has, and it pushes the cast out of those rounds and into the
+        // first one the monster can answer.
         //
-        // The monster cannot act before we do -- its initiative is set so far
-        // below the player's that it never wins one -- so the earliest round it
-        // can wind up in is the first, the twirl lands in the second, and the
-        // reflection covers the third onward. Rounds one and two are therefore
-        // free of it no matter what, and a nuke thrown in them usually ends the
-        // fight outright: this monster's health scales with the colosseum round
-        // and stays inside what a single cast does. Deleveling first spends
-        // those two free rounds taking hits to buy a lower attack for rounds
-        // that then never happen, and lands the cast in the first round where
-        // it can be handed back instead.
+        // Note the test is on the fight's own round, not on rounds spent since
+        // this loop started. Anything that acted earlier in the fight -- a free
+        // kill, a thrown item -- has already given the monster an action to wind
+        // up in, so the opening is spent whether or not this loop spent it.
         //
         // Conditional on there being a nuke to lead with. Once the mana is gone
-        // the ladder is plain attacks, which is the one case where the openers
-        // are worth more than the damage they delay: they cost nothing, and
-        // they are the only thing that reads a reflect before damage is dealt.
+        // the ladder is plain attacks, and then the openers are worth more than
+        // the damage they delay: they cost nothing, and they are the only thing
+        // that reads a reflect before any damage is dealt.
         //
-        // From the third round on they go first as usual, and wait for a clear
-        // round rather than being skipped for the fight. A fight handed over
-        // mid-reflect still wants the monster delevelled once that reflect
-        // lapses, and it would otherwise go the whole way undelevelled while
-        // being stalled against. They report a reflect that went up while they
-        // were being thrown, which is the case that loses the fight: the
-        // ladder's first cast would go into it.
-        boolean leadWithNuke = isBladeswitcher() && current_round() < 3
+        // Afterwards they go first as usual, and wait for a clear round rather
+        // than being skipped for the fight. A fight handed over mid-reflect
+        // still wants the monster delevelled once that reflect lapses, and it
+        // would otherwise go the whole way undelevelled while being stalled
+        // against. They report a reflect that went up while they were being
+        // thrown, which is the case that loses the fight: the ladder's first
+        // cast would go into it.
+        boolean leadWithNuke = current_round() <= freeRounds()
             && ((have_skill($skill[saucegeyser]) && my_mp() >= mp_cost($skill[saucegeyser]))
                 || (have_skill($skill[saucestorm]) && my_mp() >= mp_cost($skill[saucestorm])));
         if (!opened && !leadWithNuke) {
