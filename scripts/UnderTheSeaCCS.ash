@@ -366,13 +366,36 @@ void cleanUp() {
             }
             continue;
         }
-        // The openers wait for a clear round rather than being skipped for the
-        // fight. A fight handed over mid-reflect still wants the monster
-        // delevelled once that reflect lapses, and it would otherwise go the
-        // whole way undelevelled while being stalled against. They report a
-        // reflect that went up while they were being thrown, which is the case
-        // that loses the fight: the ladder's first cast would go into it.
-        if (!opened) {
+        // Against the one monster that reflects, the nuke leads and the openers
+        // wait behind it for the first two rounds.
+        //
+        // The monster cannot act before we do -- its initiative is set so far
+        // below the player's that it never wins one -- so the earliest round it
+        // can wind up in is the first, the twirl lands in the second, and the
+        // reflection covers the third onward. Rounds one and two are therefore
+        // free of it no matter what, and a nuke thrown in them usually ends the
+        // fight outright: this monster's health scales with the colosseum round
+        // and stays inside what a single cast does. Deleveling first spends
+        // those two free rounds taking hits to buy a lower attack for rounds
+        // that then never happen, and lands the cast in the first round where
+        // it can be handed back instead.
+        //
+        // Conditional on there being a nuke to lead with. Once the mana is gone
+        // the ladder is plain attacks, which is the one case where the openers
+        // are worth more than the damage they delay: they cost nothing, and
+        // they are the only thing that reads a reflect before damage is dealt.
+        //
+        // From the third round on they go first as usual, and wait for a clear
+        // round rather than being skipped for the fight. A fight handed over
+        // mid-reflect still wants the monster delevelled once that reflect
+        // lapses, and it would otherwise go the whole way undelevelled while
+        // being stalled against. They report a reflect that went up while they
+        // were being thrown, which is the case that loses the fight: the
+        // ladder's first cast would go into it.
+        boolean leadWithNuke = isBladeswitcher() && current_round() < 3
+            && ((have_skill($skill[saucegeyser]) && my_mp() >= mp_cost($skill[saucegeyser]))
+                || (have_skill($skill[saucestorm]) && my_mp() >= mp_cost($skill[saucestorm])));
+        if (!opened && !leadWithNuke) {
             opened = true;
             stallLeft = develOpeners();
             // They deal damage, so they can also end the fight outright; go
