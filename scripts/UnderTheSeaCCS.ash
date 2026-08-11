@@ -252,8 +252,20 @@ void noteRound(string page) {
 // would hand straight back.
 int develOpeners() {
     int stall = 0;
+    // No daily cap on this one. _micrometeoriteUses models potency, not a
+    // ration: the delevel opens at 25% and loses a point per use down to a floor
+    // of 10%. Mafia's daily-limit table carries a row for Macrometeorite and no
+    // row for this -- that ten-a-day limit belongs to the other skill, counted
+    // by a preference one letter away, and wearing it here switched the opener
+    // off partway through the run. At ten uses the delevel is still 15%, three
+    // times what the Time-Spinner takes and the largest single step of the
+    // three.
+    //
+    // It does not stagger, so unlike the Time-Spinner its round is one the
+    // monster attacks in. That is the same price the first ten casts already
+    // paid; whether it is worth paying belongs to the gate below, which asks
+    // whether the monster can still land a hit, and not to a use count.
     if (have_skill($skill[Micrometeorite])
-        && to_int(get_property("_micrometeoriteUses")) < 10
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
         stall = reflectStall(to_string(use_skill($skill[Micrometeorite])));
