@@ -982,8 +982,34 @@ void main(int round, monster mob, string page_text) {
                             }
                         }
                 }
+                // The waffle is a monster changer, and in this zone that makes
+                // it the thing that summons a wild seahorse. A seahorse has no
+                // exit but the tamer above: it is BOSS, so runs, banishes and
+                // copies do not touch it, and it carries defence and health in
+                // the hundreds of thousands behind full physical and elemental
+                // resistance, so every hit lands for 1. Summoned without the
+                // three cowbells and the lasso that tame it, the fight can only
+                // end on the round limit, and the corral draws the monster on
+                // its own often enough that arriving short of the pair is not
+                // hypothetical. So the summon carries the tamer's own item test.
+                //
+                // Only the summon. A seahorse already in front of us has come
+                // past the tamer, which declined it, and this throw is the last
+                // thing left to try -- narrowing that would take away an exit
+                // rather than an entrance.
+                //
+                // The name test is the same idea once removed: with the prize
+                // already collected there is nothing to summon one for, and the
+                // items are worth more spent elsewhere. It bounds what this
+                // throw creates and nothing else -- the tamer above carries no
+                // such test, so a seahorse the corral deals out on its own is
+                // still handled the way it always was.
                 if (item_amount($item[waffle]) > 0
-                    && !contains_text(get_property("_lastCombatActions"), "it11311")) {
+                    && !contains_text(get_property("_lastCombatActions"), "it11311")
+                    && (last_monster() == $monster[wild seahorse]
+                        || (get_property("seahorseName") == ""
+                            && item_amount($item[sea lasso]) > 0
+                            && item_amount($item[sea cowbell]) >= 3))) {
                     throw_item($item[waffle]);
                     run_combat();
                 }
@@ -992,7 +1018,14 @@ void main(int round, monster mob, string page_text) {
                     if (last_monster() == $monster[some fish])
                         cleanUp();
                 }
-                free_run(page_text, false);
+                // The sea cowboy is the only monster here that drops a sea
+                // lasso, so running from one while short of a lasso keeps the
+                // shortage running too -- and the shortage is exactly what turns
+                // a seahorse into a fight with no ending. Kill it instead and
+                // take the drop chance.
+                if (last_monster() != $monster[sea cowboy]
+                    || item_amount($item[sea lasso]) > 0)
+                    free_run(page_text, false);
                 free_kill(page_text, false);
                 cleanUp();
             } else {
