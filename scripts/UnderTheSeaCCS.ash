@@ -123,14 +123,54 @@ boolean bcz_gaze_ready() {
 // from the attack gate -- a caller that re-enters mid-fight before the
 // delevel lands would re-cast Weaksauce, so keep cleanUp() the only
 // caller and keep it finishing its fights.
-// Only the bladeswitchers reflect. Scoping on the monster and not the zone
-// matters: the netdragger's runner special deals half your max HP in one round,
-// which is a bigger single hit than the threshold below, and stalling ten rounds
-// against a netdragger -- which heals ~1000 a round -- loses a fight that
-// otherwise ends in four.
+// Only the Mer-kin bladeswitcher reflects, and scoping on that one monster
+// rather than on the zone or the name matters twice over.
+//
+// The netdragger's runner special deals half your max HP in one round, a bigger
+// single hit than the health threshold below, and stalling ten rounds against
+// something that heals ~1000 a round loses a fight that otherwise ends in four.
+//
+// The championship bladeswitcher is the subtler trap. It shares the name and the
+// switchblade but has no special moves of any kind -- no wind-up, no twirl, no
+// reflection -- so nothing here can ever arm legitimately against it, while its
+// attack is high enough that ordinary hits and crits clear the health threshold
+// routinely. Counting it in would spend ten stalled rounds per big hit against a
+// boss taking full damage throughout, inside a fight with a round limit.
 boolean isBladeswitcher() {
-    return last_monster() == $monster[Mer-kin bladeswitcher]
-        || last_monster() == $monster[Ringogeorge, the Bladeswitcher];
+    return last_monster() == $monster[Mer-kin bladeswitcher];
+}
+
+// How many opening rounds of this fight no special can reach.
+//
+// Every colosseum special needs a wind-up: the monster spends one action
+// setting it up and a later one resolving it. Its first action of the fight can
+// therefore only ever be the wind-up, never the payoff -- which makes the
+// opening round free of specials, and a nuke thrown into it lands before the
+// monster has shown what it was going to do.
+//
+// One round, not more, and deliberately so. The player does NOT reliably act
+// first here: these monsters carry an initiative that is supposed to hand the
+// jump over every time, and a small share of fights still open on a lost one,
+// giving the monster an action before the first submitted round. That is enough
+// to move every subsequent special a round earlier, so anything past the first
+// round is only conditionally free and is left to the reflect read and the
+// stall rather than assumed.
+//
+// The championship monsters count too. Two of the three have no specials at all
+// and the third telegraphs nothing that is written down, so there is no wind-up
+// to outrun in the first place; what makes the opening nuke right for them is
+// the arithmetic. Their health is within reach of one cast, while the openers
+// take perhaps a tenth off attack power in the low thousands at a cost of two
+// rounds in the hundreds -- a trade that does not pay even when it works.
+int freeRounds() {
+    if (last_monster() == $monster[Mer-kin balldodger]
+        || last_monster() == $monster[Mer-kin netdragger]
+        || last_monster() == $monster[Mer-kin bladeswitcher]
+        || last_monster() == $monster[Georgepaul, the Balldodger]
+        || last_monster() == $monster[Johnringo, the Netdragger]
+        || last_monster() == $monster[Ringogeorge, the Bladeswitcher])
+        return 1;
+    return 0;
 }
 
 // The bladeswitcher's "bust" makes it take 1 damage from all sources and returns
@@ -140,45 +180,88 @@ boolean isBladeswitcher() {
 // physical does not help: the reflect covers every damage source. The answer is
 // to stop dealing damage until it lapses.
 //
-// It has to be read off the fight page rather than inferred from a health drop:
-// main()'s page_text is the round the consult opened on, while cleanUp() runs
-// many rounds inside one invocation, so a stale copy would never show it. The
-// page carries only the most recent round's narrative, which is why this is
-// called as actions are submitted rather than once at the end.
+// Both tells are carried by the response to a submitted action. A monster's
+// messages are written in its half of a round, so the page returned for that
+// round's action is what holds them; a later request for the fight page is a
+// different response, and does not carry them -- a read taken between actions
+// comes back clean however live the reflect is.
 //
-// Two messages, not one. The twirl is the reflect going live; the dope move is
-// the wind-up a round earlier, and catching that is a round of warning the
-// activation alone cannot give. Stalling on the wind-up costs at most one round
-// of damage we might have been allowed, and the countdown re-arms off the twirl
-// when it lands, so an early stall corrects itself.
-boolean reflectImminent() {
-    if (!isBladeswitcher() || current_round() == 0)
-        return false;
-    string p = to_string(visit_url("fight.php"));
-    return contains_text(p, "twirling his blade around himself")
-        || contains_text(p, "an especially dope move");
+// So the tell is read from the action itself. Every combat function hands its
+// response back: attack(), use_skill() and throw_item() all return the round's
+// page. No extra request, and nothing that can go stale between the two.
+//
+// The page main() is handed covers the one round this cannot: whatever resolved
+// before the consult was given the fight. It is stamped with the round it
+// describes, because main() can spend rounds of its own before reaching the
+// point where it is read.
+string entryPage;
+int entryRound;
+
+// How many rounds of stalling a round's response calls for, 0 for none.
+//
+// Two messages, not one, and they mean different things. The twirl is the
+// reflect going live, and it runs ten rounds from there. The dope move is the
+// wind-up one round earlier: the twirl lands at the end of the round after it,
+// so the reflect covers the ten rounds after that -- eleven from here. Arming on
+// the wind-up gives up the one round the wind-up still allows, which is the
+// price of not having to trust that allowance; the twirl re-arms the full ten
+// when it lands, so the count corrects itself either way.
+int reflectStall(string page) {
+    if (!isBladeswitcher())
+        return 0;
+    if (contains_text(page, "twirling his blade around himself"))
+        return 10;
+    if (contains_text(page, "an especially dope move"))
+        return 11;
+    return 0;
 }
 
-boolean develOpeners() {
+// Hands a round's response to whatever reads it later. main() spends rounds of
+// its own before the fight reaches cleanUp(), and the tell can land in any of
+// them; without this the entry page is the round the consult opened on, which
+// by construction predates every special the monster could have used.
+void noteRound(string page) {
+    entryPage = page;
+    entryRound = current_round();
+}
+
+// Returns the rounds of stall the openers uncovered, 0 if they saw nothing.
+// Each opener is read as it is thrown and stops the rest when it finds a tell:
+// the meteorite and the Time-Spinner both deal damage, which a live reflect
+// would hand straight back.
+int develOpeners() {
+    int stall = 0;
+    // No daily cap on this one. _micrometeoriteUses models potency, not a
+    // ration: the delevel opens at 25% and loses a point per use down to a floor
+    // of 10%. Mafia's daily-limit table carries a row for Macrometeorite and no
+    // row for this -- that ten-a-day limit belongs to the other skill, counted
+    // by a preference one letter away, and wearing it here switched the opener
+    // off partway through the run. At ten uses the delevel is still 15%, three
+    // times what the Time-Spinner takes and the largest single step of the
+    // three.
+    //
+    // It does not stagger, so unlike the Time-Spinner its round is one the
+    // monster attacks in. That is the same price the first ten casts already
+    // paid; whether it is worth paying belongs to the gate below, which asks
+    // whether the monster can still land a hit, and not to a use count.
     if (have_skill($skill[Micrometeorite])
-        && to_int(get_property("_micrometeoriteUses")) < 10
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
-        use_skill($skill[Micrometeorite]);
-        if (reflectImminent()) return true;
+        stall = reflectStall(to_string(use_skill($skill[Micrometeorite])));
+        if (stall > 0) return stall;
     }
     if (item_amount($item[Time-Spinner]) > 0
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack()) {
-        throw_item($item[Time-Spinner]);
-        if (reflectImminent()) return true;
+        stall = reflectStall(to_string(throw_item($item[Time-Spinner])));
+        if (stall > 0) return stall;
     }
     if (have_skill($skill[Curse of Weaksauce])
         && my_mp() >= mp_cost($skill[Curse of Weaksauce])
         && current_round() > 0
         && my_buffedstat($stat[moxie]) + 10 < monster_attack())
-        use_skill($skill[Curse of Weaksauce]);
-    return reflectImminent();
+        stall = reflectStall(to_string(use_skill($skill[Curse of Weaksauce])));
+    return stall;
 }
 
 void attackCleanUp() {
@@ -241,42 +324,46 @@ boolean stallSpare(item it) {
 // when the unguent runs out, since even a wasted heal beats a swing that comes
 // straight back. A plain attack pays its own weapon damage into us, which is
 // why it is the floor rather than a choice.
-void stallRound() {
-    if (my_hp() * 2 < my_maxhp() && stallSpare($item[sea gel])) {
-        throw_item($item[sea gel]);
-        return;
-    }
-    if (stallSpare($item[Doc Galaktik's Pungent Unguent])) {
-        throw_item($item[Doc Galaktik's Pungent Unguent]);
-        return;
-    }
-    if (stallSpare($item[sea gel])) {
-        throw_item($item[sea gel]);
-        return;
-    }
-    attack();
+// Returns the round's response, so the caller can see a reflect renewed under a
+// stall that was already running.
+string stallRound() {
+    if (my_hp() * 2 < my_maxhp() && stallSpare($item[sea gel]))
+        return to_string(throw_item($item[sea gel]));
+    if (stallSpare($item[Doc Galaktik's Pungent Unguent]))
+        return to_string(throw_item($item[Doc Galaktik's Pungent Unguent]));
+    if (stallSpare($item[sea gel]))
+        return to_string(throw_item($item[sea gel]));
+    return to_string(attack());
 }
 
 void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
-    int stallLeft = 0;  // rounds of reflect still to wait out
     int stalled = 0;    // stall rounds spent in total, across re-arms
-    // The openers report a reflect that went up while they were being thrown --
-    // the case that loses the fight, since the ladder's first cast would
-    // otherwise go into it.
-    if (develOpeners())
-        stallLeft = 10;
+    boolean opened = false;  // the openers get one pass, on a clear round
+    // Whatever resolved before the consult was handed the fight: an autoattack,
+    // a free kill, a delevel step. Every round from here on is read off the
+    // action that produced it, but that one is only in the entry page.
+    //
+    // Aged by the rounds that have passed since. main() routinely spends its
+    // own before reaching here -- bang potions to the fifth round, then a free
+    // kill -- and a countdown started back then has that much less of it left.
+    // Taking the full ten regardless would stall well past the reflect, in the
+    // one zone whose fights are long enough for the round limit to matter.
+    int elapsed = current_round() - entryRound;
+    // Clamped, not trusted. Mafia resyncs its round counter to KoL's when the
+    // two disagree, and a monster swap restarts the fight's numbering, either
+    // of which can leave the stamp ahead of the current round -- and a negative
+    // elapsed would read as a stall to serve against a monster that never had
+    // a reflect, spending healing items reserved elsewhere.
+    if (elapsed < 0)
+        elapsed = 0;
+    int stallLeft = reflectStall(entryPage) - elapsed;
+    if (stallLeft < 0)
+        stallLeft = 0;
     while (current_round() > 0) {
         int round = current_round();
-        int hpBefore = my_hp();
-        // Before acting, not only after. develOpeners() and the colosseum's free
-        // kill both spend rounds ahead of this loop, so the special can already
-        // be live when the ladder takes its first swing -- and that first cast
-        // is the one that loses the fight, not the second.
-        if (stallLeft == 0 && reflectImminent())
-            stallLeft = 10;
         if (stallLeft > 0) {
-            stallRound();
+            string stallPage = stallRound();
             // Only a round that actually happened burns the countdown, and the
             // special can land again mid-stall -- a blind ten would resume
             // casting into a reflect that had been renewed under it. A fight
@@ -286,13 +373,16 @@ void cleanUp() {
             if (current_round() != round) {
                 stallLeft -= 1;
                 stalled += 1;
-                // Re-arm only while there is still something to stall WITH.
-                // Past the item budget every further round is a plain attack,
-                // which feeds the reflect -- better to take the fight back and
-                // let it end one way or the other than to idle out the round
-                // limit.
-                if (current_round() > 0 && stalled < 14 && reflectImminent())
-                    stallLeft = 10;
+                // Bounded, because a fight has a round limit and idling into
+                // it is a loss of its own. A monster renewing the special
+                // faster than it can be waited out is not a fight that stalling
+                // wins, so past this many stalled rounds the fight is taken
+                // back and allowed to end one way or the other.
+                if (current_round() > 0 && stalled < 14) {
+                    int renewed = reflectStall(stallPage);
+                    if (renewed > stallLeft)
+                        stallLeft = renewed;
+                }
             } else {
                 loopCount += 1;
                 if (loopCount > 3)
@@ -300,6 +390,47 @@ void cleanUp() {
             }
             continue;
         }
+        // In a monster's free opening rounds the nuke leads and the openers
+        // wait behind it. Deleveling there spends the rounds no special can
+        // reach on buying a lower attack for rounds that a finished fight then
+        // never has, and it pushes the cast out of those rounds and into the
+        // first one the monster can answer.
+        //
+        // Note the test is on the fight's own round, not on rounds spent since
+        // this loop started. Anything that acted earlier in the fight -- a free
+        // kill, a thrown item -- has already given the monster an action to wind
+        // up in, so the opening is spent whether or not this loop spent it.
+        //
+        // Conditional on there being a nuke to lead with. Once the mana is gone
+        // the ladder is plain attacks, and then the openers are worth more than
+        // the damage they delay: they cost nothing, and they are the only thing
+        // that reads a reflect before any damage is dealt.
+        //
+        // Afterwards they go first as usual, and wait for a clear round rather
+        // than being skipped for the fight. A fight handed over mid-reflect
+        // still wants the monster delevelled once that reflect lapses, and it
+        // would otherwise go the whole way undelevelled while being stalled
+        // against. They report a reflect that went up while they were being
+        // thrown, which is the case that loses the fight: the ladder's first
+        // cast would go into it.
+        boolean leadWithNuke = current_round() <= freeRounds()
+            && ((have_skill($skill[saucegeyser]) && my_mp() >= mp_cost($skill[saucegeyser]))
+                || (have_skill($skill[saucestorm]) && my_mp() >= mp_cost($skill[saucestorm])));
+        if (!opened && !leadWithNuke) {
+            opened = true;
+            stallLeft = develOpeners();
+            // They deal damage, so they can also end the fight outright; go
+            // back to the loop test rather than casting into a finished one.
+            if (stallLeft > 0 || current_round() == 0)
+                continue;
+        }
+        // Recaptured here rather than at the top of the pass, because the
+        // openers above spend up to three rounds of their own. Measured from
+        // before them, the health test would charge one cast with four rounds
+        // of ordinary hits and stall on the total, and the stuck-round test
+        // would compare against a round that had already moved.
+        round = current_round();
+        int hpBefore = my_hp();
         // Affordability ladder, not a skill-ownership fork: a geyser-knower
         // whose MP has dropped into saucestorm range still storms instead
         // of handing the fight to plain attacks. A Seal Clubber smacks
@@ -308,6 +439,7 @@ void cleanUp() {
         // current outfit was built as a spell nuke (the Sorceress phase
         // maximizes "spell damage percent, mys"): buffed mys above buffed
         // muscle means the geyser is the prepared weapon, keep it.
+        string actionPage;
         if (my_class() == $class[seal clubber]
             && have_skill($skill[Lunging Thrust-Smack])
             && my_buffedstat($stat[muscle]) >= my_buffedstat($stat[mysticality])
@@ -323,31 +455,36 @@ void cleanUp() {
             // the 30-round loss; leave them to the spells.
             && last_monster().physical_resistance < 50
             && my_mp() >= mp_cost($skill[Lunging Thrust-Smack])) {
-            use_skill($skill[Lunging Thrust-Smack]);
+            actionPage = to_string(use_skill($skill[Lunging Thrust-Smack]));
         } else if (have_skill($skill[saucegeyser])
             && my_mp() >= mp_cost($skill[saucegeyser])) {
-            use_skill($skill[saucegeyser]);
+            actionPage = to_string(use_skill($skill[saucegeyser]));
         } else if (have_skill($skill[saucestorm])
             && my_mp() >= mp_cost($skill[saucestorm])) {
+            // The shell's damage lands a round after it is cast, which is a
+            // round no read can protect: a reflect going up in between catches
+            // the payload with the caster already committed. Against the one
+            // monster that reflects, a slightly bigger storm is not worth a
+            // self-hit that arrives after the decision is made.
             if (have_skill($skill[Stuffed Mortar Shell])
+                && !isBladeswitcher()
                 && my_mp() >= mp_cost($skill[Stuffed Mortar Shell]) + mp_cost($skill[saucestorm]))
                 use_skill($skill[Stuffed Mortar Shell]);
-            use_skill($skill[saucestorm]);
+            actionPage = to_string(use_skill($skill[saucestorm]));
         } else {
             attackCleanUp();
             break;
         }
-        // Checked after acting, not before: the special resolves in the
-        // monster's half of the round, so this is the first moment it can be
-        // seen -- and seeing it here is what stops the SECOND cast into it,
-        // which is the one that turns a survivable hit into a lost fight.
-        //
-        // The health test is not redundant with the page read. It costs nothing,
-        // needs no assumption about what a re-fetched fight page still shows,
-        // and catches the reflect from its signature alone: a single round that
-        // takes a large bite out of us is one we just paid for ourselves.
-        if (stallLeft == 0 && isBladeswitcher()
-            && (hpBefore - my_hp() > 400 || reflectImminent()))
+        // The response to the cast just made, which is where the wind-up and
+        // the twirl are written. Reading it here is what stops the NEXT cast
+        // going into the reflect, and the wind-up half of it means that next
+        // cast is usually one that was never going to be allowed anyway.
+        stallLeft = reflectStall(actionPage);
+        // The health test is not redundant with the message read. It costs
+        // nothing, assumes nothing about the wording, and catches the reflect
+        // from its signature alone: a single round that takes a large bite out
+        // of us is one we just paid for ourselves.
+        if (stallLeft == 0 && isBladeswitcher() && hpBefore - my_hp() > 400)
             stallLeft = 10;
         if (round == current_round()) {
             loopCount += 1;
@@ -433,6 +570,8 @@ void shubDelevel() {
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
+    entryPage = page_text;
+    entryRound = round;
     // Pearl farming spends plain turns: free kills, free runs, Forces and
     // copies advance neither a zone's pearl progress nor screechCombats,
     // so every trick below would burn a charge for zero progress.
@@ -484,13 +623,20 @@ void main(int round, monster mob, string page_text) {
     // Chain another free diver off this one.
     lectureOnRelativity(mob, page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && mob != $monster[sea cowboy]){
+        string bangPage;
         if (have_skill($skill[Ambidextrous Funkslinging]))
-            throw_items(bangA(),bangB());
+            bangPage = to_string(throw_items(bangA(),bangB()));
         else
-            throw_item(bangA());
+            bangPage = to_string(throw_item(bangA()));
+        // These are rounds like any other: a special can resolve in one of
+        // them, and the response is the only place it is written. Hand it on,
+        // and stop throwing once one turns up -- some of these deal damage.
+        noteRound(bangPage);
+        if (reflectStall(bangPage) > 0)
+            break;
     }
     if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
-        throw_item($item[sea lasso]);
+        noteRound(to_string(throw_item($item[sea lasso])));
     // ── Location-based combat logic ───────────────────────────────────────────
     switch (my_location()) {
         case $location[The Skeleton Store]:
@@ -807,8 +953,34 @@ void main(int round, monster mob, string page_text) {
                             }
                         }
                 }
+                // The waffle is a monster changer, and in this zone that makes
+                // it the thing that summons a wild seahorse. A seahorse has no
+                // exit but the tamer above: it is BOSS, so runs, banishes and
+                // copies do not touch it, and it carries defence and health in
+                // the hundreds of thousands behind full physical and elemental
+                // resistance, so every hit lands for 1. Summoned without the
+                // three cowbells and the lasso that tame it, the fight can only
+                // end on the round limit, and the corral draws the monster on
+                // its own often enough that arriving short of the pair is not
+                // hypothetical. So the summon carries the tamer's own item test.
+                //
+                // Only the summon. A seahorse already in front of us has come
+                // past the tamer, which declined it, and this throw is the last
+                // thing left to try -- narrowing that would take away an exit
+                // rather than an entrance.
+                //
+                // The name test is the same idea once removed: with the prize
+                // already collected there is nothing to summon one for, and the
+                // items are worth more spent elsewhere. It bounds what this
+                // throw creates and nothing else -- the tamer above carries no
+                // such test, so a seahorse the corral deals out on its own is
+                // still handled the way it always was.
                 if (item_amount($item[waffle]) > 0
-                    && !contains_text(get_property("_lastCombatActions"), "it11311")) {
+                    && !contains_text(get_property("_lastCombatActions"), "it11311")
+                    && (last_monster() == $monster[wild seahorse]
+                        || (get_property("seahorseName") == ""
+                            && item_amount($item[sea lasso]) > 0
+                            && item_amount($item[sea cowbell]) >= 3))) {
                     throw_item($item[waffle]);
                     run_combat();
                 }
@@ -817,7 +989,14 @@ void main(int round, monster mob, string page_text) {
                     if (last_monster() == $monster[some fish])
                         cleanUp();
                 }
-                free_run(page_text, false);
+                // The sea cowboy is the only monster here that drops a sea
+                // lasso, so running from one while short of a lasso keeps the
+                // shortage running too -- and the shortage is exactly what turns
+                // a seahorse into a fight with no ending. Kill it instead and
+                // take the drop chance.
+                if (last_monster() != $monster[sea cowboy]
+                    || item_amount($item[sea lasso]) > 0)
+                    free_run(page_text, false);
                 free_kill(page_text, false);
                 cleanUp();
             } else {

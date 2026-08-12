@@ -2390,13 +2390,35 @@ void pearlResCheck(location zone) {
         abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
             + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
             + " is up; add " + elem + " resistance gear or buffs and rerun.");
-    // Last, once the gear above is settled: the walk's outfit carries no HP
-    // weight, so max HP here is roughly half what it is in the run proper, and
-    // a threshold computed back then leaves mafia waiting until a couple of
-    // hundred HP to heal. These zones take 100-180 a fight and give back about
-    // eight, so that is a slow slide into a lost combat rather than a fight
-    // anyone could see coming.
+    // Last, once the gear above is settled: the walk's outfit spends every slot
+    // on resistance and +combat, so max HP here is a fraction of what the run
+    // proper carries, and a threshold computed back then leaves mafia waiting
+    // until a couple of hundred HP to heal.
     setRecoveryTargets();
+    // Then heal outright, rather than leaving it to that threshold. Mafia's
+    // trigger is three quarters of the target, which assumes a fight costs less
+    // than a quarter of the bar; one of these fights costs most of it, so a
+    // walker that starts a turn even slightly down is inside the margin that
+    // kills it, and mafia -- still above its trigger -- does nothing. There is
+    // no safe buffer at this ratio, only full.
+    //
+    // It also has to happen after the re-dress above and not before. A zone
+    // change swaps the whole outfit and max HP moves with it, so a heal taken
+    // while the previous zone's gear was on tops up to the wrong number and
+    // leaves a gap mafia will not close.
+    //
+    // The mana comes first because the cheap way to fill that bar is a spell:
+    // asking for a full heal with nothing to cast it with is how a top-up turns
+    // into "ran out of restores", which stops the walk outright. The top-up at
+    // the head of this function ran before the moods spent from the same pool.
+    //
+    // Above the heal's own cost, too, and not merely up to it. A cocoon is 20
+    // of it, and topping up to exactly what the cocoon spends hands the dive a
+    // bar with nothing left in it -- which is the shortfall the top-up exists
+    // to prevent, moved one step later.
+    if (my_mp() < 50)
+        topUpMp(50);
+    restore_hp(my_maxhp());
 }
 
 // The walker's Beaten Up guard, called before each of its adventuring
