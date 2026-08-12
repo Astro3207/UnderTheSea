@@ -725,10 +725,7 @@ boolean prayerbeadsShort() {
 }
 
 // ─── THE FORCE BUDGET ─────────────────────────────────────────────────────────
-// Five charges a day, claimed in priority order: the diver (2 while its hunt
-// is live), the outpost healer while prayerbeads are short, the sea cow while
-// its drops are owed, then the library researcher / free-run of last resort.
-// Each claim releases the moment its need-check goes false.
+// 5 saber forces, 2 alloted for unholy diver
 int saberChargesLeft() {
     if (!have_item($item[Fourth of May Cosplay Saber]))
         return 0;
