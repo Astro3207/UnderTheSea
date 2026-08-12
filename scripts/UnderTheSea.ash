@@ -2534,7 +2534,7 @@ void sorceress() {
                 modes = "retrocape heck kill";
             }
 
-            if (to_int(get_property("lastColosseumRoundWon")) >= 3 && have_effect($effect[Up To 11] && have_skill($skill[BCZ: Dial it up to 11])) == 0)
+            if (to_int(get_property("lastColosseumRoundWon")) >= 3 && have_effect($effect[Up To 11]) == 0 && have_skill($skill[BCZ: Dial it up to 11]))
                 cli_execute($effect[Up To 11].default);
             if (to_int(get_property("lastColosseumRoundWon")) >= 6) {
                 if (item_amount($item[crayon shavings]) < 8
