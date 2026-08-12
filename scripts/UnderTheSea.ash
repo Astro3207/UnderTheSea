@@ -3151,22 +3151,21 @@ void sorceress() {
                 modes = "retrocape heck kill";
             }
 
-            if (to_int(get_property("lastColosseumRoundWon")) >= 3
-                && have_effect($effect[Up To 11]) == 0)
+            if (to_int(get_property("lastColosseumRoundWon")) >= 3 && have_effect($effect[Up To 11]) == 0)
                 cli_execute($effect[Up To 11].default);
             if (to_int(get_property("lastColosseumRoundWon")) >= 6) {
                 if (item_amount($item[crayon shavings]) < 8
                     && item_amount($item[null-day exploit]) > 0
                     && have_effect($effect[null afternoon]) == 0)
                     use($item[null-day exploit]);
-                if (have_familiar($familiar[patriotic eagle]) && to_int(get_property("screechCombats")) > 0 && have_item($item[Congressional Medal of Insanity])) {
-                    use_familiar($familiar[patriotic eagle]);
-                }
-                else if (have_familiar($familiar[foul ball])) {
-                    use_familiar($familiar[foul ball]);
-                }
-                mood("colosseum");
             }
+            if (have_familiar($familiar[patriotic eagle]) && to_int(get_property("screechCombats")) > 0 && have_item($item[Congressional Medal of Insanity])) {
+                use_familiar($familiar[patriotic eagle]);
+            }
+            else if (have_familiar($familiar[foul ball])) {
+                use_familiar($familiar[foul ball]);
+            }
+            mood("colosseum");
             float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
             tempEquipment(coeff + " spell damage percent, mys", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
                 + if_equip($item[Congressional Medal of Insanity]) + freeFight + bathysphere($item[none]));
