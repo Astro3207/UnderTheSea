@@ -1228,172 +1228,234 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         refresh_status();
     }
 
-    void divingHelmet(){
+    void unholyDiver(string str){
+        step("phase: rusty rivets");
         while (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat]) {
-            string conditional;
-            if (highShiny() || count_summons() == 0){
-                //Resource saving, the basic adventure in the wreck until you get enough rivets
-                if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
-                    use_familiar("-combat");
-                    tempEquipment("-combat", bathysphere($item[toy cupid bow]));
-                    mood("-combat");
-                    NCforce();
-                } else if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
-                    use_familiar("itdrop");
-                    if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
-                        conditional += "spring shoes,";
-                    } else if (get_property("heartstoneBanishUnlocked") == "true")
-                        conditional += if_equip($item[heartstone]);
-                    if (diverForceReady())
-                        conditional += if_equip($item[Fourth of May Cosplay Saber]);
-                    tempEquipment("item drop","monodent of the sea," + if_equip($item[peridot of peril]) + conditional + bathysphere($item[toy cupid bow]));
-                    mood("itdrop");
-                }
-            } else if (lowShiny()){
-                if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
-                    use_familiar("-combat");
-                    tempEquipment("-combat", bathysphere($item[toy cupid bow]));
-                    mood("-combat");
-                    if (NCForceEstimate() > 4)
-                        NCforce();
-                } else if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20 && get_property("beGregariousMonster") != "745"){
-                    use_familiar("itdrop");
-                    if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
-                        conditional += "spring shoes,";
-                    } else if (get_property("heartstoneBanishUnlocked") == "true")
-                        conditional += if_equip($item[heartstone]);
-                    tempEquipment("item drop","monodent of the sea," + if_equip($item[peridot of peril]) + conditional + bathysphere($item[toy cupid bow]));
-                    mood("itdrop");
-                    if (get_property("beGregariousCharges") == 0){
-                        if (pullSequence($item[Extrovermectin™]))
-                            chew($item[Extrovermectin™]);
-                    }
-                } else if (get_property("beGregariousMonster") == "745"){
-                    return;
-                }
-            } else if (count_summons() >= 1){
+            switch str {
+                case "summon":
+                    if (have_item($item[Cursed monkey's paw]) && count_summons() > 0){
+                        if (have_effect($effect[shadow waters]) == 0)
+                            shadowRift();
 
-            }
-            if (have_item($item[Cursed monkey's paw]) && count_summons() >= 1 && !highShiny()){
-                mood("itdrop");
-                if (have_effect($effect[shadow waters]) == 0)
-                    shadowRift();
-                if (item_amount($item[rusty porthole]) == 0) {
-                    if (diverForceReady()){
-                        if (!use_familiar($familiar[chest mimic]))
-                            use_familiar("itdrop");
-                    } else if (baseballPlayers() >= 8){
-                        if (!use_familiar($familiar[jill-of-all-trades]))
-                            use_familiar("itdrop");
-                    } else {
-                        if (!use_familiar($familiar[chest mimic]))
-                            use_familiar("itdrop");
+                        int diverTries;
+                        while ((item_amount($item[rusty rivet]) < 8 || item_amount($item[rusty porthole]) == 0|| available_amount($item[rusty broken diving helmet]) == 0)
+                            && diverTries < 4) {
+                            string conditional;
+                            diverTries += 1;
+                            if (diverForceReady() || item_amount($item[rusty rivet]) < 4){
+                                if (!use_familiar($familiar[chest mimic]))
+                                    use_familiar("itdrop");
+                            } else {
+                                if (!use_familiar($familiar[jill-of-all-trades]))
+                                    use_familiar("itdrop");
+                            }
+                            tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
+                            if (!diverForceReady()){
+                                mood("superitdrop");
+                                yellowRayPrep();
+                            }
+                            if (get_property("beGregariousCharges") == 0 && str == "greg"){
+                                if (pullSequence($item[Extrovermectin™]))
+                                    chew($item[Extrovermectin™]);
+                            }
+                            if (item_amount($item[mimic egg]) > 0
+                                && contains_text(get_property("mimicEggMonsters"), "745")){
+                                cli_execute("c2t_megg fight unholy diver");
+                                run_combat();
+                                if (handling_choice() && last_choice() == 1387)
+                                    run_choice(3);
+                            } else if (timeSpinnerFight($monster[unholy diver])) {
+                            } else if (count_summons() >= 1) {
+                                summon($monster[unholy diver]);
+                                run_combat();
+                            } else {
+                                break;
+                            }
+                            if (baseballPlayers() >= 9)
+                                baseballD();
+                            if (str == "greg" && get_property("beGregariousMonster") == "745")
+                                return;
+                        }
+                        if (item_amount($item[rusty rivet]) < 8 && !pulledToday($item[rusty rivet]))
+                            pullSequence($item[rusty rivet]);
                     }
-                    tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]) + if_equip($item[baseball diamond]));
-                    print("Item drop rate is " + numeric_modifier("item drop"));
-                    // Forced and yellow-rayed drops ignore item bonuses, so the
-                    // once-a-day squint only fires when neither covers this
-                    // fight: saberless and rayless, the roll is probabilistic
-                    // and doubling the bonus pays most on this table.
-                    if (!diverForceReady()) {
-                        yellowRayPrep();
-                        mood("superitdrop");
-                    }
-                    summon($monster[unholy diver]);
-                }
-
-                if (baseballPlayers() >= 9)
-                    baseballD();
-
-                // Divers #2..n, cheapest source first: the insurance egg is a free
-                // fight, a Time-Spinner refight costs one turn but is guaranteed,
-                // another summon costs whatever it costs. The CCS Forces or
-                // yellow-rays each of these while charges last, so with a saber
-                // this loop runs at most once. The tries cap keeps a misreporting
-                // resource from spinning the ladder.
-                int diverTries;
-                while ((item_amount($item[rusty rivet]) < 8
-                        || item_amount($item[rusty porthole]) == 0
-                        || available_amount($item[rusty broken diving helmet]) == 0)
-                    && diverTries < 4) {
-                    diverTries += 1;
-                    if (diverForceReady() || item_amount($item[rusty rivet]) < 4){
-                    if (!use_familiar($familiar[chest mimic]))
-                        use_familiar("itdrop");
-                } else {
-                    if (!use_familiar($familiar[jill-of-all-trades]))
-                        use_familiar("itdrop");
-                }
-                    tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
-                    if (!diverForceReady()){
-                        // Probabilistic roll: now the squint and the ray earn
-                        // their keep.
-                        mood("superitdrop");
-                        yellowRayPrep();
-                    }
-                    if (item_amount($item[mimic egg]) > 0
-                        && contains_text(get_property("mimicEggMonsters"), "745")){
-                        cli_execute("c2t_megg fight unholy diver");
-                        run_combat();
-                        // A Force cast during the egg fight can strand the
-                        // session in choice 1387 if nothing auto-resolved it.
-                        if (handling_choice() && last_choice() == 1387)
-                            run_choice(3);
-                    } else if (timeSpinnerFight($monster[unholy diver])) {
-                    } else if (count_summons() >= 1) {
-                    summon($monster[unholy diver]);
-                    run_combat();
-                    } else {
+                    if (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat])
                         break;
-                    }
-                }
-                if (item_amount($item[rusty rivet]) < 8 && !pulledToday($item[rusty rivet]))
-                    pullSequence($item[rusty rivet]);
-            } else {
-                use_familiar("itdrop");
-                if (NCForceEstimate() >= 7){
-                    NCforce();
-                    tempEquipment("-combat", swimmingTrunks() + bathysphere($item[toy cupid bow]));
-                    adv($location[The Wreck of the Edgar Fitzsimmons]);
-                }
-                while (item_amount($item[rusty rivet]) < 8 || available_amount($item[rusty broken diving helmet]) == 0 || item_amount($item[rusty porthole]) == 0){
+                case "direct":
+                    //Resource saving, the basic adventure in the wreck until you get enough rivets
                     string conditional;
+                    if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
+                        use_familiar("-combat");
+                        tempEquipment("-combat", bathysphere($item[toy cupid bow]));
+                        mood("-combat");
+                        if (NCForceEstimate() > 4)
+                            NCforce();
+                        adv($location[The Wreck of the Edgar Fitzsimmons]);
+                    } else if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
+                        use_familiar("itdrop");
                         if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0){
                             conditional += "shark jumper,scale-mail underwear,elf guard scuba tank,";
-                        } else {
+                        } else 
                             conditional += swimmingTrunks();
-                        }
-                    conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                    conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                    conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                    conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                    // Chained divers cost no adventure, which beats the drop
-                    // familiar we give up. Reverts itself once the rivets are in.
-                    professorFamiliar();
-                    if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
-                        use_familiar("itdrop");
+                        if (!gotPeriled($location[the wreck of edgar fitzsimmons]))
+                            if_equip($item[peridot of peril]);
                         if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
                             conditional += "spring shoes,";
                         } else if (get_property("heartstoneBanishUnlocked") == "true")
                             conditional += if_equip($item[heartstone]);
-                        tempEquipment("item drop","monodent of the sea," + if_equip($item[Congressional Medal of Insanity]) + if_equip($item[peridot of peril]) + conditional + bathysphere($item[toy cupid bow]));
+                        conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                        conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                        conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                        conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                        tempEquipment("item drop","monodent of the sea," + conditional + bathysphere($item[toy cupid bow]));
+                        if (get_property("beGregariousCharges") == 0 && str == "greg"){
+                            if (pullSequence($item[Extrovermectin™]))
+                                chew($item[Extrovermectin™]);
+                        }
                         mood("itdrop");
-                    } else {
-                        tempEquipment("-combat", "monodent of the sea," + conditional);
-                        mood("-combat");
+                        mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
+                        adv($location[The Wreck of the Edgar Fitzsimmons]);
                     }
-                    // Longest odds in the run: unholy diver is 1 of 5 here, and we
-                    // need 8 rivets plus a porthole plus a broken helmet.
-                    mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
-                    adv($location[The Wreck of the Edgar Fitzsimmons]);
-                    // Just fought the diver, so it is queued and can be refought
-                    // for one turn instead of rolling 1-in-5 for it again.
-                    timeSpinnerRefight($location[The Wreck of the Edgar Fitzsimmons]);
+                    if (str == "greg" && get_property("beGregariousMonster") == "745")
+                        return;
+                    break;
+            }
+        }
+        if (to_slot(divingHelmet()) != $slot[hat])
+            retrieve_item($item[aerated diving helmet]);
+    }
+
+    void caliginous(string str){
+        step("phase: Mom rescue (habitats / cyberzone)");
+        if (str == "cheap"){
+            int initialMomProgress = 24;
+            if (!have_item($item[backup camera]))
+                initialMomProgress += 4;
+            if (!have_item($item[2002 Mr. Store Catalog]))
+                initialMomProgress += 12;
+            if (available_amount($item[black glass]) == 0) 
+                buy($coinmaster[Big Brother], 1, $item[black glass]);
+            use_familiar("itdrop");
+            if (my_familiar() == $familiar[red-nosed snapper])
+                cli_execute("snapper horror");
+            if (highShiny() && to_int(get_property("momSeaMonkeeProgress")) < 36){
+                if (get_property("swordOfSWordsMonster") != "775"){
+                    use_familiar($familiar[sword of s words]);
+                    tempEquipment("item drop", if_equip($item[peridot of peril]) + swimmingTrunks() + bathysphere($item[toy cupid bow]));
+                    mood("itdrop");
+                    adv($location[The Coral Corral]);
+                }
+                while (to_int(get_property("momSeaMonkeeProgress")) < 40){
+                    if (available_amount($item[sea cowbell]) < 3)
+                        use_familiar($familiar[sword of s words]);
+                    else 
+                        use_familiar("itdrop");
+                    if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) {
+                        use($item[comb jelly]);
+                    }
+                    if (available_amount($item[sea leather]) > 0 && available_amount($item[sea cowboy hat]) == 0)
+                        create($item[sea cowboy hat]);
+                    string conditional;
+                    if (!contains_text(get_property("banishedMonsters"), "school of many"))
+                        conditional += "monodent of the sea,";
+                    if (to_int(get_property("lassoTrainingCount")) < 20 && available_amount($item[sea cowboy hat]) > 0)
+                        conditional += "sea cowboy hat,";
+                    if (have_effect($effect[driving waterproofly]) == 0){
+                        pullSequence($item[elf guard scuba tank]);
+                        conditional += "elf guard scuba tank,";
+                    }
+                    tempEquipment("item drop", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
+                    mood("itdrop");
+                    adv($location[The Caliginous Abyss]);
                 }
             }
-            if (to_slot(divingHelmet()) != $slot[hat])
-                retrieve_item($item[aerated diving helmet]);
         }
+        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && str == "cyberrealm"){
+            if (!contains_text(get_property("banishedPhyla"), "construct")) {
+                if (get_property("madnessBakeryAvailable") == "false") {
+                    visit_url("shop.php?whichshop=armory&action=talk");
+                    run_choice(1);
+                }
+                while (!contains_text(get_property("banishedPhyla"), "construct")
+                    && $location[madness bakery].turns_spent < 3) {
+                    use_familiar($familiar[patriotic eagle]);
+                    tempEquipment("item drop", "monodent of the sea");
+                    adv($location[madness bakery]);
+                }
+                while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
+                    && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
+                    recallCaliginous();
+                }
+                while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
+                    && to_int(get_property("_cyberFreeFights")) < 10
+                    && to_int(get_property("momSeaMonkeeProgress")) < 40) {
+                    use_familiar($familiar[glover]);
+                    tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
+                    if (my_buffedstat($stat[moxie]) < 500)
+                        abort("Need 500 moxie here to be safe");
+                    adv($location[Cyberzone 1]);
+                }
+            }
+            while (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress)
+                finishCaliginous();
+        }
+    }
+
+    void corral(string str){
+        if (get_property("corralUnlocked") != "true")
+            abort("corral not unlocked");
+        while (str == "drop" && get_property("_epicMcTwistUsed") == "false"){
+            if (have_effect($effect[shadow waters]) == 0 && lowShiny() == false)
+                shadowRift();
+            use_familiar("itdrop");
+            if (my_familiar() == $familiar[red-nosed snapper])
+                cli_execute("snapper mer-kin");
+            cli_execute("unequip blood cubic zirconia; unequip peridot of peril; unequip heartstone");
+            codpiece("blood cubic zirconia, heartstone");
+            if (get_property("_steelyEyedSquintUsed") == false)
+                mood("superitdrop");
+            if (available_amount($item[pro skateboard]) == 0)
+                pullSequence($item[pro skateboard]);
+            pullSequence($item[pulled yellow taffy]);
+            if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
+            && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
+                conditional += "backup camera,"
+                tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
+                    + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
+            } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
+                pullSequence($item[software glitch]);
+                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+            }
+            mood("itdrop");
+            adv($location[The Coral Corral]);
+        }
+        if (str == "drop" && item_amount($item[sea lasso]) < 5 && to_int(get_property("lassoTrainingCount")) < 20){
+            while (!have_item($item[cursed monkey's paw]) && item_amount($item[sea lasso]) < 6){
+                getMissingCorralItems();
+                if (get_property("dolphinItem") == "sea lasso" && have_item($item[durable dolphin whistle]))
+                    use($item[durable dolphin whistle]);
+            }
+            codpiece("none");
+        }
+        if (str == "collect" || str == "drop"){
+            if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]) {
+                while (item_amount($item[sea leather]) < 1){
+                    getMissingCorralItems();
+                    if (get_property("dolphinItem") == "sea leather" && have_item($item[durable dolphin whistle]))
+                        use($item[durable dolphin whistle]);
+                }
+                create($item[sea chaps]);
+            }
+            if (available_amount($item[sea cowboy hat]) == 0) {
+                while (item_amount($item[sea leather]) < 1){
+                    getMissingCorralItems();
+                    if (get_property("dolphinItem") == "sea leather" && have_item($item[durable dolphin whistle]))
+                        use($item[durable dolphin whistle]);
+                }
+                create($item[sea cowboy hat]);
+            }
+        }
+        "drop" || "collect" || "finish"
     }
 
 // ─── SEA MONKEES ──────────────────────────────────────────────────────────────
@@ -1454,172 +1516,35 @@ void seaMonkees() {
     // no no yes --> greg unholy diver --> 1 turn in caliginous if has backup cam --> max item backp/software glitch mctwist corral --> caliginous --> finish lasso --> finish corra
     // no no no --> sea cowboy  --> unholy diver mctwist taffy lasso --> caliginous abyss --> finish corral
     if (get_property("seahorseName") != ""){
-        if (highShiny()){
-            corral("killCow");
+        if (my_path().id == 0){
+            retrieve_item($item[aerated diving helmet]);
+        } else if (highShiny()){
             caliginous("cheap");
             unholyDiver("direct");
             corral("finish");
-        } else if (item_amount($item[server room key]) > 0 && item_amount($item[closed-circuit pay phone]) > 0 && available_amount($item[blood cubic zirconia]) > 0){
+        } else if (MomNCyber() && lassoShadow() > 0 && available_amount($item[blood cubic zirconia]) > 0){
             unholyDiver("summon");
             caliginous("cyberrealm");
             corral("drop");
-            shadowRift();
-            corral("finish");
-        } else if (item_amount($item[server room key]) == 0 && item_amount($item[closed-circuit pay phone]) > 0 && available_amount($item[blood cubic zirconia]) > 0){
-            unholyDiver("summon");
-            caliginous("cyberrealm");
+        } else if (available_amount($item[blood cubic zirconia]) > 0){
+            unholyDiver("greg");
             corral("drop");
-            shadowRift();
+            if (MomNCyber())
+                caliginous("cyberrealm");
+            else
+                caliginous("cheap");
             corral("finish");
-        }
-    }
-    step("phase: diving helmet (rivet hunt)");
-    divingHelmet();
-
-    // ── Construct banish + habitat recall for cyberzone ───────────────────────
-    step("phase: Mom rescue (habitats / cyberzone)");
-    if (my_path().id == 55){
-        int initialMomProgress = 24;
-        if (!have_item($item[backup camera]))
-            initialMomProgress += 4;
-        if (!have_item($item[2002 Mr. Store Catalog]))
-            initialMomProgress += 12;
-        if (available_amount($item[black glass]) == 0) 
-            buy($coinmaster[Big Brother], 1, $item[black glass]);
-        use_familiar("itdrop");
-        if (my_familiar() == $familiar[red-nosed snapper])
-            cli_execute("snapper horror");
-        if (highShiny() && to_int(get_property("momSeaMonkeeProgress")) < 36){
-            if (get_property("swordOfSWordsMonster") != "775"){
-                use_familiar($familiar[sword of s words]);
-                tempEquipment("item drop", if_equip($item[peridot of peril]) + swimmingTrunks() + bathysphere($item[toy cupid bow]));
-                mood("itdrop");
-                adv($location[The Coral Corral]);
-            }
-            while (to_int(get_property("momSeaMonkeeProgress")) < 40){
-                if (available_amount($item[sea cowbell]) < 3)
-                    use_familiar($familiar[sword of s words]);
-                else 
-                    use_familiar("itdrop");
-                if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) {
-                    use($item[comb jelly]);
-                }
-                if (available_amount($item[sea leather]) > 0 && available_amount($item[sea cowboy hat]) == 0)
-                    create($item[sea cowboy hat]);
-                string conditional;
-                if (!contains_text(get_property("banishedMonsters"), "school of many"))
-                    conditional += "monodent of the sea,";
-                if (to_int(get_property("lassoTrainingCount")) < 20 && available_amount($item[sea cowboy hat]) > 0)
-                    conditional += "sea cowboy hat,";
-                if (have_effect($effect[driving waterproofly]) == 0){
-                    pullSequence($item[elf guard scuba tank]);
-                    conditional += "elf guard scuba tank,";
-                }
-                tempEquipment("item drop", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
-                mood("itdrop");
-                adv($location[The Caliginous Abyss]);
-            }
-        }
-        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && have_familiar($familiar[patriotic eagle]) && have_item($item[server room key])) {
-            if (!contains_text(get_property("banishedPhyla"), "construct")) {
-                if (get_property("madnessBakeryAvailable") == "false") {
-                    visit_url("shop.php?whichshop=armory&action=talk");
-                    run_choice(1);
-                }
-                while (!contains_text(get_property("banishedPhyla"), "construct")
-                    && $location[madness bakery].turns_spent < 3) {
-                    use_familiar($familiar[patriotic eagle]);
-                    tempEquipment("item drop", "monodent of the sea");
-                    adv($location[madness bakery]);
-                }
-            }
-            while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
-                && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
-                recallCaliginous();
-            }
-            while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
-                && to_int(get_property("_cyberFreeFights")) < 10
-                && to_int(get_property("momSeaMonkeeProgress")) < 40) {
-                use_familiar($familiar[glover]);
-                tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
-                if (my_buffedstat($stat[moxie]) < 500)
-                    abort("Need 500 moxie here to be safe");
-                adv($location[Cyberzone 1]);
-            }
-        }
-        while (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress && (!have_familiar($familiar[patriotic eagle]) || !have_item($item[server room key]))){
-            finishCaliginous();
-        }
-    }
-
-    // ── Attempt at 1 turn coral corral
-    if (get_property("corralUnlocked") == "true" && ($location[the coral corral].turns_spent == 0 || last_monster() == $monster[wild seahorse]) && get_property("seahorseName") == "" && my_path().id == 55 && highShiny() == false) {
-        if (have_effect($effect[shadow waters]) == 0 && lowShiny() == false)
-            shadowRift();
-        use_familiar("itdrop");
-        if (my_familiar() == $familiar[red-nosed snapper])
-            cli_execute("snapper mer-kin");
-        cli_execute("unequip blood cubic zirconia; unequip peridot of peril; unequip heartstone");
-        codpiece("blood cubic zirconia, heartstone");
-        if (get_property("_steelyEyedSquintUsed") == false)
-            mood("superitdrop");
-        if (available_amount($item[pro skateboard]) == 0)
-            pullSequence($item[pro skateboard]);
-        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
-          && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
-            tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
-                + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
-            mood("itdrop");
-            adv($location[The Coral Corral]);
-        } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
-            pullSequence($item[software glitch]);
-            tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
-            mood("itdrop");
-            adv($location[The Coral Corral]);
         } else {
-            pullSequence($item[pulled yellow taffy]);
-            pullSequence($item[software glitch]);
-            if (!have_item($item[spring shoes]) && !have_item($item[heartstone]) && available_amount($item[stuffed yam stinkbomb]) == 0 && available_amount($item[handful of split pea soup]) == 0 && !lowShiny())
-                pullSequence($item[stuffed yam stinkbomb]);
-            tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + baseball_equip());
-            mood("itdrop");
-            adv($location[The Coral Corral]);
+            corral("collect");
+            unholyDiver("direct");
+            if (MomNCyber())
+                caliginous("cyberrealm");
+            else
+                caliginous("cheap");
+            corral("finish");
         }
-    }
-    if (item_amount($item[sea lasso]) < 5 && to_int(get_property("lassoTrainingCount")) < 20){
-        while (!have_item($item[cursed monkey's paw]) && item_amount($item[sea lasso]) < 6){
-            getMissingCorralItems();
-            if (get_property("dolphinItem") == "sea lasso" && have_item($item[durable dolphin whistle]))
-                use($item[durable dolphin whistle]);
-        }
-        codpiece("none");
     }
 
-    // ── Diving helmet acquisition for non-monkey paw owners and shadow rift owners ───────────────────────────────
-
-    // ── Craft sea cowboy hat and chaps ────────────────────────────────────────
-    step("phase: corral (leather / cowbell)");
-    if (my_path().id == 0){
-        retrieve_item($item[sea chaps]);
-        retrieve_item($item[sea cowboy hat]);
-    } else {
-        if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]) {
-            while (item_amount($item[sea leather]) < 1){
-                getMissingCorralItems();
-                if (get_property("dolphinItem") == "sea leather" && have_item($item[durable dolphin whistle]))
-                    use($item[durable dolphin whistle]);
-            }
-            create($item[sea chaps]);
-        }
-        if (available_amount($item[sea cowboy hat]) == 0) {
-            while (item_amount($item[sea leather]) < 1){
-                getMissingCorralItems();
-                if (get_property("dolphinItem") == "sea leather" && have_item($item[durable dolphin whistle]))
-                    use($item[durable dolphin whistle]);
-            }
-            create($item[sea cowboy hat]);
-        }
-    }
 }
 // ─── PEARL FARMING / EAGLE BANISH RE-AIM ─────────────────────────────────────
 // One walker serves both postloop prefs. uts_postLoopRunOutEagleBanish
@@ -1925,11 +1850,7 @@ void prepCodpiece() {
     print("Codpiece loaded: five unblemished pearls slotted for the next run.", "blue");
 }
 
-// ─── SORCERESS ────────────────────────────────────────────────────────────────
-
 void sorceress() {
-
-    // ── Shadow rift prep ─────────────────────────────────────────────────────
     step("phase: shadow rift prep");
     if (my_path().id == 55){
         if (to_int(get_property("encountersUntilSRChoice")) > 9
