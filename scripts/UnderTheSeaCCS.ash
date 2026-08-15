@@ -5,8 +5,6 @@ import UnderTheSea.ash;
 // Pass drop=true to skip items that interfere with item drops.
 void free_kill(string ptext, boolean drop) {
     if (highShiny()){
-        // Darts are an instakill too, so they only glance at the colosseum
-        // (see the club-only rule below) -- don't waste one there.
         if (contains_text(ptext, "Darts: Aim for the Bullseye")
             && my_location() != $location[mer-kin colosseum])
             use_skill($skill[Darts: Aim for the Bullseye]);
@@ -16,25 +14,15 @@ void free_kill(string ptext, boolean drop) {
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
 
-    // One freeing resource per fight: once Club 'Em Back in Time lands, the
-    // fight is already turn-free, and ptext is stale for the rest of this
-    // consult pass -- without the flag, the item loop below reads the
-    // pre-club page and spends a banked brick on a fight that costs nothing.
     boolean clubbed;
     foreach freeskill in $skills[Spit jurassic acid, Assert your Authority,
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
         BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
-        // Colosseum gladiators are insta-kill immune: damage-based
-        // instakills only glance (observed for shadow bricks; the wiki
-        // gives X-Ray and Shattering Punch the same immune-monster damage
-        // branch and has the missile read UNTARGETABLE), wasting their
-        // daily casts. Club 'Em is the exception -- against immune
-        // monsters it still deals 30% max HP and makes the fight free.
         if (my_location() == $location[mer-kin colosseum]
             && freeskill != $skill[Club 'Em Back in Time])
             continue;
         if (freeskill == $skill[Club 'Em Back in Time]
-            && (my_location() != $location[mer-kin colosseum] || lowShiny()
+            && ((my_location() != $location[mer-kin colosseum] && !lowShiny())
                 || to_int(get_property("_clubEmTimeUsed")) >= 5))
             continue;
         if (freeskill == $skill[BCZ: Sweat Bullets]
@@ -48,17 +36,10 @@ void free_kill(string ptext, boolean drop) {
         if (item_amount(freecombat) == 0) continue;
         if (freecombat == $item[groveling gravel] && drop) continue;
         if (freecombat == $item[shadow brick] && to_int(get_property("_shadowBricksUsed")) == 13) continue;
-            // Gladiators sit in these items' "unkillable" class: a brick
-            // glances for 400-600 (halved underwater) instead of killing,
-            // wasting both the item and the combat round.
-            if (my_location() == $location[Mer-kin Colosseum]) continue;
+        if (my_location() == $location[Mer-kin Colosseum]) continue;
         throw_item(freecombat);
     }
 
-    // Last resort: Use the Force forfeits the win and any conditional drops,
-    // so it runs only after every real free kill above, and only where
-    // saberEquip() put the saber on. saberForcesFree() keeps two charges
-    // reserved for the diver plan.
     if (current_round() > 0
         && saberForcesFree() > 0
         && have_equipped($item[Fourth of May Cosplay Saber])
@@ -185,20 +166,16 @@ item bangB(){
 
 void main(int round, monster mob, string page_text) {
     if (get_property("_utsPearlFarm") == "true") {
-        free_kill();
+        free_kill(page_text, false);
         cleanUp();
         return;
     }
-    // One extra roll of a fat drop table, once a day, on fights that will be
-    // WON; duplicateMonster() refuses fights the saber is about to Force.
+
     duplicateMonster(last_monster(), page_text);
-    // Deterministic diver: insurance egg, then Use the Force hands over every
-    // non-conditional drop and ends the fight -- nothing below applies.
+
     if (diverForce(last_monster(), page_text))
         return;
-    // Same trick down the Force priority ladder: the outpost healer's
-    // prayerbeads, the sea cow's leather and cowbells, the researcher's
-    // scrolls -- each from its own tier of the budget.
+
     if (healerForce(last_monster(), page_text))
         return;
     if (seaCowForce(last_monster(), page_text))
@@ -211,18 +188,13 @@ void main(int round, monster mob, string page_text) {
     otoscope(last_monster(), page_text);
     // Free stench jelly off any stench monster; NCforce() spends it as a sneak.
     extractJelly(last_monster(), page_text);
-    // Re-roll a wrong monster at Fitzsimmons rather than spending a turn on it.
-    // On a re-roll the fight holds a NEW monster. Returning would fall through
-    // to the CCS's safety abort line -- mafia does NOT re-invoke a consult
-    // script that returns mid-combat -- so restart the dispatch loop with the
-    // new monster and a re-fetched page, which also resyncs mafia's round
-    // counter after the swap.
+
     if (replaceEnemy(last_monster(), page_text)) {
         mob = last_monster();
         page_text = to_string(visit_url("fight.php"));
-        continue;
+        run_combat();
     }
-    // Chain another free diver off this one.
+
     lectureOnRelativity(last_monster(), page_text);
     while (available_amount($item[murky potion]) > 0 && current_round() > 0 && current_round() < 5 && last_monster() != $monster[sea cowboy]){
         if (have_skill($skill[Ambidextrous Funkslinging]))
@@ -313,9 +285,6 @@ void main(int round, monster mob, string page_text) {
             cleanUp();
             break;
         case $location[The Wreck of the Edgar Fitzsimmons]:
-            // Free wanderers burn delay -- they advance the zone's turns_spent
-            // for free -- and their fight costs nothing, so they are killed by
-            // the fall-through below, never run from or re-rolled.
             if (last_monster() != $monster[unholy diver] && !free_monster(last_monster())){
                 free_run(page_text, true);
                 if (last_monster() == $monster[Mer-kin scavenger]){
@@ -331,10 +300,11 @@ void main(int round, monster mob, string page_text) {
                 }
             }
             if (last_monster() == $monster[unholy diver]){
-                if (my_familiar() == $familiar[Melodramedary]){
+                if (get_property("beGregariousCharges").to_int() > 0 && get_property("beGregariousMonster") != "745")
+                    use_skill($skill[Be Gregarious]);
+                if (my_familiar() == $familiar[Melodramedary])
                     use_skill($skill[%fn, spit on them!]);
-                }
-                if (have_equipped($item[Fourth of May Cosplay Saber]));
+                if (have_equipped($item[Fourth of May Cosplay Saber]))
                     use_skill($skill[Use the Force]);
             }
             if (current_round() > 0)
@@ -483,13 +453,14 @@ void main(int round, monster mob, string page_text) {
                     abort("For some reason seahorse wasn't tamed, check that out");
                 }
             }
-            if (($location[the coral corral].turns_spent <= 1 && item_amount($item[sea leather]) == 0 && available_amount($item[sea cowboy hat]) == 0) || get_property("_lastCombatWon") == false) {
-                if (highShiny() && get_property("swordOfSWordsMonster") != "775"){
-                    if (last_monster() == $monster[sea cow]){
-                        use_skill($skill[%fn, kill a lot of these guys]);
-                        cleanUp();
-                    }
-                } else if (have_equipped($item[backup camera])) {
+            if (highShiny() && get_property("swordOfSWordsMonster") != "775" && my_familiar() == $familiar[sword of s words]){
+                if (last_monster() == $monster[sea cow]){
+                    use_skill($skill[%fn, kill a lot of these guys]);
+                    cleanUp();
+                }
+            }
+            if (get_property("_epicMcTwistUsed") == "false" && have_equipped($item[pro skateboard])) {
+                if (have_equipped($item[backup camera])) {
                     if (last_monster() == $monster[mer-kin rustler])
                         use_skill($skill[spring kick]);
                     use_skill($skill[Back-Up to your Last Enemy]);
@@ -498,7 +469,7 @@ void main(int round, monster mob, string page_text) {
                     free_kill(page_text, true);
                     cleanUp();
                 } else {
-                    if (last_monster() == $monster[mer-kin rustler]){
+                    if (last_monster().phylum != $phylum[fish]){
                         use_if_have_skill(page_text, $skill[spring kick]);
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
@@ -572,10 +543,8 @@ void main(int round, monster mob, string page_text) {
                         // Runs exhausted: re-roll the fight into a fresh draw
                         // rather than killing a monster that owes us nothing.
                         if (current_round() > 0 && rerollEnemy(page_text)) {
-                            // Re-dispatch: see the replaceEnemy note up top.
-                            last_monster() = last_monster();
                             page_text = to_string(visit_url("fight.php"));
-                            continue;
+                            run_combat();
                         }
                     }
                 } else if (last_monster() == $monster[sea cow] && doneWithSeaCow()){
@@ -583,25 +552,17 @@ void main(int round, monster mob, string page_text) {
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        if (current_round() > 0 && rerollEnemy(page_text)) {
-                            // Re-dispatch: see the replaceEnemy note up top.
-                            last_monster() = last_monster();
-                            page_text = to_string(visit_url("fight.php"));
-                            continue;
-                        }
+                        if (current_round() > 0 && rerollEnemy(page_text))
+                            run_combat();
                     }
                 } else if (last_monster() == $monster[sea cowboy] && doneWithCowboy()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        if (current_round() > 0 && rerollEnemy(page_text)) {
-                            // Re-dispatch: see the replaceEnemy note up top.
-                            last_monster() = last_monster();
-                            page_text = to_string(visit_url("fight.php"));
-                            continue;
+                        if (current_round() > 0 && rerollEnemy(page_text))
+                            run_combat();
                     }
-                }
                 }
                 // Fight being killed from here on -- the one safe moment for a
                 // Feel Nostalgic charge on the cow's table.
@@ -690,10 +651,7 @@ void main(int round, monster mob, string page_text) {
             if (cheatsheetsNeeded() && last_monster() != $monster[Mer-kin monitor]
                 && !free_monster(last_monster()) && current_round() > 0
                 && rerollEnemy(page_text)) {
-                // Re-dispatch: see the replaceEnemy note up top.
-                last_monster() = last_monster();
-                page_text = to_string(visit_url("fight.php"));
-                continue;
+                run_combat();
             }
             // Kill path from here on -- the safe spot for a Feel Nostalgic
             // charge on the monitor's cheatsheet table.

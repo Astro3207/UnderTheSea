@@ -389,11 +389,9 @@ import <seedfinder/seedfinder.ash>;
     }
 
     string delay(){
-      //  if (contains_text(maximizerInput, "item drop")
-        //    && equipmentSelection[$slot[off-hand]] == $item[none]
-          //  && have_item($item[Kramco Sausage-o-Matic&trade;]))
-        //    equipmentSelection[$slot[off-hand]] = $item[Kramco Sausage-o-Matic&trade;];
-        return "";
+        if (have_item($item[Kramco Sausage-o-Matic&trade;]))
+            return if_equip($item[latte lovers member's mug]) + freeRun();
+        return freeRun();
     }
 
     void tempEquipment(string maximizerInput, string itemInput){
@@ -962,7 +960,7 @@ boolean mapReady() {
 
 // Only cast once the Peridot's charge for this zone is gone, so the two do not
 // both spend themselves picking the same monster.
-void mapMonster() {
+void mapMonster(location loc) {
     if (!mapReady())
         return;
     if (available_amount($item[peridot of peril]) > 0
@@ -1028,8 +1026,6 @@ void timeSpinnerRefight(location loc) {
         return;
     // Only worth a turn where the target is genuinely rare; these are the same
     // zones Map the Monsters spends its charges on.
-    if (!mapZone(loc))
-        return;
     if (my_location() != loc)
         return;
     timeSpinnerFight(to_monster(target));
