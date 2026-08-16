@@ -4,6 +4,8 @@ import UnderTheSea.ash;
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
 void free_kill(string ptext, boolean drop) {
+    if (free_monster(last_monster()))
+        return;
     if (highShiny()){
         if (contains_text(ptext, "Darts: Aim for the Bullseye")
             && my_location() != $location[mer-kin colosseum])

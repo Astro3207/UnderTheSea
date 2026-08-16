@@ -1,6 +1,6 @@
 import <seedfinder/seedfinder.ash>;
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────   
-    int uniInt, uniAdv, pearlsDoneToday;
+    int pearlsDoneToday;
     string boss,modes;
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
@@ -1633,32 +1633,6 @@ void leprecondo(string input) {
         + lepRoomToNum[lepRoom[2]] + ","
         + lepRoomToNum[lepRoom[1]] + ","
         + lepRoomToNum[lepRoom[0]]);
-}
-
-// ─── UNIVERSE CALCULATOR ──────────────────────────────────────────────────────
-// Finds the adventure count at which the universe alignment hits 69.
-// Sets globals uniInt and uniAdv as a side effect and also returns uniAdv.
-
-int [string] sign = {
-    "Mongoose":1, "Wallaby":2, "Vole":3,    "Platypus":4,
-    "Opossum":5,  "Marmot":6,  "Wombat":7,  "Blender":8,
-    "Packrat":9,  "Bad Moon":10
-};
-
-int universe() {
-    for y from 0 to my_adventures() {
-        for x from 1 to 99 {
-            if (((x + my_ascensions() + sign[my_sign()])
-                * (my_spleen_use() + my_level())
-                + (my_adventures() - y)) % 100 == 69) {
-                uniInt = x;
-                uniAdv = my_adventures() - y;
-                break;
-            }
-        }
-        if (uniInt > 0) break;
-    }
-    return uniAdv;
 }
 
 void fillPrereqs(int outcomeSlot, string pitchType) {
