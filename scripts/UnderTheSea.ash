@@ -752,10 +752,8 @@ import <seedfinder/seedfinder.ash>;
         if (get_property("autumnatonQuestLocation") == "" && item_amount($item[autumn-aton]) > 0) {
             useAutumnaton();
         }
-        if (to_int(get_property("_universeCalculated")) < min(2, to_int(get_property("skillLevel144"))) && uniAdv <= my_adventures()) {
-            if (universe() == my_adventures()) {
-                cli_execute("numberology 69");
-            }
+        if (to_int(get_property("_universeCalculated")) < min(2, to_int(get_property("skillLevel144"))) && (reverse_numberology() contains 69)) {
+            cli_execute("numberology 69");
         }
 
         if (to_int(get_property("trainsetPosition"))
