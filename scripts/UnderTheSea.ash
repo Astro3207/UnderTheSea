@@ -1286,7 +1286,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("-combat");
-                        tempEquipment("-combat", bathysphere($item[toy cupid bow]));
+                        tempEquipment("-combat",  if_equip(divingHelmet()) + bathysphere($item[toy cupid bow]));
                         mood("-combat");
                         if (NCForceEstimate() > 4)
                             NCforce();
@@ -1515,13 +1515,14 @@ void seaMonkees() {
     // Mid shiny yes yes no --> mctwist taffy unholy diver --> cyberrealm caliginous --> max item corral until necessary items are collected --> lasso shadow rift --> finish corral
     // no no yes --> greg unholy diver --> 1 turn in caliginous if has backup cam --> max item backp/software glitch mctwist corral --> caliginous --> finish lasso --> finish corra
     // no no no --> sea cowboy  --> unholy diver mctwist taffy lasso --> caliginous abyss --> finish corral
-    if (get_property("seahorseName") != ""){
+    if (get_property("seahorseName") == ""){
+        print(highShiny());
         if (my_path().id == 0){
             retrieve_item($item[aerated diving helmet]);
         } else if (highShiny()){
+
             caliginous("cheap");
             unholyDiver("direct");
-            corral("finish");
         } else if (MomNCyber() && lassoShadow() && available_amount($item[blood cubic zirconia]) > 0){
             unholyDiver("summon");
             caliginous("cyberrealm");
@@ -1544,7 +1545,6 @@ void seaMonkees() {
             corral("finish");
         }
     }
-
 }
 // ─── PEARL FARMING / EAGLE BANISH RE-AIM ─────────────────────────────────────
 // One walker serves both postloop prefs. uts_postLoopRunOutEagleBanish
