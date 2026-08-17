@@ -217,6 +217,8 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[V for vivala mask]);
         if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
             return if_equip($item[latte lovers member's mug]);
+        if (have_familiar($familiar[Pair of Stomping Boots]) && round((familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()/5)) > get_property("_banderRunaways");
+            return if_equip($familiar[Pair of Stomping Boots])
         return freeKill();
     }
 
