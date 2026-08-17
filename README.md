@@ -9,17 +9,11 @@
 - **`autoSatisfyWithNPCs = true`** in mafia's preferences.
 - **A clan with a stocked photobooth** — the script claims the three sheriff
   props daily and aborts if the booth is empty.
-- **Aftercore mode (running the sea outside the path):** at least 4 fullness
-  and 5 spleen free at start; the script prompts for which boss to fight.
-
-Three more are "optional" in name only — the script will start without
-them, but the route is built around them and you should treat them as part
-of this list:
-
+- **Aftercore mode (running the sea outside the path):** The script prompts for which boss to fight.
 - **A Monodent of the Sea.**
-- **A Congressional Medal of Insanity** 
 - **The Eternity Codpiece**, loaded with unblemished pearls before
   ascending. 
+- **A Congressional Medal of Insanity** 
 - **3 Familiars** Grouper Groupie, Glover, Foul Ball
 
 ## Options
@@ -73,17 +67,16 @@ The script sorts your account into a resource tier and routes accordingly:
 
 | IOTM | Why it matters |
 |---|---|
-| monodent of the sea | Makes it all come together. |
 | closed-circuit pay phone | With Monodent, free shadow-rift fights allow free sea lasso training. |
-| Fourth of May Cosplay Saber | Use the Force guaranteed drops: the unholy diver, the sea cow's cowbells for taming the seahorse, and Mer-kin prayerbeads. |
+| CyberRealm keycode | Free Mom quest. |
 | cursed monkey's paw | Free sea lassos and sea cowbells for the seahorse taming instead of farming them. |
-| 2002 Mr. Store Catalog | Shortcut opening The Coral Corral and finding Mom in The Caliginous Abyss. |
-| book of facts | Just the Facts wishes and Monster Habitats copy chains cut the adventures needed to find Mom in The Caliginous Abyss |
-| patriotic eagle (hatchling) | Patriotic Screech |
+| Book of Facts | Just the Facts wishes and Monster Habitats copy chains cut the adventures needed to find Mom in The Caliginous Abyss |
+| patriotic eagle (hatchling) | Patriotic Screech in combation with Cyberrealm |
 
 Useful but relatively strict on item requirement Ploop alternative for this script: https://github.com/UtoTurtMcGurt/LoopTheSea
 
 If you are having the issue of it getting caught on the initial NC, there is nothing that can be done right now. You have to hit it manually or add ``visit_url("main.php"); run_choice(1);`` to the end of your preascension script.
+
 
 Useful skills and iotms and stuff: https://docs.google.com/spreadsheets/d/1bAZj17ZUb9cd4V1Nnda8--SiTlJvGQZWJvYz5CUA8G4/edit?usp=sharing
 
