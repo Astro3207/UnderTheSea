@@ -806,27 +806,28 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (!contains_text(get_property("_perilLocations"), "196") && available_amount($item[mer-kin digpick]) == 0){
             mood("spookyres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril");
+            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + if_equip($item[blood cubic zirconia]) + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril");
+            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("hot res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar("itdrop");
+            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("sleaze res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril");
+            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
