@@ -580,6 +580,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
     void skatePark() {
+        visit_url("sea_skatepark.php");
+        if (get_property("skateParkStatus") == "war")
+            return;
         NCforce();
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium();
@@ -1911,10 +1914,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         post_adv();
                     } else {
                         while (have_effect($effect[Deep-Tainted Mind]) > 0) {
-                            if (get_property("skateParkStatus") == "war"
-                                && !contains_text(
-                                    $location[The Skate Park].noncombat_queue,
-                                    "Holey Rollers")) {
+                            if (get_property("skateParkStatus") == "war") {
                                 skatePark();
                             } else if (item_amount($item[Mer-kin thighguard]) == 0
                                 || item_amount($item[Mer-kin headguard]) == 0) {
@@ -1933,8 +1933,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
 
             // Skate park war cleanup
-            while (get_property("skateParkStatus") == "war"
-                && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers"))
+            while (get_property("skateParkStatus") == "war")
                 skatePark();
             if (get_property("_skateBuff1") == "false")
                 visit_url("sea_skatepark.php?action=state2buff1");
@@ -2010,9 +2009,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             abort("Passing over yogUrt too early — rerun script");
         if (my_path().id == 55){
             // ── Post-YogUrt skate park / gladiator gear ───────────────────────────────
-            while (get_property("skateParkStatus") == "war"
-                && !contains_text($location[The Skate Park].noncombat_queue,
-                    "Holey Rollers"))
+            while (get_property("skateParkStatus") == "war")
                 skatePark();
             if (get_property("_skateBuff1") == "false")
                 visit_url("sea_skatepark.php?action=state2buff1");
