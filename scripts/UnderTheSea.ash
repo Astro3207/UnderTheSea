@@ -806,28 +806,24 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (!contains_text(get_property("_perilLocations"), "196") && available_amount($item[mer-kin digpick]) == 0){
             mood("spookyres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("hot res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("sleaze res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar("itdrop");
-            cli_execute("unequip peridot of peril; unequip blood cubic zirconia");
             codpiece("blood cubic zirconia, peridot of peril");
             tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
@@ -1414,7 +1410,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             use_familiar("itdrop");
             if (my_familiar() == $familiar[red-nosed snapper])
                 cli_execute("snapper mer-kin");
-            cli_execute("unequip blood cubic zirconia; unequip peridot of peril; unequip heartstone");
+            cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, heartstone");
             if (get_property("_steelyEyedSquintUsed") == false)
                 mood("superitdrop");

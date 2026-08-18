@@ -209,7 +209,9 @@ import <seedfinder/seedfinder.ash>;
         } else {
             string [int] slots = split_string(input, ",");
             foreach num in slots {
-                if (available_amount(to_item(slots[num])) == 0 ){
+                if (have_equipped(slots[num].to_item()))
+                    cli_execute("unequip " + have_equipped(slots[num].to_item()));
+                if (item_amount(to_item(slots[num])) == 0 ){
                     slots[num] = "";
                     continue;
                 }
