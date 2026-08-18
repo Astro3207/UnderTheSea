@@ -989,25 +989,25 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (ps == $stat[moxie] && have_item($item[tearaway pants])) {
                     equip($item[tearaway pants]);
                     visit_url("guild.php?place=challenge");
-                    return;
-                }
-                if (get_property(questProp[ps]) == "unstarted")
+                } else {
+                    if (get_property(questProp[ps]) == "unstarted")
+                        visit_url("guild.php?place=challenge");
+                    if (doSWord() == true)
+                        use_familiar($familiar[Sword of S Words]);
+                    else if (have_familiar($familiar[red-nosed snapper]))
+                        use_familiar("itdrop");
+                    else
+                        use_familiar("-combat");
+                    if (my_familiar() == $familiar[red-nosed snapper])
+                        cli_execute("snapper fish");
+                    while (get_property(questProp[ps]) == "started") {
+                        tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
+                            + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + if_equip($item[designer sweatpants]) + baseball_equip());
+                        mood("itdrop");
+                        adv1(questLoc[ps]);
+                    }
                     visit_url("guild.php?place=challenge");
-                if (doSWord() == true)
-                    use_familiar($familiar[Sword of S Words]);
-                else if (have_familiar($familiar[red-nosed snapper]))
-                    use_familiar("itdrop");
-                else
-                    use_familiar("-combat");
-                if (my_familiar() == $familiar[red-nosed snapper])
-                    cli_execute("snapper fish");
-                while (get_property(questProp[ps]) == "started") {
-                    tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                        + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + if_equip($item[designer sweatpants]) + baseball_equip());
-                    mood("itdrop");
-                    adv1(questLoc[ps]);
                 }
-                visit_url("guild.php?place=challenge");
             }
             if (get_property("questG03Ego") == "unstarted") {
                 visit_url("guild.php?place=ocg");
@@ -1233,13 +1233,13 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             switch (str) {
                 case "summon":
                     if (have_item($item[Cursed monkey's paw]) && count_summons() > 0){
-                        if (have_effect($effect[shadow waters]) == 0)
+                        if (have_effect($effect[shadow waters]) == 0){
                             shadowRift();
+                        }
 
                         int diverTries;
-                        while ((item_amount($item[rusty rivet]) < 8 || item_amount($item[rusty porthole]) == 0|| available_amount($item[rusty broken diving helmet]) == 0)
+                        while ((item_amount($item[rusty rivet]) < 8 || item_amount($item[rusty porthole]) == 0 || available_amount($item[rusty broken diving helmet]) == 0)
                             && diverTries < 4) {
-                            string conditional;
                             diverTries += 1;
                             if (diverForceReady() || item_amount($item[rusty rivet]) < 4){
                                 if (!use_familiar($familiar[chest mimic]))
