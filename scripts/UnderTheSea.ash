@@ -1381,19 +1381,19 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     tempEquipment("item drop", "monodent of the sea");
                     adv($location[madness bakery]);
                 }
-                while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
-                    && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
-                    recallCaliginous();
-                }
-                while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
-                    && to_int(get_property("_cyberFreeFights")) < 10
-                    && to_int(get_property("momSeaMonkeeProgress")) < 40) {
-                    use_familiar($familiar[glover]);
-                    tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
-                    if (my_buffedstat($stat[moxie]) < 500)
-                        abort("Need 500 moxie here to be safe");
-                    adv($location[Cyberzone 1]);
-                }
+            }
+            while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
+                && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
+                recallCaliginous();
+            }
+            while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
+                && to_int(get_property("_cyberFreeFights")) < 10
+                && to_int(get_property("momSeaMonkeeProgress")) < 40) {
+                use_familiar($familiar[glover]);
+                tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
+                if (my_buffedstat($stat[moxie]) < 500)
+                    abort("Need 500 moxie here to be safe");
+                adv($location[Cyberzone 1]);
             }
             while (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress)
                 finishCaliginous();
