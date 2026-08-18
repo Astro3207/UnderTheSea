@@ -1,4 +1,4 @@
-import iotm;
+import globals;
 
 // The wantedMonster table used by the monster-pickers below now lives in
 // iotm.ash, because the Time-Spinner needs it from the main script too.
@@ -40,27 +40,60 @@ void main(int whichchoice, string page) {
         // ── Simple run_choice(1) cases ─────────────────────────────────────
         case 299:
         case 303:
-        case 701:
         case 403:
+        case 701:
+        case 1059:
+        case 1468:
+        case 1471:
+        case 1472:
+        case 1473:
+        case 1475:
         case 1556:
         case 1564:
         case 1565:
         case 1566:
             run_choice(1);
             break;
-        case 1387:
+
+        // ── Simple run_choice(2) cases ─────────────────────────────────────
+        case 804:
+        case 1469:
+        case 1470:
+        case 1474:
+        case 1494:
+        case 1497:
+            run_choice(2);
+            break;
+
+        // ── Simple run_choice(3) cases ─────────────────────────────────────
         case 1340:
+        case 1387:
+        case 1467:
+        case 1596:
             run_choice(3);
             break;
+
+        // ── Simple run_choice(4) cases ─────────────────────────────────────
+        case 705:
+            run_choice(4);
+            break;
+
+        // ── Simple run_choice(5) cases ─────────────────────────────────────
+        case 1599:
+            run_choice(5);
+            break;
+
+        // ── More complex cases ────────────────────────────────────────────
         case 312:
             if (get_property("intenseCurrents") == "true"){
                 run_choice(3);
             }
             break;
+
         // ── Stashbox searches (different priority orders per lock monster) ──
         case 313: int [int] burglar = {0:1, 1:3, 2:2}; stashboxCheck(burglar); break;  // burglar:  1→3→2
         case 314: int [int] raider = {0:1, 1:2, 2:3}; stashboxCheck(raider); break;  // raider:   1→2→3
-        case 315: 
+        case 315:
             if (get_property("intenseCurrents") == "true"){
                 if (available_amount($item[mer-kin prayerbeads]) < 3) {
                     run_choice(3);
@@ -74,7 +107,7 @@ void main(int whichchoice, string page) {
                     run_choice(3);
                 }
             } else {
-                int [int] healer = {0:3, 1:1, 2:2}; stashboxCheck(healer); 
+                int [int] healer = {0:3, 1:1, 2:2}; stashboxCheck(healer);
             }
             break;  // healer:   3→1→2
 
@@ -182,42 +215,16 @@ void main(int whichchoice, string page) {
             }
             break;
 
-        case 705:
-            run_choice(4);
-            break;
-
-        case 804:
-            run_choice(2);
-            break;
-
-        case 1059:
-            if (get_property("choiceAdventure1059") == "")
-                run_choice(1);
-            break;
-
-        // ── Underwater zone run_choice(2) cases ───────────────────────────
-        case 1469:
-        case 1470:
-        case 1474:
-        case 1494:
-            run_choice(2);
-            break;
-
-        case 1467:
-            run_choice(3);
-            break;
-
-        // ── Shadow rift ───────────────────────────────────────────────────
-        case 1468:
-        case 1471:
-        case 1472:
-        case 1473:
-        case 1475:
-            run_choice(1);
-            break;
-
-        case 1497:
-            run_choice(2);
+        // ── Map the Monsters ───────────────────────────────────────
+        // "Leading Yourself Right to Them". Same intent as the Peridot, but a
+        // different parameter name. Only cast in zones we have a preference
+        // for, so the lookup should always hit; if it somehow does not, fall
+        // through and let mafia resolve rather than pick a monster at random.
+        case 1435:
+            location mapHere = my_location();
+            int mapTarget = zoneTarget(mapHere);
+            if (mapTarget > 0)
+                run_choice(1, "heyscriptswhatsupwinkwink=" + mapTarget);
             break;
 
         case 1483:
@@ -246,6 +253,19 @@ void main(int whichchoice, string page) {
             run_choice(1);
             break;
 
+        // ── Peridot monsters ───────────────────────────────────────
+        // The same table drives Map the Monsters (1435) below, so the two
+        // monster-pickers can never disagree about what we want in a zone.
+        case 1557:
+            set_property("NCtoC","true");
+            location here = my_location();
+            int target = zoneTarget(here);
+            if (target > 0) {
+                run_choice(1, "bandersnatch=" + target);
+                if (here == $location[The Coral Corral]) run_choice(2);
+            }
+            break;
+
         // ── Mobius strip ──────────────────────────────────────────────────
         case 1562:
             string [int] mobiusKeywords = {
@@ -261,38 +281,6 @@ void main(int whichchoice, string page) {
                 if (!pickChoice("investment tips"))
                     pickChoice("from your future self");
             }
-            break;
-
-        // ── Peridot monsters ───────────────────────────────────────
-        // The same table drives Map the Monsters (1435) below, so the two
-        // monster-pickers can never disagree about what we want in a zone.
-        case 1557:
-            set_property("NCtoC","true");
-            location here = my_location();
-            int target = zoneTarget(here);
-            if (target > 0) {
-                run_choice(1, "bandersnatch=" + target);
-                if (here == $location[The Coral Corral]) run_choice(2);
-            }
-            break;
-
-        // ── Map the Monsters ───────────────────────────────────────
-        // "Leading Yourself Right to Them". Same intent as the Peridot, but a
-        // different parameter name. Only cast in zones we have a preference
-        // for, so the lookup should always hit; if it somehow does not, fall
-        // through and let mafia resolve rather than pick a monster at random.
-        case 1435:
-            location mapHere = my_location();
-            int mapTarget = zoneTarget(mapHere);
-            if (mapTarget > 0)
-                run_choice(1, "heyscriptswhatsupwinkwink=" + mapTarget);
-            break;
-
-        case 1596:
-            run_choice(3);
-            break;
-        case 1599:
-            run_choice(5);
             break;
     }
 }
