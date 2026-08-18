@@ -580,6 +580,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
     void skatePark() {
+        visit_url("sea_skatepark.php");
+        if (get_property("skateParkStatus") == "war")
+            return;
         NCforce();
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium();
@@ -805,27 +808,27 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + if_equip($item[blood cubic zirconia]) + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + if_equip($item[blood cubic zirconia]) + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else if (!contains_text(get_property("_perilLocations"), "195")){
             mood("hotres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("hot res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("hot res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[the marinara trench]);
         } else if (!contains_text(get_property("_perilLocations"), "197")){
             mood("sleazeres");
             use_familiar("itdrop");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("sleaze res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("sleaze res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[the dive bar]); 
         } else if (!contains_text(get_property("_perilLocations"), "196")){
             mood("spookyres");
             use_familiar("itdrop");
             cli_execute("unequip peridot of peril");
             codpiece("blood cubic zirconia, peridot of peril");
-            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea" + bathysphere($item[none]));
+            tempEquipment("spooky res", swimmingTrunks() + if_equip($item[The Eternity Codpiece]) + "monodent of the sea," + bathysphere($item[none]));
             adv1($location[Anemone Mine]);
         } else {
             tempEquipment("item drop","monodent of the sea");
@@ -1911,10 +1914,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         post_adv();
                     } else {
                         while (have_effect($effect[Deep-Tainted Mind]) > 0) {
-                            if (get_property("skateParkStatus") == "war"
-                                && !contains_text(
-                                    $location[The Skate Park].noncombat_queue,
-                                    "Holey Rollers")) {
+                            if (get_property("skateParkStatus") == "war") {
                                 skatePark();
                             } else if (item_amount($item[Mer-kin thighguard]) == 0
                                 || item_amount($item[Mer-kin headguard]) == 0) {
@@ -1933,8 +1933,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
 
             // Skate park war cleanup
-            while (get_property("skateParkStatus") == "war"
-                && !contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers"))
+            while (get_property("skateParkStatus") == "war")
                 skatePark();
             if (get_property("_skateBuff1") == "false")
                 visit_url("sea_skatepark.php?action=state2buff1");
@@ -2010,9 +2009,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             abort("Passing over yogUrt too early — rerun script");
         if (my_path().id == 55){
             // ── Post-YogUrt skate park / gladiator gear ───────────────────────────────
-            while (get_property("skateParkStatus") == "war"
-                && !contains_text($location[The Skate Park].noncombat_queue,
-                    "Holey Rollers"))
+            while (get_property("skateParkStatus") == "war")
                 skatePark();
             if (get_property("_skateBuff1") == "false")
                 visit_url("sea_skatepark.php?action=state2buff1");

@@ -213,6 +213,7 @@ import <seedfinder/seedfinder.ash>;
                     slots[num] = "";
                     continue;
                 }
+                print("Inserting "+ to_item(slots[num]) + " into Codpiece");
                 visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
                     + "&iid=" + to_int(to_item(slots[num])));
             }
