@@ -727,8 +727,6 @@ void main(int round, monster mob, string page_text) {
                 && item_amount($item[mer-kin killscroll]) > 0
                 && current_round() > 0 && last_monster().phylum == $phylum[mer-kin])
                 throw_item($item[mer-kin killscroll]);
-            foreach sk in $skills[Launch spikolodon spikes, MCHUGELARGE avalanche]
-                use_if_have_skill(page_text, sk);
             if (free_monster(last_monster())) {
                 if (bcz_gaze_ready())
                     use_skill($skill[BCZ: Refracted Gaze]);
