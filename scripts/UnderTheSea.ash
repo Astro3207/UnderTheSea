@@ -1269,6 +1269,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                             if (str == "greg" && get_property("beGregariousMonster") == "745")
                                 return;
                         }
+                        if (baseballPlayers() >= 9 && contains_text(get_property("baseballTeam"),"745"))
+                            baseballD();
                         while (item_amount($item[rusty rivet]) > 5 && item_amount($item[rusty rivet]) < 8 && get_property("_monkeyPawWishesUsed").to_int() < 5 && have_item($item[cursed monkey paw]))
                             cli_execute("monkeypaw wish rusty rivet");
                     }
