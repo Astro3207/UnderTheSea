@@ -834,7 +834,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         codpiece("none");
     }
 
-    void summon(monster mon){
+    boolean summon(monster mon){
         if (haveLocketMonster[mon] && !contains_text(get_property("_locketMonstersFought"),to_int(mon)) && count_substring(get_property("_locketMonstersFought"),",") < 2) {
             cli_execute("reminisce " + mon);
         } else {
@@ -854,25 +854,16 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 // in choice 1387 if nothing auto-resolved it.
                 if (handling_choice() && last_choice() == 1387)
                     run_choice(3);
-            } else if (have_skill($skill[just the facts])){
-                if (item_amount($item[pocket wish]) == 0){
-                    if (my_class() == $class[accordion thief]){
-                        tempEquipment("item drop", if_equip($item[peridot of peril]));
-                        adv($location[The Overgrown Lot]);
-                    } else {
-                        abort("Shouldn't be here, DM Fart Scauce");
-                    }
-                }
-                if (item_amount($item[pocket wish]) > 0) {
+                
+            } else if (item_amount($item[pocket wish]) > 0) {
                     tempEquipment("item drop",if_equip($item[legendary seal-clubbing club]) + if_equip($item[McHugeLarge left pole]));
                     cli_execute("genie monster " + mon);
                     run_combat();
-                } else
-                    abort("This is an old line that should not happen any more. If you hit this you've hit a bug, let FS know");
             } else {
-                abort("This is an old line that should not happen any more. If you hit this you've hit a bug, let FS know");
+                return false;
             }
         }
+        return true;
     }
 
     boolean MomNCyber(){
@@ -1265,8 +1256,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                                     run_choice(3);
                             } else if (timeSpinnerFight($monster[unholy diver])) {
                             } else if (count_summons() >= 1) {
-                                summon($monster[unholy diver]);
-                                run_combat();
+                                if (summon($monster[unholy diver]))
+                                    run_combat();
+                                else
+                                    break;
                             } else {
                                 break;
                             }
@@ -1275,6 +1268,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                             if (str == "greg" && get_property("beGregariousMonster") == "745")
                                 return;
                         }
+                        while (item_amount($item[rusty rivet]) > 5 && item_amount($item[rusty rivet]) < 8 && get_property("_monkeyPawWishesUsed").to_int() < 5)
+                            cli_execute("monkeypaw wish rusty rivet");
                     }
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
