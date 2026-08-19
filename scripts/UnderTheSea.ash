@@ -520,6 +520,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,ten-leaf clover,large box,
                 scale-mail underwear, Congressional Medal of Insanity,Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !pulledToday(it)) {
+                    if (it == $item[Flash Liquidizer Ultra Dousing Accessory] && !have_item($item[closed-circuit pay phone]))
+                        continue;
                     if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
                     if (storage_amount(it) == 0){
