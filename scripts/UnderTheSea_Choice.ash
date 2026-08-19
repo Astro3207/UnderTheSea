@@ -69,7 +69,6 @@ void main(int whichchoice, string page) {
         case 1340:
         case 1387:
         case 1467:
-        case 1596:
             run_choice(3);
             break;
 
@@ -280,6 +279,16 @@ void main(int whichchoice, string page) {
             else{
                 if (!pickChoice("investment tips"))
                     pickChoice("from your future self");
+            }
+            break;
+        //Spade
+        case 1596:
+            string [int] choices = available_choice_options();
+            if (choices[3] == ""){
+                set_location($location[An octopus's garden]);
+                run_choice(4);
+            } else {
+                run_choice(3);
             }
             break;
     }

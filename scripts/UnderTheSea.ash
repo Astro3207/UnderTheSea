@@ -1023,10 +1023,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (get_property("skeletonStoreAvailable") == false)
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
-                }
-                while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
-                    maximize("item drop",false);
-                    use($item[Archaeologist's Spade]);
+                    while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
+                        maximize("item drop",false);
+                        use($item[Archaeologist's Spade]);
+                        if (my_location() != $location[the skeleton store])
+                        break;
+                    }
                 }
             }
             // Get citizen/RWB ray on neptune flytrap
@@ -1273,7 +1275,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         }
                         if (baseballPlayers() >= 9 && contains_text(get_property("baseballTeam"),"745"))
                             baseballD();
-                        while (item_amount($item[rusty rivet]) > 5 && item_amount($item[rusty rivet]) < 8 && get_property("_monkeyPawWishesUsed").to_int() < 5 && have_item($item[cursed monkey paw]))
+                        while (item_amount($item[rusty rivet]) > 5 && item_amount($item[rusty rivet]) < 8 && get_property("_monkeyPawWishesUsed").to_int() < 5 && have_item($item[cursed monkey's paw]))
                             cli_execute("monkeypaw wish rusty rivet");
                     }
                 case "direct":
