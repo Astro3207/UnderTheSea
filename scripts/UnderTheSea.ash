@@ -1232,7 +1232,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         while (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat]) {
             switch (str) {
                 case "summon":
-                    if (have_item($item[Cursed monkey's paw]) && count_summons() > 0){
+                    if (count_summons() > 0){
                         if (have_effect($effect[shadow waters]) == 0){
                             shadowRift();
                         }
@@ -1248,7 +1248,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                                 if (!use_familiar($familiar[jill-of-all-trades]))
                                     use_familiar("itdrop");
                             }
-                            tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[toy cupid bow]));
+                            tempEquipment("item drop", diverSaber() + if_equip($item[blood cubic zirconia]) + if_equip($item[baseball diamond]) + if_equip($item[toy cupid bow]));
                             if (!diverForceReady()){
                                 mood("superitdrop");
                                 yellowRayPrep();
@@ -1270,16 +1270,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                             } else {
                                 break;
                             }
-                            if (baseballPlayers() >= 9)
+                            if (baseballPlayers() >= 9 && contains_text(get_property("baseballTeam"),"745"))
                                 baseballD();
                             if (str == "greg" && get_property("beGregariousMonster") == "745")
                                 return;
                         }
-                        if (item_amount($item[rusty rivet]) < 8 && !pulledToday($item[rusty rivet]))
-                            pullSequence($item[rusty rivet]);
                     }
-                    if (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat])
-                        break;
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
                     string conditional;
