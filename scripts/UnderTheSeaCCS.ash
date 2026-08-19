@@ -24,7 +24,7 @@ void free_kill(string ptext, boolean drop) {
             && freeskill != $skill[Club 'Em Back in Time])
             continue;
         if (freeskill == $skill[Club 'Em Back in Time]
-            && ((my_location() != $location[mer-kin colosseum] && !lowShiny())
+            && ((my_location() != $location[mer-kin colosseum] && !lowShiny()) || drop
                 || to_int(get_property("_clubEmTimeUsed")) >= 5))
             continue;
         if (freeskill == $skill[BCZ: Sweat Bullets]
