@@ -581,7 +581,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
     void skatePark() {
         visit_url("sea_skatepark.php");
-        if (get_property("skateParkStatus") == "war")
+        if (get_property("skateParkStatus") != "war")
             return;
         NCforce();
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
