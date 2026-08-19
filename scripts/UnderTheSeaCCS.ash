@@ -61,7 +61,7 @@ void free_run(string ptext, boolean banish) {
     if (have_equipped($item[greatest american pants]) && to_int(get_property("_navelRunaways")) < 3)
         runaway();
 
-    foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Feel Hatred, snokebomb] {
+    foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Release the Boots, Feel Hatred, snokebomb] {
         if (!contains_text(ptext, to_string(freeskill))) continue;
         if (!banish && $skills[snokebomb, Bowl a Curveball, Feel Hatred, Throw Latte on Opponent] contains freeskill) continue;
         if (banish && banishUsedAtYourLocation("snokebomb") && freeskill == $skill[snokebomb]) continue;
