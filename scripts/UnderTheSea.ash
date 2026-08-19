@@ -1222,6 +1222,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         step("phase: rusty rivets");
         while (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat]) {
             switch (str) {
+                case "greg":
                 case "summon":
                     if (count_summons() > 0){
                         if (have_effect($effect[shadow waters]) == 0){
