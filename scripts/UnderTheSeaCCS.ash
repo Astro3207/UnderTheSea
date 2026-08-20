@@ -646,15 +646,6 @@ void main(int round, monster mob, string page_text) {
                     }
                 }
             }
-            // During the sheet grind, a teacher or punisher that survived its
-            // banish attempt is worth re-rolling into a fresh 1-in-3 draw at
-            // the monitor rather than killing for nothing. Never the golem
-            // stat-fights, and forced-victim fights are already monitors.
-            if (cheatsheetsNeeded() && last_monster() != $monster[Mer-kin monitor]
-                && !free_monster(last_monster()) && current_round() > 0
-                && rerollEnemy(page_text)) {
-                run_combat();
-            }
             // Kill path from here on -- the safe spot for a Feel Nostalgic
             // charge on the monitor's cheatsheet table.
             if (current_round() > 0)
