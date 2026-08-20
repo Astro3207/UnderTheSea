@@ -635,7 +635,7 @@ import <seedfinder/seedfinder.ash>;
 
     boolean doSWord(){
         if (have_familiar($familiar[Sword of S Words]) && to_int(get_property("swordOfSWordsMonster")) == 776){
-            if (highShiny() && item_amount($item[sea lasso]) < 6)
+            if (highShiny() && item_amount($item[sea lasso]) < 7)
                 return true;
             if (!have_item($item[closed-circuit pay phone]) && item_amount($item[sea lasso]) < 4)
                 return true;
