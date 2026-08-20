@@ -24,6 +24,15 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 }
             }
         }
+        if (mod == "exp"){
+            //This is for the bosses to get some exp out of them, has to be a no attack fam
+            foreach fam in $familiars[chest mimic,cooler yeti,cookbookbat,none]{
+                if (have_familiar(fam)){
+                    use_familiar(fam);
+                    return;
+                }
+            }
+        }
         familiar fam;
         if (mod == "itdrop"){
             if (chosenFamiliar != $familiar[none])
@@ -1960,7 +1969,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (!highShiny())
                     conditional += if_equip($item[bat wings]);
 
-                use_familiar("itdrop");
+                use_familiar("exp");
                 tempEquipment("moxie, hot damage, cold damage, spooky damage, sleaze damage, stench damage, -hp, -equip tiny yam cannon",
                     "Mer-kin scholar mask, Mer-kin scholar tailpiece," + bathysphere($item[toy cupid bow]) + conditional);
                 equip($slot[acc1], $item[mer-kin prayerbeads]);
@@ -2114,7 +2123,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (have_effect(ef) > 0)
                         cli_execute("uneffect" + ef);
                 }
-                use_familiar("itdrop");
+                use_familiar("exp");
                 tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece,");
                 set_property("hpAutoRecoveryTarget", "1");
                 set_property("mpAutoRecovery", "-0.05");
