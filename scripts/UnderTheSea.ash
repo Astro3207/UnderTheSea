@@ -1237,7 +1237,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
     void unholyDiver(string str){
         step("phase: rusty rivets");
-        while (item_amount($item[rusty rivet]) < 8 && to_slot(divingHelmet()) != $slot[hat]) {
+        while ((item_amount($item[rusty rivet]) < 8 || item_amount($item[rusty porthole]) == 0 || available_amount($item[rusty broken diving helmet]) == 0) && to_slot(divingHelmet()) != $slot[hat]) {
+            if (baseballPlayers() >= 9 && contains_text(get_property("baseballTeam"),"745"))
+                baseballD();
             switch (str) {
                 case "summon":
                     if (count_summons() > 0){
@@ -1291,6 +1293,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         return;
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
+                    if ((item_amount($item[rusty rivet]) >= 8 && item_amount($item[rusty porthole]) == 0 && available_amount($item[rusty broken diving helmet]) == 0) || to_slot(divingHelmet()) != $slot[hat])
+                        break;
                     string conditional;
                     if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("-combat");
