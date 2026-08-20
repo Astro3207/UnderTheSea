@@ -2124,7 +2124,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         cli_execute("uneffect" + ef);
                 }
                 use_familiar("exp");
-                tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece,");
+                tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece," + bathysphere($item[toy cupid bow]));
                 set_property("hpAutoRecoveryTarget", "1");
                 set_property("mpAutoRecovery", "-0.05");
                 set_property("mpAutoRecoveryTarget", "-0.05");
