@@ -1805,9 +1805,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     }
                     take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
                     pullPrayerbead();
-                    if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( ))
-                        while (available_amount($item[mer-kin prayerbeads]) < 3)
-                            farmPrayerbeads();
+                    while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
+                        farmPrayerbeads();
                     cli_execute("uneffect the sonata of sneakiness");
                     while (available_amount($item[Mer-kin facecowl]) == 0 || available_amount($item[Mer-kin waistrope]) == 0){
                         if ((available_amount($item[Mer-kin facecowl]) == 1 || available_amount($item[Mer-kin waistrope]) == 1) && available_amount($item[mer-kin hallpass]) == 0 && pulls_remaining( ) > reservedPulls())
@@ -1872,11 +1871,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     }
                 }
 
-                if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
-                    while (available_amount($item[mer-kin prayerbeads]) < 3){
+                while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
                     farmPrayerbeads();
-                    }
-                }  
 
                 cli_execute("uneffect the sonata of sneakiness");
                 if (contains_text(get_property("leprecondoInstalled"), "11") && item_amount($item[Leprecondo]) > 0){
@@ -1934,9 +1930,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 visit_url("sea_skatepark.php?action=state2buff1");
 
             if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny() || pulls_remaining() == 0)){
-                while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
+                while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
                     farmPrayerbeads();
-                }
             }
 
             // Healscroll pull
@@ -1958,9 +1953,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
                 // Equip as many prayerbeads as available, pull healing items for gaps
                 if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
-                    while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 2){
+                    while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
                         farmPrayerbeads();
-                    }
                 }  
                 string conditional;
                 if (!highShiny())
@@ -1980,12 +1974,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     else {
                         if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
                             pullSequence($item[New Age healing crystal]);
-                        else if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
+                        if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
                             pullSequence($item[soggy used band-aid]);
                         else {
-                            while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 3){
+                            while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
                                 farmPrayerbeads();
-                            }
                             equip($slot[acc1], $item[mer-kin prayerbeads]);
                             equip($slot[acc2], $item[mer-kin prayerbeads]);
                             equip($slot[acc3], $item[mer-kin prayerbeads]);

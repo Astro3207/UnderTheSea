@@ -585,8 +585,23 @@ import <seedfinder/seedfinder.ash>;
         return n;
     }
 
+    int [int] YogHealingsNeeded = {
+        2:3,
+        3:2,
+        5:1
+    };
+
+    int YogHealingsOwned(){
+        int n;
+        foreach it in $items[sea gel,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
+            if (available_amount(it) > 0)
+                n += 1;
+        }
+        return n;
+    }
+
     void YogHpCheck(){
-        int healsNeeded = 5 - available_amount($item[mer-kin prayerbeads]);
+        int YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])];
         int maxHeal = 1001;
         int n;
         foreach it in HealingHP {
