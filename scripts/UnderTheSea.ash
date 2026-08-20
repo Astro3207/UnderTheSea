@@ -2474,7 +2474,7 @@ void seaMonkees() {
 
     flytrap();
 
-    if (get_property("questS02Monkees") == "started")
+    while (get_property("questS02Monkees") == "started")
         visit_url("monkeycastle.php?who=1");
 
     fitzsimmons();
