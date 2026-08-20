@@ -339,7 +339,7 @@ import <seedfinder/seedfinder.ash>;
         if (have_effect($effect[everything looks yellow]) == 0){
             if (have_item($item[jurassic parka]))
                 cli_execute("parka dilophosaur; equip jurassic parka");
-            else if (have_item($item[April Shower Thoughts shield]) && available_amount($item[spitball]) == 0)
+        else if (have_item($item[April Shower Thoughts shield]) && available_amount($item[spitball]) == 0 && item_amount($item[glob of wet paper]) > 0)
                 create($item[spitball]);
         }
     }
