@@ -42,7 +42,6 @@ void main(int whichchoice, string page) {
         case 303:
         case 403:
         case 701:
-        case 1059:
         case 1468:
         case 1471:
         case 1472:
@@ -213,6 +212,11 @@ void main(int whichchoice, string page) {
                 }
             }
             break;
+        case 1059:
+            if (get_property("choiceAdventure1059") == "")
+                run_choice(1);
+            break;
+
 
         // ── Map the Monsters ───────────────────────────────────────
         // "Leading Yourself Right to Them". Same intent as the Peridot, but a
