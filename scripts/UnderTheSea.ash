@@ -2523,7 +2523,7 @@ void seaMonkees() {
         } else if (highShiny()){
             caliginous("cheap");
             unholyDiver("direct");
-        } else if (MomNCyber() && lassoShadow() && available_amount($item[blood cubic zirconia]) > 0){
+        } else if (have_skill($skill[steely-eyed squint]) && MomNCyber() && lassoShadow() && available_amount($item[blood cubic zirconia]) > 0){
             unholyDiver("summon");
             caliginous("cyberrealm");
             corral("drop");
