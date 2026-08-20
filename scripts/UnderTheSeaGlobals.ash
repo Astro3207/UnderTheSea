@@ -194,7 +194,6 @@ import <seedfinder/seedfinder.ash>;
         void codpiece(string input) {
         if (!have_item($item[The Eternity Codpiece]))
             return;
-        visit_url("inventory.php?action=docodpiece");
         if (input == "none") {
             string verify = visit_url("inventory.php?action=docodpiece");
             if (!contains_text(verify, " mounted in slot #"))
@@ -216,8 +215,10 @@ import <seedfinder/seedfinder.ash>;
                     continue;
                 }
                 print("Inserting "+ to_item(slots[num]) + " into Codpiece");
+                visit_url("inventory.php?action=docodpiece");
                 visit_url("choice.php?whichchoice=1588&option=1&which=" + (num + 1)
                     + "&iid=" + to_int(to_item(slots[num])));
+                visit_url("main.php");
             }
             string verify = visit_url("inventory.php?action=docodpiece");
             foreach num in slots {
