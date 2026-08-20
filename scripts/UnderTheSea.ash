@@ -1283,7 +1283,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("-combat");
-                        tempEquipment("-combat",  if_equip(divingHelmet()) + bathysphere($item[toy cupid bow]));
+                        tempEquipment("-combat",  if_equip(divingHelmet()) + swimmingTrunks() + bathysphere($item[toy cupid bow]));
                         mood("-combat");
                         if (NCForceEstimate() > 4)
                             NCforce();
