@@ -1271,10 +1271,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         while (item_amount($item[rusty rivet]) > 5 && item_amount($item[rusty rivet]) < 8 && get_property("_monkeyPawWishesUsed").to_int() < 5 && have_item($item[cursed monkey's paw]))
                             cli_execute("monkeypaw wish rusty rivet");
                     }
+                    if (item_amount($item[rusty rivet]) >= 8 || to_slot(divingHelmet()) == $slot[hat])
+                        break;
                 case "greg":
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
-
                     string conditional;
                     if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("-combat");
