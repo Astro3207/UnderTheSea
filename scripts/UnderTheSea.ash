@@ -1278,6 +1278,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (item_amount($item[rusty rivet]) >= 8 || to_slot(divingHelmet()) == $slot[hat])
                         break;
                 case "greg":
+                    if (str == "greg" && get_property("beGregariousMonster") == "745")
+                        return;
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
                     string conditional;
