@@ -1,4 +1,4 @@
-import globals.ash;
+import UnderTheSeaGlobals.ash;
 import UnderTheSea.ash;
 
 // Attempt a free kill using available skills/items.

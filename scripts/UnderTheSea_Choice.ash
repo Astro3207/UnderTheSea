@@ -1,4 +1,4 @@
-import globals;
+import UnderTheSeaGlobals;
 
 // The wantedMonster table used by the monster-pickers below now lives in
 // iotm.ash, because the Time-Spinner needs it from the main script too.
