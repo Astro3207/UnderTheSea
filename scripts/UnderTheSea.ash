@@ -1992,8 +1992,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         }
                     }
                 }
-                if (have_effect($effect[gummiheart]) > 0)
-                    abort("Gummiheart is inflating max HP past what the healing items can out-heal, and the pull budget is fully reserved. Remove it (soft green echo eyedrop antidote) or burn its remaining turns, then rerun.");
+                YogHPCheck();
                 adv($location[Mer-kin Temple (Right Door)]);
             }
         }

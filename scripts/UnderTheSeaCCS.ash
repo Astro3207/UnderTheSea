@@ -752,6 +752,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Right Door)]:
+    //        user_confirm("Are the prediced muscle and max hp correct?");
             if (my_maxhp() > 311)
                 abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
             // yogDeleveler() returns $item[none] when moxie already outpaces

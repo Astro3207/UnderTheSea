@@ -571,6 +571,41 @@ import <seedfinder/seedfinder.ash>;
             && get_property("merkinVocabularyMastery") == "0";
     }
 
+    int [item] HealingHP = {
+        $item[sea gel]:500,
+        $item[mer-kin healscroll]:300,
+        $item[waterlogged scroll of healing]:250,
+        $item[soggy used band-aid]:1000,
+        $item[New Age healing crystal]:500
+    };
+
+    float trueHPPercent(){
+        float n;
+        n = (my_maxhp() - numeric_modifier("maximum hp"))/(my_buffedstat($stat[muscle]) + 3);
+        return n;
+    }
+
+    void YogHpCheck(){
+        int healsNeeded = 5 - available_amount($item[mer-kin prayerbeads]);
+        int maxHeal = 1001;
+        int n;
+        foreach it in HealingHP {
+            if (n >= healsNeeded)
+                break;
+            if (available_amount(it) > 0){
+                if (HealingHP[it] < maxHeal)
+                    maxHeal = HealingHP[it];
+                n += 1;
+            }
+        }
+        int predictedMus = (30 * (1+(numeric_modifier("Muscle Percent")/100)))+numeric_modifier("Muscle");
+        print ("Predicted Mus "+ predictedMus);
+        int predictedHP = ((predictedMus+3)*trueHPPercent()) + numeric_modifier("maximum hp");
+        print ("predicted HP " + predictedHP);
+        if (predictedHP*0.9 > maxHeal)
+            abort("Muscle/HP too high, see if there are any effects you can get rid of");
+    }
+
 //Non-equipment iotm related functions
     boolean parkaForceAvailable(){
         if (have_item($item[jurassic parka]) && to_int(get_property("_spikolodonSpikeUses")) < 5)
