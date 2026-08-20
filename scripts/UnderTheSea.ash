@@ -760,7 +760,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
     void shadowRift() {
-        if (!have_item($item[closed-circuit pay phone]))
+        if (!have_item($item[closed-circuit pay phone]) || (get_property("_shadowAffinityToday") == "true" && have_effect($effect[shadow affinity]) == 0))
             return;
         if (have_effect($effect[shadow waters]) == 0) {
             if (get_property("questRufus") == "unstarted")
