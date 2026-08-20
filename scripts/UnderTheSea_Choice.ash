@@ -285,6 +285,10 @@ void main(int whichchoice, string page) {
                     pickChoice("from your future self");
             }
             break;
+        //Codpiece
+        case 1588:
+            visit_url("main.php");
+            break;
         //Spade
         case 1596:
             string [int] choices = available_choice_options();
