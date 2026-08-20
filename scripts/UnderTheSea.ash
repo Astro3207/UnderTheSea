@@ -1,4 +1,4 @@
-import globals.ash;
+import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Set with the mafia CLI; all default to off.

@@ -601,11 +601,10 @@ import <seedfinder/seedfinder.ash>;
     }
 
     void YogHpCheck(){
-        int YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])];
         int maxHeal = 1001;
         int n;
         foreach it in HealingHP {
-            if (n >= healsNeeded)
+            if (n >= YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])])
                 break;
             if (available_amount(it) > 0){
                 if (HealingHP[it] < maxHeal)
