@@ -890,20 +890,24 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
     void farmPrayerbeads(){
-        use_familiar("-combat");
-        string conditional;
-        if (lowShiny() == true)
-            conditional += if_equip($item[Congressional Medal of Insanity]);
-        // The weapon slot is free on these trips, so the saber rides along:
-        // any healer that slips through the -combat stack gets Forced for a
-        // guaranteed prayerbead + thingpouch, with the turn refunded.
-        conditional += healerSaber();
-        // swimmingTrunks() picks what the path actually allows; the path-55
-        // trunks are quest-gated and abort a path-0 run outright.
-        tempEquipment("-combat", swimmingTrunks() + bathysphere($item[toy cupid bow]) + conditional);
-        
-        mood("-combat");
-        adv($location[the mer-kin outpost]);
+        if (get_property("_monkeyPawWishesUsed").to_int() < 5 && have_item($item[cursed monkey's paw]))
+            cli_execute("monkeypaw wish mer-kin prayerbeads");
+        else {
+            use_familiar("-combat");
+            string conditional;
+            if (lowShiny() == true)
+                conditional += if_equip($item[Congressional Medal of Insanity]);
+            // The weapon slot is free on these trips, so the saber rides along:
+            // any healer that slips through the -combat stack gets Forced for a
+            // guaranteed prayerbead + thingpouch, with the turn refunded.
+            conditional += healerSaber();
+            // swimmingTrunks() picks what the path actually allows; the path-55
+            // trunks are quest-gated and abort a path-0 run outright.
+            tempEquipment("-combat", swimmingTrunks() + bathysphere($item[toy cupid bow]) + conditional);
+            
+            mood("-combat");
+            adv($location[the mer-kin outpost]);
+        }
     }
 
     void getCheatsheet(){
@@ -1799,11 +1803,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     }
                     take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
                     pullPrayerbead();
-                    if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
-                        while (available_amount($item[mer-kin prayerbeads]) < 3){
-                        farmPrayerbeads();
-                        }
-                    }
+                    if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( ))
+                        while (available_amount($item[mer-kin prayerbeads]) < 3)
+                            farmPrayerbeads();
                     cli_execute("uneffect the sonata of sneakiness");
                     while (available_amount($item[Mer-kin facecowl]) == 0 || available_amount($item[Mer-kin waistrope]) == 0){
                         if ((available_amount($item[Mer-kin facecowl]) == 1 || available_amount($item[Mer-kin waistrope]) == 1) && available_amount($item[mer-kin hallpass]) == 0 && pulls_remaining( ) > reservedPulls())
@@ -1955,7 +1957,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 // Equip as many prayerbeads as available, pull healing items for gaps
                 if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
                     while (available_amount($item[mer-kin prayerbeads]) + item_amount($item[soggy used band-aid]) + item_amount($item[New Age healing crystal]) < 2){
-                    farmPrayerbeads();
+                        farmPrayerbeads();
                     }
                 }  
                 string conditional;
