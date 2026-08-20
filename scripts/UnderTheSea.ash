@@ -2141,10 +2141,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (get_property("questL13Final") == "unstarted") {
                 if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()) {
                     tempEquipment("spell damage percent, mys", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece," + if_equip($item[bat wings])
-                        + if_equip($item[Congressional Medal of Insanity]));
+                        + if_equip($item[Congressional Medal of Insanity]) + bathysphere($item[toy cupid bow]));
                 } else {
                     tempEquipment("spell damage percent, mys", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece,"
-                        + if_equip($item[Congressional Medal of Insanity]));
+                        + if_equip($item[Congressional Medal of Insanity]) + bathysphere($item[toy cupid bow]));
                     if (have_item($item[Unwrapped knock-off retro superhero cape])){
                         cli_execute("retrocape heck kill; equip unwrapped knock-off retro superhero cape");
                     }
