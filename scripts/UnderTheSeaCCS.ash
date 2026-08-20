@@ -494,7 +494,7 @@ void main(int round, monster mob, string page_text) {
                     free_kill(page_text, true);
                     cleanUp();
                 }
-            } else if (item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea cowbell]) > 0 && to_int(get_property("lassoTrainingCount")) == 20) {
+            } else if (item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea lasso]) > 0 && to_int(get_property("lassoTrainingCount")) == 20) {
                 if (last_monster().phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
                 if (get_property("seahorseName") == "") {
