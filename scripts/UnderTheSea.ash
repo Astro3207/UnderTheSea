@@ -1923,8 +1923,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                             } else if (item_amount($item[Mer-kin thighguard]) == 0
                                 || item_amount($item[Mer-kin headguard]) == 0) {
                                 gymnasium();
-                                if (get_property("_skateBuff1") == "false")
+                                if (get_property("_skateBuff1") == "false"){
+                                    equipSwimTrunks();
                                     visit_url("sea_skatepark.php?action=state2buff1");
+                                }
                             } else if (get_property("questS02Monkees") == "step12") {
                                 finishCaliginous();
                             } else {
@@ -1939,8 +1941,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             // Skate park war cleanup
             while (get_property("skateParkStatus") == "war")
                 skatePark();
-            if (get_property("_skateBuff1") == "false")
+            if (get_property("_skateBuff1") == "false"){
+                equipSwimTrunks();
                 visit_url("sea_skatepark.php?action=state2buff1");
+            }
 
             if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny() || pulls_remaining() == 0)){
                 while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
@@ -2011,8 +2015,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             // ── Post-YogUrt skate park / gladiator gear ───────────────────────────────
             while (get_property("skateParkStatus") == "war")
                 skatePark();
-            if (get_property("_skateBuff1") == "false")
+            if (get_property("_skateBuff1") == "false"){
+                equipSwimTrunks();
                 visit_url("sea_skatepark.php?action=state2buff1");
+            }
 
             // Late pulls. The comfort/cleanup items wait until Shub is dead:
             // they once ate the last pull slots right before a Shub retry needed
@@ -2480,12 +2486,15 @@ void seaMonkees() {
 
     flytrap();
 
-    while (get_property("questS02Monkees") == "started")
+    while (get_property("questS02Monkees") == "started"){
+        equipSwimTrunks();
         visit_url("monkeycastle.php?who=1");
+    }
 
     fitzsimmons();
 
     if (get_property("questS02Monkees") == "step2") {
+        equipSwimTrunks();
         visit_url("monkeycastle.php?who=2");
         visit_url("monkeycastle.php?who=1");
     }
