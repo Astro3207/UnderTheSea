@@ -1448,6 +1448,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
                 pullSequence($item[software glitch]);
                 tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+            } else {
+                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             }
             mood("itdrop");
             adv($location[The Coral Corral]);
