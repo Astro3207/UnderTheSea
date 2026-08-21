@@ -695,9 +695,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             conditional += "monodent of the sea,";
         conditional += saberEquip($location[mer-kin library]);
         conditional += cloakeEquip($location[mer-kin library]);
+        if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) && get_property("dreadScroll5") == "0"))
+            conditional += + if_equip($item[blood cubic zirconia]);
         if (item_amount($item[mer-kin dreadscroll]) == 0) {
-            tempEquipment("item drop", "mer-kin scholar mask,mer-kin scholar tailpiece,"
-                + if_equip($item[blood cubic zirconia]) + conditional);
+            tempEquipment("item drop", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
         } else {
             mood("-combat");
             tempEquipment("-combat", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
