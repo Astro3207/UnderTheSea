@@ -202,7 +202,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             use($item[distilled resin]);
         if (item_amount($item[whirled peas]) >= 2)
             retrieve_item($item[handful of split pea soup]);
-
+        if (have_skill($skill[Summon Taffy]))
+            if (mp_cost($skill[Summon Taffy]) < my_mp() && get_property("_taffyYellowSummons") == 0)
+                use_skill($skill[Summon Taffy]);
         if (my_path().id == 55){
             if (my_adventures() == 0) {
                 if (item_amount($item[astral six-pack]) > 0) 
