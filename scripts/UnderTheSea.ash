@@ -1295,7 +1295,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         return;
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
-                    if ((item_amount($item[rusty rivet]) >= 8 && item_amount($item[rusty porthole]) == 0 && available_amount($item[rusty broken diving helmet]) == 0) || to_slot(divingHelmet()) != $slot[hat])
+                    if ((item_amount($item[rusty rivet]) >= 8 && item_amount($item[rusty porthole]) == 0 && available_amount($item[rusty broken diving helmet]) == 0) || to_slot(divingHelmet()) == $slot[hat])
                         break;
                     string conditional;
                     if (total_turns_played( ) > to_int(get_property("_lastFitzsimmonsHatch")) + 20){
