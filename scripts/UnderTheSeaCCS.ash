@@ -220,8 +220,11 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 cleanUp();
             }
-            if (!free_monster(last_monster()))
+            if (!free_monster(last_monster())){
                 free_run(page_text, false);
+                if (have_equipped($item[greatest american pants]) || have_equipped(($item[navel ring of navel gazing])))
+                    runaway( );
+            }
             use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
             darts();

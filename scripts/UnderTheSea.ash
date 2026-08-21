@@ -1009,9 +1009,16 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         use_familiar("-combat");
                     if (my_familiar() == $familiar[red-nosed snapper])
                         cli_execute("snapper fish");
+                    string conditional;
+                    if (have_item($item[greatest american pants]))
+                        conditional += "greatest american pants,"
+                    else if (have_item($item[navel ring of navel gazing]))
+                        conditional += "navel ring of navel gazing,"
+                    else
+                        conditional += if_equip($item[designer sweatpants])
                     while (get_property(questProp[ps]) == "started") {
                         tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                            + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + if_equip($item[designer sweatpants]) + baseball_equip());
+                            + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + baseball_equip() + conditional);
                         mood("itdrop");
                         adv1(questLoc[ps]);
                     }
@@ -2030,6 +2037,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (item_amount($item[crayon shavings]) < 8)
                     pullSequence($item[null-day exploit]);
                 foreach it in $items[peppermint parasol, ink bladder, Mer-kin pinkslip, stuffed yam stinkbomb, Louder Than Bomb, anchor bomb] {
+                    if (it == $item[peppermint parasol] && (have_item($item[navel ring of navel gazing]) || have_item($item[Greatest American Pants])))
+                        continue;
                     if (!pulledToday(it)) 
                         pullSequence(it);
                     if (pulls_remaining() == 0) break;
