@@ -544,28 +544,18 @@ void main(int round, monster mob, string page_text) {
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        // Runs exhausted: re-roll the fight into a fresh draw
-                        // rather than killing a monster that owes us nothing.
-                        if (current_round() > 0 && rerollEnemy(page_text)) {
-                            page_text = to_string(visit_url("fight.php"));
-                            run_combat();
-                        }
                     }
                 } else if (last_monster() == $monster[sea cow] && doneWithSeaCow()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        if (current_round() > 0 && rerollEnemy(page_text))
-                            run_combat();
                     }
                 } else if (last_monster() == $monster[sea cowboy] && doneWithCowboy()){
                     if (combatBan() != $skill[none]){
                         use_skill(combatBan());
                     } else {
                         free_run(page_text, true);
-                        if (current_round() > 0 && rerollEnemy(page_text))
-                            run_combat();
                     }
                 }
                 // Fight being killed from here on -- the one safe moment for a
