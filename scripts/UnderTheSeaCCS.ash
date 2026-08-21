@@ -96,6 +96,8 @@ boolean bcz_gaze_ready() {
 // Finish off the enemy with saucegeyser, guarded against infinite loops
 void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
+    if (item_amount($item[red taffy]) > 0 && my_location().environment == "underwater")
+        throw_item($item[red taffy]);
     while (current_round() > 0) {
         int round = current_round();
         if (have_skill($skill[saucegeyser])){
