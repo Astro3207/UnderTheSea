@@ -695,8 +695,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             conditional += "monodent of the sea,";
         conditional += saberEquip($location[mer-kin library]);
         conditional += cloakeEquip($location[mer-kin library]);
-        if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) && get_property("dreadScroll5") == "0"))
-            conditional += + if_equip($item[blood cubic zirconia]);
+        if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
+            conditional += if_equip($item[blood cubic zirconia]);
         if (item_amount($item[mer-kin dreadscroll]) == 0) {
             tempEquipment("item drop", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
         } else {
@@ -1011,11 +1011,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         cli_execute("snapper fish");
                     string conditional;
                     if (have_item($item[greatest american pants]))
-                        conditional += "greatest american pants,"
+                        conditional += "greatest american pants,";
                     else if (have_item($item[navel ring of navel gazing]))
-                        conditional += "navel ring of navel gazing,"
+                        conditional += "navel ring of navel gazing,";
                     else
-                        conditional += if_equip($item[designer sweatpants])
+                        conditional += if_equip($item[designer sweatpants]);
                     while (get_property(questProp[ps]) == "started") {
                         tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
                             + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + baseball_equip() + conditional);
