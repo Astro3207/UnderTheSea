@@ -2383,12 +2383,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         location current = $location[none];
         try {
         while (true) {
-            // The screech lands one of two ways: screechFilter casts it during a
-            // recharge fight at the camp, or -- when pearl farming has been
-            // soaking up the recharge instead -- the counter returns and the
-            // branch below makes a deliberate trip. Either way the rundown is
-            // over once the banish leaves the construct phylum, so completion is
-            // tested on banishedPhyla rather than on whichever path got there.
+            // screechFilter can land the screech on any recharge fight, so
+            // completion is read off banishedPhyla, not off which branch fired.
             if (rundown && !contains_text(get_property("banishedPhyla"), "construct")) {
                 print("Patriotic Screech re-aimed at smut orcs after " + spent
                     + " turns; constructs are free.", "blue");
@@ -2406,10 +2402,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         pearlZonePrep(current);
                 }
             } else if (rundown && to_int(get_property("screechCombats")) == 0) {
-                // Farming held the recharge turns, so spend the screech now:
-                // one fight at the camp moves the banish onto the orc phylum.
-                // Zone progress holds while stepping out, so a continuing farm
-                // loses nothing to the detour.
+                // Farming held the recharge turns; spend the screech now.
                 if (my_adventures() == 0)
                     abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
                 adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
@@ -2434,9 +2427,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 } else
                     abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
             }
-            // Only the rundown is bounded this tightly; a plain farm is held to
-            // the 90-turn ceiling further down, which the old unconditional test
-            // made unreachable.
+            // Rundown only; unconditional made the 90-turn farm ceiling unreachable.
             if (rundown && spent >= 40)
                 abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
             boolean freshZone;
@@ -2450,10 +2441,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 }
                 freshZone = current != $location[none];
             }
-            // Fishy gates the underwater zones only, so losing it costs the farm
-            // its zone but leaves the rundown a dry-land recharge below. Tested
-            // outside the selection block so a mid-zone expiry is caught too, and
-            // ahead of the prep so an abandoned zone never pays for a maximizer.
+            // Fishy gates the underwater zones only; the rundown recharges on
+            // land below. Outside the selection block to catch mid-zone expiry,
+            // ahead of the prep so an abandoned zone skips the maximizer.
             if (current != $location[none]
                 && have_effect($effect[Fishy]) == 0 && !cloverFishy(current)) {
                 if (!rundown)
@@ -2461,13 +2451,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         + claimed + " pearls claimed; today's zone progress won't survive rollover.");
                 current = $location[none];
             }
-            // Recharge turns pay for themselves in a pearl zone, so one is used
-            // whenever today's pearls leave an opening. The rundown must not
-            // depend on that: the camp is open (checked above), all-combat, and
-            // where the screech has to land anyway, so it doubles as the recharge
-            // zone -- screechFilter attacks while the counter runs down and casts
-            // the moment it reaches zero. Aborting here instead is what left the
-            // construct phylum banished into the next day's garbo.
+            // No pearl zone: recharge at the camp rather than give up. It is
+            // open (checked above), all-combat, and where the screech lands.
             if (current == $location[none]) {
                 if (!rundown)
                     break;
