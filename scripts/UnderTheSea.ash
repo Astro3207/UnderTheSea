@@ -2,7 +2,7 @@ import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Set with the mafia CLI; all default to off.
-// uts_godRunGuard, uts_postloopCommand, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy and uts_postLoopPrepCodpiece
+// uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy and uts_postLoopPrepCodpiece
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
@@ -2270,8 +2270,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     // everything left in storage may as well be on hand for gearing and
     // pearl-buying. Emptying is once per ascension; a repeat call is a no-op.
     void pullEverything() {
-        if (to_int(get_property("lastEmptiedStorage")) != my_ascensions())
-            cli_execute("pull all");
+        if (to_int(get_property("lastEmptiedStorage")) == my_ascensions())
+            return;
+        if (!cli_execute("pull all")) {
+            print("pull all didn't empty storage.", "red");
+            abort("pull all didn't empty storage.");
+        }
     }
 
     // uts_postLoopCloverFishy: top Fishy up with a Lucky! visit to The
@@ -2468,6 +2472,56 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         }
     }
 
+    // uts_usePilsners: drink the astral pilsner supply out once the run is
+    // over, cracking six-packs as it goes. Leaves out any liver capacity that
+    // equipment or the familiar is lending, since whatever runs next re-dresses
+    // and would find the character falling-down drunk.
+    void usePilsners() {
+        if (get_property("uts_usePilsners") != "true")
+            return;
+        step("postloop: drinking out the astral pilsners");
+        if (storage_amount($item[astral pilsner]) > 0
+            || storage_amount($item[astral six-pack]) > 0)
+            pullEverything();
+        int liver = inebriety_limit();
+        foreach s in $slots[]
+            liver = liver - to_int(numeric_modifier(equipped_item(s), "Liver Capacity"));
+        if (my_familiar() != $familiar[none])
+            liver = liver - to_int(numeric_modifier(my_familiar(), "Liver Capacity",
+                familiar_weight(my_familiar()), $item[none]));
+        liver = min(liver, inebriety_limit());
+        int drunk;
+        boolean odeWarned;
+        while (my_inebriety() < liver) {
+            if (item_amount($item[astral pilsner]) == 0
+                && item_amount($item[astral six-pack]) > 0
+                && !use($item[astral six-pack]))
+                break;
+            int before = item_amount($item[astral pilsner]);
+            if (before == 0)
+                break;
+            if (have_effect($effect[Ode to Booze]) == 0
+                && have_skill($skill[The Ode to Booze])) {
+                if (!cli_execute("shrug Donho's Bubbly Ballad"))
+                    print("uts_usePilsners: Donho's Bubbly Ballad wouldn't shrug.", "blue");
+                if (!use_skill(1, $skill[the ode to booze]) && !odeWarned) {
+                    print("uts_usePilsners: no Ode to Booze; drinking without it.", "blue");
+                    odeWarned = true;
+                }
+            }
+            if (!drink($item[astral pilsner]))
+                break;
+            // A mime army shotglass makes the day's first 1-drunkenness drink
+            // free, so progress is the pilsner count falling, not inebriety.
+            if (item_amount($item[astral pilsner]) >= before)
+                break;
+            drunk = drunk + 1;
+        }
+        print("uts_usePilsners: drank " + drunk + ", "
+            + (item_amount($item[astral pilsner])
+                + 6 * item_amount($item[astral six-pack])) + " pilsners left.", "blue");
+    }
+
     // uts_postLoopPrepCodpiece: leave the run with the codpiece already loaded for the
     // next ascension -- five unblemished pearls, mall-bought if the farm came
     // up short. Runs after the banish rundown and the pearl farm so their
@@ -2593,6 +2647,7 @@ void seaMonkees() {
             council();
             pearlPostloop();
             prepCodpiece();
+            usePilsners();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         }
@@ -2633,6 +2688,7 @@ void main(string... args) {
             print("Starting UnderTheSea (postloop only)");
             pearlPostloop();
             prepCodpiece();
+            usePilsners();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         } finally {
