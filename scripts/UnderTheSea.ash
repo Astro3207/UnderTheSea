@@ -2321,6 +2321,15 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         return fishy;
     }
 
+    // The rundown farms pearls to recharge; with no zone left it stops rather
+    // than aborting, so the rest of the postloop still runs.
+    void reportRundownStalled(string why, int spent) {
+        print("uts_postLoopRunOutEagleBanish: " + why + " after " + spent
+            + " turns; the Patriotic Screech is still aimed at the construct phylum.", "red");
+        print("Crates are constructs, so garbo will abort on its crate setup. Re-aim by hand: "
+            + "take out the Patriotic Eagle and screech in The Smut Orc Logging Camp.", "red");
+    }
+
     void pearlPostloop() {
         boolean rundown = get_property("uts_postLoopRunOutEagleBanish") == "true"
             && contains_text(get_property("banishedPhyla"), "construct");
@@ -2383,11 +2392,17 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         location current = $location[none];
         try {
         while (true) {
-            // screechFilter can land the screech on any recharge fight, so
-            // completion is read off banishedPhyla, not off which branch fired.
-            if (rundown && !contains_text(get_property("banishedPhyla"), "construct")) {
-                print("Patriotic Screech re-aimed at smut orcs after " + spent
-                    + " turns; constructs are free.", "blue");
+            // The moment the screech is back, spend it: one fight at the Smut
+            // Orc Logging Camp moves the banish onto the orc phylum, and the
+            // rundown is done. Zone progress holds while stepping out, so a
+            // continuing farm loses nothing to the detour.
+            if (rundown && to_int(get_property("screechCombats")) == 0) {
+                if (my_adventures() == 0)
+                    abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
+                adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
+                if (contains_text(get_property("banishedPhyla"), "construct"))
+                    abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
+                print("Patriotic Screech re-aimed at smut orcs after " + spent + " pearl-farming turns; constructs are free.", "blue");
                 rundown = false;
                 // Only a continuing farm needs the handoff; the rundown alone
                 // is done the moment the screech is spent.
@@ -2401,15 +2416,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         && get_property(pearlClaimed[current]) != "true")
                         pearlZonePrep(current);
                 }
-            } else if (rundown && to_int(get_property("screechCombats")) == 0) {
-                // Farming held the recharge turns; spend the screech now.
-                if (my_adventures() == 0)
-                    abort("uts_postLoopRunOutEagleBanish: out of adventures with the screech ready; get a turn and rerun to re-aim.");
-                adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
-                if (contains_text(get_property("banishedPhyla"), "construct"))
-                    abort("uts_postLoopRunOutEagleBanish: the screech didn't re-aim; constructs are still banished.");
-                spent += 1;
-                continue;
             }
             if (!rundown && !farm)
                 break;
@@ -2430,7 +2436,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             // Rundown only; unconditional made the 90-turn farm ceiling unreachable.
             if (rundown && spent >= 40)
                 abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
-            boolean freshZone;
             if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
                 current = $location[none];
                 foreach loc in pearlZoneRes {
@@ -2439,29 +2444,21 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         break;
                     }
                 }
-                freshZone = current != $location[none];
-            }
-            // Fishy gates the underwater zones only; the rundown recharges on
-            // land below. Outside the selection block to catch mid-zone expiry,
-            // ahead of the prep so an abandoned zone skips the maximizer.
-            if (current != $location[none]
-                && have_effect($effect[Fishy]) == 0 && !cloverFishy(current)) {
-                if (!rundown)
-                    abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
-                        + claimed + " pearls claimed; today's zone progress won't survive rollover.");
-                current = $location[none];
-            }
-            // No pearl zone: recharge at the camp rather than give up. It is
-            // open (checked above), all-combat, and where the screech lands.
-            if (current == $location[none]) {
-                if (!rundown)
+                if (current == $location[none]) {
+                    if (rundown)
+                        reportRundownStalled("no open pearl zone with today's pearl unclaimed", spent);
                     break;
-                adv1($location[The Smut Orc Logging Camp], -1, "screechFilter");
-                spent += 1;
-                continue;
-            }
-            if (freshZone)
+                }
                 pearlZonePrep(current);
+            }
+            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current)) {
+                if (rundown) {
+                    reportRundownStalled("out of Fishy, so no pearl zone is reachable", spent);
+                    break;
+                }
+                abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
+                    + claimed + " pearls claimed; today's zone progress won't survive rollover.");
+            }
             if (my_adventures() == 0)
                 abort("postloop pearls: out of adventures mid-zone after " + spent + " turns with "
                     + claimed + " pearls claimed; today's zone progress won't survive rollover.");
