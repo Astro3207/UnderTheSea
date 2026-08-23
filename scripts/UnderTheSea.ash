@@ -383,10 +383,17 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (available_amount($item[black glass]) == 0 && item_amount($item[sand dollar]) > 13)
             blackGlass();
 
-        if (to_int(get_property("_photoBoothEquipment")) < 3)
-            foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                if (available_amount(it) == 0)
-                    cli_execute("photobooth item " + it);
+        if (to_int(get_property("_photoBoothEquipment")) < 3){
+            int clanID = get_clan_id();
+            try {
+                visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
+                foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
+                    if (available_amount(it) == 0)
+                        cli_execute("photobooth item " + it);
+            } finally {
+                visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
+            }
+        }
         if (to_int(get_property("_photoBoothEquipment")) < 3)
             abort("It seems that your clan may have an incomplete photobooth, join BAFH and rerun");
 
