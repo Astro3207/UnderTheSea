@@ -1881,7 +1881,6 @@ skillNeed [skill] routeSkills = {
 
     // Optional -- guarded at every call site, so the run copes without them.
     $skill[Saucestorm]:             new skillNeed(0, "cleanUp()'s unguarded fallback when Saucegeyser is missing; one of the two is needed"),
-    $skill[Just the Facts]:         new skillNeed(0, "gates the Monster Habitats copy chain and the CyberRealm Mom route"),
     $skill[Snokebomb]:              new skillNeed(0, "banish in free_run()"),
     $skill[Shattering Punch]:       new skillNeed(0, "free kill in free_kill()"),
     $skill[Gingerbread Mob Hit]:    new skillNeed(0, "free kill in free_kill()"),
