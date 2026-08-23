@@ -2325,6 +2325,15 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         return fishy;
     }
 
+    // The rundown farms pearls to recharge; with no zone left it stops rather
+    // than aborting, so the rest of the postloop still runs.
+    void reportRundownStalled(string why, int spent) {
+        print("uts_postLoopRunOutEagleBanish: " + why + " after " + spent
+            + " turns; the Patriotic Screech is still aimed at the construct phylum.", "red");
+        print("Crates are constructs, so garbo will abort on its crate setup. Re-aim by hand: "
+            + "take out the Patriotic Eagle and screech in The Smut Orc Logging Camp.", "red");
+    }
+
     void pearlPostloop() {
         boolean rundown = get_property("uts_postLoopRunOutEagleBanish") == "true"
             && contains_text(get_property("banishedPhyla"), "construct");
@@ -2414,9 +2423,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
             if (!rundown && !farm)
                 break;
-            if (have_effect($effect[Fishy]) == 0)
-                abort("uts_runOutEagleBanish: out of Fishy after " + spent
-                    + " turns with the re-aim unfinished.");
             if (my_adventures() == 0) {
                 // Same pilsner ladder as the in-run diet: crack the six-pack if
                 // needed, Ode up, drink one. No pilsner left is a hard stop.
@@ -2431,7 +2437,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 } else
                     abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
             }
-            if (spent >= 40)
+            // Rundown only; unconditional made the 90-turn farm ceiling unreachable.
+            if (rundown && spent >= 40)
                 abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
             if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
                 current = $location[none];
@@ -2443,14 +2450,19 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 }
                 if (current == $location[none]) {
                     if (rundown)
-                        abort("uts_postLoopRunOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
+                        reportRundownStalled("no open pearl zone with today's pearl unclaimed", spent);
                     break;
                 }
                 pearlZonePrep(current);
             }
-            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
+            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current)) {
+                if (rundown) {
+                    reportRundownStalled("out of Fishy, so no pearl zone is reachable", spent);
+                    break;
+                }
                 abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
                     + claimed + " pearls claimed; today's zone progress won't survive rollover.");
+            }
             if (my_adventures() == 0)
                 abort("postloop pearls: out of adventures mid-zone after " + spent + " turns with "
                     + claimed + " pearls claimed; today's zone progress won't survive rollover.");
