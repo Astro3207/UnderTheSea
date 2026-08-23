@@ -411,6 +411,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
             // Daily skills
             foreach sk in $skills[Aug. 24th: Waffle Day!, Summon Kokomo Resort Pass] {
+                if (sk == $skill[Aug. 24th: Waffle Day!] && highShiny())
+                    continue;
                 if (have_skill(sk))
                     use_skill(sk);
             }
