@@ -1984,7 +1984,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     pullSequence($item[mer-kin prayerbeads]);
 
                 // Equip as many prayerbeads as available, pull healing items for gaps
-                if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
+                if (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( )){
                     while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
                         farmPrayerbeads();
                 }  
@@ -2001,20 +2001,17 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     equip($slot[acc2], $item[mer-kin prayerbeads]);
                     equip($slot[acc3], $item[mer-kin prayerbeads]);
                 } else {
-                    if (available_amount($item[mer-kin prayerbeads]) >= 2)
+                    if (available_amount($item[mer-kin prayerbeads]) >= 2){
                         equip($slot[acc2], $item[mer-kin prayerbeads]);
-                    else {
+                        if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
+                            pullSequence($item[New Age healing crystal]);
+                        else if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
+                            pullSequence($item[soggy used band-aid]);
+                    } else {
                         if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
                             pullSequence($item[New Age healing crystal]);
                         if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
                             pullSequence($item[soggy used band-aid]);
-                        else {
-                            while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
-                                farmPrayerbeads();
-                            equip($slot[acc1], $item[mer-kin prayerbeads]);
-                            equip($slot[acc2], $item[mer-kin prayerbeads]);
-                            equip($slot[acc3], $item[mer-kin prayerbeads]);
-                        }
                     }
                 }
                 YogHPCheck();
