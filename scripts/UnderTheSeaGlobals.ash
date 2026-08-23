@@ -70,7 +70,7 @@ import <seedfinder/seedfinder.ash>;
 
     // Returns true if this monster can prvoide a free fight
     boolean free_monster(monster mob) {
-        return $monsters[black crayon golem, time cop, sausage goblin,
+        return $monsters[black crayon golem, Black Crayon Beetle, Black Crayon Man, Black Crayon Goblin, Black Crayon Undead Thing, Black Crayon Slime, time cop, sausage goblin,
             kid who is too old to be Trick-or-Treating,
             suburban security civilian, vandal kid] contains mob;
     }
@@ -582,7 +582,8 @@ import <seedfinder/seedfinder.ash>;
 
     float trueHPPercent(){
         float n;
-        n = (my_maxhp() - numeric_modifier("maximum hp"))/(my_buffedstat($stat[muscle]) + 3);
+        n = round((my_maxhp() - numeric_modifier("maximum hp"))/(my_buffedstat($stat[muscle]) + 3)*100);
+        n = n/100;
         return n;
     }
 
@@ -613,9 +614,9 @@ import <seedfinder/seedfinder.ash>;
                 n += 1;
             }
         }
-        int predictedMus = (30 * (1+(numeric_modifier("Muscle Percent")/100)))+numeric_modifier("Muscle");
+        int predictedMus = round(30 * (1+(numeric_modifier("Muscle Percent")/100)))+numeric_modifier("Muscle");
         print ("Predicted Mus "+ predictedMus);
-        int predictedHP = ((predictedMus+3)*trueHPPercent()) + numeric_modifier("maximum hp");
+        int predictedHP = round((predictedMus+3)*trueHPPercent()) + numeric_modifier("maximum hp");
         print ("predicted HP " + predictedHP);
         if (predictedHP*0.9 > maxHeal)
             abort("Muscle/HP too high, see if there are any effects you can get rid of");
