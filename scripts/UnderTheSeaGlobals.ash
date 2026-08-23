@@ -1866,7 +1866,7 @@ record skillNeed {
 skillNeed [skill] routeSkills = {
     // Required -- the run cannot finish without these.
     $skill[Saucegeyser]:            new skillNeed(2, "Kills most of what you fight. Without this or Saucestorm the run stops."),
-    $skill[Cannelloni Cocoon]:      new skillNeed(2, "Heals you back up before the Yog-Urt fight."),
+    $skill[Cannelloni Cocoon]:      new skillNeed(2, "In-run healing."),
     $skill[Empathy of the Newt]:    new skillNeed(2, "Cast before fighting Shub-Jigguwatt."),
     $skill[Deep Dark Visions]:      new skillNeed(2, "The only way to learn the third dreadscroll answer."),
 
@@ -1885,9 +1885,9 @@ skillNeed [skill] routeSkills = {
     $skill[Shattering Punch]:       new skillNeed(0, "Kills a monster for free, saving a turn."),
     $skill[Gingerbread Mob Hit]:    new skillNeed(0, "Kills a monster for free, saving a turn."),
     $skill[Perpetrate Mild Evil]:   new skillNeed(0, "Extra damage against the shadow slab."),
-    $skill[Raise Backup Dancer]:    new skillNeed(0, "Extra damage in the Mer-kin Temple center door fight."),
+    $skill[Raise Backup Dancer]:    new skillNeed(0, "Extra damage in the Naughty Sorceress fight."),
     $skill[Summon Kokomo Resort Pass]: new skillNeed(0, "A free daily summon, picked up during daily setup."),
-    $skill[The Ode to Booze]:       new skillNeed(0, "More adventures from every drink, both in the run and when drinking out pilsners after it."),
+    $skill[The Ode to Booze]:       new skillNeed(0, "More adventures from every drink."),
     $skill[Ambidextrous Funkslinging]: new skillNeed(0, "Throws two potions at once, halving the fights spent identifying the murky potions."),
     $skill[Double-Fisted Skull Smashing]: new skillNeed(0, "Lets you wield a weapon in each hand, for better equipment."),
     $skill[Gallapagosian Mating Call]: new skillNeed(0, "Another way to make a monster reappear, and the only one that works on the black crayon golem."),
@@ -1897,13 +1897,13 @@ skillNeed [skill] routeSkills = {
     $skill[Bind Angel Hair Wisp]:   new skillNeed(0, "Pastamancer thrall for a little extra damage. Any one of the three is enough."),
 
     // Buffs the script puts up before the zones that need them.
-    $skill[Fat Leon's Phat Loot Lyric]: new skillNeed(0, "Item drop buff, put up when the run is hunting a specific drop."),
-    $skill[The Ballad of Richie Thingfinder]: new skillNeed(0, "Item drop buff, put up when the run is hunting a specific drop."),
-    $skill[Singer's Faithful Ocelot]: new skillNeed(0, "Item drop buff, put up when the run is hunting a specific drop."),
-    $skill[Leash of Linguini]:      new skillNeed(0, "Item drop buff, put up when the run is hunting a specific drop."),
-    $skill[Who's Going to Pay This Drunken Sailor?]: new skillNeed(0, "Item drop buff, put up when the run is hunting a specific drop."),
-    $skill[Sauce Contemplation]:    new skillNeed(0, "Item drop buff, put up when the run is hunting a specific drop."),
-    $skill[Donho's Bubbly Ballad]:  new skillNeed(0, "Item drop buff. Shrugged later to make room for Ode to Booze."),
+    $skill[Fat Leon's Phat Loot Lyric]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[The Ballad of Richie Thingfinder]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Singer's Faithful Ocelot]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Leash of Linguini]:      new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Who's Going to Pay This Drunken Sailor?]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Sauce Contemplation]:    new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Donho's Bubbly Ballad]:  new skillNeed(0, "Cast while the run is hunting a specific item drop."),
     $skill[The Sonata of Sneakiness]: new skillNeed(0, "Fewer combats, so the noncombats the run wants arrive sooner."),
     $skill[Hide From Seekers]:      new skillNeed(0, "Fewer combats, so the noncombats the run wants arrive sooner."),
     $skill[Smooth Movement]:        new skillNeed(0, "Fewer combats, so the noncombats the run wants arrive sooner."),
