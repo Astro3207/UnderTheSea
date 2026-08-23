@@ -1010,8 +1010,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (my_familiar() == $familiar[red-nosed snapper])
                         cli_execute("snapper fish");
                     string conditional;
-                    if (have_item($item[greatest american pants]))
+                    if (have_item($item[greatest american pants])){
+                        if (item_amount($item[greatest american pants]) == 0)  
+                            pullSequence($item[greatest american pants]);
                         conditional += "greatest american pants,";
+                    }
                     else if (have_item($item[navel ring of navel gazing]))
                         conditional += "navel ring of navel gazing,";
                     else
