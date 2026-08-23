@@ -70,7 +70,7 @@ import <seedfinder/seedfinder.ash>;
 
     // Returns true if this monster can prvoide a free fight
     boolean free_monster(monster mob) {
-        return $monsters[black crayon golem, time cop, sausage goblin,
+        return $monsters[black crayon golem, Black Crayon Beetle, Black Crayon Man, Black Crayon Goblin, Black Crayon Undead Thing, Black Crayon Slime time cop, sausage goblin,
             kid who is too old to be Trick-or-Treating,
             suburban security civilian, vandal kid] contains mob;
     }

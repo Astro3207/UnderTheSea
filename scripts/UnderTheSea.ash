@@ -1005,6 +1005,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("guild.php?place=challenge");
                     if (doSWord() == true)
                         use_familiar($familiar[Sword of S Words]);
+                    else if (have_familiar($familiar[Artistic Goth Kid]))
+                        use_familiar($familiar[Artistic Goth Kid]);
                     else if (have_familiar($familiar[red-nosed snapper]))
                         use_familiar("itdrop");
                     else
@@ -1023,7 +1025,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         conditional += if_equip($item[designer sweatpants]);
                     while (get_property(questProp[ps]) == "started") {
                         tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                            + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + baseball_equip() + conditional);
+                            + if_equip($item[toy cupid bow]) + conditional + delay());
                         mood("itdrop");
                         adv1(questLoc[ps]);
                     }
