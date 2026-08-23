@@ -371,6 +371,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             abort("set autoSatisfyWithNPCs = true, the script isn't going to work if it's false");
 
         iotmChecklist();
+        skillChecklist();
         if (my_path().id == 55)
             pullChecklist();
 
@@ -2677,6 +2678,7 @@ void main(string... args) {
         // Report-only mode: the same ownership checklists the run prints at
         // startup and nothing else -- no pulls, no turns, no combat.
         iotmChecklist();
+        skillChecklist();
         pullChecklist();
         return;
     }
