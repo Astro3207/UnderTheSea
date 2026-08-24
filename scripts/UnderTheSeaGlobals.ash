@@ -70,7 +70,7 @@ import <seedfinder/seedfinder.ash>;
 
     // Returns true if this monster can prvoide a free fight
     boolean free_monster(monster mob) {
-        return $monsters[black crayon golem, time cop, sausage goblin,
+        return $monsters[black crayon golem, Black Crayon Beetle, Black Crayon Man, Black Crayon Goblin, Black Crayon Undead Thing, Black Crayon Slime, time cop, sausage goblin,
             kid who is too old to be Trick-or-Treating,
             suburban security civilian, vandal kid] contains mob;
     }
@@ -582,14 +582,16 @@ import <seedfinder/seedfinder.ash>;
 
     float trueHPPercent(){
         float n;
-        n = (my_maxhp() - numeric_modifier("maximum hp"))/(my_buffedstat($stat[muscle]) + 3);
+        n = round((my_maxhp() - numeric_modifier("maximum hp"))/(my_buffedstat($stat[muscle]) + 3)*100);
+        n = n/100;
         return n;
     }
 
     int [int] YogHealingsNeeded = {
+        0:21,
+        1:5,
         2:3,
-        3:2,
-        5:1
+        3:2
     };
 
     int YogHealingsOwned(){
@@ -605,7 +607,7 @@ import <seedfinder/seedfinder.ash>;
         int maxHeal = 1001;
         int n;
         foreach it in HealingHP {
-            if (n >= YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])])
+            if (n >= (available_amount($item[mer-kin prayerbeads]) <= 3 ? YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] : 2))
                 break;
             if (available_amount(it) > 0){
                 if (HealingHP[it] < maxHeal)
@@ -613,9 +615,9 @@ import <seedfinder/seedfinder.ash>;
                 n += 1;
             }
         }
-        int predictedMus = (30 * (1+(numeric_modifier("Muscle Percent")/100)))+numeric_modifier("Muscle");
+        int predictedMus = round(30 * (1+(numeric_modifier("Muscle Percent")/100)))+numeric_modifier("Muscle");
         print ("Predicted Mus "+ predictedMus);
-        int predictedHP = ((predictedMus+3)*trueHPPercent()) + numeric_modifier("maximum hp");
+        int predictedHP = round((predictedMus+3)*trueHPPercent()) + numeric_modifier("maximum hp");
         print ("predicted HP " + predictedHP);
         if (predictedHP*0.9 > maxHeal)
             abort("Muscle/HP too high, see if there are any effects you can get rid of");

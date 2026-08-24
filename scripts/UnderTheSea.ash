@@ -384,12 +384,24 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (available_amount($item[black glass]) == 0 && item_amount($item[sand dollar]) > 13)
             blackGlass();
 
-        if (to_int(get_property("_photoBoothEquipment")) < 3)
-            foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                if (available_amount(it) == 0)
-                    cli_execute("photobooth item " + it);
-        if (to_int(get_property("_photoBoothEquipment")) < 3)
-            abort("It seems that your clan may have an incomplete photobooth, join BAFH and rerun");
+        // The borrow counter only advances when the booth reports a grab, so it
+        // can fall behind what is actually in inventory. Possession decides.
+        if (to_int(get_property("_photoBoothEquipment")) < 3){
+            int clanID = get_clan_id();
+            try {
+                visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
+                foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
+                    if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
+                        print("Couldn't borrow the " + it + " from the photo booth.", "red");
+            } finally {
+                visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
+            }
+        }
+        foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
+            if (available_amount(it) == 0)
+                abort("Missing the " + it + " -- the photo booth wouldn't hand it over. "
+                    + "Either its Sheriff props are not unlocked, or all three of today's "
+                    + "prop borrows are already spent.");
 
         if (my_path().id == 55){
             if (get_property("questM05Toot") == "started") {
@@ -412,6 +424,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
             // Daily skills
             foreach sk in $skills[Aug. 24th: Waffle Day!, Summon Kokomo Resort Pass] {
+                if (sk == $skill[Aug. 24th: Waffle Day!] && highShiny())
+                    continue;
                 if (have_skill(sk))
                     use_skill(sk);
             }
@@ -1004,6 +1018,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("guild.php?place=challenge");
                     if (doSWord() == true)
                         use_familiar($familiar[Sword of S Words]);
+                    else if (have_familiar($familiar[Artistic Goth Kid]))
+                        use_familiar($familiar[Artistic Goth Kid]);
                     else if (have_familiar($familiar[red-nosed snapper]))
                         use_familiar("itdrop");
                     else
@@ -1011,15 +1027,18 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (my_familiar() == $familiar[red-nosed snapper])
                         cli_execute("snapper fish");
                     string conditional;
-                    if (have_item($item[greatest american pants]))
+                    if (have_item($item[greatest american pants])){
+                        if (item_amount($item[greatest american pants]) == 0)  
+                            pullSequence($item[greatest american pants]);
                         conditional += "greatest american pants,";
+                    }
                     else if (have_item($item[navel ring of navel gazing]))
                         conditional += "navel ring of navel gazing,";
                     else
                         conditional += if_equip($item[designer sweatpants]);
                     while (get_property(questProp[ps]) == "started") {
                         tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                            + if_equip($item[spring shoes]) + if_equip($item[toy cupid bow]) + baseball_equip() + conditional);
+                            + if_equip($item[toy cupid bow]) + conditional + delay());
                         mood("itdrop");
                         adv1(questLoc[ps]);
                     }
@@ -1982,7 +2001,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     pullSequence($item[mer-kin prayerbeads]);
 
                 // Equip as many prayerbeads as available, pull healing items for gaps
-                if (3-available_amount($item[mer-kin prayerbeads]) > pulls_remaining( )){
+                if (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( )){
                     while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
                         farmPrayerbeads();
                 }  
@@ -1999,20 +2018,17 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     equip($slot[acc2], $item[mer-kin prayerbeads]);
                     equip($slot[acc3], $item[mer-kin prayerbeads]);
                 } else {
-                    if (available_amount($item[mer-kin prayerbeads]) >= 2)
+                    if (available_amount($item[mer-kin prayerbeads]) >= 2){
                         equip($slot[acc2], $item[mer-kin prayerbeads]);
-                    else {
+                        if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
+                            pullSequence($item[New Age healing crystal]);
+                        else if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
+                            pullSequence($item[soggy used band-aid]);
+                    } else {
                         if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
                             pullSequence($item[New Age healing crystal]);
                         if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
                             pullSequence($item[soggy used band-aid]);
-                        else {
-                            while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
-                                farmPrayerbeads();
-                            equip($slot[acc1], $item[mer-kin prayerbeads]);
-                            equip($slot[acc2], $item[mer-kin prayerbeads]);
-                            equip($slot[acc3], $item[mer-kin prayerbeads]);
-                        }
                     }
                 }
                 YogHPCheck();
