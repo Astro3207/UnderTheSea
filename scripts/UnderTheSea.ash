@@ -2161,8 +2161,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         use($item[null-day exploit]);
                 }
                 foreach ef in $effects[scarysauce]{
-                    if (have_effect(ef) > 0)
-                        cli_execute("uneffect" + ef);
+                    if (have_effect(ef) > 0 && !cli_execute("uneffect " + ef))
+                        print("Couldn't remove " + ef + " before Shub-Jigguwatt.", "red");
                 }
                 use_familiar("exp");
                 tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece," + bathysphere($item[toy cupid bow]));
