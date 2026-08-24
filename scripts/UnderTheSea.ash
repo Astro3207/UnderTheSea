@@ -1674,12 +1674,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
             adv($location[The Coral Corral]);
             // Burn shadow affinity if crystal ball shows non-seahorse incoming
-            if (contains_text(get_property("crystalBallPredictions"), "The Coral Corral")
-                && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse")
+            if (contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral")
+                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse")
                 && have_effect($effect[shadow affinity]) > 0 && available_amount($item[miniature crystal ball]) > 0)
                 shadowRift();
             while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0
-                && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
+                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
                 shadowRift();
         }
     }
