@@ -1463,13 +1463,13 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
             && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
                 conditional += "backup camera,";
-                tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
+                tempEquipment("item drop, sea", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
                     + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
             } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
                 pullSequence($item[software glitch]);
-                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+                tempEquipment("item drop, sea", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             } else {
-                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+                tempEquipment("item drop, sea", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             }
             mood("itdrop");
             adv($location[The Coral Corral]);
@@ -1662,7 +1662,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             } else {
                 conditional += swimmingTrunks();
             }
-            tempEquipment("initiative",conditional);
+            tempEquipment("initiative, sea",conditional);
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
