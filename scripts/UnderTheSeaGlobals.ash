@@ -588,9 +588,10 @@ import <seedfinder/seedfinder.ash>;
     }
 
     int [int] YogHealingsNeeded = {
+        0:21,
+        1:5,
         2:3,
-        3:2,
-        5:1
+        3:2
     };
 
     int YogHealingsOwned(){
@@ -606,7 +607,7 @@ import <seedfinder/seedfinder.ash>;
         int maxHeal = 1001;
         int n;
         foreach it in HealingHP {
-            if (n >= YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])])
+            if (n >= (available_amount($item[mer-kin prayerbeads]) <= 3 ? YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] : 2))
                 break;
             if (available_amount(it) > 0){
                 if (HealingHP[it] < maxHeal)
