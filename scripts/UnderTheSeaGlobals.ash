@@ -1857,6 +1857,110 @@ void iotmChecklist() {
     print("IOTM check: " + owned + " of " + total + " supported IOTMs owned.");
 }
 
+// Permable skills the route leans on. A skill that stops working the moment
+// the IOTM granting it is gone belongs to iotmChecklist(); these survive a
+// perm, so they are worth their own list. Informational -- nothing aborts.
+record skillNeed {
+    int tier;        // 2 required, 1 big turn saver, 0 optional
+    string why;
+};
+
+skillNeed [skill] routeSkills = {
+    // Required -- the run cannot finish without these.
+    $skill[Saucegeyser]:            new skillNeed(2, "Kills most of what you fight. Without this or Saucestorm the run stops."),
+    $skill[Cannelloni Cocoon]:      new skillNeed(2, "In-run healing."),
+    $skill[Empathy of the Newt]:    new skillNeed(2, "Cast before fighting Shub-Jigguwatt."),
+    $skill[Deep Dark Visions]:      new skillNeed(2, "The only way to learn the third dreadscroll answer."),
+
+    // Big turn savers.
+    $skill[Steely-Eyed Squint]:     new skillNeed(1, "A big once-a-day item drop boost, used to force the drops the run needs."),
+    $skill[Unaccompanied Miner]:    new skillNeed(1, "Five free trips into the mine each day, so you need not pull a lodestone for the teflon ore."),
+    $skill[Transcendent Olfaction]: new skillNeed(1, "Makes the Neptune flytrap, giant squid and Mer-kin tippler turn up far more often."),
+    $skill[Holiday Multitasking]:   new skillNeed(1, "Three crafts a day that cost no adventure."),
+    $skill[Tongue of the Walrus]:   new skillNeed(1, "Clears Beaten Up without spending turns resting."),
+    $skill[Overclock(10)]:          new skillNeed(1, "Your first ten CyberRealm fights each day are free; used for the Mom quest and to recharge the eagle screech."),
+    $skill[Garbage Nova]:           new skillNeed(1, "Extra damage against the school of many. Without it that fight just takes longer."),
+
+    // Optional -- the run copes without any of these.
+    $skill[Saucestorm]:             new skillNeed(0, "Backup finisher if you have no Saucegeyser. You need one of the two."),
+    $skill[Snokebomb]:              new skillNeed(0, "Banishes a monster you would rather not fight."),
+    $skill[Shattering Punch]:       new skillNeed(0, "Kills a monster for free, saving a turn."),
+    $skill[Gingerbread Mob Hit]:    new skillNeed(0, "Kills a monster for free, saving a turn."),
+    $skill[Perpetrate Mild Evil]:   new skillNeed(0, "Extra damage against the shadow slab."),
+    $skill[Raise Backup Dancer]:    new skillNeed(0, "Extra damage in the Naughty Sorceress fight."),
+    $skill[Summon Kokomo Resort Pass]: new skillNeed(0, "A free daily summon, picked up during daily setup."),
+    $skill[The Ode to Booze]:       new skillNeed(0, "More adventures from every drink."),
+    $skill[Ambidextrous Funkslinging]: new skillNeed(0, "Throws two potions at once, halving the fights spent identifying the murky potions."),
+    $skill[Double-Fisted Skull Smashing]: new skillNeed(0, "Lets you wield a weapon in each hand, for better equipment."),
+    $skill[Gallapagosian Mating Call]: new skillNeed(0, "Another way to make a monster reappear, and the only one that works on the black crayon golem."),
+    $skill[Stuffed Mortar Shell]:   new skillNeed(0, "Extra damage while finishing fights without Saucegeyser."),
+    $skill[Bind Spice Ghost]:       new skillNeed(0, "Pastamancer thrall for a little extra damage. Any one of the three is enough."),
+    $skill[Bind Vermincelli]:       new skillNeed(0, "Pastamancer thrall for a little extra damage. Any one of the three is enough."),
+    $skill[Bind Angel Hair Wisp]:   new skillNeed(0, "Pastamancer thrall for a little extra damage. Any one of the three is enough."),
+
+    // Buffs the script puts up before the zones that need them.
+    $skill[Fat Leon's Phat Loot Lyric]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[The Ballad of Richie Thingfinder]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Singer's Faithful Ocelot]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Leash of Linguini]:      new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Who's Going to Pay This Drunken Sailor?]: new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Sauce Contemplation]:    new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[Donho's Bubbly Ballad]:  new skillNeed(0, "Cast while the run is hunting a specific item drop."),
+    $skill[The Sonata of Sneakiness]: new skillNeed(0, "Fewer combats, so the noncombats the run wants arrive sooner."),
+    $skill[Hide From Seekers]:      new skillNeed(0, "Fewer combats, so the noncombats the run wants arrive sooner."),
+    $skill[Smooth Movement]:        new skillNeed(0, "Fewer combats, so the noncombats the run wants arrive sooner."),
+    $skill[Carlweather's Cantata of Confrontation]: new skillNeed(0, "More combats, for the zones the run needs to fight through."),
+    $skill[Musk of the Moose]:      new skillNeed(0, "More combats, for the zones the run needs to fight through."),
+    $skill[Attract Snakes]:         new skillNeed(0, "More combats, for the zones the run needs to fight through."),
+    $skill[Astral Shell]:           new skillNeed(0, "Elemental resistance for the underwater boss fights."),
+    $skill[Elemental Saucesphere]:  new skillNeed(0, "Elemental resistance for the underwater boss fights."),
+    $skill[Scarysauce]:             new skillNeed(0, "Elemental resistance for the underwater boss fights."),
+    $skill[Carol of the Hells]:     new skillNeed(0, "Buff for the Mer-kin Colosseum fights."),
+    $skill[Elron's Explosive Etude]: new skillNeed(0, "Buff for the Mer-kin Colosseum fights."),
+    $skill[Get Big]:                new skillNeed(0, "Buff for the Mer-kin Colosseum fights."),
+    $skill[The Magical Mojomuscular Melody]: new skillNeed(0, "Buff for the Mer-kin Colosseum fights."),
+    $skill[Manicotti Meditation]:   new skillNeed(0, "Buff for the Mer-kin Colosseum fights."),
+    $skill[Moxie of the Mariachi]:  new skillNeed(0, "Buff for the Mer-kin Colosseum fights."),
+};
+
+
+// A skill you hold only because of your current class is gone next ascension,
+// so an owned-but-unpermed skill is flagged. get_permed_skills() is empty
+// until a charsheet parse fills it, and an empty map suppresses the note
+// rather than marking everything unpermed.
+void printSkillTier(int tier, string label) {
+    boolean [skill] permed = get_permed_skills();
+    print("Skill check — " + label + ":");
+    foreach sk in routeSkills {
+        if (routeSkills[sk].tier != tier)
+            continue;
+        if (!have_skill(sk))
+            print("✗ " + sk + " — " + routeSkills[sk].why, "red");
+        else if (count(permed) > 0 && !(permed contains sk))
+            print("✓ " + sk + " (not permed) — " + routeSkills[sk].why, "blue");
+        else
+            print("✓ " + sk + " — " + routeSkills[sk].why, "blue");
+    }
+}
+
+void skillChecklist() {
+    int owned;
+    int total;
+    int missingRequired;
+    foreach sk in routeSkills {
+        total += 1;
+        if (have_skill(sk))
+            owned += 1;
+        else if (routeSkills[sk].tier == 2)
+            missingRequired += 1;
+    }
+    printSkillTier(2, "required");
+    printSkillTier(1, "big turn savers");
+    printSkillTier(0, "optional");
+    print("Skill check: " + owned + " of " + total + " permable skills owned"
+        + (missingRequired > 0 ? ", " + missingRequired + " REQUIRED missing" : "") + ".");
+}
+
 void pullChecklist() {
     boolean [item] pulls = $items[Mer-kin sneakmask, sea lasso, shark jumper,
         scale-mail underwear, Congressional Medal of Insanity,

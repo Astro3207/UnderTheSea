@@ -2,7 +2,7 @@ import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Set with the mafia CLI; all default to off.
-// uts_godRunGuard, uts_postloopCommand, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy and uts_postLoopPrepCodpiece
+// uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy and uts_postLoopPrepCodpiece
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
@@ -371,6 +371,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             abort("set autoSatisfyWithNPCs = true, the script isn't going to work if it's false");
 
         iotmChecklist();
+        skillChecklist();
         if (my_path().id == 55)
             pullChecklist();
 
@@ -1462,13 +1463,13 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
             && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
                 conditional += "backup camera,";
-                tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
+                tempEquipment("item drop, sea", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
                     + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
             } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
                 pullSequence($item[software glitch]);
-                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+                tempEquipment("item drop, sea", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             } else {
-                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+                tempEquipment("item drop, sea", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             }
             mood("itdrop");
             adv($location[The Coral Corral]);
@@ -1661,7 +1662,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             } else {
                 conditional += swimmingTrunks();
             }
-            tempEquipment("initiative",conditional);
+            tempEquipment("initiative, sea",conditional);
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
@@ -1673,12 +1674,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
             adv($location[The Coral Corral]);
             // Burn shadow affinity if crystal ball shows non-seahorse incoming
-            if (contains_text(get_property("crystalBallPredictions"), "The Coral Corral")
-                && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse")
+            if (contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral")
+                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse")
                 && have_effect($effect[shadow affinity]) > 0 && available_amount($item[miniature crystal ball]) > 0)
                 shadowRift();
             while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0
-                && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
+                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
                 shadowRift();
         }
     }
@@ -2160,8 +2161,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         use($item[null-day exploit]);
                 }
                 foreach ef in $effects[scarysauce]{
-                    if (have_effect(ef) > 0)
-                        cli_execute("uneffect" + ef);
+                    if (have_effect(ef) > 0 && !cli_execute("uneffect " + ef))
+                        print("Couldn't remove " + ef + " before Shub-Jigguwatt.", "red");
                 }
                 use_familiar("exp");
                 tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece," + bathysphere($item[toy cupid bow]));
@@ -2286,8 +2287,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     // everything left in storage may as well be on hand for gearing and
     // pearl-buying. Emptying is once per ascension; a repeat call is a no-op.
     void pullEverything() {
-        if (to_int(get_property("lastEmptiedStorage")) != my_ascensions())
-            cli_execute("pull all");
+        if (to_int(get_property("lastEmptiedStorage")) == my_ascensions())
+            return;
+        if (!cli_execute("pull all")) {
+            print("pull all didn't empty storage.", "red");
+            abort("pull all didn't empty storage.");
+        }
     }
 
     // uts_postLoopCloverFishy: top Fishy up with a Lucky! visit to The
@@ -2335,6 +2340,15 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (zone != $location[none] && get_property(pearlClaimed[zone]) != "true")
             pearlZonePrep(zone);
         return fishy;
+    }
+
+    // The rundown farms pearls to recharge; with no zone left it stops rather
+    // than aborting, so the rest of the postloop still runs.
+    void reportRundownStalled(string why, int spent) {
+        print("uts_postLoopRunOutEagleBanish: " + why + " after " + spent
+            + " turns; the Patriotic Screech is still aimed at the construct phylum.", "red");
+        print("Crates are constructs, so garbo will abort on its crate setup. Re-aim by hand: "
+            + "take out the Patriotic Eagle and screech in The Smut Orc Logging Camp.", "red");
     }
 
     void pearlPostloop() {
@@ -2426,9 +2440,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
             if (!rundown && !farm)
                 break;
-            if (have_effect($effect[Fishy]) == 0)
-                abort("uts_runOutEagleBanish: out of Fishy after " + spent
-                    + " turns with the re-aim unfinished.");
             if (my_adventures() == 0) {
                 // Same pilsner ladder as the in-run diet: crack the six-pack if
                 // needed, Ode up, drink one. No pilsner left is a hard stop.
@@ -2443,7 +2454,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 } else
                     abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
             }
-            if (spent >= 40)
+            // Rundown only; unconditional made the 90-turn farm ceiling unreachable.
+            if (rundown && spent >= 40)
                 abort("uts_runOutEagleBanish: the screech still isn't ready after 40 turns; something is wrong, bailing out.");
             if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
                 current = $location[none];
@@ -2455,14 +2467,19 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 }
                 if (current == $location[none]) {
                     if (rundown)
-                        abort("uts_postLoopRunOutEagleBanish: no open pearl zone with today's pearl unclaimed to recharge the screech in.");
+                        reportRundownStalled("no open pearl zone with today's pearl unclaimed", spent);
                     break;
                 }
                 pearlZonePrep(current);
             }
-            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current))
+            if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current)) {
+                if (rundown) {
+                    reportRundownStalled("out of Fishy, so no pearl zone is reachable", spent);
+                    break;
+                }
                 abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
                     + claimed + " pearls claimed; today's zone progress won't survive rollover.");
+            }
             if (my_adventures() == 0)
                 abort("postloop pearls: out of adventures mid-zone after " + spent + " turns with "
                     + claimed + " pearls claimed; today's zone progress won't survive rollover.");
@@ -2482,6 +2499,56 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
             print("uts_postLoopFarmPearls: " + claimed + " pearls claimed in " + spent + " turns.", "blue");
         }
+    }
+
+    // uts_usePilsners: drink the astral pilsner supply out once the run is
+    // over, cracking six-packs as it goes. Leaves out any liver capacity that
+    // equipment or the familiar is lending, since whatever runs next re-dresses
+    // and would find the character falling-down drunk.
+    void usePilsners() {
+        if (get_property("uts_usePilsners") != "true")
+            return;
+        step("postloop: drinking out the astral pilsners");
+        if (storage_amount($item[astral pilsner]) > 0
+            || storage_amount($item[astral six-pack]) > 0)
+            pullEverything();
+        int liver = inebriety_limit();
+        foreach s in $slots[]
+            liver = liver - to_int(numeric_modifier(equipped_item(s), "Liver Capacity"));
+        if (my_familiar() != $familiar[none])
+            liver = liver - to_int(numeric_modifier(my_familiar(), "Liver Capacity",
+                familiar_weight(my_familiar()), $item[none]));
+        liver = min(liver, inebriety_limit());
+        int drunk;
+        boolean odeWarned;
+        while (my_inebriety() < liver) {
+            if (item_amount($item[astral pilsner]) == 0
+                && item_amount($item[astral six-pack]) > 0
+                && !use($item[astral six-pack]))
+                break;
+            int before = item_amount($item[astral pilsner]);
+            if (before == 0)
+                break;
+            if (have_effect($effect[Ode to Booze]) == 0
+                && have_skill($skill[The Ode to Booze])) {
+                if (!cli_execute("shrug Donho's Bubbly Ballad"))
+                    print("uts_usePilsners: Donho's Bubbly Ballad wouldn't shrug.", "blue");
+                if (!use_skill(1, $skill[the ode to booze]) && !odeWarned) {
+                    print("uts_usePilsners: no Ode to Booze; drinking without it.", "blue");
+                    odeWarned = true;
+                }
+            }
+            if (!drink($item[astral pilsner]))
+                break;
+            // A mime army shotglass makes the day's first 1-drunkenness drink
+            // free, so progress is the pilsner count falling, not inebriety.
+            if (item_amount($item[astral pilsner]) >= before)
+                break;
+            drunk = drunk + 1;
+        }
+        print("uts_usePilsners: drank " + drunk + ", "
+            + (item_amount($item[astral pilsner])
+                + 6 * item_amount($item[astral six-pack])) + " pilsners left.", "blue");
     }
 
     // uts_postLoopPrepCodpiece: leave the run with the codpiece already loaded for the
@@ -2609,6 +2676,7 @@ void seaMonkees() {
             council();
             pearlPostloop();
             prepCodpiece();
+            usePilsners();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         }
@@ -2626,6 +2694,7 @@ void main(string... args) {
         // Report-only mode: the same ownership checklists the run prints at
         // startup and nothing else -- no pulls, no turns, no combat.
         iotmChecklist();
+        skillChecklist();
         pullChecklist();
         return;
     }
@@ -2649,6 +2718,7 @@ void main(string... args) {
             print("Starting UnderTheSea (postloop only)");
             pearlPostloop();
             prepCodpiece();
+            usePilsners();
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         } finally {
