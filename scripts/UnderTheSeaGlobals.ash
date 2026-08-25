@@ -1711,7 +1711,7 @@ boolean canBaseballBanish(int p){
     if (get_property("pitchNum9") == "")
         return false;
     for x from 8 to 6 {
-        if (get_property("pitchNum") + x != "" || x == p)
+        if (get_property("pitchNum" + x) != "" || x == p)
             return true;
     }
     return false;
