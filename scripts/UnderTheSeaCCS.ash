@@ -90,6 +90,8 @@ void free_run(string ptext, boolean banish) {
 
 // BCZ refracted gaze helper — checks stat threshold before casting
 boolean bcz_gaze_ready() {
+    if (get_property("NCtoC") == "true")
+        return false;
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
@@ -609,7 +611,8 @@ void main(int round, monster mob, string page_text) {
 
         case $location[Mer-kin Elementary School]:
             if (free_monster(last_monster())) {
-                use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
+                if (get_property("NCtoC") != "true")
+                    use_if_have_skill(page_text, $skill[BCZ: Refracted Gaze]);
                 if (have_equipped($item[legendary seal-clubbing club]) && to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
                     use_skill($skill[Club 'Em Across the Battlefield]);
                 } else {
