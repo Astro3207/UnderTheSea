@@ -41,7 +41,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 fam = $familiar[Melodramedary];
             else if (have_familiar($familiar[Red-Nosed Snapper]))
                 fam = $familiar[Red-Nosed Snapper];
-            else if (have_effect($effect[driving waterproofly]) > 0)
+            else if (have_effect($effect[driving waterproofly]) > 0 && have_familiar($familiar[jill-of-all-trades]))
                 fam = $familiar[jill-of-all-trades];
             else if (jellyfishReady())
                 fam = $familiar[Space Jellyfish];
