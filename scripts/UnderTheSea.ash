@@ -183,7 +183,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         }
         if (have_effect($effect[really quite poisoned]) > 0)
             cli_execute("uneffect really quite poisoned");
-        if (have_effect($effect[marked by don]) > 0 && have_skill($skill[disco nap]))
+        if (have_effect($effect[Marked by the Don]) > 0 && have_skill($skill[disco nap]))
             use_skill($skill[disco nap]);
         modes = "";
         if (get_property("NCtoC") == "true")

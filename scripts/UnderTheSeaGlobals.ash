@@ -1707,6 +1707,15 @@ void fillPrereqs(int outcomeSlot, string pitchType) {
     if (filled < 2)
         abort("Not enough open slots to fill prereqs for outcome at slot " + outcomeSlot);
 }
+boolean canBaseballBanish(){
+    if (get_property("pitchNum9") == "")
+        return false;
+    for x from 8 to 6 {
+        if (get_property("pitchNum") + x != "")
+            return true;
+    }
+    return false;
+}
 void baseballD() {
     string [int] lineup = split_string(get_property("baseballTeam"), ",");
     int players;
@@ -1730,7 +1739,7 @@ void baseballD() {
             }
             // Banish (third pitch) only activates if slot 9 is already claimed by another outcome
             if (BanishPitchNum == 0 && $strings[764] contains lineup[x-1]
-                && (YRPitchNum == 9 || FKPitchNum == 9)) {
+                && canBaseballBanish()) {
                 BanishPitchNum = x;
                 set_property("pitchNum" + x, "2");
             }
