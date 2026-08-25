@@ -1463,13 +1463,13 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
             && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
                 conditional += "backup camera,";
-                tempEquipment("item drop", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
+                tempEquipment("item drop, sea", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
                     + "pro skateboard," + if_equip($item[The Eternity Codpiece]) + "backup camera");
             } else if (have_skill($skill[steely-eyed squint]) && have_item($item[cursed monkey's paw])){
                 pullSequence($item[software glitch]);
-                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+                tempEquipment("item drop, sea", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             } else {
-                tempEquipment("item drop", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
+                tempEquipment("item drop, sea", if_equip(divingHelmet()) + "pro skateboard," + if_equip($item[The Eternity Codpiece]));
             }
             mood("itdrop");
             adv($location[The Coral Corral]);
@@ -1662,7 +1662,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             } else {
                 conditional += swimmingTrunks();
             }
-            tempEquipment("initiative",conditional);
+            tempEquipment("initiative, sea",conditional);
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
@@ -1674,12 +1674,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
             adv($location[The Coral Corral]);
             // Burn shadow affinity if crystal ball shows non-seahorse incoming
-            if (contains_text(get_property("crystalBallPredictions"), "The Coral Corral")
-                && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse")
+            if (contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral")
+                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse")
                 && have_effect($effect[shadow affinity]) > 0 && available_amount($item[miniature crystal ball]) > 0)
                 shadowRift();
             while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0
-                && !contains_text(get_property("crystalBallPredictions"), "The Coral Corral:Wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
+                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
                 shadowRift();
         }
     }
@@ -2161,8 +2161,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         use($item[null-day exploit]);
                 }
                 foreach ef in $effects[scarysauce]{
-                    if (have_effect(ef) > 0)
-                        cli_execute("uneffect" + ef);
+                    if (have_effect(ef) > 0 && !cli_execute("uneffect " + ef))
+                        print("Couldn't remove " + ef + " before Shub-Jigguwatt.", "red");
                 }
                 use_familiar("exp");
                 tempEquipment("damage absorption, mus", "mer-kin gladiator mask,mer-kin gladiator tailpiece," + bathysphere($item[toy cupid bow]));

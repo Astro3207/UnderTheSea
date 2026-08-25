@@ -818,8 +818,10 @@ void main(int round, monster mob, string page_text) {
             if (get_property("_monsterHabitatsFightsLeft") == "0"
                 && to_int(get_property("_monsterHabitatsRecalled")) < 3)
                 use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
-            if (!contains_text(get_property("trackedMonsters"),
-                "black crayon golem:McHugeLarge Slash")) {
+            // trackedMonsters records mafia's own capitalisation, so compare
+            // lowercased rather than guessing at it.
+            if (!contains_text(to_lower_case(get_property("trackedMonsters")),
+                "black crayon golem:mchugelarge slash")) {
                 foreach sk in $skills[Gallapagosian Mating Call, MCHUGELARGE SLASH]
                     use_if_have_skill(page_text, sk);
                 use_skill($skill[Club 'Em Into Next Week]);
