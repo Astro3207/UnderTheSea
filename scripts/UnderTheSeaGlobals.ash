@@ -1820,8 +1820,9 @@ void iotmChecklist() {
         Unwrapped knock-off retro superhero cape, roman candelabra,
         miniature crystal ball, latte lovers member's mug, V for Vivala mask,
         designer sweatpants, tearaway pants, autumn-aton, cosmic bowling ball];
-    // Meteor Lore rather than Macrometeorite: the passive is what the IOTM
-    // grants, and it carries Micrometeorite and Meteor Shower with it.
+    // The passive, not its combat skills: mafia learns Micrometeorite,
+    // Macrometeorite and Meteor Shower only by parsing a fight page, so
+    // outside combat have_skill() reads them as absent.
     boolean [skill] iotmSkills = $skills[Just the Facts, Map the Monsters,
         Meteor Lore, Feel Nostalgic];
     boolean [familiar] iotmFamiliars = $familiars[Grouper Groupie,
