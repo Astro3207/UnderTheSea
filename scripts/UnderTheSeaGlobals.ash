@@ -591,7 +591,7 @@ import <seedfinder/seedfinder.ash>;
         0:21,
         1:5,
         2:3,
-        3:2
+        3:1
     };
 
     int YogHealingsOwned(){
@@ -607,7 +607,7 @@ import <seedfinder/seedfinder.ash>;
         int maxHeal = 1001;
         int n;
         foreach it in HealingHP {
-            if (n >= (available_amount($item[mer-kin prayerbeads]) <= 3 ? YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] : 2))
+            if (n >= (available_amount($item[mer-kin prayerbeads]) <= 3 ? YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] : 1))
                 break;
             if (available_amount(it) > 0){
                 if (HealingHP[it] < maxHeal)
@@ -619,7 +619,7 @@ import <seedfinder/seedfinder.ash>;
         print ("Predicted Mus "+ predictedMus);
         int predictedHP = round((predictedMus+3)*trueHPPercent()) + numeric_modifier("maximum hp");
         print ("predicted HP " + predictedHP);
-        if (predictedHP*0.9 > maxHeal){
+        if (predictedHP*0.9*2 > (predictedHP+maxHeal)){
             if (have_effect($effect[gummiheart]) > 0) {
                 if (item_amount($item[soft green echo eyedrop antidote]) == 0
                     && pulls_remaining() > reservedPulls())
