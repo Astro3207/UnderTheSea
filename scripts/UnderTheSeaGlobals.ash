@@ -287,17 +287,6 @@ import <seedfinder/seedfinder.ash>;
         return it;
     }
 
-    string swimmingTrunks(){
-        string str;
-        if (have_effect($effect[driving waterproofly]) > 0)
-            return "";
-        if (my_path().id == 55){
-            str = "really nice swimming trunks,";
-        } else if (my_path().id == 0){
-            str = "Elf Guard SCUBA tank,";
-        }
-        return str;
-    }
     void equipSwimTrunks(){
         if (have_effect($effect[driving waterproofly]) > 0)
             return;
