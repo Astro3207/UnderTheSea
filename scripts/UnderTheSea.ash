@@ -49,6 +49,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (fam == $familiar[none]){
             fam = $familiar[grouper groupie];
         }
+        // The familiar command errors on one you do not own, and an
+        // uncaptured error ends the script.
+        if (!have_familiar(fam)) {
+            print("No " + fam + " to switch to; keeping " + my_familiar() + ".", "red");
+            return;
+        }
         use_familiar(fam);
         // Prince George goes on whichever familiar the item setup just settled on, and only the first time, since the costume is once a day and lasts until rollover.
         if (mod == "itdrop")

@@ -1820,8 +1820,11 @@ void iotmChecklist() {
         Unwrapped knock-off retro superhero cape, roman candelabra,
         miniature crystal ball, latte lovers member's mug, V for Vivala mask,
         designer sweatpants, tearaway pants, autumn-aton, cosmic bowling ball];
+    // The passive, not its combat skills: mafia learns Micrometeorite,
+    // Macrometeorite and Meteor Shower only by parsing a fight page, so
+    // outside combat have_skill() reads them as absent.
     boolean [skill] iotmSkills = $skills[Just the Facts, Map the Monsters,
-        Macrometeorite, Feel Nostalgic];
+        Meteor Lore, Feel Nostalgic];
     boolean [familiar] iotmFamiliars = $familiars[Grouper Groupie,
         Red-Nosed Snapper, Jill-of-All-Trades, Chest Mimic, Patriotic Eagle,
         Sword of S Words, Peace Turkey, Disgeist, Jumpsuited Hound Dog,
@@ -1838,10 +1841,7 @@ void iotmChecklist() {
     }
     foreach sk in iotmSkills {
         total += 1;
-        // have_skill() can flicker at initialization; the owned guide is accepted as a second signal for Macrometeorite.
-        boolean has = have_skill(sk)
-            || (sk == $skill[Macrometeorite] && have_item($item[Pocket Meteor Guide]));
-        if (has) { owned += 1; print("✓ " + sk, "blue"); }
+        if (have_skill(sk)) { owned += 1; print("✓ " + sk, "blue"); }
         else print("✗ " + sk, "red");
     }
     foreach fam in iotmFamiliars {
