@@ -742,24 +742,22 @@ void main(int round, monster mob, string page_text) {
 
         case $location[Mer-kin Temple (Right Door)]:
     //        user_confirm("Are the prediced muscle and max hp correct?");
-            if (my_maxhp() > 311)
-                abort("Too much HP to beat Yogurt (need < 312 after debuff) — check what's granting HP");
-            // yogDeleveler() returns $item[none] when moxie already outpaces
-            // her attack; funkslinging none errors out, so heal solo then.
-            for i from 1 to 2 {
+            if (my_maxhp() >= 314)
+                abort("Too much HP to beat Yogurt (need < 314 after debuff) — check what's granting HP");
+
+            for i from 0 to 5 {
+                if (i >= YogHealingsNeeded[equipped_amount($item[mer-kin prayerbeads])])
+                    break;
                 item dlv = yogDeleveler();
                 if (dlv == $item[none])
                     throw_item(yogHealing());
                 else
                     throw_items(dlv, yogHealing());
             }
-            if (equipped_amount($item[mer-kin prayerbeads]) < 3)
-                throw_item(yogHealing());
-            if (equipped_amount($item[mer-kin prayerbeads]) < 2)
-                throw_item(yogHealing());
-            if (equipped_amount($item[mer-kin prayerbeads]) < 2)
-                throw_item(yogHealing());
-            throw_items($item[Doc Galaktik's Homeopathic Elixir],$item[Doc Galaktik's Pungent Unguent]);
+            if (yogDeleveler() != $item[none])
+                throw_item(yogDeleveler());
+            else
+                throw_items($item[Doc Galaktik's Homeopathic Elixir],$item[Doc Galaktik's Pungent Unguent]);
             cleanUp();
             attackCleanUp();
             break;
