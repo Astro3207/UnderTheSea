@@ -133,9 +133,9 @@ void attackCleanUp() {
 }
 
 item yogDeleveler(){
-    if (my_buffedstat($stat[moxie]) + 10 > monster_attack( ) )
+    if (my_basestat($stat[moxie]) + 10 > monster_attack( ) )
         return $item[none];
-    foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,Mer-kin mouthsoap,sea cowbell]{
+    foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]{
         if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
             return it;
     }
