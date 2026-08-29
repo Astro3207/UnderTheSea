@@ -137,8 +137,6 @@ import <seedfinder/seedfinder.ash>;
 
     int reservedPulls(){
         int n;
-        if (!lowShiny() && available_amount($item[peppermint parasol]) == 0 && available_amount($item[navel ring of navel gazing]) == 0 && available_amount($item[greatest american pants]) == 0)
-            n += 1;
         if (available_amount($item[mer-kin prayerbeads]) < 3 && pulledToday($item[mer-kin prayerbeads]))
             n += 1;
         if (item_amount($item[sea cowbell]) < 3 && pulledToday($item[sea cowbell]))
@@ -592,7 +590,7 @@ import <seedfinder/seedfinder.ash>;
         return n;
     }
 
-    void YogHpCheck(){
+    boolean YogHpCheck(){
         int maxHeal = 1001;
         int n;
         foreach it in HealingHP {
@@ -615,12 +613,12 @@ import <seedfinder/seedfinder.ash>;
                     pullSequence($item[soft green echo eyedrop antidote]);
                 if (item_amount($item[soft green echo eyedrop antidote]) > 0)
                     cli_execute("uneffect gummiheart");
-            }
+            } else
+                return false;
             if (have_effect($effect[gummiheart]) > 0)
-                abort("Gummiheart is inflating max HP past what the healing items can out-heal, and the pull budget is fully reserved. Remove it (soft green echo eyedrop antidote) or burn its remaining turns, then rerun.");
-            else
-                abort("Muscle/HP too high, see if there are any effects you can get rid of");
+                return false;
         }
+        return true;
     }
 
 //Non-equipment iotm related functions

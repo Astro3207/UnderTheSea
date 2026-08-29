@@ -1987,7 +1987,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 pullSequence($item[mer-kin healscroll]);
 
             // YogUrt fight
-            if (get_property("yogUrtDefeated") == "false") {
+            while (get_property("yogUrtDefeated") == "false") {
                 cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
                 if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0){
                     pullSequence($item[null-day exploit]);
@@ -2030,7 +2030,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                             pullSequence($item[soggy used band-aid]);
                     }
                 }
-                YogHPCheck();
+                if (!YogHPCheck()){
+                    farmPrayerbeads();
+                    continue;
+                }
                 adv($location[Mer-kin Temple (Right Door)]);
             }
         }
