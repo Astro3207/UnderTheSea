@@ -622,7 +622,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
-            cli_execute("alliedradio sniper");
+            cli_execute("alliedradio misc sniper");
         if (pulls_remaining( ) > reservedPulls() && item_amount($item[skate blade]) == 0)
             pullSequence($item[skate blade]);
         if (get_property("noncombatForcerActive") == "true"){
