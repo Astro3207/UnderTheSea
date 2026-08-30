@@ -102,7 +102,7 @@ void cleanUp() {
         throw_item($item[pulled red taffy]);
     while (current_round() > 0) {
         int round = current_round();
-        if (have_skill($skill[saucegeyser])){
+        if (have_skill($skill[saucegeyser]) && last_monster() != $monster[Yog-Urt, Elder Goddess of Hatred]){
             use_skill($skill[saucegeyser]);
         } else {
             if (have_skill($skill[Stuffed Mortar Shell]))
@@ -133,7 +133,7 @@ void attackCleanUp() {
 }
 
 item yogDeleveler(){
-    if (my_basestat($stat[moxie]) + 10 > monster_attack( ) )
+    if (my_basestat($stat[moxie]) + 10 > monster_attack( ) && my_basestat($stat[muscle]) - 30 > monster_defense( ))
         return $item[none];
     foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]{
         if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
