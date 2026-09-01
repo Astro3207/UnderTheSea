@@ -1449,6 +1449,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (get_property("corralUnlocked") != "true")
             abort("corral not unlocked");
         while (str == "drop" && get_property("_epicMcTwistUsed") == "false"){
+            step("phase: McTwist corral");
             string conditional;
             if (have_effect($effect[shadow waters]) == 0 && lowShiny() == false)
                 shadowRift();
@@ -1484,6 +1485,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             codpiece("none");
         }
         if (str == "collect" || str == "drop"){
+            step("phase: collect sea leathers");
             if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]) {
                 while (item_amount($item[sea leather]) < 1){
                     getMissingCorralItems();
