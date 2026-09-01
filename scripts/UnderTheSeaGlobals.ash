@@ -560,7 +560,7 @@ import <seedfinder/seedfinder.ash>;
 
     boolean doneWithCowboy(){
         boolean bool = true;
-        if (to_int(get_property("lassoTrainingCount")) + (3*item_amount($item[sea lasso])) < 21)
+        if (to_int(get_property("lassoTrainingCount")) + (3*item_amount($item[sea lasso])) < 23)
             bool = false;
         return bool;
     }
