@@ -742,10 +742,6 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Right Door)]:
-    //        user_confirm("Are the prediced muscle and max hp correct?");
-            if (my_maxhp() >= 314)
-                abort("Too much HP to beat Yogurt (need < 314 after debuff) — check what's granting HP");
-
             for i from 0 to 5 {
                 if (i >= YogHealingsNeeded[equipped_amount($item[mer-kin prayerbeads])])
                     break;
