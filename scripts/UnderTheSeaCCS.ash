@@ -479,7 +479,8 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 } else {
                     if (last_monster().phylum != $phylum[fish]){
-                        use_if_have_skill(page_text, $skill[spring kick]);
+                        if (last_monster() == $monster[mer-kin rustler])
+                            use_skill($skill[spring kick]);
                         use_if_have_skill(page_text, $skill[Sea *dent: Talk to some fish]);
                         use_skill($skill[BCZ: Refracted Gaze]);
                         use_if_have_skill(page_text, $skill[Do an epic McTwist!]);
