@@ -1322,9 +1322,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     }
                     if (item_amount($item[rusty rivet]) >= 8 || to_slot(divingHelmet()) == $slot[hat])
                         break;
-                case "greg":
-                    if (str == "greg" && get_property("beGregariousMonster") == "unholy diver")
-                        return;
                 case "direct":
                     //Resource saving, the basic adventure in the wreck until you get enough rivets
                     if ((item_amount($item[rusty rivet]) >= 8 && item_amount($item[rusty porthole]) == 0 && available_amount($item[rusty broken diving helmet]) == 0) || to_slot(divingHelmet()) == $slot[hat])
@@ -1352,16 +1349,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
                         conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
                         tempEquipment("item drop,sea","monodent of the sea," + conditional + bathysphere($item[toy cupid bow]));
-                        if (get_property("beGregariousCharges") == 0 && str == "greg"){
-                            if (pullSequence($item[Extrovermectin&trade;]))
-                                chew($item[Extrovermectin&trade;]);
-                        }
                         mood("itdrop");
                         mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
                         adv($location[The Wreck of the Edgar Fitzsimmons]);
                     }
-                    if (str == "greg" && get_property("beGregariousMonster") == "unholy diver")
-                        return;
                     break;
             }
         }
@@ -2641,13 +2632,6 @@ void seaMonkees() {
             unholyDiver("summon");
             caliginous("cyberrealm");
             corral("drop");
-        } else if (available_amount($item[blood cubic zirconia]) > 0){
-            unholyDiver("greg");
-            corral("drop");
-            if (MomNCyber())
-                caliginous("cyberrealm");
-            else
-                caliginous("cheap");
         } else {
             corral("collect");
             unholyDiver("direct");
