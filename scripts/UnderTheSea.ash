@@ -1453,7 +1453,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 mood("superitdrop");
             if (available_amount($item[pro skateboard]) == 0)
                 pullSequence($item[pro skateboard]);
-            pullSequence($item[pulled yellow taffy]);
             if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
             && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
                 conditional += "backup camera,";
