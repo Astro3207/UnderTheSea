@@ -1997,8 +1997,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         farmPrayerbeads();
                 }  
                 string conditional;
-                if (!highShiny())
-                    conditional += if_equip($item[bat wings]);
+                conditional += if_equip($item[bat wings]);
 
                 use_familiar("exp");
                 tempEquipment("moxie, hot damage, cold damage, spooky damage, sleaze damage, stench damage, -hp, -equip tiny yam cannon,sea",
@@ -2104,8 +2103,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 string freeFight;
                 if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
                     freeFight = "legendary seal-clubbing club,";
-                if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()
-                    && if_equip($item[bat wings]) != "")
+                if (to_int(get_property("_batWingsFreeFights")) < 5 && if_equip($item[bat wings]) != "")
                     freeFight += if_equip($item[bat wings]);
                 else if (have_item($item[Unwrapped knock-off retro superhero cape])){
                     freeFight += "unwrapped knock-off retro superhero cape,";
@@ -2174,7 +2172,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             // ── Naughty Sorceress intro ───────────────────────────────────────────────
             step("phase: Naughty Sorceress");
             if (get_property("questL13Final") == "unstarted") {
-                if (to_int(get_property("_batWingsFreeFights")) < 5 && !highShiny()) {
+                if (to_int(get_property("_batWingsFreeFights")) < 5) {
                     tempEquipment("spell damage percent, mys,sea", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece," + if_equip($item[bat wings])
                         + if_equip($item[Congressional Medal of Insanity]) + bathysphere($item[toy cupid bow]));
                 } else {
