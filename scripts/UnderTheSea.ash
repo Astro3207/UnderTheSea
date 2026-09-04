@@ -619,21 +619,26 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (get_property("skateParkStatus") != "war")
             return;
         NCforce();
+        item it;
+        if (highShiny())
+            it == $item[skate board];
+        else
+            it == $item[skate blade];
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio misc sniper");
-        if (pulls_remaining( ) > reservedPulls() && item_amount($item[skate blade]) == 0)
-            pullSequence($item[skate blade]);
+        if (pulls_remaining( ) > reservedPulls() && item_amount(it) == 0)
+            pullSequence(it);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
             cli_execute("unequip peridot");
-            if (item_amount($item[skate blade]) > 0)
-                equip($item[skate blade]);
+            if (item_amount(it) > 0)
+                equip(it);
         } else {
             use_familiar("-combat");
-            if (available_amount($item[skate blade]) > 0){
-                equip($slot[weapon],$item[skate blade]);
+            if (available_amount(it) > 0){
+                equip($slot[weapon],it);
             }
             tempEquipment("-combat, sea, -weapon",bathysphere($item[toy cupid bow]));
             mood("-combat");
