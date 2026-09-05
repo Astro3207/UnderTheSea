@@ -621,9 +621,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         NCforce();
         item it;
         if (highShiny())
-            it == $item[skate board];
+            it = $item[skate board];
         else
-            it == $item[skate blade];
+            it = $item[skate blade];
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
