@@ -1951,7 +1951,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                             } else if (item_amount($item[Mer-kin thighguard]) == 0
                                 || item_amount($item[Mer-kin headguard]) == 0) {
                                 gymnasium();
-                                if (get_property("_skateBuff1") == "false"){
+                                if (get_property("_skateBuff1") == "false" && !highShiny()){
                                     equipSwimTrunks();
                                     visit_url("sea_skatepark.php?action=state2buff1");
                                 }
@@ -1969,7 +1969,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             // Skate park war cleanup
             while (get_property("skateParkStatus") == "war")
                 skatePark();
-            if (get_property("_skateBuff1") == "false"){
+            if (get_property("_skateBuff1") == "false" && !highShiny()){
                 equipSwimTrunks();
                 visit_url("sea_skatepark.php?action=state2buff1");
             }
@@ -2042,7 +2042,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             // ── Post-YogUrt skate park / gladiator gear ───────────────────────────────
             while (get_property("skateParkStatus") == "war")
                 skatePark();
-            if (get_property("_skateBuff1") == "false"){
+            if (get_property("_skateBuff1") == "false" && !highShiny()){
                 equipSwimTrunks();
                 visit_url("sea_skatepark.php?action=state2buff1");
             }
