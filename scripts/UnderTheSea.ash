@@ -491,7 +491,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
 
             // Other iotm related daily setup
-            if (item_amount($item[tiny stillsuit]) > 0 && have_familiar($familiar[tickle-me emilio])){
+            if (item_amount($item[tiny stillsuit]) > 0 && have_familiar($familiar[tickle-me emilio]) && familiar_equipped_equipment($familiar[tickle-me emilio]) != $item[tiny stillsuit]){
                 use_familiar($familiar[tickle-me emilio]);
                 equip($item[tiny stillsuit]);
             }
