@@ -137,14 +137,14 @@ import <seedfinder/seedfinder.ash>;
 
     int reservedPulls(){
         int n;
-        if (available_amount($item[mer-kin prayerbeads]) < 3 && pulledToday($item[mer-kin prayerbeads]))
+        if (available_amount($item[mer-kin prayerbeads]) < 3 && !pulledToday($item[mer-kin prayerbeads]))
             n += 1;
-        if (item_amount($item[sea cowbell]) < 3 && pulledToday($item[sea cowbell]))
+        if (item_amount($item[sea cowbell]) < 3 && !pulledToday($item[sea cowbell]))
             n += 1;
-        if (!lowShiny() && have_effect($effect[Jelly Combed]) == 0 && available_amount($item[comb jelly]) == 0 && pulledToday($item[comb jelly]))
+        if (!lowShiny() && have_effect($effect[Jelly Combed]) == 0 && available_amount($item[comb jelly]) == 0 && !pulledToday($item[comb jelly]))
             n += 1;
         if (get_property("shubJigguwattDefeated") == "false" && item_amount($item[crayon shavings]) < 4
-            && item_amount($item[null-day exploit]) == 0 && pulledToday($item[null-day exploit]))
+            && item_amount($item[null-day exploit]) == 0 && !pulledToday($item[null-day exploit]))
             n += 1;
         return n;
     }
