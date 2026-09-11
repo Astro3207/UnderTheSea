@@ -394,8 +394,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             blackGlass();
 
         // The borrow counter only advances when the booth reports a grab, so it
-        // can fall behind what is actually in inventory. Possession decides.
-        if (to_int(get_property("_photoBoothEquipment")) < 3){
+        // can fall behind what is actually in inventory. Possession decides:
+        // gating on the counter skips the retry for exactly the account that
+        // holds a duplicate and is short a prop. A spent booth just declines.
+        if (!sheriffOutfit()){
             int clanID = get_clan_id();
             try {
                 visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
@@ -406,11 +408,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
             }
         }
-        foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-            if (available_amount(it) == 0)
-                abort("Missing the " + it + " -- the photo booth wouldn't hand it over. "
-                    + "Either its Sheriff props are not unlocked, or all three of today's "
-                    + "prop borrows are already spent.");
+        // The props only buy three free kills, so a run without them is a run
+        // three turns longer. Every site that would dress them checks for them.
+        if (!sheriffOutfit())
+            print("No Sheriff outfit -- either its props are not unlocked, or today's "
+                + "three prop borrows are spent. Skipping the Assert your Authority "
+                + "free kills; the run costs up to three more turns.", "blue");
 
         if (my_path().id == 55){
             if (get_property("questM05Toot") == "started") {
@@ -1117,7 +1120,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         conditional += "monodent of the sea,";
                 }
 
-                if (get_property("_assertYourAuthorityCast").to_int() < 3) 
+                if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
                 tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());

@@ -348,6 +348,15 @@ import <seedfinder/seedfinder.ash>;
             ? castMathFloor : castMathFloor + 1);
     }
 
+    // Assert your Authority needs all three props worn at once. Same test
+    // tempEquipment() applies, so a true here means it can dress them.
+    boolean sheriffOutfit() {
+        foreach it in $items[Sheriff moustache, Sheriff badge, Sheriff pistol]
+            if (available_amount(it) == 0)
+                return false;
+        return true;
+    }
+
     string freeKill() {
         if (have_effect($effect[everything looks red]) == 0 && available_amount($item[everfull dart holster]) > 0)
             return if_equip($item[everfull dart holster]);
@@ -357,8 +366,8 @@ import <seedfinder/seedfinder.ash>;
         }
         if (highShiny())
             return "";
-        if (to_int(get_property("_assertYourAuthorityCast")) < 3 && 
-            (my_location() == $location[An octopus's garden] || my_location() == $location[mer-kin gymnasium] || my_location() == $location[the caliginous abyss]))
+        if (to_int(get_property("_assertYourAuthorityCast")) < 3 && sheriffOutfit()
+            && (my_location() == $location[An octopus's garden] || my_location() == $location[mer-kin gymnasium] || my_location() == $location[the caliginous abyss]))
             return "Sheriff moustache,Sheriff badge,Sheriff pistol,";
         if (to_int(get_property("_chestXRayUsed")) < 3 && have_item($item[Lil' Doctor&trade; bag]))
             return "Lil' Doctor™ bag,";
