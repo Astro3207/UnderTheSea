@@ -26,7 +26,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         }
         if (mod == "exp"){
             //This is for the bosses to get some exp out of them, has to be a no attack fam
-            foreach fam in $familiars[chest mimic,cooler yeti,cookbookbat,none]{
+            foreach fam in $familiars[chest mimic,Melodramedary,cooler yeti,cookbookbat,none]{
                 if (have_familiar(fam)){
                     use_familiar(fam);
                     return;
@@ -37,8 +37,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (mod == "itdrop"){
             if (chosenFamiliar != $familiar[none])
                 fam = chosenFamiliar;
-            else if (highShiny() && have_familiar($familiar[Melodramedary]) && to_int(get_property("camelSpit")) < 100 && to_slot(divingHelmet()) != $slot[hat])
-                fam = $familiar[Melodramedary];
             else if (have_familiar($familiar[Red-Nosed Snapper]))
                 fam = $familiar[Red-Nosed Snapper];
             else if (have_effect($effect[driving waterproofly]) > 0 && have_familiar($familiar[jill-of-all-trades]))
@@ -1080,7 +1078,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (!highShiny() && have_familiar($familiar[sword of s words]) && available_amount($item[archaeologist's spade]) > 0){
                 while (get_property("swordOfSWordsMonster") != "740"){
                     use_familiar($familiar[sword of s words]);
-                    tempEquipment("item drop,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
+                    tempEquipment("Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
                     adv($location[An octopus's garden]);
                 }
                 while (my_location() != $location[the skeleton store] && item_amount($item[wriggling flytrap pellet]) == 0){
@@ -1088,7 +1086,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
                     while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
-                        maximize("item drop",false);
+                        maximize("Drops Items",false);
                         use($item[Archaeologist's Spade]);
                         if (my_location() != $location[the skeleton store])
                         break;
@@ -1102,12 +1100,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (!gotPeriled($location[An octopus's garden]))
                         conditional += if_equip($item[peridot of peril]);
-                    tempEquipment("item drop,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
+                    tempEquipment("Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
                     adv($location[An octopus's garden]);
                 }
             }
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
-                use_familiar("itdrop");
+                use_familiar("exp");
                 string conditional;
                 if (to_int(get_property("rwbMonsterCount")) <= 1 && !get_property("trackedMonsters").contains_text("Neptune flytrap"))
                     conditional += if_equip($item[McHugeLarge left pole]);
@@ -1123,7 +1121,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
-                tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment("Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
                 if (to_int(get_property("rwbMonsterCount")) == 0)
                     mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
