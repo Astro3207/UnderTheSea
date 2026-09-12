@@ -723,13 +723,13 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         // actually lets it into the slot is keeping the monodent OUT while a
         // truly spare charge exists. worktea and knucklebone come from the
         // other two monsters, so the monodent keeps the slot for those.
-        boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0
-                || item_amount($item[mer-kin healscroll]) == 0)
-            && saberForcesFree() > 0
-            && have_item($item[Fourth of May Cosplay Saber]);
+        boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0)
+            && saberForcesFree() > 0 && have_item($item[Fourth of May Cosplay Saber]);
         if (!saberForResearcher
-            && (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0))
+            && (item_amount($item[mer-kin healscroll]) == 0 || ((item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0) && get_property("dreadScroll7") == "0")))
             conditional += "monodent of the sea,";
+        else if (!saberForResearcher)
+            conditional += delay();
         conditional += saberEquip($location[mer-kin library]);
         conditional += cloakeEquip($location[mer-kin library]);
         if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
@@ -738,12 +738,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (item_amount($item[mer-kin healscroll]) < 2)
             max = "item drop,sea";
         else
-            max = "Drops Item, sea";
+            max = "Drops Items, sea";
         tempEquipment(max, "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
 
         mood("itdrop");
         useMapIfAvailable();
-        abort("check if you have bcz equipped");
         adv($location[mer-kin library]);
     }
 
