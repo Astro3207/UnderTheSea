@@ -462,6 +462,7 @@ void main(int round, monster mob, string page_text) {
                 }
                 if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    free_kill(page_text);
                     cleanUp();
                 }
                 if (last_monster() == $monster[mer-kin healer]
@@ -487,6 +488,11 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             } else {
                 // turns_spent >= 24 and no lockkey monster
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                    use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    free_kill(page_text);
+                    cleanUp();
+                }
                 if (last_monster() == $monster[mer-kin burglar] || last_monster() == $monster[mer-kin raider])
                     free_run(page_text, true);
                 free_kill(page_text,

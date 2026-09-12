@@ -1258,7 +1258,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 conditional += "backup camera,";
             else if (to_int(get_property("_bczSweatBulletsCasts")) < 9 && !highShiny())
                 conditional += if_equip($item[blood cubic zirconia]);
-            else
+            else if (lowShiny())
                 conditional += if_equip($item[Congressional Medal of Insanity]);
 
             if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
