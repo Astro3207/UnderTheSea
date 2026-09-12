@@ -1681,8 +1681,9 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             string conditional;
             if (!contains_text(get_property("_perilLocations"), "199"))
                 conditional += if_equip($item[peridot of peril]);
-            if (!have_item($item[august scepter])){
+            if (item_amount($item[waffle]) == 0)
                 pullSequence($item[waffle]);
+            if (!have_item($item[august scepter])){
                 conditional += "monodent of the sea,";
                 conditional += if_equip($item[heartstone]);
             } else if (have_item($item[Miniature crystal ball])){
