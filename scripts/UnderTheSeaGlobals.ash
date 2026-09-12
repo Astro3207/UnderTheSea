@@ -393,8 +393,8 @@ import <seedfinder/seedfinder.ash>;
     }
 
     string delay(){
-        if (have_item($item[Kramco Sausage-o-Matic&trade;]))
-            return if_equip($item[latte lovers member's mug]) + freeRun();
+        if (have_item($item[Kramco Sausage-o-Matic&trade;]) && !highShiny())
+            return if_equip($item[Kramco Sausage-o-Matic&trade;]) + freeRun();
         return freeRun();
     }
 

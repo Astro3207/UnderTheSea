@@ -1266,9 +1266,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 conditional += "monodent of the sea,";
             if (get_property("merkinLockkeyMonster") != "") {
                 mood("-combat");
-                if (!highShiny())
-                    conditional += delay();
-                tempEquipment("-combat,sea", bathysphere($item[none]) + conditional);
+                tempEquipment("-combat,sea", bathysphere($item[none]) + conditional + delay());
             } else {
                 tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
             }
