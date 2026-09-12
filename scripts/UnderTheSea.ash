@@ -605,7 +605,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     void gymnasium(){
         use_familiar("combat");
         string conditional;
-            if (!contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")){
+            if (get_property("skateParkStatus") == "war"){
                 if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
                 else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
