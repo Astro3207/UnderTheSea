@@ -707,7 +707,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
     void merkinLib(){
-        use_familiar("itdrop");
+        if (get_property("dreadScroll7") == "0")
+            use_familiar("itdrop");
+        else
+            use_familiar("exp");
 
         string conditional;
         if (lowShiny() == true)
@@ -731,12 +734,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         conditional += cloakeEquip($location[mer-kin library]);
         if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
             conditional += if_equip($item[blood cubic zirconia]);
-        if (item_amount($item[mer-kin dreadscroll]) == 0) {
-            tempEquipment("item drop,sea", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
-        } else {
-            mood("-combat");
-            tempEquipment("-combat,sea", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
-        }
+        tempEquipment("item drop,sea", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
 
         mood("itdrop");
         useMapIfAvailable();
@@ -1674,7 +1672,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (item_amount($item[sea cowbell]) < 3 && !pulledToday($item[sea cowbell]))
                 pullSequence($item[sea cowbell]);
 
-            use_familiar("itdrop");
+            use_familiar("exp");
             string conditional;
             if (!contains_text(get_property("_perilLocations"), "199"))
                 conditional += if_equip($item[peridot of peril]);
