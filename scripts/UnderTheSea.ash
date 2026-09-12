@@ -743,6 +743,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
         mood("itdrop");
         useMapIfAvailable();
+        abort("check if you have bcz equipped");
         adv($location[mer-kin library]);
     }
 
@@ -1541,7 +1542,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
     void shadowTeflon(){
         step("phase: shadow rift prep");
-        if (my_path().id == 55){
+        if (my_path().id == 55 && !highShiny()){
             if (to_int(get_property("encountersUntilSRChoice")) > 9
                 && get_property("questRufus") == "unstarted"
                 && item_amount($item[Closed-circuit pay phone]) > 0) {
