@@ -734,6 +734,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         conditional += cloakeEquip($location[mer-kin library]);
         if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
             conditional += if_equip($item[blood cubic zirconia]);
+        else 
+            conditional += delay();
         string max;
         if (item_amount($item[mer-kin healscroll]) < 2)
             max = "item drop,sea";
