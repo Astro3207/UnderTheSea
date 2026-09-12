@@ -1357,21 +1357,34 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         adv($location[The Wreck of the Edgar Fitzsimmons]);
                     } else if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("itdrop");
-                        if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
-                            conditional += "shark jumper,scale-mail underwear,";
-                        if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
-                            if_equip($item[peridot of peril]);
-                        if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
-                            conditional += "spring shoes,";
-                        } else if (get_property("heartstoneBanishUnlocked") == "true")
-                            conditional += if_equip($item[heartstone]);
-                        conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        tempEquipment("item drop,sea","monodent of the sea," + conditional + bathysphere($item[toy cupid bow]));
-                        mood("itdrop");
-                        mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
+                        if (!highShiny()){
+                            if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
+                                conditional += "shark jumper,scale-mail underwear,";
+                            if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
+                                conditional += if_equip($item[peridot of peril]);
+                            if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
+                                conditional += "spring shoes,";
+                            } else if (get_property("heartstoneBanishUnlocked") == "true")
+                                conditional += if_equip($item[heartstone]);
+                            conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            tempEquipment("item drop,sea","monodent of the sea," + conditional + bathysphere($item[toy cupid bow]));
+                            mood("itdrop");
+                            mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
+                        } else if (highShiny()){
+                            if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
+                                conditional += if_equip($item[peridot of peril]);
+                            if (get_property("_epicMcTwistUsed") == "false")
+                                conditional += if_equip($item[pro skateboard]);
+                            if (have_item($item[Fourth of May Cosplay Saber])){
+                                conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            } else {
+                                mood("superitdrop");
+                            }
+                            tempEquipment("item drop,sea", conditional + bathysphere($item[toy cupid bow]));
+                        }
                         adv($location[The Wreck of the Edgar Fitzsimmons]);
                     }
                     break;

@@ -368,6 +368,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Be Gregarious]);
                 if (my_familiar() == $familiar[Melodramedary])
                     use_skill($skill[%fn, spit on them!]);
+                if (have_equipped($item[pro skateboard]))
+                    use_skill($skill[Do an epic McTwist!]);
                 if (have_equipped($item[Fourth of May Cosplay Saber]))
                     use_skill($skill[Use the Force]);
             }
