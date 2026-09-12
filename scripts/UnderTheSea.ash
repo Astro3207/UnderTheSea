@@ -1694,7 +1694,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 && have_item($item[tearaway pants])) {
                 conditional += "tearaway pants,";
             }
-            tempEquipment("initiative, sea",conditional);
+            tempEquipment("Drops Items, sea",conditional);
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
