@@ -9,7 +9,11 @@ void free_kill(string ptext, boolean drop) {
     if (highShiny()){
         if (contains_text(ptext, "Darts: Aim for the Bullseye")
             && my_location() != $location[mer-kin colosseum])
-            use_skill($skill[Darts: Aim for the Bullseye]);
+            while (current_round() > 0 && get_property("_dartsLeft").to_int() > 0)
+                use_skill($skill[Darts: Aim for the Bullseye]);
+        if (contains_text(ptext, "Spit jurassic acid")
+            && my_location() != $location[mer-kin colosseum])
+                use_skill($skill[Spit jurassic acid]);
         return;
     }
     if (get_property("_curveballMonster") == last_monster()

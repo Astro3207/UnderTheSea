@@ -360,7 +360,7 @@ import <seedfinder/seedfinder.ash>;
     string freeKill() {
         if (have_effect($effect[everything looks red]) == 0 && available_amount($item[everfull dart holster]) > 0)
             return if_equip($item[everfull dart holster]);
-        if (highShiny() && have_effect($effect[everything looks yellow]) == 0){
+        if (highShiny() && my_familiar() != $familiar[Sword of S Words] && have_effect($effect[everything looks yellow]) == 0){
             modes = "parka dilophosaur";
             return if_equip($item[jurassic parka]);
         }

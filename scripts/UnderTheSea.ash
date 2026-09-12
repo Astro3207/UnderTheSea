@@ -1120,7 +1120,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         conditional += "monodent of the sea,";
                 }
 
-                if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit())
+                if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
                 tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
@@ -1255,7 +1255,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && have_item($item[backup camera])
                 && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
                 conditional += "backup camera,";
-            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
+            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9 && !highShiny())
                 conditional += if_equip($item[blood cubic zirconia]);
             else
                 conditional += if_equip($item[Congressional Medal of Insanity]);
@@ -1264,11 +1264,15 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 conditional += "shark jumper,scale-mail underwear,";
             if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
                 mood("itdrop");
+            if (my_familiar() != $familiar[Sword of S Words])
+                conditional += "monodent of the sea,";
             if (get_property("merkinLockkeyMonster") != "") {
                 mood("-combat");
-                tempEquipment("-combat,sea", "monodent of the sea," + bathysphere($item[none]) + delay() + conditional);
+                if (!highShiny())
+                    conditional += delay();
+                tempEquipment("-combat,sea", bathysphere($item[none]) + conditional);
             } else {
-                tempEquipment("item drop,sea", "monodent of the sea," + bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
             }
             adv($location[The Mer-Kin Outpost]);
 
