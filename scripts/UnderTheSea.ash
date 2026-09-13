@@ -291,9 +291,49 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             use_skill($skill[rest upside down]);
         }
 
-        if ((get_property("dolphinItem") == "Mer-kin prayerbeads" || get_property("dolphinItem") == "rusty rivet") && 
-            have_item($item[durable dolphin whistle]) && lowShiny())
-            use($item[durable dolphin whistle]);
+        // The buffer holds one item and the next theft overwrites it, so this
+        // has to act now.
+        item stolen = to_item(get_property("dolphinItem"));
+        // Not for high shiny, which would rather spend the turn elsewhere, and not
+        // while falling-down drunk, when the next adventure fails anyway.
+        if ((whistleWorthy contains stolen) && stillWanted(stolen) && !highShiny()
+            && my_adventures() > 0 && my_inebriety() <= inebriety_limit()) {
+            boolean refused;
+            if (item_amount($item[dolphin whistle]) == 0 && !durableWhistleReady()
+                && item_amount($item[sand dollar]) > sandDollarsOwed())
+                refused = !buy($coinmaster[Big Brother], 1, $item[dolphin whistle]);
+            item whistle;
+            if (durableWhistleReady())
+                whistle = $item[durable dolphin whistle];
+            else if (item_amount($item[dolphin whistle]) > 0)
+                whistle = $item[dolphin whistle];
+            // use() returns true having used nothing mid-fight, and true on a lost
+            // thief fight, so the emptied buffer is what says the whistle blew.
+            boolean ignored;
+            if (whistle != $item[none])
+                ignored = use(whistle);
+            boolean blew = get_property("dolphinItem") == "";
+            string why;
+            if (blew)
+                why = "blew the " + whistle;
+            else if (whistle != $item[none])
+                why = "the " + whistle + " would not blow";
+            else if (refused)
+                why = "Big Brother would not sell a whistle";
+            else
+                why = "no whistle, and " + item_amount($item[sand dollar])
+                    + " sand dollars against " + sandDollarsOwed() + " owed";
+            if (stolen != dolphinSaid || why != dolphinSaidWhy) {
+                step("a dolphin took " + stolen + "; " + why + ".");
+                dolphinSaid = stolen;
+                dolphinSaidWhy = why;
+            }
+            // A later theft of the same item is a new event.
+            if (blew) {
+                dolphinSaid = $item[none];
+                dolphinSaidWhy = "";
+            }
+        }
         if (my_meat( ) < 300){
             foreach it in $items[dull fish scale, rough fish scale]{
                 autosell(item_amount(it), it );
@@ -793,8 +833,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (available_amount($item[cursed monkey's paw]) == 0 || to_int(get_property("_monkeyPawWishesUsed")) == 5){
             while (available_amount(it) == 0){
                 getMissingCorralItems();
-            if (get_property("dolphinItem") == to_string(it) && have_item($item[durable dolphin whistle]))
-                use($item[durable dolphin whistle]);
             }
         } else
             cli_execute("monkeypaw item " + it);
@@ -1516,8 +1554,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (str == "drop" && item_amount($item[sea lasso]) < 5 && to_int(get_property("lassoTrainingCount")) < 20){
             while (!have_item($item[cursed monkey's paw]) && item_amount($item[sea lasso]) < 6){
                 getMissingCorralItems();
-                if (get_property("dolphinItem") == "sea lasso" && have_item($item[durable dolphin whistle]))
-                    use($item[durable dolphin whistle]);
             }
             codpiece("none");
         }
@@ -1526,16 +1562,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]) {
                 while (item_amount($item[sea leather]) < 1){
                     getMissingCorralItems();
-                    if (get_property("dolphinItem") == "sea leather" && have_item($item[durable dolphin whistle]))
-                        use($item[durable dolphin whistle]);
                 }
                 create($item[sea chaps]);
             }
             if (available_amount($item[sea cowboy hat]) == 0) {
                 while (item_amount($item[sea leather]) < 1){
                     getMissingCorralItems();
-                    if (get_property("dolphinItem") == "sea leather" && have_item($item[durable dolphin whistle]))
-                        use($item[durable dolphin whistle]);
                 }
                 create($item[sea cowboy hat]);
             }
@@ -1657,15 +1689,11 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (get_property("seahorseName") == "" && item_amount($item[sea cowbell]) < wantCowbell){
             while (item_amount($item[sea cowbell]) < wantCowbell){
                 getMissingCorralItems();
-                if (get_property("dolphinItem") == "sea cowbell" && have_item($item[durable dolphin whistle]))
-                    use($item[durable dolphin whistle]);
             }
         }
         if (get_property("seahorseName") == "" && item_amount($item[sea lasso]) == 0){
             while (item_amount($item[sea lasso]) == 0){
                 getMissingCorralItems();
-                if (get_property("dolphinItem") == "sea lasso" && have_item($item[durable dolphin whistle]))
-                    use($item[durable dolphin whistle]);
             }
         }
     }
@@ -1889,6 +1917,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         }
                     }
                 } else if (available_amount($item[mer-kin dreadscroll]) == 0 && available_amount($item[Mer-kin scholar tailpiece]) == 0){
+                    // Both loops below feed on the same zone, so they share a count.
+                    int schoolTurns;
                     while (get_property("merkinElementaryTeacherUnlock") == "false") {
                         put_closet(item_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
                         string conditional;
@@ -1898,7 +1928,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         tempEquipment("-combat,sea", "monodent of the sea,crappy Mer-kin tailpiece,crappy Mer-kin mask," + if_equip($item[blood cubic zirconia])
                             + bathysphere($item[toy cupid bow]) + if_equip($item[M&ouml;bius ring]) + conditional);
                         mood("-combat");
+                        zoneStall("the teacher's lounge noncombat", $item[none],
+                            $location[mer-kin elementary school], schoolTurns, 20);
                         adv($location[mer-kin elementary school]);
+                        schoolTurns += 1;
                         put_closet(item_amount($item[mer-kin hallpass]),
                             $item[mer-kin hallpass]);
                         if ((available_amount($item[Mer-kin facecowl]) > 0 && available_amount($item[Mer-kin waistrope]) > 0))
@@ -1910,14 +1943,21 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         farmPrayerbeads();
                     cli_execute("uneffect the sonata of sneakiness");
                     while (available_amount($item[Mer-kin facecowl]) == 0 || available_amount($item[Mer-kin waistrope]) == 0){
-                        if ((available_amount($item[Mer-kin facecowl]) == 1 || available_amount($item[Mer-kin waistrope]) == 1) && available_amount($item[mer-kin hallpass]) == 0 && pulls_remaining( ) > reservedPulls())
+                        // Waiting for a piece first farms a 5% drop under -150% for
+                        // the pass that opens the lounge they come from.
+                        if (available_amount($item[mer-kin hallpass]) == 0
+                            && pulls_remaining( ) > reservedPulls())
                             pullSequence($item[mer-kin hallpass]);
                         use_familiar("itdrop");
                         mood("combat");
                         mood("itdrop");
                         tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + "monodent of the sea,"
                             + if_equip($item[Blood Cubic Zirconia]) + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+                        // The lounge wants a hallpass, so that is the real gate.
+                        zoneStall("the scholar outfit pieces", $item[Mer-kin hallpass],
+                            $location[mer-kin elementary school], schoolTurns, 20);
                         adv($location[mer-kin elementary school]);
+                        schoolTurns += 1;
                     }
                 }
 
