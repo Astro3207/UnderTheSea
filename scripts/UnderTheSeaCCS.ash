@@ -9,7 +9,11 @@ void free_kill(string ptext, boolean drop) {
     if (highShiny()){
         if (contains_text(ptext, "Darts: Aim for the Bullseye")
             && my_location() != $location[mer-kin colosseum])
-            use_skill($skill[Darts: Aim for the Bullseye]);
+            while (current_round() > 0 && get_property("_dartsLeft").to_int() > 0)
+                use_skill($skill[Darts: Aim for the Bullseye]);
+        if (contains_text(ptext, "Spit jurassic acid")
+            && my_location() != $location[mer-kin colosseum])
+                use_skill($skill[Spit jurassic acid]);
         return;
     }
     if (get_property("_curveballMonster") == last_monster()
@@ -364,6 +368,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Be Gregarious]);
                 if (my_familiar() == $familiar[Melodramedary])
                     use_skill($skill[%fn, spit on them!]);
+                if (have_equipped($item[pro skateboard]))
+                    use_skill($skill[Do an epic McTwist!]);
                 if (have_equipped($item[Fourth of May Cosplay Saber]))
                     use_skill($skill[Use the Force]);
             }
@@ -456,6 +462,7 @@ void main(int round, monster mob, string page_text) {
                 }
                 if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    free_kill(page_text,true);
                     cleanUp();
                 }
                 if (last_monster() == $monster[mer-kin healer]
@@ -481,6 +488,11 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             } else {
                 // turns_spent >= 24 and no lockkey monster
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                    use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    free_kill(page_text,true);
+                    cleanUp();
+                }
                 if (last_monster() == $monster[mer-kin burglar] || last_monster() == $monster[mer-kin raider])
                     free_run(page_text, true);
                 free_kill(page_text,

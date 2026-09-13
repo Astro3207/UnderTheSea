@@ -4,6 +4,8 @@ import <seedfinder/seedfinder.ash>;
     string boss,modes;
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
+    string mpAutoRecoveryItemsStorage = get_property("mpAutoRecoveryItems");
+    int clanID = get_clan_id();
     if (CCSStorage == "temp") CCSStorage = "default";
     string choice1387Storage = get_property("choiceAdventure1387");
     string [stat] pearlRes = {
@@ -137,14 +139,14 @@ import <seedfinder/seedfinder.ash>;
 
     int reservedPulls(){
         int n;
-        if (available_amount($item[mer-kin prayerbeads]) < 3 && pulledToday($item[mer-kin prayerbeads]))
+        if (available_amount($item[mer-kin prayerbeads]) < 3 && !pulledToday($item[mer-kin prayerbeads]))
             n += 1;
-        if (item_amount($item[sea cowbell]) < 3 && pulledToday($item[sea cowbell]))
+        if (item_amount($item[sea cowbell]) < 3 && !pulledToday($item[sea cowbell]))
             n += 1;
-        if (!lowShiny() && have_effect($effect[Jelly Combed]) == 0 && available_amount($item[comb jelly]) == 0 && pulledToday($item[comb jelly]))
+        if (!lowShiny() && have_effect($effect[Jelly Combed]) == 0 && available_amount($item[comb jelly]) == 0 && !pulledToday($item[comb jelly]))
             n += 1;
         if (get_property("shubJigguwattDefeated") == "false" && item_amount($item[crayon shavings]) < 4
-            && item_amount($item[null-day exploit]) == 0 && pulledToday($item[null-day exploit]))
+            && item_amount($item[null-day exploit]) == 0 && !pulledToday($item[null-day exploit]))
             n += 1;
         return n;
     }
@@ -416,7 +418,7 @@ import <seedfinder/seedfinder.ash>;
     string freeKill() {
         if (have_effect($effect[everything looks red]) == 0 && available_amount($item[everfull dart holster]) > 0)
             return if_equip($item[everfull dart holster]);
-        if (highShiny() && have_effect($effect[everything looks yellow]) == 0){
+        if (highShiny() && my_familiar() != $familiar[Sword of S Words] && have_effect($effect[everything looks yellow]) == 0){
             modes = "parka dilophosaur";
             return if_equip($item[jurassic parka]);
         }
@@ -449,8 +451,8 @@ import <seedfinder/seedfinder.ash>;
     }
 
     string delay(){
-        if (have_item($item[Kramco Sausage-o-Matic&trade;]))
-            return if_equip($item[latte lovers member's mug]) + freeRun();
+        if (have_item($item[Kramco Sausage-o-Matic&trade;]) && !highShiny())
+            return if_equip($item[Kramco Sausage-o-Matic&trade;]) + freeRun();
         return freeRun();
     }
 

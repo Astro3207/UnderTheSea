@@ -26,7 +26,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         }
         if (mod == "exp"){
             //This is for the bosses to get some exp out of them, has to be a no attack fam
-            foreach fam in $familiars[chest mimic,cooler yeti,cookbookbat,none]{
+            foreach fam in $familiars[chest mimic,Melodramedary,cooler yeti,cookbookbat,none]{
                 if (have_familiar(fam)){
                     use_familiar(fam);
                     return;
@@ -37,8 +37,6 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (mod == "itdrop"){
             if (chosenFamiliar != $familiar[none])
                 fam = chosenFamiliar;
-            else if (highShiny() && have_familiar($familiar[Melodramedary]) && to_int(get_property("camelSpit")) < 100 && to_slot(divingHelmet()) != $slot[hat])
-                fam = $familiar[Melodramedary];
             else if (have_familiar($familiar[Red-Nosed Snapper]))
                 fam = $familiar[Red-Nosed Snapper];
             else if (have_effect($effect[driving waterproofly]) > 0 && have_familiar($familiar[jill-of-all-trades]))
@@ -82,6 +80,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         continue;
                     if (ef == $effect[Party Soundtrack] && !have_item($item[Cincho de Mayo]))
                         continue;
+					if ((ef == $effect[Thoughtful Empathy] || ef == $effect[Lubricating Sauce]) && !have_item($item[April Shower Thoughts Shield]))
+						continue;
                     if (have_effect(ef) == 0)
                         cli_execute(ef.default);
                 }
@@ -161,6 +161,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                     if (ef == $effect[Ultraheart] && get_property("heartstoneBuffUnlocked") == false) continue;
                     if (ef == $effect[Everybody Calls Him Gorgon] && !lowShiny()) continue;
+					if ((ef == $effect[Tubes of Universal Meat] || ef == $effect[Mariachi Moisture]) && !have_item($item[April Shower Thoughts Shield]))
+						continue;
                     if (have_effect(ef) == 0) cli_execute(ef.default);
                 }
                 break;
@@ -238,7 +240,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 }
             }
             if (have_effect($effect[fishy]) == 0) {
-                if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false" && lowShiny() == false){
+                if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false" && lowShiny() == false && highShiny() == false){
                     if (item_amount($item[fishy pipe]) == 0)
                         cli_execute("pull fishy pipe");
                     use($item[fishy pipe]);
@@ -438,15 +440,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         // gating on the counter skips the retry for exactly the account that
         // holds a duplicate and is short a prop. A spent booth just declines.
         if (!sheriffOutfit()){
-            int clanID = get_clan_id();
-            try {
-                visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
-                foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                    if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
-                        print("Couldn't borrow the " + it + " from the photo booth.", "red");
-            } finally {
-                visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
-            }
+            visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
+            foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
+                if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
+                    print("Couldn't borrow the " + it + " from the photo booth.", "red");
         }
         // The props only buy three free kills, so a run without them is a run
         // three turns longer. Every site that would dress them checks for them.
@@ -531,7 +528,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             }
 
             // Other iotm related daily setup
-            if (item_amount($item[tiny stillsuit]) > 0 && have_familiar($familiar[tickle-me emilio])){
+            if (item_amount($item[tiny stillsuit]) > 0 && have_familiar($familiar[tickle-me emilio]) && familiar_equipped_equipment($familiar[tickle-me emilio]) != $item[tiny stillsuit]){
                 use_familiar($familiar[tickle-me emilio]);
                 equip($item[tiny stillsuit]);
             }
@@ -602,7 +599,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,ten-leaf clover,large box,
                 scale-mail underwear, Congressional Medal of Insanity,Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !pulledToday(it)) {
-                    if (it == $item[Flash Liquidizer Ultra Dousing Accessory] && !have_item($item[closed-circuit pay phone]))
+                    if (it == $item[Flash Liquidizer Ultra Dousing Accessory] && (!have_item($item[closed-circuit pay phone]) || highShiny()))
                         continue;
                     if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
@@ -647,7 +644,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     void gymnasium(){
         use_familiar("combat");
         string conditional;
-            if (!contains_text($location[The Skate Park].noncombat_queue, "Holey Rollers")){
+            if (get_property("skateParkStatus") == "war"){
                 if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
                 else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
@@ -677,7 +674,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             gymnasium();
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio misc sniper");
-        if (pulls_remaining( ) > reservedPulls() && item_amount(it) == 0)
+        if ((pulls_remaining( ) > reservedPulls() || it == $item[skate board]) && available_amount(it) == 0)
             pullSequence(it);
         if (get_property("noncombatForcerActive") == "true"){
             equipSwimTrunks();
@@ -749,7 +746,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
     }
 
     void merkinLib(){
-        use_familiar("itdrop");
+        if (get_property("dreadScroll7") == "0")
+            use_familiar("itdrop");
+        else
+            use_familiar("exp");
 
         string conditional;
         if (lowShiny() == true)
@@ -762,23 +762,25 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         // actually lets it into the slot is keeping the monodent OUT while a
         // truly spare charge exists. worktea and knucklebone come from the
         // other two monsters, so the monodent keeps the slot for those.
-        boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0
-                || item_amount($item[mer-kin healscroll]) == 0)
-            && saberForcesFree() > 0
-            && have_item($item[Fourth of May Cosplay Saber]);
+        boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0)
+            && saberForcesFree() > 0 && have_item($item[Fourth of May Cosplay Saber]);
         if (!saberForResearcher
-            && (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0))
+            && (item_amount($item[mer-kin healscroll]) == 0 || ((item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0) && get_property("dreadScroll7") == "0")))
             conditional += "monodent of the sea,";
+        else if (!saberForResearcher)
+            conditional += delay();
         conditional += saberEquip($location[mer-kin library]);
         conditional += cloakeEquip($location[mer-kin library]);
         if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
             conditional += if_equip($item[blood cubic zirconia]);
-        if (item_amount($item[mer-kin dreadscroll]) == 0) {
-            tempEquipment("item drop,sea", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
-        } else {
-            mood("-combat");
-            tempEquipment("-combat,sea", "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
-        }
+        else 
+            conditional += delay();
+        string max;
+        if (item_amount($item[mer-kin healscroll]) < 2)
+            max = "item drop,sea";
+        else
+            max = "1 Drops Items, sea";
+        tempEquipment(max, "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
 
         mood("itdrop");
         useMapIfAvailable();
@@ -1118,7 +1120,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (!highShiny() && have_familiar($familiar[sword of s words]) && available_amount($item[archaeologist's spade]) > 0){
                 while (get_property("swordOfSWordsMonster") != "740"){
                     use_familiar($familiar[sword of s words]);
-                    tempEquipment("item drop,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
+                    tempEquipment("1 Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
                     adv($location[An octopus's garden]);
                 }
                 while (my_location() != $location[the skeleton store] && item_amount($item[wriggling flytrap pellet]) == 0){
@@ -1126,7 +1128,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
                     while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
-                        maximize("item drop",false);
+                        maximize("1 Drops Items",false);
                         use($item[Archaeologist's Spade]);
                         if (my_location() != $location[the skeleton store])
                         break;
@@ -1140,12 +1142,12 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (!gotPeriled($location[An octopus's garden]))
                         conditional += if_equip($item[peridot of peril]);
-                    tempEquipment("item drop,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
+                    tempEquipment("1 Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
                     adv($location[An octopus's garden]);
                 }
             }
             while (item_amount($item[wriggling flytrap pellet]) == 0) {
-                use_familiar("itdrop");
+                use_familiar("exp");
                 string conditional;
                 if (to_int(get_property("rwbMonsterCount")) <= 1 && !get_property("trackedMonsters").contains_text("Neptune flytrap"))
                     conditional += if_equip($item[McHugeLarge left pole]);
@@ -1158,10 +1160,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         conditional += "monodent of the sea,";
                 }
 
-                if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit())
+                if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
-                tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment("1 Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
                 if (to_int(get_property("rwbMonsterCount")) == 0)
                     mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
@@ -1293,20 +1295,22 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && have_item($item[backup camera])
                 && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
                 conditional += "backup camera,";
-            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
+            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9 && !highShiny())
                 conditional += if_equip($item[blood cubic zirconia]);
-            else
+            else if (lowShiny())
                 conditional += if_equip($item[Congressional Medal of Insanity]);
 
             if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
                 conditional += "shark jumper,scale-mail underwear,";
             if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
                 mood("itdrop");
+            if (my_familiar() != $familiar[Sword of S Words])
+                conditional += "monodent of the sea,";
             if (get_property("merkinLockkeyMonster") != "") {
                 mood("-combat");
-                tempEquipment("-combat,sea", "monodent of the sea," + bathysphere($item[none]) + delay() + conditional);
+                tempEquipment("-combat,sea", bathysphere($item[none]) + conditional + delay());
             } else {
-                tempEquipment("item drop,sea", "monodent of the sea," + bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
             }
             adv($location[The Mer-Kin Outpost]);
 
@@ -1395,21 +1399,36 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         adv($location[The Wreck of the Edgar Fitzsimmons]);
                     } else if (total_turns_played( ) < to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("itdrop");
-                        if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
-                            conditional += "shark jumper,scale-mail underwear,";
-                        if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
-                            if_equip($item[peridot of peril]);
-                        if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
-                            conditional += "spring shoes,";
-                        } else if (get_property("heartstoneBanishUnlocked") == "true")
-                            conditional += if_equip($item[heartstone]);
-                        conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
-                        tempEquipment("item drop,sea","monodent of the sea," + conditional + bathysphere($item[toy cupid bow]));
-                        mood("itdrop");
-                        mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
+                        if (!highShiny()){
+                            if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
+                                conditional += "shark jumper,scale-mail underwear,";
+                            if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
+                                conditional += if_equip($item[peridot of peril]);
+                            if (banishGear($location[The Wreck of the Edgar Fitzsimmons]) == $item[spring shoes] && available_amount($item[spring shoes]) > 0){
+                                conditional += "spring shoes,";
+                            } else if (get_property("heartstoneBanishUnlocked") == "true")
+                                conditional += if_equip($item[heartstone]);
+                            conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            conditional += cloakeEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            conditional += champagneEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            conditional += gloveEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            tempEquipment("item drop,sea","monodent of the sea," + conditional + bathysphere($item[toy cupid bow]));
+                            mood("itdrop");
+                            mapMonster($location[The Wreck of the Edgar Fitzsimmons]);
+                        } else if (highShiny()){
+                            if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
+                                conditional += if_equip($item[peridot of peril]);
+                            if (get_property("_epicMcTwistUsed") == "false"){
+                                pullSequence($item[pro skateboard]);
+                                conditional += if_equip($item[pro skateboard]);
+                            }
+                            if (have_item($item[Fourth of May Cosplay Saber])){
+                                conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            } else {
+                                mood("superitdrop");
+                            }
+                            tempEquipment("item drop,sea", conditional + bathysphere($item[toy cupid bow]));
+                        }
                         adv($location[The Wreck of the Edgar Fitzsimmons]);
                     }
                     break;
@@ -1557,7 +1576,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
 
     void shadowTeflon(){
         step("phase: shadow rift prep");
-        if (my_path().id == 55){
+        if (my_path().id == 55 && !highShiny()){
             if (to_int(get_property("encountersUntilSRChoice")) > 9
                 && get_property("questRufus") == "unstarted"
                 && item_amount($item[Closed-circuit pay phone]) > 0) {
@@ -1689,12 +1708,13 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (item_amount($item[sea cowbell]) < 3 && !pulledToday($item[sea cowbell]))
                 pullSequence($item[sea cowbell]);
 
-            use_familiar("itdrop");
+            use_familiar("exp");
             string conditional;
             if (!contains_text(get_property("_perilLocations"), "199"))
                 conditional += if_equip($item[peridot of peril]);
-            if (!have_item($item[august scepter])){
+            if (item_amount($item[waffle]) == 0)
                 pullSequence($item[waffle]);
+            if (!have_item($item[august scepter])){
                 conditional += "monodent of the sea,";
                 conditional += if_equip($item[heartstone]);
             } else if (have_item($item[Miniature crystal ball])){
@@ -1709,7 +1729,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 && have_item($item[tearaway pants])) {
                 conditional += "tearaway pants,";
             }
-            tempEquipment("initiative, sea",conditional);
+            tempEquipment("1 Drops Items, sea",conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
@@ -2838,6 +2858,7 @@ void main(string... args) {
         abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists, \"UnderTheSea postloop\" runs only the postloop steps.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+        set_property("mpAutoRecoveryItems", get_property("mpAutoRecoveryItems")+";magical mystery juice;doc galaktik's invigorating tonic");
         // c2t_megg clears choiceAdventureScript for the span of its egg
         // fights, so the Force's follow-up choice must also be answerable
         // from the property alone.
@@ -2848,6 +2869,8 @@ void main(string... args) {
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
         set_property("choiceAdventure1387", choice1387Storage);
+        set_property("mpAutoRecoveryItems", mpAutoRecoveryItemsStorage);
+        visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
         set_ccs(CCSStorage);
         print("Ending UnderTheSea");
     }
