@@ -359,6 +359,62 @@ import <seedfinder/seedfinder.ash>;
         return true;
     }
 
+    // Quest items worth a turn to claim off a dolphin. A theft is a drop that
+    // missed, so the whistle is a second chance, not damage control.
+    boolean [item] whistleWorthy = $items[Mer-kin prayerbeads, Mer-kin healscroll,
+        Mer-kin lockkey, Mer-kin hallpass, Mer-kin cheatsheet, Mer-kin bunwig,
+        rusty rivet, rusty porthole, rusty broken diving helmet, sea leather,
+        sea cowbell, sea lasso];
+
+    // Charges cap at seaPoints, and one in Hagnk's is unusable in Ronin, so
+    // possession is not readiness.
+    boolean durableWhistleReady() {
+        return item_amount($item[durable dolphin whistle]) > 0
+            && to_int(get_property("_durableDolphinWhistleUsed"))
+                < to_int(get_property("seaPoints"));
+    }
+
+    // Last theft reported and the words used, so a retry only speaks on a change.
+    item dolphinSaid;
+    string dolphinSaidWhy;
+
+    // Sand dollars Big Brother is still owed: 13 for the black glass, 50 for
+    // the damp old boot. Only the surplus buys whistles.
+    int sandDollarsOwed() {
+        int n;
+        if (available_amount($item[black glass]) == 0)
+            n += 13;
+        // Against "true" so an unread preference reserves rather than releases.
+        if (get_property("dampOldBootPurchased") != "true")
+            n += 50;
+        // Bootstraps smith into the teflon swim fins, a tailpiece option.
+        if (tailpiece() == $item[none]
+            && available_amount($item[waterlogged bootstraps]) == 0)
+            n += 10;
+        return n;
+    }
+
+    // Names what an unbounded zone loop is waiting for, every ten turns past the
+    // mark. Call before adv(): the modifiers read are whatever is worn.
+    void zoneStall(string waitingFor, item gate, location zone, int spent, int mark) {
+        if (spent < mark || (spent - mark) % 10 != 0)
+            return;
+        string why;
+        if (gate == $item[none])
+            why = (turns_until_forced_noncombat(zone) < 0
+                    ? "no forced noncombat here"
+                    : "forced noncombat in " + turns_until_forced_noncombat(zone)
+                        + " turns")
+                + ", combat rate " + round(combat_rate_modifier()) + "%";
+        else
+            why = gate + " x" + item_amount(gate) + ", item "
+                + round(numeric_modifier("Item Drop")) + "% against this zone's "
+                + round(numeric_modifier("Loc:" + to_string(zone),
+                    "Item Drop Penalty")) + "%";
+        print(spent + " turns in " + zone + " still waiting on " + waitingFor
+            + ": " + why + ".", "red");
+    }
+
     string freeKill() {
         if (have_effect($effect[everything looks red]) == 0 && available_amount($item[everfull dart holster]) > 0)
             return if_equip($item[everfull dart holster]);
@@ -832,6 +888,30 @@ boolean seaCowNeeded() {
 
 boolean prayerbeadsShort() {
     return available_amount($item[mer-kin prayerbeads]) < 3;
+}
+
+// Whether a dolphin's item is still worth a turn. The predicates above answer
+// that, so ask them rather than restating their numbers.
+boolean stillWanted(item it) {
+    switch (it) {
+    case $item[rusty broken diving helmet]:
+    case $item[rusty porthole]:
+    case $item[rusty rivet]:
+        return diverHuntActive();
+    case $item[sea leather]:
+        return seaCowNeeded();
+    case $item[Mer-kin cheatsheet]:
+        // One is consumed per wordquiz, and each quiz is ten of the ninety wanted.
+        return item_amount($item[Mer-kin cheatsheet]) * 10
+            < 90 - to_int(get_property("merkinVocabularyMastery"));
+    case $item[Mer-kin prayerbeads]:
+        return prayerbeadsShort();
+    case $item[Mer-kin bunwig]:
+        return available_amount($item[mer-kin bunwig]) == 0;
+    }
+    // The rest are thrown or spent, so what the run wants of them moves. The
+    // cowbell and the lasso outlive the seahorse as Yog-Urt delevelers.
+    return true;
 }
 
 // ─── THE FORCE BUDGET ─────────────────────────────────────────────────────────
