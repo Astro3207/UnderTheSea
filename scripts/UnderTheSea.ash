@@ -6,7 +6,7 @@ import UnderTheSeaGlobals.ash;
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For 
 
-string DropsItems = have_item($item[kol con 13 snowglobe]) ? "Drops Items, sea" : "item drop, sea";
+string DropsItems = maximize("Drops Items, sea",false) ? "Drops Items, sea" : "item drop, sea";
 
 // ─── MOOD ─────────────────────────────────────────────────────────────────────
     void use_familiar(string mod){
