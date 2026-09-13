@@ -739,7 +739,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (item_amount($item[mer-kin healscroll]) < 2)
             max = "item drop,sea";
         else
-            max = "1 Drops Items, sea";
+            max = "Drops Items, sea";
         tempEquipment(max, "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
 
         mood("itdrop");
@@ -1082,7 +1082,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (!highShiny() && have_familiar($familiar[sword of s words]) && available_amount($item[archaeologist's spade]) > 0){
                 while (get_property("swordOfSWordsMonster") != "740"){
                     use_familiar($familiar[sword of s words]);
-                    tempEquipment("1 Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
+                    tempEquipment("Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
                     adv($location[An octopus's garden]);
                 }
                 while (my_location() != $location[the skeleton store] && item_amount($item[wriggling flytrap pellet]) == 0){
@@ -1090,7 +1090,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
                     while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
-                        maximize("1 Drops Items",false);
+                        maximize("Drops Items",false);
                         use($item[Archaeologist's Spade]);
                         if (my_location() != $location[the skeleton store])
                         break;
@@ -1104,7 +1104,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (!gotPeriled($location[An octopus's garden]))
                         conditional += if_equip($item[peridot of peril]);
-                    tempEquipment("1 Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
+                    tempEquipment("Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
                     adv($location[An octopus's garden]);
                 }
             }
@@ -1125,7 +1125,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
-                tempEquipment("1 Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment("Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
                 if (to_int(get_property("rwbMonsterCount")) == 0)
                     mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
@@ -1680,7 +1680,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (item_amount($item[sea cowbell]) < 3 && !pulledToday($item[sea cowbell]))
                 pullSequence($item[sea cowbell]);
 
-            use_familiar("exp");
+            use_familiar("itdrop");
             string conditional;
             if (!contains_text(get_property("_perilLocations"), "199"))
                 conditional += if_equip($item[peridot of peril]);
@@ -1701,7 +1701,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 && have_item($item[tearaway pants])) {
                 conditional += "tearaway pants,";
             }
-            tempEquipment("1 Drops Items, sea",conditional + delay());
+            tempEquipment("Drops Items, sea",conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
