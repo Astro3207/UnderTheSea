@@ -80,6 +80,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         continue;
                     if (ef == $effect[Party Soundtrack] && !have_item($item[Cincho de Mayo]))
                         continue;
+					if ((ef == $effect[Thoughtful Empathy] || ef == $effect[Lubricating Sauce]) && !have_item($item[April Shower Thoughts Shield]))
+						continue;
                     if (have_effect(ef) == 0)
                         cli_execute(ef.default);
                 }
@@ -159,6 +161,8 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                     if (ef == $effect[Ultraheart] && get_property("heartstoneBuffUnlocked") == false) continue;
                     if (ef == $effect[Everybody Calls Him Gorgon] && !lowShiny()) continue;
+					if ((ef == $effect[Tubes of Universal Meat] || ef == $effect[Mariachi Moisture]) && !have_item($item[April Shower Thoughts Shield]))
+						continue;
                     if (have_effect(ef) == 0) cli_execute(ef.default);
                 }
                 break;
