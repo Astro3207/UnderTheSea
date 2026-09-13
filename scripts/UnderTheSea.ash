@@ -236,7 +236,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 }
             }
             if (have_effect($effect[fishy]) == 0) {
-                if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false" && lowShiny() == false){
+                if (have_item($item[fishy pipe]) && item_amount($item[closed-circuit pay phone]) > 0 && have_item($item[Monodent of the Sea]) && have_item($item[Platinum Yendorian Express Card]) && get_property("_fishyPipeUsed") == "false" && lowShiny() == false && highShiny() == false){
                     if (item_amount($item[fishy pipe]) == 0)
                         cli_execute("pull fishy pipe");
                     use($item[fishy pipe]);
@@ -1381,8 +1381,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         } else if (highShiny()){
                             if (!gotPeriled($location[The Wreck of the Edgar Fitzsimmons]))
                                 conditional += if_equip($item[peridot of peril]);
-                            if (get_property("_epicMcTwistUsed") == "false")
+                            if (get_property("_epicMcTwistUsed") == "false"){
+                                pullSequence($item[pro skateboard]);
                                 conditional += if_equip($item[pro skateboard]);
+                            }
                             if (have_item($item[Fourth of May Cosplay Saber])){
                                 conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
                             } else {
