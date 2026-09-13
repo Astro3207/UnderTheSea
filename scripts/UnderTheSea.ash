@@ -740,7 +740,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (item_amount($item[mer-kin healscroll]) < 2)
             max = "item drop,sea";
         else
-            max = "Drops Items, sea";
+            max = "item drop, Drops Items, sea";
         tempEquipment(max, "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
 
         mood("itdrop");
@@ -1083,7 +1083,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (!highShiny() && have_familiar($familiar[sword of s words]) && available_amount($item[archaeologist's spade]) > 0){
                 while (get_property("swordOfSWordsMonster") != "740"){
                     use_familiar($familiar[sword of s words]);
-                    tempEquipment("Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
+                    tempEquipment("item drop, Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
                     adv($location[An octopus's garden]);
                 }
                 while (my_location() != $location[the skeleton store] && item_amount($item[wriggling flytrap pellet]) == 0){
@@ -1091,7 +1091,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
                     while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
-                        maximize("Drops Items",false);
+                        maximize("item drop, Drops Items",false);
                         use($item[Archaeologist's Spade]);
                         if (my_location() != $location[the skeleton store])
                         break;
@@ -1105,7 +1105,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (!gotPeriled($location[An octopus's garden]))
                         conditional += if_equip($item[peridot of peril]);
-                    tempEquipment("Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
+                    tempEquipment("item drop, Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
                     adv($location[An octopus's garden]);
                 }
             }
@@ -1126,7 +1126,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
-                tempEquipment("Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment("item drop, Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
                 if (to_int(get_property("rwbMonsterCount")) == 0)
                     mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
@@ -1702,7 +1702,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 && have_item($item[tearaway pants])) {
                 conditional += "tearaway pants,";
             }
-            tempEquipment("Drops Items, sea",conditional + delay());
+            tempEquipment("item drop, Drops Items, sea",conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
