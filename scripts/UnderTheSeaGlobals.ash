@@ -4,6 +4,7 @@ import <seedfinder/seedfinder.ash>;
     string boss,modes;
     string choiceStorage = get_property("choiceAdventureScript");
     string CCSStorage = get_property("customCombatScript");
+    string mpAutoRecoveryItemsStorage = set_property("mpAutoRecoveryItems");
     if (CCSStorage == "temp") CCSStorage = "default";
     string choice1387Storage = get_property("choiceAdventure1387");
     string [stat] pearlRes = {

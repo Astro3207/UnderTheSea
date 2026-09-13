@@ -2819,6 +2819,7 @@ void main(string... args) {
         abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists, \"UnderTheSea postloop\" runs only the postloop steps.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+        set_property("mpAutoRecoveryItems", get_property("mpAutoRecoveryItems")+";magical mystery juice;doc galaktik's invigorating tonic");
         // c2t_megg clears choiceAdventureScript for the span of its egg
         // fights, so the Force's follow-up choice must also be answerable
         // from the property alone.
@@ -2829,6 +2830,7 @@ void main(string... args) {
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
         set_property("choiceAdventure1387", choice1387Storage);
+        set_property("mpAutoRecoveryItems", mpAutoRecoveryItemsStorage);
         set_ccs(CCSStorage);
         print("Ending UnderTheSea");
     }
