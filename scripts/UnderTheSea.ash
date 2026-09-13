@@ -396,15 +396,10 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         // gating on the counter skips the retry for exactly the account that
         // holds a duplicate and is short a prop. A spent booth just declines.
         if (!sheriffOutfit()){
-            int clanID = get_clan_id();
-            try {
-                visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
-                foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                    if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
-                        print("Couldn't borrow the " + it + " from the photo booth.", "red");
-            } finally {
-                visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
-            }
+            visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
+            foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
+                if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
+                    print("Couldn't borrow the " + it + " from the photo booth.", "red");
         }
         // The props only buy three free kills, so a run without them is a run
         // three turns longer. Every site that would dress them checks for them.
@@ -2831,6 +2826,7 @@ void main(string... args) {
         set_property("choiceAdventureScript", choiceStorage);
         set_property("choiceAdventure1387", choice1387Storage);
         set_property("mpAutoRecoveryItems", mpAutoRecoveryItemsStorage);
+        visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
         set_ccs(CCSStorage);
         print("Ending UnderTheSea");
     }
