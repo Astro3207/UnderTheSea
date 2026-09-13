@@ -4,7 +4,9 @@ import UnderTheSeaGlobals.ash;
 // Set with the mafia CLI; all default to off.
 // uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy and uts_postLoopPrepCodpiece
 // see the README for what each does.
-familiar chosenFamiliar = $familiar[none]; //For kidoblivious
+familiar chosenFamiliar = $familiar[none]; //For 
+
+string DropsItems = have_item($item[kol con 13 snowglobe]) ? "Drops Items, sea" : "item drop, sea";
 
 // ─── MOOD ─────────────────────────────────────────────────────────────────────
     void use_familiar(string mod){
@@ -779,7 +781,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
         if (item_amount($item[mer-kin healscroll]) < 2)
             max = "item drop,sea";
         else
-            max = "Drops Items, sea";
+            max = DropsItems;
         tempEquipment(max, "mer-kin scholar mask,mer-kin scholar tailpiece," + conditional);
 
         mood("itdrop");
@@ -1120,7 +1122,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
             if (!highShiny() && have_familiar($familiar[sword of s words]) && available_amount($item[archaeologist's spade]) > 0){
                 while (get_property("swordOfSWordsMonster") != "740"){
                     use_familiar($familiar[sword of s words]);
-                    tempEquipment("Drops Items,sea", if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
+                    tempEquipment(DropsItems, if_equip($item[peridot of peril]) + baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill());
                     adv($location[An octopus's garden]);
                 }
                 while (my_location() != $location[the skeleton store] && item_amount($item[wriggling flytrap pellet]) == 0){
@@ -1128,7 +1130,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                         visit_url("shop.php?whichshop=meatsmith&action=talk");
                     adv($location[The skeleton store]);
                     while(to_int(get_property("_archSpadeDigs")) < 11 && item_amount($item[wriggling flytrap pellet]) == 0){
-                        maximize("Drops Items",false);
+                        maximize(DropsItems,false);
                         use($item[Archaeologist's Spade]);
                         if (my_location() != $location[the skeleton store])
                         break;
@@ -1142,7 +1144,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                     string conditional;
                     if (!gotPeriled($location[An octopus's garden]))
                         conditional += if_equip($item[peridot of peril]);
-                    tempEquipment("Drops Items,sea", baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
+                    tempEquipment(DropsItems, baseball_equip() + bathysphere($item[toy cupid bow]) + freeKill() + conditional);
                     adv($location[An octopus's garden]);
                 }
             }
@@ -1163,7 +1165,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
                     conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
-                tempEquipment("Drops Items,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                tempEquipment(DropsItems, bathysphere($item[toy cupid bow]) + conditional + freeKill());
                 if (to_int(get_property("rwbMonsterCount")) == 0)
                     mapMonster($location[An octopus's garden]);
                 adv($location[An octopus's garden]);
@@ -1729,7 +1731,7 @@ familiar chosenFamiliar = $familiar[none]; //For kidoblivious
                 && have_item($item[tearaway pants])) {
                 conditional += "tearaway pants,";
             }
-            tempEquipment("Drops Items, sea",conditional + delay());
+            tempEquipment(DropsItems,conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
