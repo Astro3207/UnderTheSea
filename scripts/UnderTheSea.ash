@@ -106,6 +106,8 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                             && item_amount($item[ultra-soft ferns]) == 0) continue;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
+                        if (ef == $effect[Wild and Westy!]
+                            && (to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
                         if (ef == $effect[Apriling Band Patrol Beat] && (!have_item($item[apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
@@ -122,7 +124,7 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
                             && (get_property("yogUrtDefeated") == "false"
-                                || to_int(get_property("_photoBoothEffects")) >= 3)) continue;
+                                || to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
                         if (ef == $effect[Fresh Breath]
                             && get_property("_aug6Cast") == "true") continue;
                         if (ef == $effect[Bloodbathed]
@@ -441,7 +443,7 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
         // can fall behind what is actually in inventory. Possession decides:
         // gating on the counter skips the retry for exactly the account that
         // holds a duplicate and is short a prop. A spent booth just declines.
-        if (!sheriffOutfit()){
+        if (!sheriffOutfit() && have_item($item[Clan VIP Lounge key])){
             visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
             foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
                 if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
@@ -932,7 +934,7 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
         } else {
             if (have_item($item[Combat lover's locket]))
                 equip($slot[acc3], $item[Combat lover's locket]);
-            if (get_property("_photocopyUsed") == "false" && (faxbot(mon) || faxbot(mon) || faxbot(mon))){
+            if (get_property("_photocopyUsed") == "false" && have_item($item[Clan VIP Lounge key]) && (faxbot(mon) || faxbot(mon) || faxbot(mon))){
                 use($item[photocopied monster]);
                 run_combat();
             } else if ($familiar[chest mimic].experience > 200) {
@@ -2182,7 +2184,6 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                 }
             }
         }
-
         if (my_path().id == 55 && get_property("spookyVHSTapeMonster") == ""){
             while (get_property("questS02Monkees") == "step12")
                 finishCaliginous();

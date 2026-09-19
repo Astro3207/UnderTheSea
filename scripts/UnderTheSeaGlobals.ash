@@ -90,7 +90,7 @@ import <seedfinder/seedfinder.ash>;
 
     int count_summons(){
         int n;
-        if (get_property("_photocopyUsed") == "false")
+        if (get_property("_photocopyUsed") == "false" && have_item($item[Clan VIP Lounge key]))
             n += 1;
         if (available_amount($item[combat lover's locket]) > 0){
             string [int] lockets = split_string(get_property("_locketMonstersFought"), ",");
@@ -1981,7 +1981,7 @@ void iotmChecklist() {
         Eight Days a Week Pill Keeper, Sept-Ember Censer, vampyric cloake,
         Unwrapped knock-off retro superhero cape, roman candelabra,
         miniature crystal ball, latte lovers member's mug, V for Vivala mask,
-        designer sweatpants, tearaway pants, autumn-aton, cosmic bowling ball];
+        designer sweatpants, tearaway pants, autumn-aton, cosmic bowling ball,Clan VIP Lounge key];
     // The passive, not its combat skills: mafia learns Micrometeorite,
     // Macrometeorite and Meteor Shower only by parsing a fight page, so
     // outside combat have_skill() reads them as absent.
