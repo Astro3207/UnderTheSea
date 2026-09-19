@@ -1093,7 +1093,8 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                     if (have_item($item[greatest american pants])){
                         if (item_amount($item[greatest american pants]) == 0)  
                             pullSequence($item[greatest american pants]);
-                        conditional += "greatest american pants,";
+                        if (item_amount($item[greatest american pants]) > 0)  
+                            conditional += "greatest american pants,";
                     }
                     else if (have_item($item[navel ring of navel gazing]))
                         conditional += "navel ring of navel gazing,";
