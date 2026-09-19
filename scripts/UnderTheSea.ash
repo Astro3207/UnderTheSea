@@ -2090,7 +2090,7 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
             int hpCheckPasses;
             while (get_property("yogUrtDefeated") == "false") {
                 cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
-                if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0){
+                if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0 && !lowShiny()){
                     pullSequence($item[null-day exploit]);
                     use($item[null-day exploit]);
                 } else if (delevelers() < 2){
