@@ -61,7 +61,9 @@ void free_run(string ptext, boolean banish) {
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
 
-    if (have_equipped($item[greatest american pants]) && to_int(get_property("_navelRunaways")) < 3)
+    if (have_equipped($item[greatest american pants]) && (to_int(get_property("_navelRunaways")) < 3 || (to_int(get_property("_navelRunaways")) < 10 && highShiny())))
+        runaway();
+    if (my_familiar() == $familiar[Pair of Stomping Boots] && round((familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()/5)) > get_property("_banderRunaways").to_int())
         runaway();
 
     foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Release the Boots, Feel Hatred, snokebomb] {

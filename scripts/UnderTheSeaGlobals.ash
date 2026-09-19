@@ -437,7 +437,7 @@ import <seedfinder/seedfinder.ash>;
     string freeRun() {
         if (have_effect($effect[Everything Looks Green]) == 0)
             return if_equip($item[spring shoes]);
-        if (available_amount($item[greatest american pants]) > 0 && to_int(get_property("_navelRunaways")) < 3 && have_effect($effect[driving waterproofly]) > 0)
+        if (available_amount($item[greatest american pants]) > 0 && (get_property("_navelRunaways").to_int() < 3 || (get_property("_navelRunaways").to_int() < 10 && highShiny())) && have_effect($effect[driving waterproofly]) > 0)
             return if_equip($item[greatest american pants]);
         if (available_amount($item[V for vivala mask]) > 0 && get_property("_vmaskBanisherUsed") == false)
             return if_equip($item[V for vivala mask]);
