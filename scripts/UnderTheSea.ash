@@ -2277,6 +2277,10 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                 else if (item_amount($item[crayon shavings]) < 8 && have_effect($effect[null afternoon]) == 0){
                     if (item_amount($item[null-day exploit]) > 0)
                         use($item[null-day exploit]);
+                    else if (highShiny()) {
+                        use_skill($skill[ruthless efficiency]);
+                    } else
+                        abort("Hit Shub without adequate delevers, this means something went wrong, sorry!");
                 }
                 foreach ef in $effects[scarysauce]{
                     if (have_effect(ef) > 0 && !cli_execute("uneffect " + ef))

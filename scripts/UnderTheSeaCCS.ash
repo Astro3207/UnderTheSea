@@ -157,6 +157,20 @@ item yogHealing(){
     return $item[none];
 }
 
+record itemPair { item a; item b; };
+itemPair[int] candidates;
+foreach it1 in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]{
+    foreach it2 in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]{
+        candidates[count(candidates)] = new itemPair(it1,it2);
+    }
+}
+foreach _, pair in candidates {
+    if (item_amount(pair.a) > 0 && item_amount(pair.b) > 0) {
+        throw_items(pair.a, pair.b);
+        break;
+    }
+}
+
 item bangA(){
     foreach it in $items[milky potion, swirly potion, bubbly potion, smoky potion, cloudy potion, effervescent potion, fizzy potion, dark potion, murky potion]{
         if (available_amount(it) > 0)
@@ -825,8 +839,12 @@ void main(int round, monster mob, string page_text) {
 
         case $location[Mer-kin Temple (Left Door)]:
             if (have_effect($effect[null afternoon]) == 0){
-                for i from 1 to 4
-                    throw_items($item[crayon shavings], $item[crayon shavings]);
+                if (item_amount($item[crayon shavings]) >= 8){
+                    for i from 1 to 4
+                        throw_items($item[crayon shavings], $item[crayon shavings]);
+                } else {
+
+                }
             }
             while (current_round() > 0)
                 attack();

@@ -607,7 +607,7 @@ import <seedfinder/seedfinder.ash>;
 
     int delevelers(){
         int n;
-        foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,Mer-kin mouthsoap,sea cowbell]
+        foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]
             if (item_amount(it) > 0)
                 n += 1;
         return n;
