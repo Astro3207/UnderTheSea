@@ -164,12 +164,6 @@ foreach it1 in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea la
         candidates[count(candidates)] = new itemPair(it1,it2);
     }
 }
-foreach _, pair in candidates {
-    if (item_amount(pair.a) > 0 && item_amount(pair.b) > 0) {
-        throw_items(pair.a, pair.b);
-        break;
-    }
-}
 
 item bangA(){
     foreach it in $items[milky potion, swirly potion, bubbly potion, smoky potion, cloudy potion, effervescent potion, fizzy potion, dark potion, murky potion]{
@@ -843,7 +837,14 @@ void main(int round, monster mob, string page_text) {
                     for i from 1 to 4
                         throw_items($item[crayon shavings], $item[crayon shavings]);
                 } else {
-
+                    while (delevelers() > 0){
+                        foreach _, pair in candidates {
+                            if (item_amount(pair.a) > 0 && item_amount(pair.b) > 0) {
+                                throw_items(pair.a, pair.b);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
             while (current_round() > 0)
