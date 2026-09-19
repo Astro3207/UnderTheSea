@@ -1819,27 +1819,41 @@ string [int] lepRoomToNum = {
 };
 
 void leprecondo(string input) {
-    string [int] rooms = split_string(input, ",");
+    if (to_int(get_property("_leprecondoRearrangements")) >= 3)
+        return;
+    boolean [int] discovered;
+    foreach i, s in split_string(get_property("leprecondoDiscovered"), ",") {
+        if (s != "" && (lepRoomToNum contains to_int(s)))
+            discovered[to_int(s)] = true;
+    }
+    // Wanted rooms first, then any other discovered piece. Furnish takes exactly four.
     int [int] lepRoom;
-    int count;
-    foreach num in rooms {
-        int val = to_int(rooms[num]);
-        string discovered = get_property("leprecondoDiscovered");
-        // Two-digit room numbers need a plain contains; single-digit need comma guards
-        // to avoid matching "1" inside "10", "11", etc.
-        boolean found = (val >= 10)
-            ? contains_text(discovered, rooms[num])
-            : contains_text(discovered, "," + rooms[num] + ",");
-        if (found) {
+    int count = 0;
+    foreach i, s in split_string(input, ",") {
+        int val = to_int(s);
+        if (count < 4 && (discovered contains val)) {
             lepRoom[count] = val;
+            remove discovered[val];
             count += 1;
         }
     }
-    cli_execute("leprecondo furnish "
+    foreach val in discovered {
+        if (count >= 4)
+            break;
+        lepRoom[count] = val;
+        count += 1;
+    }
+    if (count < 4) {
+        print("Leprecondo skipped: only " + count + " furniture pieces discovered.", "red");
+        return;
+    }
+    string furnish = "leprecondo furnish "
         + lepRoomToNum[lepRoom[3]] + ","
         + lepRoomToNum[lepRoom[2]] + ","
         + lepRoomToNum[lepRoom[1]] + ","
-        + lepRoomToNum[lepRoom[0]]);
+        + lepRoomToNum[lepRoom[0]];
+    if (!cli_execute(furnish))
+        print("Leprecondo furnish failed: " + furnish, "red");
 }
 
 void fillPrereqs(int outcomeSlot, string pitchType) {
