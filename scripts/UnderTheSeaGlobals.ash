@@ -490,6 +490,8 @@ import <seedfinder/seedfinder.ash>;
         string [int] itemMap = split_string(itemInput, ",");
         item [slot] equipmentSelection;
         //Assigning items to slots
+        if (have_equipped($item[Elf Guard SCUBA tank]))
+            cli_execute("unequip Elf Guard SCUBA tank");
         foreach str in itemMap{
             if (itemMap[str] == "")
                 continue;
