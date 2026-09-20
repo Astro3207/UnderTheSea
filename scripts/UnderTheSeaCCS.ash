@@ -837,14 +837,21 @@ void main(int round, monster mob, string page_text) {
                     for i from 1 to 4
                         throw_items($item[crayon shavings], $item[crayon shavings]);
                 } else {
-                    while (delevelers() > 0 && (my_basestat($stat[moxie]) + 10 > monster_attack( ) || my_basestat($stat[muscle]) - 30 > monster_defense( ))){
+                    while (delevelers() > 0 && (my_basestat($stat[moxie]) + 10 < monster_attack( ) || my_basestat($stat[muscle]) - 30 < monster_defense( ))){
                         foreach _, pair in candidates {
                             if (item_amount(pair.a) > 0 && item_amount(pair.b) > 0) {
+                                if (pair.a == pair.b && item_amount(pair.a) < 2)
+                                    continue;
                                 throw_items(pair.a, pair.b);
                                 break;
                             }
                         }
+                        if (delevelers() == 1)
+                            foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea cowbell]
+                                if (item_amount(it) == 1)
+                                    throw_item(it);
                     }
+                    abort();
                 }
             }
             while (current_round() > 0)

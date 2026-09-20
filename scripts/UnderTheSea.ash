@@ -170,6 +170,14 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                     if (have_effect(ef) == 0) cli_execute(ef.default);
                 }
                 break;
+            case "shub":
+                foreach ef in $effects[ruthlessly efficient,Juiced Out,Juiced,Starry-Eyed,Gummiheart,Carol of the Bulls,Song of Bravado,Quiet Desperation,Stevedave's Shanty of Superiority,Rage of the Reindeer] {
+                    if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
+                    if (effect_to_item(ef) != $item[none] && item_amount(effect_to_item(ef)) == 0) continue;
+                    if (ef == $effect[Starry-Eyed] && get_property("telescopeUpgrades") == "0") continue;
+                    if (have_effect(ef) == 0) cli_execute(ef.default);
+                }
+                break;
         }
     }
 
@@ -2278,7 +2286,7 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                     if (item_amount($item[null-day exploit]) > 0)
                         use($item[null-day exploit]);
                     else if (highShiny()) {
-                        use_skill($skill[ruthless efficiency]);
+                        mood("shub");
                     } else
                         abort("Hit Shub without adequate delevers, this means something went wrong, sorry!");
                 }
@@ -2291,6 +2299,8 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                 set_property("hpAutoRecoveryTarget", "1");
                 set_property("mpAutoRecovery", "-0.05");
                 set_property("mpAutoRecoveryTarget", "-0.05");
+                while (my_hp() < my_maxhp())
+                    use_skill($skill[Cannelloni Cocoon]);
                 cli_execute("recover hp; cast * empathy");
                 adv($location[Mer-kin Temple (Left Door)]);
             }

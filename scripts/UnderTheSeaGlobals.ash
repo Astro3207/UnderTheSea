@@ -77,6 +77,15 @@ import <seedfinder/seedfinder.ash>;
             suburban security civilian, vandal kid] contains mob;
     }
 
+    item effect_to_item(effect ef){
+        if (contains_text(ef.default,"drink 1 ") || contains_text(ef.default,"chew 1 ")){
+            return delete(to_buffer(ef.default),0,7).to_item();
+        } else if (contains_text(ef.default,"eat 1 ") || contains_text(ef.default,"use 1 ")){
+            return delete(to_buffer(ef.default),0,6).to_item();
+        } else
+            return $item[none];
+    }
+
 // Account states
     boolean highShiny() {
         return to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure"));
