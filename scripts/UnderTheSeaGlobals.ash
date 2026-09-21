@@ -3,6 +3,8 @@ import <seedfinder/seedfinder.ash>;
     int pearlsDoneToday;
     string boss,modes;
     string choiceStorage = get_property("choiceAdventureScript");
+    string betweenBattleStorage = get_property("betweenBattleScript");
+    string afterAdventureStorage = get_property("afterAdventureScript");
     string CCSStorage = get_property("customCombatScript");
     string mpAutoRecoveryItemsStorage = get_property("mpAutoRecoveryItems");
     int clanID = get_clan_id();

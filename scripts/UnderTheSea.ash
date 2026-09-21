@@ -2849,6 +2849,8 @@ void main(string... args) {
         // none of them set this does nothing but set up and tear down.
         try {
             set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+            set_property("betweenBattleScript", "");
+            set_property("afterAdventureScript", "");
             // Same defensive clear initialization() does: a run killed
             // mid-walk can leave this set, which reduces the CCS to cleanUp().
             set_property("_utsPearlFarm", "false");
@@ -2867,6 +2869,8 @@ void main(string... args) {
                 cli_execute(get_property("uts_postloopCommand"));
         } finally {
             set_property("choiceAdventureScript", choiceStorage);
+            set_property("betweenBattleScript", betweenBattleStorage);
+            set_property("afterAdventureScript", afterAdventureStorage);
             set_ccs(CCSStorage);
             print("Ending UnderTheSea");
         }
@@ -2876,6 +2880,8 @@ void main(string... args) {
         abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists, \"UnderTheSea postloop\" runs only the postloop steps.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
+        set_property("betweenBattleScript", "");
+        set_property("afterAdventureScript", "");
         set_property("mpAutoRecoveryItems", get_property("mpAutoRecoveryItems")+";magical mystery juice;doc galaktik's invigorating tonic");
         // c2t_megg clears choiceAdventureScript for the span of its egg
         // fights, so the Force's follow-up choice must also be answerable
@@ -2886,6 +2892,8 @@ void main(string... args) {
         seaMonkees();
     } finally {
         set_property("choiceAdventureScript", choiceStorage);
+        set_property("betweenBattleScript", betweenBattleStorage);
+        set_property("afterAdventureScript", afterAdventureStorage);
         set_property("choiceAdventure1387", choice1387Storage);
         set_property("mpAutoRecoveryItems", mpAutoRecoveryItemsStorage);
         visit_url("showclan.php?whichclan="+clanID+"&action=joinclan&confirm=on");
