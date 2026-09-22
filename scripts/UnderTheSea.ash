@@ -1832,10 +1832,25 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
             }
 
             if (get_property("dreadScroll3") == "0") {
+                mood("spookyres");
                 maximize("50 spooky res, hp",false);
+                // Mafia skips the cast below 500 maximum HP.
+                if (my_maxhp() < 500)
+                    abort("Deep Dark Visions needs 500 maximum HP; you have " + my_maxhp() + ".");
+                // A cast deals three to four times max HP before resistance. The phrase
+                // comes either way; below this even a full HP cast ends Beaten Up.
+                int spookyRes = to_int(elemental_resistance($element[spooky]));
+                if (spookyRes < 67)
+                    print("Deep Dark Visions: " + spookyRes + "% spooky resistance is too low to survive a cast.", "red");
+                int casts;
                 while (get_property("dreadScroll3") == "0") {
-                    restore_hp(1000);
-                    use_skill($skill[deep dark visions]);
+                    if (casts >= 10)
+                        abort("Deep Dark Visions gave no dreadscroll phrase in 10 casts. Cast it by hand until dreadScroll3 is set, then rerun.");
+                    if (!restore_hp(spookyRes < 67 ? 1000 : my_maxhp()))
+                        abort("Could not restore HP before Deep Dark Visions; see the message above.");
+                    if (!use_skill(1, $skill[deep dark visions]))
+                        abort("Could not cast Deep Dark Visions; see the message above.");
+                    casts += 1;
                 }
             }
         }
