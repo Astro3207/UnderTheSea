@@ -2106,8 +2106,22 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                         pullSequence($item[null-day exploit]);
                         use($item[null-day exploit]);
                     } else if (delevelers() < 2){
-                        while (delevelers() < 2)
+                        string why = pulledToday($item[null-day exploit])
+                            ? "the null-day exploit was already pulled today"
+                            : lowShiny() ? "low shiny runs don't pull a null-day exploit here"
+                            : "no pulls are left for a null-day exploit";
+                        int farmStart = turns_played();
+                        int noticeAt = 10;
+                        while (delevelers() < 2) {
                             getMissingCorralItems();
+                            int farmed = turns_played() - farmStart;
+                            if (farmed > noticeAt) {
+                                print("Deleveler farming: " + farmed + " turns in The Coral Corral for delevelers. "
+                                    + "Yog-Urt needs 2 delevelers and " + delevelers() + " are on hand; "
+                                    + why + ".", "red");
+                                noticeAt = farmed + 10 - farmed % 10;
+                            }
+                        }
                     }
                 }
                 if (available_amount($item[mer-kin prayerbeads]) < 3 && pulledToday($item[mer-kin prayerbeads]))
