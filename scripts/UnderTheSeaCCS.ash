@@ -182,6 +182,24 @@ void killDiver(string page_text) {
     cleanUp();
 }
 
+// KoL leaves the screech out of the skill dropdown while it recharges.
+// Returns and records "true" or "false"; "" without the eagle or a dropdown.
+string noteScreechReady(string page_text) {
+    if (my_familiar() != $familiar[Patriotic Eagle] || current_round() < 1)
+        return "";
+    int start = index_of(page_text, "<select name=whichskill>");
+    if (start < 0)
+        start = index_of(page_text, "<select name=\"whichskill\">");
+    if (start < 0)
+        return "";
+    int stop = index_of(page_text, "</select>", start);
+    if (stop < 0)
+        return "";
+    string ready = contains_text(substring(page_text, start, stop), "value=\"7451\"") ? "true" : "false";
+    set_property("_utsScreechReady", ready);
+    return ready;
+}
+
 // ─── MAIN CCS ─────────────────────────────────────────────────────────────────
 
 void main(int round, monster mob, string page_text) {
@@ -194,8 +212,12 @@ void main(int round, monster mob, string page_text) {
     if (get_property("_utsScreechReaim") == "true") {
         // Only the zone's natives are safe to banish; a wanderer would take
         // the banish onto its own phylum, and the pearl zones are fish.
-        // Leaving the result unset backs the caller off and retries.
+        // A result left unset tells the caller no cast was attempted.
         if (get_property("_utsScreechFired") == ""
+            && last_monster().phylum == $phylum[orc]
+            && noteScreechReady(page_text) == "false") {
+            set_property("_utsScreechFired", "unready");
+        } else if (get_property("_utsScreechFired") == ""
             && last_monster().phylum == $phylum[orc]) {
             page_text = to_string(use_skill($skill[%fn, Release the Patriotic Screech!]));
             // The line mafia itself reads to register the banish.
@@ -208,6 +230,7 @@ void main(int round, monster mob, string page_text) {
         return;
     }
     if (get_property("_utsPearlFarm") == "true") {
+        noteScreechReady(page_text);
         free_kill(page_text, false);
         cleanUp();
         return;
