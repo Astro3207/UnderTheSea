@@ -137,6 +137,13 @@ void attackCleanUp() {
     }
 }
 
+// Each item works once per Yog-Urt fight; _lastCombatActions lists throws as "it<id>;".
+boolean yogUnused(item it) {
+    return item_amount(it) > 0
+        && !contains_text(get_property("_lastCombatActions"), "it" + to_int(it) + ";");
+}
+
+// None when no deleveler is needed; aborts when one is needed and none is left.
 item yogDeleveler(){
     // Null Afternoon zeroes enemy Attack and Defense; mafia's monster stats do not show it.
     if (have_effect($effect[null afternoon]) > 0)
@@ -144,20 +151,82 @@ item yogDeleveler(){
     if (my_basestat($stat[moxie]) + 10 > monster_attack( ) && my_basestat($stat[muscle]) - 30 > monster_defense( ))
         return $item[none];
     foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]{
-        if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
+        if (yogUnused(it))
             return it;
     }
-    abort("Missing delever... oops");
+    abort("Yog-Urt needs a deleveler and none is left.");
     return $item[none];
 }
 
+// None when every full heal has been used.
 item yogHealing(){
     foreach it in $items[sea gel,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
-        if (item_amount(it) > 0 && !contains_text(get_property("_lastCombatActions"),to_int(it)))
+        if (yogUnused(it))
             return it;
     }
-    abort("Missing healing... oops");
     return $item[none];
+}
+
+boolean yogDocPair() {
+    return yogUnused($item[Doc Galaktik's Homeopathic Elixir])
+        && yogUnused($item[Doc Galaktik's Pungent Unguent]);
+}
+
+// One action under More Like a Suckrament. Nothing thrown may damage Yog-Urt.
+void yogSuckramentAction(boolean needHeal) {
+    item heal = yogHealing();
+    if (needHeal && heal != $item[none]) {
+        item dlv = yogDeleveler();
+        if (dlv != $item[none])
+            throw_items(dlv, heal);
+        else
+            throw_item(heal);
+    } else if (!needHeal && yogDeleveler() != $item[none]) {
+        throw_item(yogDeleveler());
+    } else if (yogDocPair()) {
+        throw_items($item[Doc Galaktik's Homeopathic Elixir], $item[Doc Galaktik's Pungent Unguent]);
+    } else if (heal != $item[none]) {
+        throw_item(heal);
+    } else {
+        abort("Yog-Urt: nothing harmless left to throw under More Like a Suckrament. Finish the fight by hand.");
+    }
+}
+
+// Heal through More Like a Suckrament without touching Yog-Urt, then kill her.
+void yogUrtFight() {
+    int beads = min(equipped_amount($item[mer-kin prayerbeads]), 3);
+    int stuck;
+    while (current_round() > 0 && have_effect($effect[More Like a Suckrament]) > 0) {
+        if (current_round() > 12)
+            abort("Yog-Urt: More Like a Suckrament is still up past round 12. Finish the fight by hand.");
+        if (stuck >= 3)
+            abort("Yog-Urt: throws are not advancing the round. Finish the fight by hand.");
+        int round = current_round();
+        // She hits first each round; past the counted heals the last action only fills the round.
+        yogSuckramentAction(round <= YogHealingsNeeded[beads]);
+        stuck = current_round() == round ? stuck + 1 : 0;
+    }
+    boolean mortared;
+    int guard;
+    while (current_round() > 0 && guard < 40) {
+        guard += 1;
+        // Her own hits run up to about 11 once the effect is gone.
+        if (my_hp() < 15 && yogDocPair()) {
+            throw_items($item[Doc Galaktik's Homeopathic Elixir], $item[Doc Galaktik's Pungent Unguent]);
+        } else if (my_hp() < 15 && yogHealing() != $item[none]) {
+            throw_item(yogHealing());
+        } else if (!mortared && have_skill($skill[Stuffed Mortar Shell])
+            && my_mp() >= mp_cost($skill[Stuffed Mortar Shell])) {
+            // Its damage lands next round; a recast while it is pending does nothing.
+            use_skill($skill[Stuffed Mortar Shell]);
+            mortared = true;
+        } else if (have_skill($skill[saucestorm]) && my_mp() >= mp_cost($skill[saucestorm])) {
+            use_skill($skill[saucestorm]);
+        } else {
+            // One swing per pass so the HP check above still runs.
+            attack();
+        }
+    }
 }
 
 record itemPair { item a; item b; };
@@ -246,6 +315,12 @@ void main(int round, monster mob, string page_text) {
         noteScreechReady(page_text);
         free_kill(page_text, false);
         cleanUp();
+        return;
+    }
+    // Any stray opener under More Like a Suckrament costs a heal round or kills.
+    if (my_location() == $location[Mer-kin Temple (Right Door)]
+        && last_monster() == $monster[Yog-Urt, Elder Goddess of Hatred]) {
+        yogUrtFight();
         return;
     }
 
@@ -840,21 +915,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[Mer-kin Temple (Right Door)]:
-            for i from 0 to 5 {
-                if (i >= YogHealingsNeeded[equipped_amount($item[mer-kin prayerbeads])])
-                    break;
-                item dlv = yogDeleveler();
-                if (dlv == $item[none])
-                    throw_item(yogHealing());
-                else
-                    throw_items(dlv, yogHealing());
-            }
-            if (yogDeleveler() != $item[none])
-                throw_item(yogDeleveler());
-            else
-                throw_items($item[Doc Galaktik's Homeopathic Elixir],$item[Doc Galaktik's Pungent Unguent]);
-            cleanUp();
-            attackCleanUp();
+            yogUrtFight();
             break;
 
         case $location[Mer-kin Temple (Left Door)]:
