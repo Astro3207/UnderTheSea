@@ -2100,12 +2100,29 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
             int hpCheckPasses;
             while (get_property("yogUrtDefeated") == "false") {
                 cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
-                if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0 && !lowShiny()){
-                    pullSequence($item[null-day exploit]);
-                    use($item[null-day exploit]);
-                } else if (delevelers() < 2){
-                    while (delevelers() < 2)
-                        getMissingCorralItems();
+                // Null Afternoon stands in for the delevelers while it lasts.
+                if (have_effect($effect[null afternoon]) == 0) {
+                    if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0 && !lowShiny()){
+                        pullSequence($item[null-day exploit]);
+                        use($item[null-day exploit]);
+                    } else if (delevelers() < 2){
+                        string why = pulledToday($item[null-day exploit])
+                            ? "the null-day exploit was already pulled today"
+                            : lowShiny() ? "low shiny runs don't pull a null-day exploit here"
+                            : "no pulls are left for a null-day exploit";
+                        int farmStart = turns_played();
+                        int noticeAt = 10;
+                        while (delevelers() < 2) {
+                            getMissingCorralItems();
+                            int farmed = turns_played() - farmStart;
+                            if (farmed > noticeAt) {
+                                print("Deleveler farming: " + farmed + " turns in The Coral Corral for delevelers. "
+                                    + "Yog-Urt needs 2 delevelers and " + delevelers() + " are on hand; "
+                                    + why + ".", "red");
+                                noticeAt = farmed + 10 - farmed % 10;
+                            }
+                        }
+                    }
                 }
                 if (available_amount($item[mer-kin prayerbeads]) < 3 && pulledToday($item[mer-kin prayerbeads]))
                     pullSequence($item[mer-kin prayerbeads]);
@@ -2160,6 +2177,9 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                     farmPrayerbeads();
                     continue;
                 }
+                // Prayerbead farming can outlast Null Afternoon; restock delevelers first.
+                if (have_effect($effect[null afternoon]) == 0 && delevelers() < 2)
+                    continue;
                 adv($location[Mer-kin Temple (Right Door)]);
             }
         }
