@@ -2521,7 +2521,10 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
         set_property("_utsPearlFarm", "true");
         int spent;
         int claimed;
-        int nextScreechTry;
+        // screechCombats misses eagle chatter and resets at rollover, so it only
+        // times the first try; the CCS result decides the rest.
+        int nextScreechTry = max(0, min(to_int(get_property("screechCombats")), 11));
+        boolean screechTried;
         location current = $location[none];
         try {
         while (true) {
@@ -2529,13 +2532,12 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
             // the orc phylum and the rundown is done. Zone progress holds
             // while stepping out, so a continuing farm loses nothing to the
             // detour. At 0 adventures this waits for the pilsner ladder below.
-            if (rundown && to_int(get_property("screechCombats")) == 0
-                && spent >= nextScreechTry && my_adventures() > 0) {
+            if (rundown && my_adventures() > 0 && (spent >= nextScreechTry
+                || (!screechTried && to_int(get_property("screechCombats")) == 0))) {
+                screechTried = true;
                 // The CCS casts the screech and records whether it landed, so
                 // "not recastable yet" is told apart from "cast, and the
-                // banish stayed put". screechCombats cannot separate them:
-                // mafia resets it at rollover, while the real cooldown is 11
-                // fights with the eagle out.
+                // banish stayed put".
                 set_property("_utsScreechFired", "");
                 set_property("_utsScreechReaim", "true");
                 adv1($location[The Smut Orc Logging Camp]);
