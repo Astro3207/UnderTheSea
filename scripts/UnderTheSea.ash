@@ -2537,7 +2537,12 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
         set_property("_utsPearlFarm", "true");
         int spent;
         int claimed;
-        int nextScreechTry;
+        // The CCS sets _utsScreechReady from each eagle fight's skill dropdown.
+        // screechCombats misses eagle chatter, so it only times the fallback try.
+        set_property("_utsScreechReady", "");
+        int nextScreechTry = 0;
+        int fallbackScreechTry = max(0, min(to_int(get_property("screechCombats")), 11));
+        int screechNoAttempts;
         location current = $location[none];
         try {
         while (true) {
@@ -2545,13 +2550,11 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
             // the orc phylum and the rundown is done. Zone progress holds
             // while stepping out, so a continuing farm loses nothing to the
             // detour. At 0 adventures this waits for the pilsner ladder below.
-            if (rundown && to_int(get_property("screechCombats")) == 0
-                && spent >= nextScreechTry && my_adventures() > 0) {
-                // The CCS casts the screech and records whether it landed, so
-                // "not recastable yet" is told apart from "cast, and the
-                // banish stayed put". screechCombats cannot separate them:
-                // mafia resets it at rollover, while the real cooldown is 11
-                // fights with the eagle out.
+            if (rundown && my_adventures() > 0 && spent >= nextScreechTry
+                && (get_property("_utsScreechReady") == "true" || spent >= fallbackScreechTry)) {
+                // The CCS casts the screech, or records "unready" when the
+                // dropdown lacks it, so "not recastable yet" is told apart
+                // from "cast, and the banish stayed put".
                 set_property("_utsScreechFired", "");
                 set_property("_utsScreechReaim", "true");
                 adv1($location[The Smut Orc Logging Camp]);
@@ -2571,10 +2574,23 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                     reportRundownStalled("the screech was cast but constructs are still banished", spent);
                     rundown = false;
                     farmHandoff(farm, current);
-                } else {
-                    // Every farming turn below is another fight with the eagle
-                    // out, so the cooldown runs down while the pearls come in.
+                } else if (get_property("_utsScreechFired") == "false") {
+                    // Offered but rejected: back off both paths.
+                    screechNoAttempts = 0;
                     nextScreechTry = spent + 11;
+                    fallbackScreechTry = spent + 11;
+                } else if (get_property("_utsScreechFired") == "unready") {
+                    // Not offered: wait for a farm fight to see it again.
+                    screechNoAttempts = 0;
+                    fallbackScreechTry = spent + 11;
+                } else {
+                    // No cast attempted. Retry once, then back off both paths.
+                    screechNoAttempts += 1;
+                    if (screechNoAttempts >= 2) {
+                        screechNoAttempts = 0;
+                        nextScreechTry = spent + 11;
+                        fallbackScreechTry = spent + 11;
+                    }
                 }
             }
             if (!rundown && !farm)
