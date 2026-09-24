@@ -137,10 +137,9 @@ void attackCleanUp() {
     }
 }
 
-// Each item works once per Yog-Urt fight; _lastCombatActions lists throws as "it<id>;".
-boolean yogUnused(item it) {
-    return item_amount(it) > 0
-        && !contains_text(get_property("_lastCombatActions"), "it" + to_int(it) + ";");
+// True once the item has been thrown this fight; _lastCombatActions lists throws as "it<id>;".
+boolean itemUsedThisCombat(item it) {
+    return contains_text(get_property("_lastCombatActions"), "it" + to_int(it) + ";");
 }
 
 // None when no deleveler is needed; aborts when one is needed and none is left.
@@ -151,7 +150,7 @@ item yogDeleveler(){
     if (my_basestat($stat[moxie]) + 10 > monster_attack( ) && my_basestat($stat[muscle]) - 30 > monster_defense( ))
         return $item[none];
     foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]{
-        if (yogUnused(it))
+        if (item_amount(it) > 0 && !itemUsedThisCombat(it))
             return it;
     }
     abort("Yog-Urt needs a deleveler and none is left.");
@@ -161,15 +160,15 @@ item yogDeleveler(){
 // None when every full heal has been used.
 item yogHealing(){
     foreach it in $items[sea gel,mer-kin healscroll,waterlogged scroll of healing,soggy used band-aid,New Age healing crystal]{
-        if (yogUnused(it))
+        if (item_amount(it) > 0 && !itemUsedThisCombat(it))
             return it;
     }
     return $item[none];
 }
 
 boolean yogDocPair() {
-    return yogUnused($item[Doc Galaktik's Homeopathic Elixir])
-        && yogUnused($item[Doc Galaktik's Pungent Unguent]);
+    return item_amount($item[Doc Galaktik's Homeopathic Elixir]) > 0 && !itemUsedThisCombat($item[Doc Galaktik's Homeopathic Elixir])
+        && item_amount($item[Doc Galaktik's Pungent Unguent]) > 0 && !itemUsedThisCombat($item[Doc Galaktik's Pungent Unguent]);
 }
 
 // One action under More Like a Suckrament. Nothing thrown may damage Yog-Urt.
@@ -927,18 +926,25 @@ void main(int round, monster mob, string page_text) {
                     while (delevelers() > 0 && (my_basestat($stat[moxie]) + 10 < monster_attack( ) || my_basestat($stat[muscle]) - 30 < monster_defense( ))){
                         foreach _, pair in candidates {
                             if (item_amount(pair.a) > 0 && item_amount(pair.b) > 0) {
-                                if (pair.a == pair.b && item_amount(pair.a) < 2)
+                                if (pair.a == pair.b && (item_amount(pair.a) < 2 || pair.b == $item[sea lasso]))
+                                    continue;
+                                if ((pair.a == $item[sea lasso] || pair.b == $item[sea lasso]) && itemUsedThisCombat($item[sea lasso]))
                                     continue;
                                 throw_items(pair.a, pair.b);
                                 break;
                             }
                         }
-                        if (delevelers() == 1)
+                        boolean lassoSpent = item_amount($item[sea lasso]) > 0 && itemUsedThisCombat($item[sea lasso]);
+                        if (delevelers() == 1 || (lassoSpent && delevelers() == 2)){
                             foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea cowbell]
                                 if (item_amount(it) == 1)
                                     throw_item(it);
+                            if (delevelers() == 1 && item_amount($item[sea lasso]) > 0)
+                                break;
+                        }
+                        if (current_round() == 0)
+                            break;
                     }
-                    abort();
                 }
             }
             while (current_round() > 0)
