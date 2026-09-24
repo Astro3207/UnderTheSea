@@ -128,16 +128,16 @@ import <seedfinder/seedfinder.ash>;
 
     boolean isKBandSushiEnough(){
         SeedData[int] possibleSeeds=find_seeds();
-        boolean bool = true;
-        string DS4to7poss;
+        if (count(possibleSeeds) == 0)
+            return false;
+        boolean [string] seen;
         foreach idx, seed in possibleSeeds {
-            if (!contains_text(DS4to7poss,possibleSeeds[idx].dreadscroll[4]+":"+possibleSeeds[idx].dreadscroll[7])){
-                DS4to7poss += possibleSeeds[idx].dreadscroll[4]+":"+possibleSeeds[idx].dreadscroll[7];
-            } else {
-                bool = false;
-            }
+            string key = seed.dreadscroll[3] + ":" + seed.dreadscroll[6];
+            if (seen contains key)
+                return false;
+            seen[key] = true;
         }
-        return bool;
+        return true;
     }
 
 // Game Mechanics
