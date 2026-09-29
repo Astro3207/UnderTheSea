@@ -77,6 +77,7 @@ void main(int whichchoice, string page) {
             break;
 
         // ── Simple run_choice(5) cases ─────────────────────────────────────
+        case 1312:
         case 1599:
             run_choice(5);
             break;

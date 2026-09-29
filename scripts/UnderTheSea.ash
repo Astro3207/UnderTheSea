@@ -483,6 +483,9 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
             if (have_item($item[wardrobe-o-matic]))
                 use($item[wardrobe-o-matic]);
 
+            if (have_item($item[SongBoom&trade; BoomBox]) && get_property("boomBoxSong") != "Total Eclipse of Your Meat")
+                use($item[SongBoom&trade; BoomBox]);
+
             // Daily skills
             foreach sk in $skills[Aug. 24th: Waffle Day!, Summon Kokomo Resort Pass] {
                 if (sk == $skill[Aug. 24th: Waffle Day!] && highShiny())
