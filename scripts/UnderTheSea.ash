@@ -269,9 +269,15 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                         eat(cheap_pasta);
                     if (pullSequence($item[Aldebaran sardines]))
                         eat($item[Aldebaran sardines]);
-                } else if (!pulledToday($item[fish sauce])) {
-                    pullSequence($item[fish sauce]);
-                    chew($item[fish sauce]);
+                } else if (!pulledToday($item[fish sauce]) && !pulledToday($item[cuppa Gill tea])) {
+                    int fishSauceCost = mall_price($item[fish sauce]) + valueOfSpleen();
+                    if (fishSauceCost <= mall_price($item[cuppa Gill tea])){
+                        pullSequence($item[fish sauce]);
+                        chew($item[fish sauce]);
+                    } else {
+                        pullSequence($item[cuppa Gill tea]);
+                        use($item[cuppa Gill tea]);
+                    }
                 } else {
                     retrieve_item($item[white rice]);
                     eatSushi();

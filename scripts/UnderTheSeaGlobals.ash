@@ -88,6 +88,16 @@ import <seedfinder/seedfinder.ash>;
             return $item[none];
     }
 
+    int valueOfSpleen(){
+        int value;
+        if (!have_skill($skill[sweet synthesis])){
+            value = 30*300*3 - (mall_price($item[Crimbo candied pecan])*2);
+        } else {
+            value = get_property("valueOfAdventure").to_int() * 2.5 - mall_price($item[transdermal smoke patch]);
+        }
+        return value;
+    }
+
 // Account states
     boolean highShiny() {
         return to_int(get_property("garbo_valueOfFreeFight")) > to_int(get_property("valueOfAdventure"));
