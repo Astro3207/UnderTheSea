@@ -6,7 +6,8 @@ import UnderTheSeaGlobals.ash;
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For 
 
-string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item drop, sea";
+// Initialized only for commands that are allowed to change equipment.
+string DropsItems;
 
 // ─── MOOD ─────────────────────────────────────────────────────────────────────
     void use_familiar(string mod){
@@ -2900,6 +2901,9 @@ void main(string... args) {
         pullChecklist();
         return;
     }
+    if (command != "" && command != "postloop")
+        abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists, \"UnderTheSea postloop\" runs only the postloop steps.");
+    DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item drop, sea";
     if (command == "postloop") {
         // Postloop-only mode: the finishing steps the run would have reached
         // on its own, without initialization() or any of the run itself. A
@@ -2936,8 +2940,6 @@ void main(string... args) {
         }
         return;
     }
-    if (command != "")
-        abort("Unknown command \"" + command + "\" -- plain \"UnderTheSea\" runs the loop, \"UnderTheSea sim\" prints the IOTM and pull checklists, \"UnderTheSea postloop\" runs only the postloop steps.");
     try {
         set_property("choiceAdventureScript", "UnderTheSea_Choice.ash");
         set_property("betweenBattleScript", "");
