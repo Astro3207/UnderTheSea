@@ -57,6 +57,8 @@ void free_kill(string ptext, boolean drop) {
 // Attempt a free run using available skills/items.
 // Pass banish=true to allow banishing skills/items.
 void free_run(string ptext, boolean banish) {
+    if (free_monster(last_monster()))
+        return;
     if (get_property("_curveballMonster") == last_monster()
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
