@@ -56,13 +56,15 @@ void free_kill(string ptext, boolean drop) {
 
 // Attempt a free run using available skills/items.
 // Pass banish=true to allow banishing skills/items.
-void free_run(string ptext, boolean banish) {
+void free_run_any(string ptext, boolean banish) {
     if (get_property("_curveballMonster") == last_monster()
         && to_int(get_property("_curveballFightsLeft")) > 0)
         return;
 
+    if (current_round() == 0) return;
     if (have_equipped($item[greatest american pants]) && (to_int(get_property("_navelRunaways")) < 3 || (to_int(get_property("_navelRunaways")) < 10 && highShiny())))
         runaway();
+    if (current_round() == 0) return;
     if (my_familiar() == $familiar[Pair of Stomping Boots] && round((familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()/5)) > get_property("_banderRunaways").to_int())
         runaway();
 
@@ -74,8 +76,10 @@ void free_run(string ptext, boolean banish) {
             The Haunted Pantry] contains my_location()
             && freeskill == $skill[snokebomb])
             return;
+        if (current_round() == 0) return;
         if (banish && freeskill == $skill[spring away])
             use_skill($skill[spring kick]);
+        if (current_round() == 0) return;
         use_skill(freeskill);
     }
 
@@ -89,8 +93,16 @@ void free_run(string ptext, boolean banish) {
             && to_int(get_property("parasolUsed")) >= 3) continue;
         if (freecombat == $item[mer-kin pinkslip]
             && last_monster().phylum != $phylum[mer-kin]) continue;
+        if (current_round() == 0) return;
         throw_item(freecombat);
     }
+}
+
+// free_run_any, skipped for free fights.
+void free_run(string ptext, boolean banish) {
+    if (free_monster(last_monster()))
+        return;
+    free_run_any(ptext, banish);
 }
 
 // BCZ refracted gaze helper — checks stat threshold before casting
@@ -100,7 +112,34 @@ boolean bcz_gaze_ready() {
     return (my_basestat($stat[submysticality]) - 40000) > BCZcost("RefractedGazeCasts");
 }
 
-// Finish off the enemy with saucegeyser, guarded against infinite loops
+// Ends a live free fight: Saucestorm while affordable, attacks while HP is safe,
+// then a non-banishing run. Aborts if the fight is still live after that.
+void finishFreeFight() {
+    while (current_round() > 0 && have_skill($skill[saucestorm])
+        && my_mp() >= mp_cost($skill[saucestorm])) {
+        int round = current_round();
+        use_skill($skill[saucestorm]);
+        if (round == current_round())
+            break;
+    }
+    int stuck = 0;
+    while (current_round() > 0 && my_hp() > expected_damage() && stuck < 3) {
+        int round = current_round();
+        attack();
+        stuck = current_round() == round ? stuck + 1 : 0;
+    }
+    if (current_round() > 0)
+        free_run_any(to_string(visit_url("fight.php")), false);
+    for i from 1 to 3 {
+        if (current_round() > 0 && my_hp() > expected_damage())
+            runaway();
+    }
+    if (current_round() > 0)
+        abort("Could not finish or escape " + last_monster() + ". Finish the fight by hand.");
+}
+
+// Finish off the enemy with saucegeyser, guarded against infinite loops.
+// A free fight left live at low MP goes to finishFreeFight.
 void cleanUp() {
     int loopCount = 0;  // declared outside loop so the guard actually works
     if (item_amount($item[pulled red taffy]) > 0 && my_location().environment == "underwater")
@@ -122,6 +161,9 @@ void cleanUp() {
         if (my_mp() < 24)
             break;
     }
+    // Out of MP with a free fight still live: finish it without a banish.
+    if (current_round() > 0 && free_monster(last_monster()))
+        finishFreeFight();
 }
 
 void attackCleanUp() {
