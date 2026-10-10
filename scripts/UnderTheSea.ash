@@ -1506,7 +1506,7 @@ string DropsItems = maximize("Drops Items",false) ? "Drops Items, sea" : "item d
                         pullSequence($item[elf guard scuba tank]);
                         conditional += "elf guard scuba tank,";
                     }
-                    tempEquipment("item drop,sea", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
+                    tempEquipment("item drop,sea,-equip peridot", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
                     mood("itdrop");
                     adv($location[The Caliginous Abyss]);
                 }
