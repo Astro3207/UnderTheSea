@@ -473,7 +473,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[an octopus's garden]:
-            if (have_effect($effect[Citizen of a Zone]) == 0 && my_familiar() == $familiar[patriotic eagle])
+            if (have_effect($effect[Citizen of a Zone]) == 0 && my_familiar() == $familiar[patriotic eagle] && !highShiny())
                 use_skill($skill[%fn, let's pledge allegiance to a Zone]);
             if (last_monster() == $monster[neptune flytrap]) {
                 if (have_effect($effect[Everything Looks Red, White and Blue]) == 0 && my_familiar() == $familiar[patriotic eagle])
