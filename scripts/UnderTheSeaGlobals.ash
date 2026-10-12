@@ -576,6 +576,18 @@ import <seedfinder/seedfinder.ash>;
         return to_string(buf);
     }
 
+    string oreSquare(int x_coor, int y_coor){
+        buffer buf;
+        int nums = (8 * y_coor) + (x_coor);
+        matcher m = create_matcher(
+            "#" + nums + "<img src=\"[^\"]*/([^\"]+)\\.gif\"",
+            get_property("mineLayout3")
+        );
+        if (m.find())
+            append(buf, to_string(m.group(1)));
+        return to_string(buf);
+    }
+
     int mineNum(){
         int num, x_coor, y_coor;
         string itzmine = visit_url("mining.php?mine=3");
@@ -584,7 +596,7 @@ import <seedfinder/seedfinder.ash>;
 
         // Try preferred spots first
         foreach str in $strings[(3\,6),(3\,5),(3\,4),(3\,3),(3\,2),(2\,2),(4\,2),(5\,2)] {
-            if (!contains_text(itzmine, "Open Cavern " + str)) {
+            if (!contains_text(itzmine, "Open Cavern " + str)){
                 matcher open_spot = create_matcher("(\\d),(\\d)", str);
                 if (open_spot.find()) {
                     x_coor = to_int(open_spot.group(1));
@@ -597,24 +609,39 @@ import <seedfinder/seedfinder.ash>;
 
         // Fall back to promising chunks not near bad ore
         if (num == 0) {
-            while (mining_spot.find()) {
+            while (mining_spot.find()){
                 x_coor = to_int(mining_spot.group(1));
                 y_coor = to_int(mining_spot.group(2));
-                if (y_coor >= 4
-                    || contains_text(adjacentCaverns(x_coor, y_coor), "velcroore")
-                    || contains_text(adjacentCaverns(x_coor, y_coor), "vinylore"))
+                string adj = adjacentCaverns(x_coor, y_coor);
+                if (y_coor >= 4 || contains_text(adj, "velcroore") || contains_text(adj, "vinylore"))
                     continue;
                 num = (8 * y_coor) + x_coor;
                 break;
             }
         }
 
-        // Last resort: any promising chunk not too deep
+        // Fall back 2 that I see sometimes
         if (num == 0) {
-            while (mining_spot.find()) {
+            mining_spot.reset();
+            while (mining_spot.find()){
                 x_coor = to_int(mining_spot.group(1));
                 y_coor = to_int(mining_spot.group(2));
-                print(x_coor + ", " + y_coor);
+                if (x_coor == 1 && y_coor == 2 && oreSquare(2,2) == oreSquare(3,2)){
+                    num = (8 * y_coor) + x_coor;
+                    break;
+                } else if (x_coor == 6 && y_coor == 2 && oreSquare(5,2) == oreSquare(4,2)){
+                    num = (8 * y_coor) + x_coor;
+                    break;
+                }
+            }
+        }
+
+        // Last resort: any promising chunk not too deep
+        if (num == 0) {
+            mining_spot.reset();
+            while (mining_spot.find()){
+                x_coor = to_int(mining_spot.group(1));
+                y_coor = to_int(mining_spot.group(2));
                 if (y_coor >= 4) continue;
                 num = (8 * y_coor) + x_coor;
                 break;
