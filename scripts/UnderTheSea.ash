@@ -127,7 +127,7 @@ string DropsItems;
                             && (get_property("yogUrtDefeated") == "false"
                                 || to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
                         if (ef == $effect[Fresh Breath]
-                            && get_property("_aug6Cast") == "true") continue;
+                            && (get_property("_aug6Cast") == "true" || highShiny())) continue;
                         if (ef == $effect[Bloodbathed]
                             && lowShiny() == true) continue;
                         if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
