@@ -364,9 +364,7 @@ void main(int round, monster mob, string page_text) {
         yogUrtFight();
         return;
     }
-
-    duplicateMonster(last_monster(), page_text);
-
+    
     if (diverForce(last_monster(), page_text))
         return;
 
