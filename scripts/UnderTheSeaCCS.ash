@@ -7,9 +7,14 @@ void free_kill(string ptext, boolean drop) {
         return;
     if (highShiny()){
         if (contains_text(ptext, "Darts: Aim for the Bullseye")
-            && my_location() != $location[mer-kin colosseum])
-            while (current_round() > 0 && get_property("_dartsLeft").to_int() > 0)
+            && my_location() != $location[mer-kin colosseum]) {
+            // A refused cast leaves the round where it was.
+            int lastRound;
+            while (current_round() > lastRound && get_property("_dartsLeft").to_int() > 0) {
+                lastRound = current_round();
                 use_skill($skill[Darts: Aim for the Bullseye]);
+            }
+        }
         if (contains_text(ptext, "Spit jurassic acid")
             && my_location() != $location[mer-kin colosseum])
                 use_skill($skill[Spit jurassic acid]);
@@ -457,10 +462,16 @@ void main(int round, monster mob, string page_text) {
                     throw_item($item[Septapus summoning charm]);
                 use_if_have_skill(page_text, $skill[swoop like a bat]);
                 use_if_have_skill(page_text, $skill[Perpetrate Mild Evil]);
-                while (to_int(get_property("_douseFoeUses")) < 3
-                    && get_property("_douseFoeSuccess") == "false"
-                    && current_round() < 25)
-                    use_skill($skill[douse foe]);
+                // Douse Foe exists only while the Liquidizer is worn. A refused cast leaves the round where it was.
+                if (have_equipped($item[Flash Liquidizer Ultra Dousing Accessory])) {
+                    int lastRound;
+                    while (current_round() > lastRound && to_int(get_property("_douseFoeUses")) < 3
+                        && get_property("_douseFoeSuccess") == "false"
+                        && current_round() < 25) {
+                        lastRound = current_round();
+                        use_skill($skill[douse foe]);
+                    }
+                }
             }
             if (last_monster() == $monster[tumbleweed])
                 abort("Unexpected mob encountered in shadow rift");
@@ -659,8 +670,12 @@ void main(int round, monster mob, string page_text) {
 
         case $location[cyberzone 1]:
             if (last_monster() == $monster[eye in the darkness] || last_monster() == $monster[slithering thing]) {
-                while (current_round() > 0)
+                // A refused cast leaves the round where it was.
+                int lastRound;
+                while (current_round() > lastRound) {
+                    lastRound = current_round();
                     use_skill($skill[Throw Cyber Rock]);
+                }
             } else {
                 use_if_have_skill(page_text, $skill[Sea *dent: Throw a Lightning Bolt]);
             }
@@ -947,7 +962,27 @@ void main(int round, monster mob, string page_text) {
             // Colosseum rounds need WINS, so this drains free kills and never
             // Use the Force (which forfeits the win); the saber is not
             // equipped here, so its last-resort clause stays dead.
-            if (current_round() > 0)
+            // A champion's specials take hold from round 2, so one Saucegeyser must kill it. When it can't, leave
+            // the fight rather than lose it.
+            if (current_round() > 0 && last_monster().boss && have_skill($skill[saucegeyser])) {
+                // championCheck() reads _utsChampionRanEst to stop a rerun before the turn.
+                if (geyserLowRoll() < monster_hp()) {
+                    set_property("_utsChampionRanEst", to_string(geyserLowRoll()));
+                    string why = "UTS: " + last_monster() + " has " + monster_hp() + " HP and one Saucegeyser is estimated at "
+                        + geyserLowRoll() + ". Raise Mysticality or spell damage, or fight it by hand, then rerun.";
+                    free_run_any(page_text, false);
+                    if (current_round() > 0)
+                        runaway();
+                    if (current_round() > 0)
+                        why += " The fight is still in progress: finish it by hand.";
+                    print(why, "red");
+                    abort(why);
+                }
+                int castRound = current_round();
+                use_skill($skill[saucegeyser]);
+                if (current_round() > castRound)
+                    set_property("_utsChampionRanEst", to_string(geyserLowRoll()));
+            } else if (current_round() > 0)
                 free_kill(page_text, false);
             if (to_int(get_property("lastColosseumRoundWon")) < 15)
                 cleanUp();

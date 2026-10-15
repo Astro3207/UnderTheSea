@@ -205,6 +205,14 @@ import <seedfinder/seedfinder.ash>;
         use($item[11-leaf clover]);
     }
 
+// Low roll of Saucegeyser in the worn gear, crits and lanterns aside.
+    int geyserLowRoll() {
+        float flat = numeric_modifier("Spell Damage")
+            + max(numeric_modifier("Hot Spell Damage"), numeric_modifier("Cold Spell Damage"));
+        float base = 60 + floor(0.4 * my_buffedstat($stat[mysticality])) + flat;
+        return floor(base * (1 + numeric_modifier("Spell Damage Percent") / 100));
+    }
+
 // Progress tracker
     void step(string msg) {
         print("UTS: " + msg, "blue");
