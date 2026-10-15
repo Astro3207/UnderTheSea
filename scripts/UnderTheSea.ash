@@ -191,6 +191,48 @@ string DropsItems;
             buy($coinmaster[Big Brother], 1, $item[black glass]);
     }
 
+    // MP for one fight's kill: three casts of the spell cleanUp() leads with, at most half of max MP.
+    int fightMP() {
+        skill kill = have_skill($skill[saucegeyser]) ? $skill[saucegeyser] : $skill[saucestorm];
+        return min(my_maxmp() / 2, 3 * mp_cost(kill));
+    }
+
+    // MP up to goal that meat buys in Doc Galaktik's tonics at their low roll of 9, after selling drops the run
+    // never uses. Never under fightMP(), and stops the run when even that is out of reach.
+    int affordableMP(int goal) {
+        int price = npc_price($item[Doc Galaktik's Invigorating Tonic]);
+        if (price <= 0)
+            return goal;
+        if (my_meat() < price * ((goal + 8) / 9)) {
+            foreach it in $items[Eye Agate, Azurite, Lapis Lazuli, dense meat stack]
+                if (item_amount(it) > 0 && !autosell(item_amount(it), it))
+                    print("Couldn't autosell the " + it + ".", "red");
+        }
+        int fight = min(goal, fightMP());
+        int afford = my_meat() / price * 9;
+        if (afford < fight && my_mp() < fight && (!restore_mp(fight) || my_mp() < fight)) {
+            string why = "UTS: " + my_mp() + " MP and " + my_meat() + " meat can't cover the " + fight
+                + " MP of the next fight. Get MP or meat, then rerun.";
+            print(why, "red");
+            abort(why);
+        }
+        return min(goal, max(fight, my_meat() / price * 9));
+    }
+
+    // The MP recovery target setMPRecovery() last wrote.
+    string mpTargetSet;
+
+    // MP recovery up to 250 or what meat buys, starting before a fight's kill casts run short.
+    void setMPRecovery() {
+        float mpTar = min(1, affordableMP(250) / to_float(my_maxmp()));
+        float mpLow = min(mpTar, max(mpTar * 0.5, fightMP() / to_float(my_maxmp())));
+        string mpAutoRecovery = to_float(round(mpLow * 10000))/10000;
+        string mpAutoRecoveryTarget = to_float(round(mpTar * 10000))/10000;
+        set_property("mpAutoRecovery",       mpAutoRecovery);
+        set_property("mpAutoRecoveryTarget", mpAutoRecoveryTarget);
+        mpTargetSet = mpAutoRecoveryTarget;
+    }
+
     void post_adv() {
         if (get_property("_lastCombatLost") == "true"){
             if (have_effect($effect[beaten up]) > 0){
@@ -393,7 +435,6 @@ string DropsItems;
             }
         }
 
-        float mpTar = min(1, 250 / to_float(my_maxmp()));
         float hpTar;
         if (my_location() == $location[mer-kin colosseum]){
             hpTar = 1;
@@ -404,15 +445,15 @@ string DropsItems;
         }
         string hpAutoRecovery = to_float(round(hpTar * 0.75 * 10000))/10000;
         string hpAutoRecoveryTarget = to_float(round(hpTar * 10000))/10000;
-        string mpAutoRecovery = to_float(round(mpTar * 0.5 * 10000))/10000;
-        string mpAutoRecoveryTarget = to_float(round(mpTar * 10000))/10000;
         set_property("hpAutoRecovery",       hpAutoRecovery);
         set_property("hpAutoRecoveryTarget", hpAutoRecoveryTarget);
-        set_property("mpAutoRecovery",       mpAutoRecovery);
-        set_property("mpAutoRecoveryTarget", mpAutoRecoveryTarget);
+        setMPRecovery();
     }
 
     void adv(location loc) {
+        // Re-caps MP recovery at the meat on hand, unless a phase has set its own target since.
+        if (get_property("mpAutoRecoveryTarget") == mpTargetSet)
+            setMPRecovery();
         adv1(loc);
         post_adv();
     }
@@ -860,9 +901,19 @@ string DropsItems;
             cli_execute("monkeypaw item " + it);
     }
 
+    // Shadow Rift fight gear. The Liquidizer grants the Douse Foe the CCS casts on a shadow slab.
+    void shadowRiftGear() {
+        string trainer = to_int(get_property("lassoTrainingCount")) < 20
+            ? if_equip($item[sea cowboy hat]) + if_equip($item[sea chaps]) : "";
+        tempEquipment("item drop", if_equip($item[Flash Liquidizer Ultra Dousing Accessory]) + "monodent of the sea," + trainer
+            + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
+    }
+
     void shadowRift() {
         if (!have_item($item[closed-circuit pay phone]) || (get_property("_shadowAffinityToday") == "true" && have_effect($effect[shadow affinity]) == 0))
             return;
+        // These fights run on adv1(), which skips post_adv().
+        setMPRecovery();
         if (have_effect($effect[shadow waters]) == 0) {
             if (get_property("questRufus") == "unstarted")
                 use($item[closed-circuit pay phone]);
@@ -873,6 +924,7 @@ string DropsItems;
             if (get_property("_seadentWaveUsed") == "false")
                 use_skill($skill[Sea *dent: Summon a Wave]);
             use($item[closed-circuit pay phone]);
+            shadowRiftGear();
             adv1($location[Shadow Rift (The Misspelled Cemetary)]);
         } else {
             if (to_int(get_property("encountersUntilSRChoice")) > 9
@@ -893,13 +945,7 @@ string DropsItems;
                 if (!use_familiar($familiar[jill-of-all-trades]))
                     use_familiar("itdrop");
                 
-                if (to_int(get_property("lassoTrainingCount")) < 20) {
-                    tempEquipment("item drop","Flash Liquidizer Ultra Dousing Accessory,monodent of the sea,sea cowboy hat,sea chaps,"
-                    + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
-                } else {
-                    tempEquipment("item drop","Flash Liquidizer Ultra Dousing Accessory,monodent of the sea,"
-                    + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
-                }
+                shadowRiftGear();
                 mood("itdrop");
                 adv1($location[Shadow Rift (The Misspelled Cemetary)]);
                 if (get_property("_seadentWaveUsed") == "false"
@@ -2243,6 +2289,24 @@ string DropsItems;
         }
     }
 
+    // Champions come at rounds won 12 to 14 and must die to one Saucegeyser. Stops before the turn when the
+    // estimate is short of the weakest one's HP, or of the HP of a champion the CCS ran from today.
+    void championCheck() {
+        int won = to_int(get_property("lastColosseumRoundWon"));
+        if (won < 12 || won > 14 || !have_skill($skill[saucegeyser])
+            || get_property("isMerkinGladiatorChampion") == "true")
+            return;
+        int needed = max(monster_hp($monster[Georgepaul, the Balldodger]), to_int(get_property("_utsChampionRanHP")));
+        if (geyserLowRoll() >= needed) {
+            set_property("_utsChampionRanHP", "");
+            return;
+        }
+        string why = "UTS: the next Colosseum champion (up to " + needed + " HP) must die to one Saucegeyser, estimated at "
+            + geyserLowRoll() + " here. Raise Mysticality or spell damage, or fight it by hand, then rerun.";
+        print(why, "red");
+        abort(why);
+    }
+
     void Shub(){
         if (my_path().id == 55 || (my_path().id == 0 && boss == "Shub")){
             // ── Gladiator gear grind ──────────────────────────────────────────────────
@@ -2307,6 +2371,7 @@ string DropsItems;
                 float coeff = (60 + my_buffedstat($stat[mysticality])/2.5)/(numeric_modifier("spell damage percent") + 1);
                 tempEquipment(coeff + " spell damage percent, mys,sea", "Mer-kin gladiator tailpiece,Mer-kin gladiator mask,"
                     + if_equip($item[Congressional Medal of Insanity]) + freeFight + bathysphere($item[none]));
+                championCheck();
                 adv($location[Mer-kin Colosseum]);
                 if (get_property("lastEncounter") == "Been There, Won That"){
                     set_property("lastColosseumRoundWon","15");
