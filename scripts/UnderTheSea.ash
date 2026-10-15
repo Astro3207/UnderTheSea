@@ -2290,19 +2290,25 @@ string DropsItems;
     }
 
     // Champions come at rounds won 12 to 14 and must die to one Saucegeyser. Stops before the turn when the
-    // estimate is short of the weakest one's HP, or of the HP of a champion the CCS ran from today.
+    // estimate is short of the weakest one's HP, or no higher than one that already failed to kill a champion today.
     void championCheck() {
         int won = to_int(get_property("lastColosseumRoundWon"));
         if (won < 12 || won > 14 || !have_skill($skill[saucegeyser])
             || get_property("isMerkinGladiatorChampion") == "true")
             return;
-        int needed = max(monster_hp($monster[Georgepaul, the Balldodger]), to_int(get_property("_utsChampionRanHP")));
-        if (geyserLowRoll() >= needed) {
-            set_property("_utsChampionRanHP", "");
+        string why;
+        int weakest = monster_hp($monster[Georgepaul, the Balldodger]);
+        if (get_property("_utsChampionRanEst") != "" && geyserLowRoll() <= to_int(get_property("_utsChampionRanEst")))
+            why = "UTS: one Saucegeyser estimated at " + get_property("_utsChampionRanEst")
+                + " failed to kill a Colosseum champion today, and the estimate here is " + geyserLowRoll()
+                + ". Raise Mysticality or spell damage past that, or fight it by hand, then rerun.";
+        else if (geyserLowRoll() < weakest)
+            why = "UTS: the Colosseum champions (" + weakest + " HP and up) must die to one Saucegeyser, estimated at "
+                + geyserLowRoll() + " here. Raise Mysticality or spell damage, or fight them by hand, then rerun.";
+        if (why == "") {
+            set_property("_utsChampionRanEst", "");
             return;
         }
-        string why = "UTS: the next Colosseum champion (up to " + needed + " HP) must die to one Saucegeyser, estimated at "
-            + geyserLowRoll() + " here. Raise Mysticality or spell damage, or fight it by hand, then rerun.";
         print(why, "red");
         abort(why);
     }

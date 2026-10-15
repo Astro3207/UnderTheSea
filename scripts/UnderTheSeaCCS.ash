@@ -965,9 +965,9 @@ void main(int round, monster mob, string page_text) {
             // A champion's specials take hold from round 2, so one Saucegeyser must kill it. When it can't, leave
             // the fight rather than lose it.
             if (current_round() > 0 && last_monster().boss && have_skill($skill[saucegeyser])) {
+                // championCheck() reads _utsChampionRanEst to stop a rerun before the turn.
                 if (geyserLowRoll() < monster_hp()) {
-                    // championCheck() reads this to stop a rerun before the turn.
-                    set_property("_utsChampionRanHP", to_string(monster_hp()));
+                    set_property("_utsChampionRanEst", to_string(geyserLowRoll()));
                     string why = "UTS: " + last_monster() + " has " + monster_hp() + " HP and one Saucegeyser is estimated at "
                         + geyserLowRoll() + ". Raise Mysticality or spell damage, or fight it by hand, then rerun.";
                     free_run_any(page_text, false);
@@ -978,7 +978,10 @@ void main(int round, monster mob, string page_text) {
                     print(why, "red");
                     abort(why);
                 }
+                int castRound = current_round();
                 use_skill($skill[saucegeyser]);
+                if (current_round() > castRound)
+                    set_property("_utsChampionRanEst", to_string(geyserLowRoll()));
             } else if (current_round() > 0)
                 free_kill(page_text, false);
             if (to_int(get_property("lastColosseumRoundWon")) < 15)
