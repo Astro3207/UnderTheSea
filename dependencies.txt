@@ -1,2 +1,3 @@
 github C2Talon/c2t_megg
 github VeeArrKoL/seedfinder
+github xn/pearlo release
