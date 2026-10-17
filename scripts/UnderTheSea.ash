@@ -2765,20 +2765,39 @@ string DropsItems;
 
     // uts_postLoopPrepCodpiece: leave the run with the codpiece already loaded for the
     // next ascension: five unblemished pearls, mall-bought if inventory is short.
-    // Runs before the screech rundown and pearlo, either of which can abort.
-    void prepCodpiece() {
+    // The first pass runs before the farm and only reports a shortfall; the
+    // final pass after pearlo aborts on one.
+    void prepCodpiece(boolean finalPass) {
         if (get_property("uts_postLoopPrepCodpiece") != "true")
             return;
+        if (!have_item($item[The Eternity Codpiece])) {
+            if (finalPass)
+                abort("uts_postLoopPrepCodpiece: you don't own The Eternity Codpiece.");
+            return;
+        }
+        string verify = visit_url("inventory.php?action=docodpiece");
+        int slotted;
+        for num from 1 to 5 {
+            if (contains_text(verify, $item[unblemished pearl] + " mounted in slot #" + num))
+                slotted += 1;
+        }
+        if (slotted == 5)
+            return;
         step("postloop: loading the codpiece with unblemished pearls");
-        if (!have_item($item[The Eternity Codpiece]))
-            abort("uts_postLoopPrepCodpiece: you don't own The Eternity Codpiece.");
         pullEverything();
+        // Mall buys need autoSatisfyWithMall and an autoBuyPriceLimit at or above the pearl's price.
+        if (item_amount($item[unblemished pearl]) + slotted < 5
+            && !retrieve_item(5 - slotted, $item[unblemished pearl]))
+            print("uts_postLoopPrepCodpiece: couldn't buy the missing unblemished pearls.", "blue");
+        int held = item_amount($item[unblemished pearl]) + slotted;
+        if (held < 5) {
+            if (finalPass)
+                abort("uts_postLoopPrepCodpiece: couldn't get to five unblemished pearls (have "
+                    + held + ").");
+            print("uts_postLoopPrepCodpiece: " + held + " unblemished pearls held; topped up after the pearl farm.", "blue");
+            return;
+        }
         codpiece("none");
-        if (item_amount($item[unblemished pearl]) < 5)
-            retrieve_item(5, $item[unblemished pearl]);
-        if (item_amount($item[unblemished pearl]) < 5)
-            abort("uts_postLoopPrepCodpiece: couldn't get to five unblemished pearls (have "
-                + item_amount($item[unblemished pearl]) + ").");
         codpiece("unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl");
         print("Codpiece loaded: five unblemished pearls slotted for the next run.", "blue");
     }
@@ -2816,7 +2835,9 @@ string DropsItems;
             print("uts_postLoopFarmPearls: out of adventures and no astral pilsner to drink within your own liver; skipping the farm.", "red");
             return;
         }
-        string extra = get_property("uts_pearloArgs");
+        // Trimmed and single-spaced: an empty key makes pearlo throw "Unknown argument".
+        string extra = replace_all(create_matcher("^ | $",
+            replace_all(create_matcher("\\s+", get_property("uts_pearloArgs")), " ")), "");
         string args = "";
         // pearlo rejects a repeated key, so a key set in uts_pearloArgs is not added here.
         int voa = to_int(get_property("valueOfAdventure"));
@@ -2945,11 +2966,13 @@ void seaMonkees() {
             // First of the postloop steps, since the later ones can abort
             // and leave the supply undrunk. After council(): the storage
             // pull it may need is refused before the prism breaks.
-            // pearlFarm() comes last because an abort inside pearlo can't be caught.
+            // The codpiece's first pass loads it from pearls on hand in case
+            // pearlo aborts; the final pass after it counts the farmed pearls.
             usePilsners();
-            prepCodpiece();
+            prepCodpiece(false);
             screechRundown();
             pearlFarm();
+            prepCodpiece(true);
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         }
@@ -2997,9 +3020,10 @@ void main(string... args) {
             set_property("battleAction", "custom combat script");
             print("Starting UnderTheSea (postloop only)");
             usePilsners();
-            prepCodpiece();
+            prepCodpiece(false);
             screechRundown();
             pearlFarm();
+            prepCodpiece(true);
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         } finally {
