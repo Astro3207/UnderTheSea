@@ -481,6 +481,8 @@ import <seedfinder/seedfinder.ash>;
     string delay(){
         if (have_item($item[Kramco Sausage-o-Matic&trade;]) && !highShiny())
             return if_equip($item[Kramco Sausage-o-Matic&trade;]) + freeRun();
+        else if (highShiny() && have_item($item[cursed magnifying glass]) && get_property("cursedMagnifyingGlassCount").to_int() < 13)
+            return if_equip($item[cursed magnifying glass]) + freeRun();
         return freeRun();
     }
 
