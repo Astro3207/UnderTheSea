@@ -312,7 +312,7 @@ string DropsItems;
                         eat(cheap_pasta);
                     if (pullSequence($item[Aldebaran sardines]))
                         eat($item[Aldebaran sardines]);
-                } else if (!pulledToday($item[fish sauce]) && !pulledToday($item[cuppa Gill tea])) {
+                } else if (!pulledToday($item[fish sauce]) && !pulledToday($item[cuppa Gill tea]) && pulls_remaining() > reservedPulls()) {
                     int fishSauceCost = mall_price($item[fish sauce]) + valueOfSpleen();
                     if (fishSauceCost <= mall_price($item[cuppa Gill tea])){
                         pullSequence($item[fish sauce]);
