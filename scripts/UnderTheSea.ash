@@ -2298,7 +2298,7 @@ string DropsItems;
             return;
         string why;
         int weakest = monster_hp($monster[Georgepaul, the Balldodger]);
-        if (get_property("_utsChampionRanEst") != "" && geyserLowRoll() <= to_int(get_property("_utsChampionRanEst")))
+        if (get_property("_utsChampionRanEst") != "" && geyserLowRoll() < to_int(get_property("_utsChampionRanEst")))
             why = "UTS: one Saucegeyser estimated at " + get_property("_utsChampionRanEst")
                 + " failed to kill a Colosseum champion today, and the estimate here is " + geyserLowRoll()
                 + ". Raise Mysticality or spell damage past that, or fight it by hand, then rerun.";

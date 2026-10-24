@@ -927,10 +927,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                 } else {
-                    if (bcz_gaze_ready() && (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0)) {
-                        use_skill($skill[Sea *dent: Talk to Some Fish]);
+                        if (bcz_gaze_ready() && item_amount($item[mer-kin healscroll]) == 0 && last_monster() != $monster[Mer-kin researcher])
                         use_skill($skill[BCZ: Refracted Gaze]);
-                    }
                     free_kill(page_text, true);
                     cleanUp();
                 }
