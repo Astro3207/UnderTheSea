@@ -2,7 +2,7 @@ import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Set with the mafia CLI; all default to off.
-// uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy and uts_postLoopPrepCodpiece
+// uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy, uts_postLoopPrepCodpiece and uts_pearloArgs
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For 
 
@@ -462,7 +462,7 @@ string DropsItems;
     void initialization() {
         if (get_revision() < 29057)
             abort("Please update mafia to newer than 29057");
-        // A pearl farm that aborted mid-loop leaves this set, and a stuck
+        // A screech rundown that aborted mid-loop leaves this set, and a stuck
         // "true" reduces the whole CCS to cleanUp(); in-run zones need the
         // full consult.
         set_property("_utsPearlFarm", "false");
@@ -2451,15 +2451,11 @@ string DropsItems;
     }
 
 // ─── PEARL FARMING / EAGLE BANISH RE-AIM ─────────────────────────────────────
-    // One walker serves both postloop prefs. uts_postLoopRunOutEagleBanish
-    // (experimental): the Patriotic Eagle farms pearl zones until the screech
-    // recharges, spends it at once on the first monster at the Smut Orc
-    // Logging Camp -- the leftover construct banish moves onto the orc phylum
-    // -- and is done; a pearl the recharge started stays where it is.
-    // uts_postLoopFarmPearls: when a pearl's mall price
-    // beats the ten turns its farm costs at valueOfAdventure, keep walking
-    // until every open zone's daily pearl is claimed. Missing pieces abort
-    // loudly.
+    // uts_postLoopRunOutEagleBanish (experimental): the Patriotic Eagle walks
+    // pearl zones until the screech recharges, then spends it at once on the
+    // first monster at the Smut Orc Logging Camp, which moves the leftover
+    // construct banish onto the orc phylum. The zone progress it makes stays
+    // for the pearl farm. uts_postLoopFarmPearls hands the farm to pearlo.
     //
     // Free kills, free runs and fight-enders advance neither a zone's pearl
     // progress nor screechCombats -- only a combat fought to a plain win on a
@@ -2580,79 +2576,58 @@ string DropsItems;
             + "take out the Patriotic Eagle and screech in The Smut Orc Logging Camp.", "red");
     }
 
-    // Once the rundown is done or given up on, the eagle has no more work,
-    // and the Hound Dog's +combat buys the farm fewer noncombats per pearl.
-    void farmHandoff(boolean farm, location current) {
-        if (!farm || !have_familiar($familiar[Jumpsuited Hound Dog]))
-            return;
-        use_familiar($familiar[Jumpsuited Hound Dog]);
-        // The bathysphere is familiar equipment, so the new familiar needs
-        // it maximized back on before the next underwater turn; a claimed
-        // or unset zone gets its prep from the selection block instead.
-        if (current != $location[none]
-            && get_property(pearlClaimed[current]) != "true")
-            pearlZonePrep(current);
+    // The inebriety limit without the liver capacity that equipment or the
+    // familiar is lending, since whatever runs next re-dresses.
+    int ownLiver() {
+        int liver = inebriety_limit();
+        foreach s in $slots[]
+            liver = liver - to_int(numeric_modifier(equipped_item(s), "Liver Capacity"));
+        if (my_familiar() != $familiar[none])
+            liver = liver - to_int(numeric_modifier(my_familiar(), "Liver Capacity",
+                familiar_weight(my_familiar()), $item[none]));
+        return min(liver, inebriety_limit());
     }
 
-    void pearlPostloop() {
-        boolean rundown = get_property("uts_postLoopRunOutEagleBanish") == "true"
-            && contains_text(get_property("banishedPhyla"), "construct");
-        boolean farm;
-        if (get_property("uts_postLoopFarmPearls") == "true") {
-            int pearlPrice = mall_price($item[unblemished pearl]);
-            int voa = to_int(get_property("valueOfAdventure"));
-            if (pearlPrice > 0 && voa <= 0) {
-                // garbo's own default; an unset zero would make farming always win.
-                voa = 4000;
-                print("uts_postLoopFarmPearls: valueOfAdventure isn't set, assuming " + voa + ".", "blue");
-            }
-            if (pearlPrice <= 0)
-                print("uts_postLoopFarmPearls: couldn't get a mall price for the pearl; skipping the farm.", "red");
-            else if (pearlPrice <= voa * 10)
-                print("uts_postLoopFarmPearls: a pearl mall-buys at " + pearlPrice
-                    + " and ten farming turns are worth " + (voa * 10)
-                    + " -- buying beats farming today.", "blue");
-            else {
-                farm = true;
-                step("postloop: pearls sell for " + pearlPrice + " against " + (voa * 10)
-                    + " for ten farming turns -- farming");
-            }
+    // Drinks one astral pilsner within ownLiver(), cracking a six-pack and
+    // casting Ode first. True only when adventures rose.
+    boolean drinkPilsner() {
+        if (my_inebriety() >= ownLiver())
+            return false;
+        if (item_amount($item[astral pilsner]) == 0
+            && item_amount($item[astral six-pack]) > 0
+            && !use($item[astral six-pack]))
+            return false;
+        if (item_amount($item[astral pilsner]) == 0)
+            return false;
+        if (have_effect($effect[Ode to Booze]) == 0 && have_skill($skill[The Ode to Booze])) {
+            if (have_effect($effect[Donho's Bubbly Ballad]) > 0
+                && !cli_execute("shrug Donho's Bubbly Ballad"))
+                print("Donho's Bubbly Ballad wouldn't shrug.", "blue");
+            if (!use_skill(1, $skill[the ode to booze]))
+                print("No Ode to Booze; drinking without it.", "blue");
         }
-        if (!rundown && !farm)
+        int before = my_adventures();
+        if (!drink($item[astral pilsner]))
+            return false;
+        return my_adventures() > before;
+    }
+
+    void screechRundown() {
+        if (get_property("uts_postLoopRunOutEagleBanish") != "true"
+            || !contains_text(get_property("banishedPhyla"), "construct"))
             return;
-        if (rundown) {
-            step("postloop: re-aiming the Patriotic Screech off the construct phylum");
-            if (!have_familiar($familiar[Patriotic Eagle]))
-                abort("uts_postLoopRunOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
-            if (!can_adventure($location[The Smut Orc Logging Camp]))
-                abort("uts_postLoopRunOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
-        }
+        step("postloop: re-aiming the Patriotic Screech off the construct phylum");
+        if (!have_familiar($familiar[Patriotic Eagle]))
+            abort("uts_postLoopRunOutEagleBanish: no Patriotic Eagle in the terrarium, so the screech can't be re-aimed.");
+        if (!can_adventure($location[The Smut Orc Logging Camp]))
+            abort("uts_postLoopRunOutEagleBanish: The Smut Orc Logging Camp isn't open, and the re-aim needs a place to screech.");
         pullEverything();
         // The eagle's combats are what recharge the screech, so it stays out
-        // until the re-aim; otherwise the Hound Dog's +combat means fewer
-        // noncombats per pearl (picked directly, never via the "combat"
-        // overload, which force-swaps Hound-Dog-less accounts; the maximizer
-        // never recommends familiars). With no familiar out at all, bathysphere()'s
-        // equip term has nowhere to land and tempEquipment aborts; beyond
-        // that the familiar doesn't matter, pearls are counter claims, not
-        // drops.
-        if (rundown)
-            use_familiar($familiar[Patriotic Eagle]);
-        else if (have_familiar($familiar[Jumpsuited Hound Dog]))
-            use_familiar($familiar[Jumpsuited Hound Dog]);
-        if (my_familiar() == $familiar[none]) {
-            foreach fam in $familiars[Patriotic Eagle, grouper groupie] {
-                if (have_familiar(fam)) {
-                    use_familiar(fam);
-                    break;
-                }
-            }
-            if (my_familiar() == $familiar[none])
-                abort("postloop pearls: no familiar out; take out any familiar and rerun.");
-        }
+        // until the re-aim.
+        if (!use_familiar($familiar[Patriotic Eagle]))
+            abort("uts_postLoopRunOutEagleBanish: couldn't take out the Patriotic Eagle.");
         set_property("_utsPearlFarm", "true");
         int spent;
-        int claimed;
         // The CCS sets _utsScreechReady from each eagle fight's skill dropdown.
         // screechCombats misses eagle chatter, so it only times the fallback try.
         set_property("_utsScreechReady", "");
@@ -2664,9 +2639,9 @@ string DropsItems;
         while (true) {
             // One fight at the Smut Orc Logging Camp moves the banish onto
             // the orc phylum and the rundown is done. Zone progress holds
-            // while stepping out, so a continuing farm loses nothing to the
-            // detour. At 0 adventures this waits for the pilsner ladder below.
-            if (rundown && my_adventures() > 0 && spent >= nextScreechTry
+            // while stepping out. At 0 adventures this waits for the
+            // pilsner ladder below.
+            if (my_adventures() > 0 && spent >= nextScreechTry
                 && (get_property("_utsScreechReady") == "true" || spent >= fallbackScreechTry)) {
                 // The CCS casts the screech, or records "unready" when the
                 // dropdown lacks it, so "not recastable yet" is told apart
@@ -2684,12 +2659,10 @@ string DropsItems;
                     else
                         // The banish runs 100 turns, so it can also just expire.
                         print("The construct banish is gone after " + spent + " turns; constructs are free.", "blue");
-                    rundown = false;
-                    farmHandoff(farm, current);
+                    break;
                 } else if (get_property("_utsScreechFired") == "true") {
                     reportRundownStalled("the screech was cast but constructs are still banished", spent);
-                    rundown = false;
-                    farmHandoff(farm, current);
+                    break;
                 } else if (get_property("_utsScreechFired") == "false") {
                     // Offered but rejected: back off both paths.
                     screechNoAttempts = 0;
@@ -2709,30 +2682,12 @@ string DropsItems;
                     }
                 }
             }
-            if (!rundown && !farm)
-                break;
-            if (my_adventures() == 0) {
-                // Same pilsner ladder as the in-run diet: crack the six-pack if
-                // needed, Ode up, drink one. No pilsner left is a hard stop.
-                if (item_amount($item[astral pilsner]) == 0
-                    && item_amount($item[astral six-pack]) > 0)
-                    use($item[astral six-pack]);
-                if (item_amount($item[astral pilsner]) > 0) {
-                    cli_execute("shrug Donho's Bubbly Ballad");
-                    if (have_skill($skill[The Ode to Booze]))
-                        use_skill($skill[the ode to booze]);
-                    drink($item[astral pilsner]);
-                } else
-                    abort("uts_runOutEagleBanish: out of adventures and no astral pilsner left to drink.");
-            }
-            // Rundown only; unconditional made the 90-turn farm ceiling unreachable.
-            if (rundown && spent >= 40) {
+            if (spent >= 40) {
                 reportRundownStalled("the screech still isn't ready after 40 turns", spent);
-                rundown = false;
-                if (!farm)
-                    break;
-                farmHandoff(farm, current);
+                break;
             }
+            if (my_adventures() == 0 && !drinkPilsner())
+                abort("uts_postLoopRunOutEagleBanish: out of adventures and couldn't drink an astral pilsner within your own liver.");
             if (current == $location[none] || get_property(pearlClaimed[current]) == "true") {
                 current = $location[none];
                 foreach loc in pearlZoneRes {
@@ -2742,25 +2697,18 @@ string DropsItems;
                     }
                 }
                 if (current == $location[none]) {
-                    if (rundown)
-                        reportRundownStalled("no open pearl zone with today's pearl unclaimed", spent);
+                    reportRundownStalled("no open pearl zone with today's pearl unclaimed", spent);
                     break;
                 }
                 pearlZonePrep(current);
             }
             if (have_effect($effect[Fishy]) == 0 && !cloverFishy(current)) {
-                if (rundown) {
-                    reportRundownStalled("out of Fishy, so no pearl zone is reachable", spent);
-                    break;
-                }
-                abort("postloop pearls: out of Fishy mid-zone after " + spent + " turns with "
-                    + claimed + " pearls claimed; today's zone progress won't survive rollover.");
+                reportRundownStalled("out of Fishy, so no pearl zone is reachable", spent);
+                break;
             }
+            // The Lucky! trip can spend the last adventures; back to the pilsner step.
             if (my_adventures() == 0)
-                abort("postloop pearls: out of adventures mid-zone after " + spent + " turns with "
-                    + claimed + " pearls claimed; today's zone progress won't survive rollover.");
-            if (spent >= 90)
-                abort("postloop pearls: 90 turns spent without finishing; something is wrong, bailing out.");
+                continue;
             pearlResCheck(current);
             adv1(current);
             spent += 1;
@@ -2768,13 +2716,6 @@ string DropsItems;
         } finally {
             set_property("_utsPearlFarm", "false");
             set_property("_utsScreechReaim", "false");
-        }
-        if (farm) {
-            foreach loc in pearlZoneRes {
-                if (get_property(pearlClaimed[loc]) != "true")
-                    print("uts_postLoopFarmPearls: " + loc + " left unclaimed.", "red");
-            }
-            print("uts_postLoopFarmPearls: " + claimed + " pearls claimed in " + spent + " turns.", "blue");
         }
     }
 
@@ -2789,13 +2730,7 @@ string DropsItems;
         if (storage_amount($item[astral pilsner]) > 0
             || storage_amount($item[astral six-pack]) > 0)
             pullEverything();
-        int liver = inebriety_limit();
-        foreach s in $slots[]
-            liver = liver - to_int(numeric_modifier(equipped_item(s), "Liver Capacity"));
-        if (my_familiar() != $familiar[none])
-            liver = liver - to_int(numeric_modifier(my_familiar(), "Liver Capacity",
-                familiar_weight(my_familiar()), $item[none]));
-        liver = min(liver, inebriety_limit());
+        int liver = ownLiver();
         int drunk;
         boolean odeWarned;
         while (my_inebriety() < liver) {
@@ -2829,24 +2764,107 @@ string DropsItems;
     }
 
     // uts_postLoopPrepCodpiece: leave the run with the codpiece already loaded for the
-    // next ascension -- five unblemished pearls, mall-bought if the farm came
-    // up short. Runs after the banish rundown and the pearl farm so their
-    // pearls count.
-    void prepCodpiece() {
+    // next ascension: five unblemished pearls, mall-bought if inventory is short.
+    // The first pass runs before the farm and only reports a shortfall; the
+    // final pass after pearlo aborts on one.
+    void prepCodpiece(boolean finalPass) {
         if (get_property("uts_postLoopPrepCodpiece") != "true")
             return;
+        if (!have_item($item[The Eternity Codpiece])) {
+            if (finalPass)
+                abort("uts_postLoopPrepCodpiece: you don't own The Eternity Codpiece.");
+            return;
+        }
+        string verify = visit_url("inventory.php?action=docodpiece");
+        int slotted;
+        for num from 1 to 5 {
+            if (contains_text(verify, $item[unblemished pearl] + " mounted in slot #" + num))
+                slotted += 1;
+        }
+        if (slotted == 5)
+            return;
         step("postloop: loading the codpiece with unblemished pearls");
-        if (!have_item($item[The Eternity Codpiece]))
-            abort("uts_postLoopPrepCodpiece: you don't own The Eternity Codpiece.");
         pullEverything();
+        // Mall buys need autoSatisfyWithMall and an autoBuyPriceLimit at or above the pearl's price.
+        if (item_amount($item[unblemished pearl]) + slotted < 5
+            && !retrieve_item(5 - slotted, $item[unblemished pearl]))
+            print("uts_postLoopPrepCodpiece: couldn't buy the missing unblemished pearls.", "blue");
+        int held = item_amount($item[unblemished pearl]) + slotted;
+        if (held < 5) {
+            if (finalPass)
+                abort("uts_postLoopPrepCodpiece: couldn't get to five unblemished pearls (have "
+                    + held + ").");
+            print("uts_postLoopPrepCodpiece: " + held + " unblemished pearls held; topped up after the pearl farm.", "blue");
+            return;
+        }
         codpiece("none");
-        if (item_amount($item[unblemished pearl]) < 5)
-            retrieve_item(5, $item[unblemished pearl]);
-        if (item_amount($item[unblemished pearl]) < 5)
-            abort("uts_postLoopPrepCodpiece: couldn't get to five unblemished pearls (have "
-                + item_amount($item[unblemished pearl]) + ").");
         codpiece("unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl, unblemished pearl");
         print("Codpiece loaded: five unblemished pearls slotted for the next run.", "blue");
+    }
+
+    // True when extra already sets key, as "key", "!key", "key=..." or "key =...".
+    boolean hasPearloArg(string extra, string key) {
+        return create_matcher("(^|\\s)!?" + key + "(\\s|=|$)", to_lower_case(extra)).find();
+    }
+
+    // uts_postLoopFarmPearls: pearlo prices each zone against valueOfAdventure
+    // and farms the profitable ones. Its pearlo_* prefs apply, and
+    // uts_pearloArgs is appended to the command line.
+    void pearlFarm() {
+        if (get_property("uts_postLoopFarmPearls") != "true") {
+            if (get_property("uts_postLoopCloverFishy") == "true"
+                && get_property("uts_postLoopRunOutEagleBanish") != "true")
+                print("uts_postLoopCloverFishy only applies with uts_postLoopFarmPearls or uts_postLoopRunOutEagleBanish; ignoring it.", "blue");
+            return;
+        }
+        if (!git_exists("xn-pearlo-release")) {
+            print("uts_postLoopFarmPearls: pearlo isn't installed, so pearl farming is skipped. "
+                + "Install it with: git checkout xn/pearlo release", "red");
+            return;
+        }
+        step("postloop: farming unblemished pearls with pearlo");
+        pullEverything();
+        // pearlo never drinks, so the pilsners go in now; leftover adventures
+        // carry over to uts_postloopCommand.
+        int drunk;
+        while (drinkPilsner())
+            drunk = drunk + 1;
+        if (drunk > 0)
+            print("uts_postLoopFarmPearls: drank " + drunk + " astral pilsners for pearlo.", "blue");
+        if (my_adventures() == 0) {
+            print("uts_postLoopFarmPearls: out of adventures and no astral pilsner to drink within your own liver; skipping the farm.", "red");
+            return;
+        }
+        // Trimmed and single-spaced: an empty key makes pearlo throw "Unknown argument".
+        string extra = replace_all(create_matcher("^ | $",
+            replace_all(create_matcher("\\s+", get_property("uts_pearloArgs")), " ")), "");
+        string args = "";
+        // pearlo rejects a repeated key, so a key set in uts_pearloArgs is not added here.
+        int voa = to_int(get_property("valueOfAdventure"));
+        if (voa <= 0 && get_property("pearlo_voa") == "" && !hasPearloArg(extra, "voa")) {
+            // garbo's own default; zero or less would price every zone as profitable.
+            args += " voa=4000";
+            print("uts_postLoopFarmPearls: valueOfAdventure is " + voa + ", assuming 4000.", "blue");
+        }
+        if (get_property("uts_postLoopCloverFishy") == "true" && !hasPearloArg(extra, "luckyfishy"))
+            args += " luckyfishy";
+        if (extra != "")
+            args += " " + extra;
+        // An abort inside pearlo ends this script too. A thrown error returns false.
+        if (!cli_execute("pearlo" + args))
+            print("uts_postLoopFarmPearls: \"pearlo" + args + "\" failed. Look above for a typo in uts_pearloArgs "
+                + "(\"Unknown argument\" or \"Duplicate key\"), a pearlo error, or duplicate pearlo scripts "
+                + "(keep only the xn-pearlo-release copy).", "red");
+        int claimed;
+        string unclaimed = "";
+        foreach loc in pearlClaimed {
+            if (get_property(pearlClaimed[loc]) == "true")
+                claimed += 1;
+            else
+                unclaimed += (unclaimed == "" ? "" : ", ") + loc;
+        }
+        print("uts_postLoopFarmPearls: " + claimed + " of 5 unblemished pearls claimed today; unclaimed: "
+            + (unclaimed == "" ? "none" : unclaimed) + ".", "blue");
     }
 
 // ─── SEA MONKEES ──────────────────────────────────────────────────────────────
@@ -2948,9 +2966,13 @@ void seaMonkees() {
             // First of the postloop steps, since the later ones can abort
             // and leave the supply undrunk. After council(): the storage
             // pull it may need is refused before the prism breaks.
+            // The codpiece's first pass loads it from pearls on hand in case
+            // pearlo aborts; the final pass after it counts the farmed pearls.
             usePilsners();
-            pearlPostloop();
-            prepCodpiece();
+            prepCodpiece(false);
+            screechRundown();
+            pearlFarm();
+            prepCodpiece(true);
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         }
@@ -2991,15 +3013,17 @@ void main(string... args) {
             set_property("_utsPearlFarm", "false");
             // A leaked re-aim flag would screech at the next fight instead.
             set_property("_utsScreechReaim", "false");
-            // The pearl walk fights through the CCS, and pearlPostloop()
+            // The screech rundown fights through the CCS, and screechRundown()
             // hands it _utsPearlFarm to reduce it to plain kills.
             write_ccs(to_buffer("consult UnderTheSeaCCS.ash \n abort"), "temp");
             set_ccs("temp");
             set_property("battleAction", "custom combat script");
             print("Starting UnderTheSea (postloop only)");
             usePilsners();
-            pearlPostloop();
-            prepCodpiece();
+            prepCodpiece(false);
+            screechRundown();
+            pearlFarm();
+            prepCodpiece(true);
             if (get_property("uts_postloopCommand") != "")
                 cli_execute(get_property("uts_postloopCommand"));
         } finally {
