@@ -269,7 +269,8 @@ string DropsItems;
         if (have_skill($skill[Summon Taffy]))
             if (mp_cost($skill[Summon Taffy]) < my_mp() && get_property("_taffyYellowSummons") == 0)
                 use_skill($skill[Summon Taffy]);
-        if (my_path().id == 55){
+        // The Seaceress kill sets questL13Final to finished; the run's end block takes over from there.
+        if (my_path().id == 55 && get_property("questL13Final") != "finished"){
             if (my_adventures() == 0) {
                 if (item_amount($item[astral six-pack]) > 0) 
                     use($item[astral six-pack]);
@@ -2438,8 +2439,10 @@ string DropsItems;
                         cli_execute("retrocape heck kill; equip unwrapped knock-off retro superhero cape");
                     }
                 }
+                // The first visit is a no-turn intro and the second the fight, unless the intro was already seen.
                 adv($location[Mer-kin Temple (center Door)]);
-                adv($location[Mer-kin Temple (center Door)]);
+                if (get_property("questL13Final") != "finished")
+                    adv($location[Mer-kin Temple (center Door)]);
             }
         } else if (my_path().id == 0 && boss == "Dad"){
             use_familiar($familiar[Tiny Plastic Santa Claus Skeleton]);
@@ -2868,7 +2871,35 @@ string DropsItems;
     }
 
 // ─── SEA MONKEES ──────────────────────────────────────────────────────────────
+// Post-quest cleanup and spending, once the Seaceress is dead.
+void endOfRun() {
+    while (item_amount($item[sand penny]) > 30)
+        buy($coinmaster[Wet Crap For Sale], 1, $item[water-logged pill]);
+    while (item_amount($item[sand penny]) > 10)
+        buy($coinmaster[Wet Crap For Sale], 1,
+            $item[waterlogged scroll of healing]);
+    council();
+    council();
+    // First of the postloop steps, since the later ones can abort
+    // and leave the supply undrunk. After council(): the storage
+    // pull it may need is refused before the prism breaks.
+    // The codpiece's first pass loads it from pearls on hand in case
+    // pearlo aborts; the final pass after it counts the farmed pearls.
+    usePilsners();
+    prepCodpiece(false);
+    screechRundown();
+    pearlFarm();
+    prepCodpiece(true);
+    if (get_property("uts_postloopCommand") != "")
+        cli_execute(get_property("uts_postloopCommand"));
+}
+
 void seaMonkees() {
+    if (my_path().id == 55 && get_property("questL13Final") == "finished") {
+        step("final boss already dead, skipping to the end of the run");
+        endOfRun();
+        return;
+    }
     //Use Sword of S Words to get sea lasso early if you can't use shadow rift to lasso train
     SWordLasso();
     //Unlock guild to gain access to shadow brick if you have payphone
@@ -2953,30 +2984,8 @@ void seaMonkees() {
     Shub();
     finalBoss();
 
-    if (my_path().id == 55){
-        // ── Post-quest cleanup and spending ──────────────────────────────────────
-        if (get_property("questL13Final") == "finished") {
-            while (item_amount($item[sand penny]) > 30)
-                buy($coinmaster[Wet Crap For Sale], 1, $item[water-logged pill]);
-            while (item_amount($item[sand penny]) > 10)
-                buy($coinmaster[Wet Crap For Sale], 1,
-                    $item[waterlogged scroll of healing]);
-            council();
-            council();
-            // First of the postloop steps, since the later ones can abort
-            // and leave the supply undrunk. After council(): the storage
-            // pull it may need is refused before the prism breaks.
-            // The codpiece's first pass loads it from pearls on hand in case
-            // pearlo aborts; the final pass after it counts the farmed pearls.
-            usePilsners();
-            prepCodpiece(false);
-            screechRundown();
-            pearlFarm();
-            prepCodpiece(true);
-            if (get_property("uts_postloopCommand") != "")
-                cli_execute(get_property("uts_postloopCommand"));
-        }
-    }
+    if (my_path().id == 55 && get_property("questL13Final") == "finished")
+        endOfRun();
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
