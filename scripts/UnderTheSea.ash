@@ -918,7 +918,7 @@ string DropsItems;
         string trainer = to_int(get_property("lassoTrainingCount")) < 20
             ? if_equip($item[sea cowboy hat]) + if_equip($item[sea chaps]) : "";
         tempEquipment("item drop", if_equip($item[Flash Liquidizer Ultra Dousing Accessory]) + "monodent of the sea," + trainer
-            + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
+            + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + riftFamiliarGear() + baseball_equip());
     }
 
     void shadowRift() {
@@ -1718,8 +1718,12 @@ string DropsItems;
             while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
                 shadowRift();
 
+            // Before turn 26, a run that wears the crystal ball in the Corral takes the day's Shadow Affinity
+            // but keeps what is left for dodges.
+            boolean keepAffinity = my_turncount() <= 25 && corralWearsBall();
             if (!highShiny() && have_item($item[closed-circuit pay phone])){
-                while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false"))
+                while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false")
+                    && !(keepAffinity && get_property("_shadowAffinityToday") == "true"))
                     shadowRift();
             }
 
@@ -1779,6 +1783,12 @@ string DropsItems;
     void seahorseTaming(){
         step("phase: seahorse taming");
         while (get_property("seahorseName") == "") {
+            // Rift fights in the crystal ball meet the Rift's own prediction, which clears the Corral's lock.
+            int dodges = 0;
+            while (corralLockToBreak() && riftDodgeAffinity() && dodges < 4) {
+                shadowRift();
+                dodges += 1;
+            }
             if (my_path().id == 0){
                 retrieve_item(3, $item[sea cowbell]);
                 retrieve_item($item[sea lasso]);
