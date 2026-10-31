@@ -1020,6 +1020,41 @@ boolean seaCowNeeded() {
     return false;
 }
 
+// The monster the crystal ball has locked into the Coral Corral, or none.
+monster corralPrediction() {
+    foreach i, entry in split_string(get_property("crystalBallPredictions"), "\\|") {
+        string [int] part = split_string(entry, ":");
+        if (count(part) >= 3 && part[1] == "The Coral Corral")
+            return to_monster(part[2]);
+    }
+    return $monster[none];
+}
+
+// Before the tame, the crystal ball has locked the Corral onto a monster other than the seahorse.
+boolean corralLockToBreak() {
+    monster mob = corralPrediction();
+    return get_property("seahorseName") == "" && mob != $monster[none] && mob != $monster[wild seahorse]
+        && available_amount($item[miniature crystal ball]) > 0;
+}
+
+// seahorseTaming() puts the crystal ball on in the Corral only alongside the August scepter.
+boolean corralWearsBall() {
+    return have_item($item[august scepter]) && have_item($item[miniature crystal ball]);
+}
+
+// Enough Shadow Affinity for a dodge: two fights, or one when the Rift already holds a prediction to meet.
+boolean riftDodgeAffinity() {
+    int left = have_effect($effect[shadow affinity]);
+    return left >= 2 || (left == 1 && contains_text(get_property("crystalBallPredictions"), ":Shadow Rift"));
+}
+
+// The Rift wears the crystal ball while it is clearing a Corral lock, and the toy Cupid bow otherwise.
+string riftFamiliarGear() {
+    if (corralLockToBreak())
+        return if_equip($item[miniature crystal ball]);
+    return if_equip($item[toy cupid bow]);
+}
+
 boolean prayerbeadsShort() {
     return available_amount($item[mer-kin prayerbeads]) < 3;
 }
