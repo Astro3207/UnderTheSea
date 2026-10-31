@@ -403,8 +403,9 @@ import <seedfinder/seedfinder.ash>;
         }
     }
 
-    int BCZcost(string BCZskill) {
-        int cast = to_int(get_property("_bcz" + BCZskill));
+    // Substat cost of a BCZ skill's next cast after `casts` casts today.
+    int bczCostAt(int casts) {
+        int cast = casts;
         if (cast == 12) return 420000;
         if (cast > 12) cast -= 1;
         int castMathFloor = floor(cast / 3);
@@ -418,6 +419,10 @@ import <seedfinder/seedfinder.ash>;
         // Pattern: 11, 23, 37, 110, 230, 370, ... 13th cast handled separately but unreachable
         return substatBase * 10 ** ((cast < 12 || (cast > 12 && castMathModulo == 0))
             ? castMathFloor : castMathFloor + 1);
+    }
+
+    int BCZcost(string BCZskill) {
+        return bczCostAt(to_int(get_property("_bcz" + BCZskill)));
     }
 
     // Assert your Authority needs all three props worn at once. Same test
@@ -2299,4 +2304,614 @@ void pullChecklist() {
         else
             print("✗ " + it + " — NOT mall-buyable, acquire before it's needed", "red");
     }
+}
+
+// ─── FREE FIGHT SOURCES ───────────────────────────────────────────────────────
+// Shadow mode, except the CCS sites gated by allocLive*Ready(). uts_allocShadow=false
+// turns off every ALLOC line, live ones included; uts_allocLive=false turns off the live spends.
+
+record freeSrc {
+    string kind;        // kill, run or force
+    boolean drops;      // the monster's items still drop
+    boolean win;        // counts as a won fight
+    boolean banishes;
+    string capProp;     // daily counter; "true" counts as 1
+    int cap;            // 0 when there is no fixed daily cap
+    int tier;           // 0 renewable, 1 plentiful, 2 scarce, 3 precious
+    string gate;        // tokens joined by " + ", read by freeSrcGateOk()
+    boolean mayMiss;    // a kill that can leave the fight running
+};
+
+freeSrc [string] freeSources = {
+    "darts":      new freeSrc("kill", true,  true,  false, "",                         0, 0, "equip:Everfull Dart Holster + noeffect:Everything Looks Red + skill:7521 + killable", true),
+    "brick":      new freeSrc("kill", true,  true,  false, "_shadowBricksUsed",       13, 1, "throw:shadow brick + killable"),
+    "bullets":    new freeSrc("kill", true,  true,  false, "_bczSweatBulletsCasts",    0, 1, "equip:blood cubic zirconia + bcz + skill:7573 + killable"),
+    "clubback":   new freeSrc("kill", false, true,  false, "_clubEmTimeUsed",          5, 1, "equip:legendary seal-clubbing club + skill:7584"),
+    "spit":       new freeSrc("kill", true,  true,  false, "",                         0, 2, "equip:Jurassic Parka + noeffect:Everything Looks Yellow + skill:7423 + killable"),
+    "punch":      new freeSrc("kill", true,  true,  false, "_shatteringPunchUsed",     3, 2, "skill:149 + mp:30 + killable"),
+    "xray":       new freeSrc("kill", true,  true,  false, "_chestXRayUsed",           3, 2, "equip:Lil' Doctor&trade; bag + skill:7307 + killable"),
+    "gravel":     new freeSrc("kill", false, true,  false, "",                         0, 2, "throw:groveling gravel + killable"),
+    "assert":     new freeSrc("kill", false, true,  false, "_assertYourAuthorityCast", 3, 2, "sheriff + skill:7532 + killable"),
+    "mobhit":     new freeSrc("kill", true,  true,  false, "_gingerbreadMobHitUsed",   1, 3, "skill:163 + mp:30 + killable"),
+    "springaway": new freeSrc("run",  false, false, false, "",                         0, 0, "equip:spring shoes + noeffect:Everything Looks Green + skill:7500"),
+    // Spring Kick banishes until rollover without ending the fight. The Spring Away after it does.
+    "springkick": new freeSrc("run",  false, false, true,  "",                         0, 0, "skill:7501 + equip:spring shoes + noeffect:Everything Looks Green + skill:7500"),
+    "curveball":  new freeSrc("run",  false, false, true,  "",                         0, 0, "inv:cosmic bowling ball + skill:7405"),
+    "boots":      new freeSrc("run",  false, false, false, "_banderRunaways",          0, 1, "fam:Pair of Stomping Boots + boots + runaway"),
+    "navel":      new freeSrc("run",  false, false, false, "_navelRunaways",           3, 1, "equip:Greatest American Pants|navel ring of navel gazing + nofam:Pair of Stomping Boots + runaway"),
+    "blankout":   new freeSrc("run",  false, false, false, "",                         0, 1, "throw:glob of Blank-Out"),
+    "pinkslip":   new freeSrc("run",  false, false, false, "",                         0, 1, "throw:Mer-kin pinkslip + phylum:mer-kin"),
+    "inkbladder": new freeSrc("run",  false, false, false, "",                         0, 2, "throw:ink bladder + underwater"),
+    "latte":      new freeSrc("run",  false, false, true,  "_latteBanishUsed",         1, 1, "equip:latte lovers member's mug + skill:7301"),
+    "parasol":    new freeSrc("run",  false, false, false, "_navelRunaways",           3, 2, "throw:peppermint parasol"),
+    "snokebomb":  new freeSrc("run",  false, false, true,  "_snokebombUsed",           3, 2, "skill:150 + mp:50"),
+    "hatred":     new freeSrc("run",  false, false, true,  "_feelHatredUsed",          3, 2, "skill:7359"),
+    "anchorbomb": new freeSrc("run",  false, false, true,  "",                         0, 2, "throw:anchor bomb"),
+    "stinkbomb":  new freeSrc("run",  false, false, true,  "",                         0, 2, "throw:stuffed yam stinkbomb"),
+    "peasoup":    new freeSrc("run",  false, false, true,  "",                         0, 2, "throw:handful of split pea soup"),
+    "grin":       new freeSrc("run",  false, false, true,  "_vmaskBanisherUsed",       1, 3, "equip:V for Vivala mask + skill:7015 + mp:30"),
+    "force":      new freeSrc("force", true, false, false, "_saberForceUses",          5, 3, "equip:Fourth of May Cosplay Saber + saber + skill:7311"),
+};
+
+// Tie-break inside a tier: earlier ids are preferred.
+string [int] freeSrcOrder = split_string("darts,springaway,curveball,springkick,clubback,brick,bullets,"
+    + "boots,navel,blankout,pinkslip,latte,gravel,assert,spit,punch,xray,"
+    + "parasol,inkbladder,snokebomb,hatred,anchorbomb,stinkbomb,peasoup,mobhit,grin,force", ",");
+
+// The fight page's skill dropdown, or "" when the page has none.
+string fightSkillMenu(string page_text) {
+    int start = index_of(page_text, "<select name=whichskill>");
+    if (start < 0)
+        start = index_of(page_text, "<select name=\"whichskill\">");
+    if (start < 0)
+        return "";
+    int stop = index_of(page_text, "</select>", start);
+    if (stop < 0)
+        return "";
+    return substring(page_text, start, stop);
+}
+
+int freeSrcCount(string prop) {
+    string v = get_property(prop);
+    if (v == "true")
+        return 1;
+    if (!is_integer(v))
+        return 0;
+    return to_int(v);
+}
+
+// Worn, or socketed in a worn Eternity Codpiece, whose gems grant their skills.
+boolean wornOrSocketed(item it) {
+    if (have_equipped(it))
+        return true;
+    if (!have_equipped($item[The Eternity Codpiece]))
+        return false;
+    foreach sl in $slots[codpiece1, codpiece2, codpiece3, codpiece4, codpiece5]
+        if (equipped_item(sl) == it)
+            return true;
+    return false;
+}
+
+boolean instakillImmune(monster mob) {
+    if (mob.boss)
+        return true;
+    foreach i, attr in split_string(mob.attributes, " ")
+        if (attr == "NOINSTAKILL")
+            return true;
+    return false;
+}
+
+// One gate token. skill:<id> is offered in the dropdown, equip:<a|b> is worn,
+// inv:/throw:<item> is held (throw is also the action), runaway marks the action.
+boolean freeSrcGateOk(string token, string menu) {
+    int colon = index_of(token, ":");
+    string key = colon < 0 ? token : substring(token, 0, colon);
+    string arg = colon < 0 ? "" : substring(token, colon + 1);
+    switch (key) {
+    case "skill":
+        return contains_text(menu, "value=\"" + arg + "\"")
+            || contains_text(menu, "value=" + arg + ">")
+            || contains_text(menu, "value=" + arg + " ");
+    case "equip":
+        foreach i, name in split_string(arg, "\\|") {
+            item it = to_item(name);
+            if (it != $item[none] && wornOrSocketed(it))
+                return true;
+        }
+        return false;
+    case "inv":
+    case "throw":
+        return to_item(arg) != $item[none] && item_amount(to_item(arg)) > 0;
+    case "fam":
+        return to_familiar(arg) != $familiar[none] && my_familiar() == to_familiar(arg);
+    case "nofam":
+        return my_familiar() != to_familiar(arg);
+    case "noeffect":
+        return to_effect(arg) != $effect[none] && have_effect(to_effect(arg)) == 0;
+    case "mp":
+        return my_mp() >= to_int(arg);
+    case "phylum":
+        return last_monster().phylum == to_phylum(arg);
+    case "underwater":
+        return my_location().environment == "underwater";
+    case "killable":
+        return !instakillImmune(last_monster());
+    case "sheriff":
+        return have_equipped($item[Sheriff moustache]) && have_equipped($item[Sheriff badge])
+            && have_equipped($item[Sheriff pistol]);
+    case "bcz":
+        return my_basestat($stat[submoxie]) - 22500 >= BCZcost("SweatBulletsCasts");
+    case "boots":
+        return bootsRunaways() > freeSrcCount("_banderRunaways");
+    case "saber":
+        return saberForcesFree() > 0;
+    case "runaway":
+        return true;
+    }
+    return false;
+}
+
+boolean freeSrcReadyIn(string id, string menu) {
+    if (!(freeSources contains id))
+        return false;
+    freeSrc src = freeSources[id];
+    if (src.capProp != "" && src.cap > 0 && freeSrcCount(src.capProp) >= src.cap)
+        return false;
+    foreach i, token in split_string(src.gate, " \\+ ")
+        if (!freeSrcGateOk(token, menu))
+            return false;
+    return true;
+}
+
+// Available now: cap left and every gate token passes against this fight page.
+boolean freeSrcReady(string id, string page_text) {
+    return freeSrcReadyIn(id, fightSkillMenu(page_text));
+}
+
+// Whether Do an epic McTwist! was cast this fight.
+boolean mcTwistThisFight() {
+    return contains_text(";" + get_property("_lastCombatActions"), ";sk7447;");
+}
+
+// A waffle is held and none has been thrown this fight.
+boolean waffleUnthrown() {
+    return item_amount($item[waffle]) > 0 && !contains_text(get_property("_lastCombatActions"), "it11311");
+}
+
+string corralNeed(monster mob) {
+    boolean tameReady = item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea lasso]) > 0
+        && to_int(get_property("lassoTrainingCount")) == 20;
+    if (mob == $monster[wild seahorse])
+        return tameReady ? "TRAIN" : "RUN";
+    boolean isNative = $monsters[sea cow, sea cowboy, Mer-kin rustler] contains mob;
+    if (tameReady) {
+        // The waffle may turn a native into the seahorse, so nothing is spent before it.
+        if (isNative && waffleUnthrown())
+            return "WAFFLE";
+        if (!isNative || is_banished(mob))
+            return "RUN";
+        int banned;
+        foreach m in $monsters[sea cow, sea cowboy, Mer-kin rustler]
+            if (is_banished(m))
+                banned += 1;
+        return banned < 2 ? "RUN_BANISH" : "RUN";
+    }
+    if (mob == $monster[sea cow])
+        return seaCowNeeded() ? "KILL_DROPS" : "RUN_BANISH";
+    if (mob == $monster[sea cowboy])
+        return doneWithCowboy() ? "RUN_BANISH" : "KILL_DROPS";
+    if (mob == $monster[Mer-kin rustler])
+        return "RUN_BANISH";
+    return "SOFT";
+}
+
+string fightNeedZone(location loc, monster mob) {
+    if (get_property("_utsScreechReaim") == "true")
+        return "RUN";
+    if (get_property("_utsPearlFarm") == "true")
+        return "KILL_ANY";
+    // A McTwist this fight doubles its drops, so the CCS kills it.
+    if (mcTwistThisFight())
+        return "KILL_DROPS";
+    if (mob == $monster[unholy diver])
+        return diverHuntActive() ? "KILL_DROPS" : "KILL_ANY";
+    if (mob == $monster[some fish]) {
+        // The CCS banishes a converted fish here. A curveballed one is killed by cleanUp(), not a free kill.
+        if ($locations[The Marinara Trench, The Dive Bar, Anemone Mine] contains loc)
+            return "RUN_BANISH";
+        return available_amount($item[pristine fish scale]) < 6 ? "KILL_DROPS" : "SOFT";
+    }
+    if (mob == $monster[rotten dolphin thief])
+        return "SOFT";
+    switch (loc) {
+    case $location[The Outskirts of Cobb's Knob]:
+    case $location[The Sleazy Back Alley]:
+    case $location[The Haunted Pantry]:
+    case $location[Madness Bakery]:
+        return "RUN";
+    case $location[An Octopus's Garden]:
+        return mob == $monster[Neptune flytrap] ? "KILL_DROPS" : "RUN_BANISH";
+    case $location[The Wreck of the Edgar Fitzsimmons]:
+    case $location[Mer-kin Gymnasium]:
+        return "RUN_BANISH";
+    case $location[The Marinara Trench]:
+    case $location[The Dive Bar]:
+    case $location[Anemone Mine]:
+        if ((mob == $monster[giant squid] && item_amount($item[comb jelly]) == 0)
+            || mob == $monster[Mer-kin tippler]
+            || (mob == $monster[Mer-kin miner] && item_amount($item[Mer-kin digpick]) == 0))
+            return "KILL_DROPS";
+        return "RUN_BANISH";
+    case $location[The Mer-Kin Outpost]:
+        if (mob == $monster[Mer-kin healer] && item_amount($item[mer-kin prayerbeads]) < 2)
+            return "KILL_DROPS";
+        if (mob == $monster[Mer-kin burglar] || mob == $monster[Mer-kin raider])
+            return "RUN_BANISH";
+        if (get_property("merkinLockkeyMonster") == "" && available_amount($item[Mer-kin lockkey]) == 0)
+            return "KILL_DROPS";
+        return "RUN";
+    case $location[The Coral Corral]:
+        return corralNeed(mob);
+    case $location[The Caliginous Abyss]:
+        return "KILL_ANY";
+    case $location[Mer-kin Elementary School]:
+        return "KILL_DROPS";
+    case $location[Mer-kin Library]:
+        if (mob == $monster[Mer-kin drifter] && to_int(get_property("merkinVocabularyMastery")) >= 90)
+            return "RUN_BANISH";
+        return "KILL_DROPS";
+    case $location[Mer-kin Colosseum]:
+        return "BOSS";
+    case $location[The Skate Park]:
+    case $location[Shadow Rift (The Misspelled Cemetary)]:
+        return "TRAIN";
+    }
+    return "NONE";
+}
+
+// FREE, SOFT, KILL_DROPS, KILL_ANY, RUN, RUN_BANISH, TRAIN, WAFFLE, BOSS or NONE.
+string fightNeed(location loc, monster mob) {
+    if (mob == $monster[none])
+        return "NONE";
+    if (free_monster(mob))
+        return "FREE";
+    string need = fightNeedZone(loc, mob);
+    if ($strings[SOFT, KILL_ANY, KILL_DROPS] contains need && instakillImmune(mob))
+        return "BOSS";
+    return need;
+}
+
+// A kill cheap enough to end a fight the CCS meant to run from: tier 1 or less, or gravel.
+boolean freeSrcFallbackOk(string id) {
+    freeSrc s = freeSources[id];
+    return s.kind == "kill" && id != "clubback" && (s.tier <= 1 || id == "gravel");
+}
+
+// Pass 0 is the need's first choice, pass 1 its fallback.
+// FALLBACK is the kill a run need falls back to: no-drop first, then drops.
+boolean freeSrcFits(string need, string id, int pass) {
+    freeSrc s = freeSources[id];
+    boolean isKill = s.kind == "kill";
+    boolean isRun = s.kind == "run";
+    switch (need) {
+    case "RUN":
+        return pass == 0 && isRun && !s.banishes;
+    case "RUN_BANISH":
+        return isRun && s.banishes == (pass == 0);
+    case "KILL_ANY":
+        return isKill && id != "clubback" && s.drops == (pass == 1);
+    case "KILL_DROPS":
+        return pass == 0 && isKill && s.drops;
+    case "SOFT":
+        return isKill && id != "clubback" && s.tier <= 1 && s.drops == (pass == 1);
+    case "FALLBACK":
+        return freeSrcFallbackOk(id) && s.drops == (pass == 1);
+    case "BOSS":
+        return pass == 0 && id == "clubback";
+    }
+    return false;
+}
+
+// Tier for ordering. A kill need ranks a kill that may miss as scarce, after the sure kills of that tier.
+int freeSrcRank(string need, string id) {
+    freeSrc s = freeSources[id];
+    if (s.mayMiss && $strings[KILL_ANY, KILL_DROPS, FALLBACK] contains need)
+        return max(s.tier, 2);
+    return s.tier;
+}
+
+// First ready id for the need, by pass, then rank, sure before may-miss, then freeSrcOrder.
+// A run need with no run ready falls back to the FALLBACK choice, marked (fallback).
+string chooseFreeFrom(string need, boolean [string] ready) {
+    for pass from 0 to 1
+        for t from 0 to 3
+            for miss from 0 to 1
+                foreach i, id in freeSrcOrder
+                    if (ready[id] && (freeSources contains id) && freeSrcRank(need, id) == t
+                        && freeSources[id].mayMiss == (miss == 1) && freeSrcFits(need, id, pass))
+                        return id;
+    if ($strings[RUN, RUN_BANISH] contains need) {
+        string kill = chooseFreeFrom("FALLBACK", ready);
+        if (kill != "")
+            return kill + "(fallback)";
+    }
+    return "";
+}
+
+// The source id in a chosen or used entry: darts(miss) names darts, springkick+springaway springkick.
+string freeSrcBase(string entry) {
+    foreach mark in $strings[(, +]
+        if (index_of(entry, mark) > 0)
+            entry = substring(entry, 0, index_of(entry, mark));
+    return entry;
+}
+
+// ─── Reservations ───
+// Claims are fights still ahead that want a scarce source, keyed "location|monster,monster",
+// where an empty location matches any. "drops" claims want a drop-keeping kill, "banish" a banish.
+
+// The loop in outpost() is still running.
+boolean outpostAhead() {
+    return (item_amount($item[Mer-kin stashbox]) == 0 && get_property("corralUnlocked") == "false")
+        || $strings[step6, step7, step8] contains get_property("questS02Monkees");
+}
+
+// Shub() still has gymnasium visits to make.
+boolean gymAhead() {
+    return my_path().id == 55 && (available_amount($item[Mer-kin gladiator mask]) == 0
+        || available_amount($item[Mer-kin gladiator tailpiece]) == 0);
+}
+
+boolean [string] freeClaims(string kind) {
+    boolean [string] c;
+    if (kind == "drops") {
+        if (get_property("questS02Monkees") == "unstarted" && item_amount($item[wriggling flytrap pellet]) == 0)
+            c[$location[An Octopus's Garden] + "|" + $monster[Neptune flytrap]] = true;
+        if (item_amount($item[mer-kin prayerbeads]) < 2)
+            c[$location[The Mer-Kin Outpost] + "|" + $monster[Mer-kin healer]] = true;
+        if (outpostAhead() && available_amount($item[pristine fish scale]) < 6)
+            c[$location[The Mer-Kin Outpost] + "|" + $monster[some fish]] = true;
+        if (to_int(get_property("momSeaMonkeeProgress")) < 40)
+            c["|" + $monster[eye in the darkness]] = true;
+    } else if (kind == "banish") {
+        if (outpostAhead() && !(is_banished($monster[Mer-kin raider]) && is_banished($monster[Mer-kin burglar])))
+            c[$location[The Mer-Kin Outpost] + "|" + $monster[Mer-kin raider] + "," + $monster[Mer-kin burglar]] = true;
+        if (get_property("seahorseName") == "" && !is_banished($monster[Mer-kin rustler]))
+            c[$location[The Coral Corral] + "|" + $monster[Mer-kin rustler]] = true;
+        if (gymAhead() && !is_banished($monster[Mer-kin trainer]))
+            c[$location[Mer-kin Gymnasium] + "|" + $monster[Mer-kin trainer]] = true;
+    }
+    return c;
+}
+
+boolean freeClaimMatches(string key, location loc, monster mob) {
+    int bar = index_of(key, "|");
+    if (bar < 0)
+        return false;
+    string where = substring(key, 0, bar);
+    if (where != "" && where != to_string(loc))
+        return false;
+    foreach i, name in split_string(substring(key, bar + 1), ",")
+        if (name == to_string(mob))
+            return true;
+    return false;
+}
+
+// The claim kind a reserved source serves, or "" for an unreserved one.
+string freeClaimKind(string id) {
+    if ($strings[punch, bullets] contains id)
+        return "drops";
+    if (id == "snokebomb")
+        return "banish";
+    return "";
+}
+
+boolean freeClaimHere(string kind, location loc, monster mob) {
+    foreach key in freeClaims(kind)
+        if (freeClaimMatches(key, loc, mob))
+            return true;
+    return false;
+}
+
+// Sweat Bullets casts a substat budget pays for, after `casts` casts today.
+int bczCastsLeft(int budget, int casts) {
+    int n;
+    int left = budget;
+    while (casts + n < 30 && bczCostAt(casts + n) <= left) {
+        left -= bczCostAt(casts + n);
+        n += 1;
+    }
+    return n;
+}
+
+int bricksLeft() {
+    return max(0, min(13 - freeSrcCount("_shadowBricksUsed"), item_amount($item[shadow brick])));
+}
+
+int bulletsLeft() {
+    if (available_amount($item[blood cubic zirconia]) == 0 && !wornOrSocketed($item[blood cubic zirconia]))
+        return 0;
+    return bczCastsLeft(my_basestat($stat[submoxie]) - 22500, freeSrcCount("_bczSweatBulletsCasts"));
+}
+
+// Charges left today. Bullets count by substat budget, an uncapped source as 99.
+int freeSrcLeft(string id) {
+    if (id == "bullets")
+        return bulletsLeft();
+    if (!(freeSources contains id) || freeSources[id].cap <= 0)
+        return 99;
+    return max(0, freeSources[id].cap - freeSrcCount(freeSources[id].capProp));
+}
+
+// Drop claims fall to bricks, then bullets, then punch. Banish claims fall to snokebomb.
+int reservedFrom(string id, int dropClaims, int banishClaims, int bricks, int bullets) {
+    switch (id) {
+    case "bullets":
+        return max(0, dropClaims - bricks);
+    case "punch":
+        return max(0, dropClaims - bricks - bullets);
+    case "snokebomb":
+        return banishClaims;
+    }
+    return 0;
+}
+
+int reserved(string id) {
+    if (freeClaimKind(id) == "")
+        return 0;
+    return reservedFrom(id, count(freeClaims("drops")), count(freeClaims("banish")), bricksLeft(), bulletsLeft());
+}
+
+// Every charge left is reserved and this fight is not one of the claims.
+boolean freeSrcKept(int left, int res, boolean claimedHere) {
+    return res > 0 && left - res <= 0 && !claimedHere;
+}
+
+boolean freeSrcHeld(string id, location loc, monster mob) {
+    int res = reserved(id);
+    if (res == 0)
+        return false;
+    return freeSrcKept(freeSrcLeft(id), res, freeClaimHere(freeClaimKind(id), loc, mob));
+}
+
+// Each reserved source with charges left as id:reserved/left, ! when held from this fight.
+string freeResNote(location loc, monster mob) {
+    string out;
+    foreach i, id in split_string("punch,bullets,snokebomb", ",") {
+        int res = reserved(id);
+        if (res > 0 && freeSrcLeft(id) > 0)
+            out += (out == "" ? "" : ",") + id + ":" + res + "/" + freeSrcLeft(id)
+                + (freeSrcHeld(id, loc, mob) ? "!" : "");
+    }
+    return out;
+}
+
+// The source the allocator would spend on this fight, or "".
+string chooseFree(string need, string page_text) {
+    if ($strings[FREE, TRAIN, WAFFLE, NONE] contains need)
+        return "";
+    string menu = fightSkillMenu(page_text);
+    boolean [string] ready;
+    foreach id in freeSources
+        ready[id] = freeSrcReadyIn(id, menu) && !freeSrcHeld(id, my_location(), last_monster());
+    return chooseFreeFrom(need, ready);
+}
+
+// The _lastCombatActions entry a source writes: sk<id>, it<id> or runaway.
+string freeSrcAction(string id) {
+    if (!(freeSources contains id))
+        return "";
+    foreach i, token in split_string(freeSources[id].gate, " \\+ ") {
+        if (index_of(token, "skill:") == 0)
+            return "sk" + substring(token, 6);
+        if (index_of(token, "throw:") == 0)
+            return "it" + to_int(to_item(substring(token, 6)));
+        if (token == "runaway")
+            return "runaway";
+    }
+    return "";
+}
+
+// Source id for one _lastCombatActions entry, or the entry itself. A runaway is named by runawayAs.
+string freeSrcForAction(string act, string runawayAs) {
+    if (act == "runaway")
+        return runawayAs;
+    foreach id in freeSources
+        if (freeSrcAction(id) != "runaway" && freeSrcAction(id) == act)
+            return id;
+    return act;
+}
+
+// Sources named in a run of _lastCombatActions entries, comma-joined, or "-". A Spring Away right
+// after a Spring Kick joins it with +. A may-miss kill is (miss) unless it is last and the fight ended.
+string freeSrcUsed(string actions, string runawayAs, boolean ended) {
+    string [int] ids;
+    foreach i, act in split_string(actions, ";")
+        if (act != "")
+            ids[count(ids)] = freeSrcForAction(act, runawayAs);
+    string used;
+    foreach i, id in ids {
+        string entry = id;
+        if ((freeSources contains id) && freeSources[id].mayMiss && !(ended && i == count(ids) - 1))
+            entry += "(miss)";
+        if (id == "springaway" && i > 0 && ids[i - 1] == "springkick")
+            used += "+" + entry;
+        else
+            used += (used == "" ? "" : ",") + entry;
+    }
+    return used == "" ? "-" : used;
+}
+
+boolean allocShadowOn() {
+    return get_property("uts_allocShadow") != "false";
+}
+
+boolean allocLiveOn() {
+    return get_property("uts_allocLive") != "false";
+}
+
+// Opens an ALLOC record whose spend is named by `field`; empty when shadow mode is off,
+// between rounds or on a free monster.
+string [int] allocRecord(string field, string page_text) {
+    string [int] rec;
+    if (!allocShadowOn() || current_round() == 0 || free_monster(last_monster()))
+        return rec;
+    string need = fightNeed(my_location(), last_monster());
+    string would = chooseFree(need, page_text);
+    string res = freeResNote(my_location(), last_monster());
+    rec[0] = "ALLOC " + my_location() + " | " + last_monster() + " | need=" + need
+        + " | would=" + (would == "" ? "-" : would) + (res == "" ? "" : " | res=" + res) + " | " + field;
+    rec[1] = get_property("_lastCombatActions");
+    rec[2] = freeSrcBase(would);
+    rec[3] = to_string(freeSrcCount("_banderRunaways"));
+    rec[4] = to_string(freeSrcCount("_navelRunaways"));
+    return rec;
+}
+
+// Opens an ALLOC record before a legacy spend.
+string [int] allocOpen(string legacy, string page_text) {
+    return allocRecord("legacy=" + legacy, page_text);
+}
+
+// A shadow brick is held, under the daily 13, for a live killable non-free monster.
+// Leaves the kill to a ready Assert, Spit or Darts.
+boolean allocLiveBrickReady(string page_text) {
+    return allocLiveOn() && !highShiny() && current_round() > 0 && !free_monster(last_monster())
+        && !freeSrcReady("assert", page_text) && !freeSrcReady("spit", page_text)
+        && !freeSrcReady("darts", page_text)
+        && !instakillImmune(last_monster()) && item_amount($item[shadow brick]) > 0
+        && freeSrcCount("_shadowBricksUsed") < 13;
+}
+
+// Gingerbread Mob Hit is unused, known and affordable for a live monster McTwisted this fight.
+boolean allocLiveMobHitReady() {
+    return allocLiveOn() && !highShiny() && current_round() > 0 && mcTwistThisFight()
+        && !free_monster(last_monster()) && !instakillImmune(last_monster())
+        && get_property("_gingerbreadMobHitUsed") != "true"
+        && have_skill($skill[Gingerbread Mob Hit])
+        && my_mp() >= mp_cost($skill[Gingerbread Mob Hit]);
+}
+
+// Prints the record with what the spend did, same or diff, and the fight's start stamp.
+// Every call in one fight prints the same stamp, so its lines group by it.
+void allocClose(string [int] rec) {
+    if (count(rec) < 5)
+        return;
+    string now = get_property("_lastCombatActions");
+    string delta;
+    if (length(now) >= length(rec[1]) && index_of(now, rec[1]) == 0)
+        delta = substring(now, length(rec[1]));
+    // The counter that moved names a runaway; neither moving means it was not free.
+    string runawayAs = "runaway";
+    if (freeSrcCount("_banderRunaways") > to_int(rec[3]))
+        runawayAs = "boots";
+    else if (freeSrcCount("_navelRunaways") > to_int(rec[4]))
+        runawayAs = "navel";
+    string used = freeSrcUsed(delta, runawayAs, current_round() == 0);
+    string first;
+    foreach i, entry in split_string(used, ",")
+        if (first == "" && (freeSources contains freeSrcBase(entry)))
+            first = freeSrcBase(entry);
+    print(rec[0] + " | used=" + used + " | " + (first == rec[2] ? "same" : "diff")
+        + " | fight=" + get_property("_lastCombatStarted"), "gray");
 }
