@@ -72,11 +72,14 @@ import <seedfinder/seedfinder.ash>;
         return false;
     }
 
-    // Returns true if this monster can prvoide a free fight
+    // True for monsters mafia's data tags FREE, plus the time cop, which it does not tag.
     boolean free_monster(monster mob) {
-        return $monsters[black crayon golem, Black Crayon Beetle, Black Crayon Man, Black Crayon Goblin, Black Crayon Undead Thing, Black Crayon Slime, time cop, sausage goblin,
-            kid who is too old to be Trick-or-Treating,
-            suburban security civilian, vandal kid] contains mob;
+        if (mob == $monster[time cop])
+            return true;
+        foreach i, attr in split_string(mob.attributes, " ")
+            if (attr == "FREE")
+                return true;
+        return false;
     }
 
     item effect_to_item(effect ef){
@@ -121,8 +124,9 @@ import <seedfinder/seedfinder.ash>;
         return n;
     }
 
-    boolean gotPeriled (location loc){
-        string [int] perilLoc = split_string(get_property("_perilLocations"),",");
+    // perilLocations is _perilLocations: ids of the zones the Peridot was used in today.
+    boolean periledIn(string perilLocations, location loc){
+        string [int] perilLoc = split_string(perilLocations,",");
         foreach num in perilLoc{
             if (perilLoc[num].to_int().to_location() == loc)
                 return true;
@@ -130,13 +134,51 @@ import <seedfinder/seedfinder.ash>;
         return false;
     }
 
+    boolean gotPeriled (location loc){
+        return periledIn(get_property("_perilLocations"), loc);
+    }
+
+    // find_seeds() scans all seeds without nine bang potions or the Daily Dungeon rooms,
+    // and aborts past 1000 matches, which the rooms alone pass without two dreadscroll clues.
+    boolean seedfinderSafe(){
+        boolean bangKnown = true;
+        for i from 819 to 827
+            if (get_property("lastBangPotion" + i) == "")
+                bangKnown = false;
+        if (bangKnown)
+            return true;
+        string rooms = get_property("dailyDungeonRooms");
+        if (length(rooms) != 14)
+            return false;
+        for i from 0 to 13
+            if (!contains_text("MDT_? ", char_at(rooms, i)))
+                return false;
+        string key = substring(rooms, 0, 4) + substring(rooms, 7, 9) + substring(rooms, 12, 14);
+        for i from 0 to 7
+            if (!contains_text("MDT", char_at(key, i)))
+                return false;
+        int clues;
+        for x from 1 to 8
+            if (to_int(get_property("dreadScroll" + x)) > 0)
+                clues += 1;
+        return clues >= 2;
+    }
+
+    // Empty while seedfinderSafe() is false.
+    SeedData[int] knownSeeds(){
+        SeedData[int] none;
+        if (!seedfinderSafe())
+            return none;
+        return find_seeds();
+    }
+
     int seedPoss(){
-        SeedData[int] possibleSeeds=find_seeds();
+        SeedData[int] possibleSeeds=knownSeeds();
         return count(possibleSeeds);
     }
 
     boolean isKBandSushiEnough(){
-        SeedData[int] possibleSeeds=find_seeds();
+        SeedData[int] possibleSeeds=knownSeeds();
         if (count(possibleSeeds) == 0)
             return false;
         boolean [string] seen;
@@ -443,7 +485,19 @@ import <seedfinder/seedfinder.ash>;
             + ": " + why + ".", "red");
     }
 
-    string freeKill() {
+    // Daily cap on the Boots' free runaways: buffed weight / 5, rounded down.
+    int bootsRunaways() {
+        return (familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()) / 5;
+    }
+
+    // Sheriff props only where the CCS free-kills with drop=false, and while Assert has casts left.
+    boolean sheriffPropsFor(location loc, int assertCasts, boolean outfit) {
+        return assertCasts < 3 && outfit
+            && (loc == $location[mer-kin gymnasium] || loc == $location[the caliginous abyss]);
+    }
+
+    // Free-kill gear for a fight in loc.
+    string freeKill(location loc) {
         if (have_effect($effect[everything looks red]) == 0 && available_amount($item[everfull dart holster]) > 0)
             return if_equip($item[everfull dart holster]);
         if (highShiny() && my_familiar() != $familiar[Sword of S Words] && have_effect($effect[everything looks yellow]) == 0){
@@ -452,14 +506,17 @@ import <seedfinder/seedfinder.ash>;
         }
         if (highShiny())
             return "";
-        if (to_int(get_property("_assertYourAuthorityCast")) < 3 && sheriffOutfit()
-            && (my_location() == $location[An octopus's garden] || my_location() == $location[mer-kin gymnasium] || my_location() == $location[the caliginous abyss]))
+        if (sheriffPropsFor(loc, to_int(get_property("_assertYourAuthorityCast")), sheriffOutfit()))
             return "Sheriff moustache,Sheriff badge,Sheriff pistol,";
         if (to_int(get_property("_chestXRayUsed")) < 3 && have_item($item[Lil' Doctor&trade; bag]))
             return "Lil' Doctor™ bag,";
         if ((my_basestat($stat[submoxie]) - 22500) > BCZcost("SweatBulletsCasts"))
             return if_equip($item[blood cubic zirconia]);
         return "";
+    }
+
+    string freeKill() {
+        return freeKill(my_location());
     }
 
     string freeRun() {
@@ -471,7 +528,7 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[V for vivala mask]);
         if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
             return if_equip($item[latte lovers member's mug]);
-        if (have_familiar($familiar[Pair of Stomping Boots]) && round((familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()/5)) > get_property("_banderRunaways").to_int()){
+        if (have_familiar($familiar[Pair of Stomping Boots]) && bootsRunaways() > get_property("_banderRunaways").to_int()){
             use_familiar($familiar[Pair of Stomping Boots]);
             return "";
         }
@@ -516,12 +573,18 @@ import <seedfinder/seedfinder.ash>;
         return false;
     }
 
-    void tempEquipment(string maximizerInput, string itemInput){
+    boolean slotsHold(item [slot] selection, item it) {
+        foreach sl in selection
+            if (selection[sl] == it)
+                return true;
+        return false;
+    }
+
+    // Slots for a comma-separated item list. An accessory takes acc1, else the first free of acc2
+    // and acc3, else it is dropped. The maximizer forces one copy per item, so a repeat takes no slot.
+    item [slot] equipSlots(string itemInput, boolean doubleFist, boolean reserveMobius) {
         string [int] itemMap = split_string(itemInput, ",");
         item [slot] equipmentSelection;
-        //Assigning items to slots
-        if (have_equipped($item[Elf Guard SCUBA tank]))
-            cli_execute("unequip Elf Guard SCUBA tank");
         foreach str in itemMap{
             if (itemMap[str] == "")
                 continue;
@@ -529,29 +592,39 @@ import <seedfinder/seedfinder.ash>;
                 print("String to item mismatch, item is " + itemMap[str] + ", notify fart scauce","red");
                 continue;
             }
-            if (equipmentSelection[itemMap[str].to_item().to_slot()] == $item[none]){
+            boolean held = slotsHold(equipmentSelection, to_item(itemMap[str]));
+            if (!held && equipmentSelection[itemMap[str].to_item().to_slot()] == $item[none]){
                 equipmentSelection[itemMap[str].to_item().to_slot()] = itemMap[str].to_item(); 
                 continue;
             }
-            if (to_slot(to_item(itemMap[str])) == $slot[weapon] && have_skill($skill[Double-Fisted Skull Smashing])){
+            if (!held && to_slot(to_item(itemMap[str])) == $slot[weapon] && doubleFist){
                 if (equipmentSelection[$slot[off-hand]] == $item[none]){
                     equipmentSelection[$slot[off-hand]] = itemMap[str].to_item(); 
                     continue;
                 }
             }
-            if (to_slot(to_item(itemMap[str])) == $slot[acc1]){
+            if (!held && to_slot(to_item(itemMap[str])) == $slot[acc1]){
                 foreach sl in $slots[acc2,acc3]{
                     if (equipmentSelection[sl] == $item[none]){
                         equipmentSelection[sl] = itemMap[str].to_item(); 
-                        continue;
+                        break;
                     }
                 }
             }
-            if (highShiny() && MobiusNCReady()){
+            if (reserveMobius && !slotsHold(equipmentSelection, $item[M&ouml;bius ring])){
                 if (equipmentSelection[$slot[acc3]] == $item[none])
                     equipmentSelection[$slot[acc3]] = $item[M&ouml;bius ring];
             }
         }
+        return equipmentSelection;
+    }
+
+    void tempEquipment(string maximizerInput, string itemInput){
+        if (have_equipped($item[Elf Guard SCUBA tank]))
+            cli_execute("unequip Elf Guard SCUBA tank");
+        item [slot] equipmentSelection = equipSlots(itemInput,
+            have_skill($skill[Double-Fisted Skull Smashing]),
+            highShiny() && MobiusNCReady() && available_amount($item[M&ouml;bius ring]) > 0);
         foreach slo in equipmentSelection{
             if (available_amount(equipmentSelection[slo]) == 0)
                 abort("Missing " + equipmentSelection[slo]);
@@ -701,10 +774,12 @@ import <seedfinder/seedfinder.ash>;
     }
 
     void dreadSeedCheck(){
+        if (!seedfinderSafe())
+            return;
         if (seedPoss() == 1){
             for x from 1 to 8{
                 if (get_property("dreadScroll" + x) == 0){
-                    SeedData[int] possibleSeeds=find_seeds();
+                    SeedData[int] possibleSeeds=knownSeeds();
                     foreach idx, seed in possibleSeeds 
                         set_property("dreadScroll" + x,possibleSeeds[idx].dreadscroll[x-1]);
                 }

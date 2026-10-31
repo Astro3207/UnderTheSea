@@ -15,7 +15,7 @@ void free_kill(string ptext, boolean drop) {
                 use_skill($skill[Darts: Aim for the Bullseye]);
             }
         }
-        if (contains_text(ptext, "Spit jurassic acid")
+        if (current_round() > 0 && contains_text(ptext, "Spit jurassic acid")
             && my_location() != $location[mer-kin colosseum])
                 use_skill($skill[Spit jurassic acid]);
         return;
@@ -28,6 +28,11 @@ void free_kill(string ptext, boolean drop) {
     foreach freeskill in $skills[Spit jurassic acid, Assert your Authority,
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
         BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
+        if (current_round() == 0)
+            return;
+        // Assert your Authority kills for meat only, no items.
+        if (freeskill == $skill[Assert your Authority] && drop)
+            continue;
         if (my_location() == $location[mer-kin colosseum]
             && freeskill != $skill[Club 'Em Back in Time])
             continue;
@@ -43,6 +48,7 @@ void free_kill(string ptext, boolean drop) {
     }
 
     foreach freecombat in $items[shadow brick, groveling gravel] {
+        if (current_round() == 0) return;
         if (item_amount(freecombat) == 0) continue;
         if (freecombat == $item[groveling gravel] && drop) continue;
         if (freecombat == $item[shadow brick] && to_int(get_property("_shadowBricksUsed")) == 13) continue;
@@ -73,7 +79,7 @@ void free_run_any(string ptext, boolean banish) {
     if (have_equipped($item[greatest american pants]) && (to_int(get_property("_navelRunaways")) < 3 || (to_int(get_property("_navelRunaways")) < 10 && highShiny())))
         runaway();
     if (current_round() == 0) return;
-    if (my_familiar() == $familiar[Pair of Stomping Boots] && round((familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()/5)) > get_property("_banderRunaways").to_int())
+    if (my_familiar() == $familiar[Pair of Stomping Boots] && bootsRunaways() > get_property("_banderRunaways").to_int())
         runaway();
 
     foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Release the Boots, Feel Hatred, snokebomb] {
@@ -371,6 +377,17 @@ void main(int round, monster mob, string page_text) {
         && last_monster() == $monster[Yog-Urt, Elder Goddess of Hatred]) {
         yogUrtFight();
         return;
+    }
+    // With the ball worn and no unthrown waffle, a banished Corral native gets a non-banishing run.
+    if (current_round() > 0 && my_location() == $location[The Coral Corral]
+        && have_equipped($item[miniature crystal ball])
+        && $monsters[sea cow, sea cowboy, Mer-kin rustler] contains last_monster()
+        && is_banished(last_monster())
+        && !(item_amount($item[waffle]) > 0
+            && !contains_text(get_property("_lastCombatActions"), "it11311"))) {
+        free_run_any(page_text, false);
+        if (current_round() == 0)
+            return;
     }
     
     if (diverForce(last_monster(), page_text))
@@ -735,7 +752,15 @@ void main(int round, monster mob, string page_text) {
             } else if (item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea lasso]) > 0 && to_int(get_property("lassoTrainingCount")) == 20) {
                 if (last_monster().phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
-                if (get_property("seahorseName") == "") {
+                // A banished native gets the unthrown waffle first and never a second banish.
+                boolean nativeBanished = $monsters[sea cow, sea cowboy, Mer-kin rustler] contains last_monster()
+                    && is_banished(last_monster());
+                if (nativeBanished && current_round() > 0 && item_amount($item[waffle]) > 0
+                    && !contains_text(get_property("_lastCombatActions"), "it11311")) {
+                    throw_item($item[waffle]);
+                    run_combat();
+                }
+                if (get_property("seahorseName") == "" && !nativeBanished) {
                     if ((!contains_text(get_property("banishedMonsters"), "sea cow:")
                         && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
                         || (!contains_text(get_property("banishedMonsters"), "Mer-kin rustler")
@@ -945,7 +970,7 @@ void main(int round, monster mob, string page_text) {
                 && item_amount($item[mer-kin killscroll]) > 0
                 && current_round() > 0 && last_monster().phylum == $phylum[mer-kin])
                 throw_item($item[mer-kin killscroll]);
-            if (get_property("skateParkStatus") == "war"){
+            if (get_property("skateParkStatus") == "war" && get_property("_utsGymForceNC") == "true"){
                 foreach sk in $skills[Launch spikolodon spikes, MCHUGELARGE avalanche]
                     use_if_have_skill(page_text, sk);
             }
