@@ -420,8 +420,10 @@ string DropsItems;
             string conditional;
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += "monodent of the sea,";
-            tempEquipment("item drop,sea","shark jumper,scale-mail underwear,black glass,"+ if_equip($item[peridot of peril]) 
-                + freeKill() + bathysphere($item[toy cupid bow]) + conditional);
+            // A Peridot spent here frees its slot for the Sheriff props. The Monodent goes before the pistol, so it keeps a hand.
+            tempEquipment("item drop,sea","shark jumper,scale-mail underwear,black glass,"
+                + (gotPeriled($location[The Caliginous Abyss]) ? "" : if_equip($item[peridot of peril]))
+                + conditional + freeKill($location[The Caliginous Abyss]) + bathysphere($item[toy cupid bow]));
             adv1($location[The Caliginous Abyss]);
         }
 
@@ -705,10 +707,11 @@ string DropsItems;
         post_adv();
     }
 
-    void gymnasium(){
+    // forceNC dresses the gear whose gym casts force a Skate Park noncombat.
+    void gymnasium(boolean forceNC){
         use_familiar("combat");
         string conditional;
-            if (get_property("skateParkStatus") == "war"){
+            if (forceNC && get_property("skateParkStatus") == "war"){
                 if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
                 else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
@@ -717,11 +720,17 @@ string DropsItems;
                 }
             }
         conditional += baseball_equip();
-        tempEquipment("combat,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + delay() + freeKill() + bathysphere($item[none]) + conditional);
+        tempEquipment("combat,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + delay() + freeKill(forceNC ? my_location() : $location[Mer-kin Gymnasium]) + bathysphere($item[none]) + conditional);
         mood("combat");
         if (get_property("noncombatForcerActive") == "true")
             abort("Sneak active while trying to adventure in gymnasium, get rid of it");
-        adv($location[Mer-kin Gymnasium]);
+        // The CCS casts the forcers only while this reads true.
+        set_property("_utsGymForceNC", to_string(forceNC));
+        try {
+            adv($location[Mer-kin Gymnasium]);
+        } finally {
+            set_property("_utsGymForceNC", "false");
+        }
     }
 
     void skatePark() {
@@ -735,7 +744,7 @@ string DropsItems;
         else
             it = $item[skate blade];
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
-            gymnasium();
+            gymnasium(true);
         else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
             cli_execute("alliedradio misc sniper");
         if ((pulls_remaining( ) > reservedPulls() || it == $item[skate board]) && available_amount(it) == 0)
@@ -760,8 +769,10 @@ string DropsItems;
         if (available_amount($item[black glass]) == 0) 
             buy($coinmaster[Big Brother], 1, $item[black glass]);
         use_familiar("-combat");
-        tempEquipment("item drop,sea","shark jumper,scale-mail underwear,black glass,peridot of peril,monodent of the sea,"
-            + bathysphere($item[none]) + freeKill());
+        // A Peridot spent here frees its slot for the Sheriff props.
+        tempEquipment("item drop,sea","shark jumper,scale-mail underwear,black glass,"
+            + (gotPeriled($location[The Caliginous Abyss]) ? "" : "peridot of peril,") + "monodent of the sea,"
+            + bathysphere($item[none]) + freeKill($location[The Caliginous Abyss]));
         if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) 
             use($item[comb jelly]);
         adv($location[The Caliginous Abyss]);
@@ -907,7 +918,7 @@ string DropsItems;
         string trainer = to_int(get_property("lassoTrainingCount")) < 20
             ? if_equip($item[sea cowboy hat]) + if_equip($item[sea chaps]) : "";
         tempEquipment("item drop", if_equip($item[Flash Liquidizer Ultra Dousing Accessory]) + "monodent of the sea," + trainer
-            + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]) + baseball_equip());
+            + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + riftFamiliarGear() + baseball_equip());
     }
 
     void shadowRift() {
@@ -1119,7 +1130,7 @@ string DropsItems;
             }
         }
         if (get_property("dreadScroll5") == "0" || get_property("dreadScroll2") == "0"){
-            gymnasium();
+            gymnasium(false);
         }
     }
 
@@ -1229,9 +1240,6 @@ string DropsItems;
                     if (highShiny())
                         conditional += "monodent of the sea,";
                 }
-
-                if (get_property("_assertYourAuthorityCast").to_int() < 3 && sheriffOutfit() && !highShiny())
-                    conditional += "Sheriff moustache,Sheriff badge,Sheriff pistol,";
 
                 tempEquipment(DropsItems, bathysphere($item[toy cupid bow]) + conditional + freeKill());
                 if (to_int(get_property("rwbMonsterCount")) == 0)
@@ -1710,8 +1718,12 @@ string DropsItems;
             while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
                 shadowRift();
 
-            if ((my_turncount( ) > 25 || !have_item($item[Miniature crystal ball])) && !highShiny() && have_item($item[closed-circuit pay phone])){
-                while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false"))
+            // Before turn 26, a run that wears the crystal ball in the Corral takes the day's Shadow Affinity
+            // but keeps what is left for dodges.
+            boolean keepAffinity = my_turncount() <= 25 && corralWearsBall();
+            if (!highShiny() && have_item($item[closed-circuit pay phone])){
+                while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false")
+                    && !(keepAffinity && get_property("_shadowAffinityToday") == "true"))
                     shadowRift();
             }
 
@@ -1771,6 +1783,12 @@ string DropsItems;
     void seahorseTaming(){
         step("phase: seahorse taming");
         while (get_property("seahorseName") == "") {
+            // Rift fights in the crystal ball meet the Rift's own prediction, which clears the Corral's lock.
+            int dodges = 0;
+            while (corralLockToBreak() && riftDodgeAffinity() && dodges < 4) {
+                shadowRift();
+                dodges += 1;
+            }
             if (my_path().id == 0){
                 retrieve_item(3, $item[sea cowbell]);
                 retrieve_item($item[sea lasso]);
@@ -1810,14 +1828,6 @@ string DropsItems;
                 abort("need more cowbells");
 
             adv($location[The Coral Corral]);
-            // Burn shadow affinity if crystal ball shows non-seahorse incoming
-            if (contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral")
-                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse")
-                && have_effect($effect[shadow affinity]) > 0 && available_amount($item[miniature crystal ball]) > 0)
-                shadowRift();
-            while (have_effect($effect[shadow affinity]) > 0 && item_amount($item[shadow brick]) == 0
-                && !contains_text(to_lower_case(get_property("crystalBallPredictions")), "the coral corral:wild seahorse") && available_amount($item[miniature crystal ball]) > 0)
-                shadowRift();
         }
     }
 
@@ -2135,7 +2145,7 @@ string DropsItems;
                                 skatePark();
                             } else if (item_amount($item[Mer-kin thighguard]) == 0
                                 || item_amount($item[Mer-kin headguard]) == 0) {
-                                gymnasium();
+                                gymnasium(false);
                                 if (get_property("_skateBuff1") == "false" && !highShiny()){
                                     equipSwimTrunks();
                                     visit_url("sea_skatepark.php?action=state2buff1");
@@ -2322,7 +2332,7 @@ string DropsItems;
             // while either is missing.
             while (available_amount($item[Mer-kin gladiator mask]) == 0
                 || available_amount($item[Mer-kin gladiator tailpiece]) == 0) {
-                gymnasium();
+                gymnasium(false);
                 if (item_amount($item[Mer-kin thighguard]) > 0
                     && item_amount($item[Mer-kin headguard]) > 0) {
                     equip($slot[hat], $item[none]);
