@@ -2307,8 +2307,8 @@ void pullChecklist() {
 }
 
 // ─── FREE FIGHT SOURCES ───────────────────────────────────────────────────────
-// Shadow mode, except the CCS sites gated by allocLive*Ready(). uts_allocShadow=false
-// turns off every ALLOC line, live ones included; uts_allocLive=false turns off the live spends.
+// The CCS keeps its own kill and run order. The allocator acts at freeRunFallback()'s call sites, the gym
+// shadow brick and the McTwist Mob Hit. uts_allocLive=false turns all three off.
 
 record freeSrc {
     string kind;        // kill, run or force
@@ -2638,11 +2638,10 @@ string chooseFreeFrom(string need, boolean [string] ready) {
     return "";
 }
 
-// The source id in a chosen or used entry: darts(miss) names darts, springkick+springaway springkick.
+// The source id in a chosen entry such as brick(fallback).
 string freeSrcBase(string entry) {
-    foreach mark in $strings[(, +]
-        if (index_of(entry, mark) > 0)
-            entry = substring(entry, 0, index_of(entry, mark));
+    if (index_of(entry, "(") > 0)
+        entry = substring(entry, 0, index_of(entry, "("));
     return entry;
 }
 
@@ -2774,18 +2773,6 @@ boolean freeSrcHeld(string id, location loc, monster mob) {
     return freeSrcKept(freeSrcLeft(id), res, freeClaimHere(freeClaimKind(id), loc, mob));
 }
 
-// Each reserved source with charges left as id:reserved/left, ! when held from this fight.
-string freeResNote(location loc, monster mob) {
-    string out;
-    foreach i, id in split_string("punch,bullets,snokebomb", ",") {
-        int res = reserved(id);
-        if (res > 0 && freeSrcLeft(id) > 0)
-            out += (out == "" ? "" : ",") + id + ":" + res + "/" + freeSrcLeft(id)
-                + (freeSrcHeld(id, loc, mob) ? "!" : "");
-    }
-    return out;
-}
-
 // The source the allocator would spend on this fight, or "".
 string chooseFree(string need, string page_text) {
     if ($strings[FREE, TRAIN, WAFFLE, NONE] contains need)
@@ -2797,80 +2784,8 @@ string chooseFree(string need, string page_text) {
     return chooseFreeFrom(need, ready);
 }
 
-// The _lastCombatActions entry a source writes: sk<id>, it<id> or runaway.
-string freeSrcAction(string id) {
-    if (!(freeSources contains id))
-        return "";
-    foreach i, token in split_string(freeSources[id].gate, " \\+ ") {
-        if (index_of(token, "skill:") == 0)
-            return "sk" + substring(token, 6);
-        if (index_of(token, "throw:") == 0)
-            return "it" + to_int(to_item(substring(token, 6)));
-        if (token == "runaway")
-            return "runaway";
-    }
-    return "";
-}
-
-// Source id for one _lastCombatActions entry, or the entry itself. A runaway is named by runawayAs.
-string freeSrcForAction(string act, string runawayAs) {
-    if (act == "runaway")
-        return runawayAs;
-    foreach id in freeSources
-        if (freeSrcAction(id) != "runaway" && freeSrcAction(id) == act)
-            return id;
-    return act;
-}
-
-// Sources named in a run of _lastCombatActions entries, comma-joined, or "-". A Spring Away right
-// after a Spring Kick joins it with +. A may-miss kill is (miss) unless it is last and the fight ended.
-string freeSrcUsed(string actions, string runawayAs, boolean ended) {
-    string [int] ids;
-    foreach i, act in split_string(actions, ";")
-        if (act != "")
-            ids[count(ids)] = freeSrcForAction(act, runawayAs);
-    string used;
-    foreach i, id in ids {
-        string entry = id;
-        if ((freeSources contains id) && freeSources[id].mayMiss && !(ended && i == count(ids) - 1))
-            entry += "(miss)";
-        if (id == "springaway" && i > 0 && ids[i - 1] == "springkick")
-            used += "+" + entry;
-        else
-            used += (used == "" ? "" : ",") + entry;
-    }
-    return used == "" ? "-" : used;
-}
-
-boolean allocShadowOn() {
-    return get_property("uts_allocShadow") != "false";
-}
-
 boolean allocLiveOn() {
     return get_property("uts_allocLive") != "false";
-}
-
-// Opens an ALLOC record whose spend is named by `field`; empty when shadow mode is off,
-// between rounds or on a free monster.
-string [int] allocRecord(string field, string page_text) {
-    string [int] rec;
-    if (!allocShadowOn() || current_round() == 0 || free_monster(last_monster()))
-        return rec;
-    string need = fightNeed(my_location(), last_monster());
-    string would = chooseFree(need, page_text);
-    string res = freeResNote(my_location(), last_monster());
-    rec[0] = "ALLOC " + my_location() + " | " + last_monster() + " | need=" + need
-        + " | would=" + (would == "" ? "-" : would) + (res == "" ? "" : " | res=" + res) + " | " + field;
-    rec[1] = get_property("_lastCombatActions");
-    rec[2] = freeSrcBase(would);
-    rec[3] = to_string(freeSrcCount("_banderRunaways"));
-    rec[4] = to_string(freeSrcCount("_navelRunaways"));
-    return rec;
-}
-
-// Opens an ALLOC record before a legacy spend.
-string [int] allocOpen(string legacy, string page_text) {
-    return allocRecord("legacy=" + legacy, page_text);
 }
 
 // A shadow brick is held, under the daily 13, for a live killable non-free monster.
@@ -2892,26 +2807,47 @@ boolean allocLiveMobHitReady() {
         && my_mp() >= mp_cost($skill[Gingerbread Mob Hit]);
 }
 
-// Prints the record with what the spend did, same or diff, and the fight's start stamp.
-// Every call in one fight prints the same stamp, so its lines group by it.
-void allocClose(string [int] rec) {
-    if (count(rec) < 5)
+// Uses a source through the skill or thrown item in its gate. False when the gate names neither.
+boolean freeSrcSpend(string id) {
+    if (!(freeSources contains id))
+        return false;
+    foreach i, token in split_string(freeSources[id].gate, " \\+ ") {
+        if (index_of(token, "skill:") == 0) {
+            buffer cast = use_skill(to_skill(to_int(substring(token, 6))));
+            return true;
+        }
+        if (index_of(token, "throw:") == 0) {
+            buffer thrown = throw_item(to_item(substring(token, 6)));
+            return true;
+        }
+    }
+    return false;
+}
+
+// CCS, where a failed run is followed by a paid kill: a fight that still needs a run and has none
+// ready gets the allocator's fallback kill. A curveballed monster is left to that paid kill.
+void freeRunFallback(string page_text) {
+    if (!allocLiveOn() || highShiny() || current_round() == 0 || free_monster(last_monster()))
         return;
-    string now = get_property("_lastCombatActions");
-    string delta;
-    if (length(now) >= length(rec[1]) && index_of(now, rec[1]) == 0)
-        delta = substring(now, length(rec[1]));
-    // The counter that moved names a runaway; neither moving means it was not free.
-    string runawayAs = "runaway";
-    if (freeSrcCount("_banderRunaways") > to_int(rec[3]))
-        runawayAs = "boots";
-    else if (freeSrcCount("_navelRunaways") > to_int(rec[4]))
-        runawayAs = "navel";
-    string used = freeSrcUsed(delta, runawayAs, current_round() == 0);
-    string first;
-    foreach i, entry in split_string(used, ",")
-        if (first == "" && (freeSources contains freeSrcBase(entry)))
-            first = freeSrcBase(entry);
-    print(rec[0] + " | used=" + used + " | " + (first == rec[2] ? "same" : "diff")
-        + " | fight=" + get_property("_lastCombatStarted"), "gray");
+    if (get_property("_curveballMonster") == to_string(last_monster())
+        && to_int(get_property("_curveballFightsLeft")) > 0)
+        return;
+    string need = fightNeed(my_location(), last_monster());
+    if (!($strings[RUN, RUN_BANISH] contains need))
+        return;
+    string menu = fightSkillMenu(page_text);
+    boolean [string] ready;
+    foreach id in freeSources
+        ready[id] = freeSrcReadyIn(id, menu) && !freeSrcHeld(id, my_location(), last_monster());
+    // Gravel keeps no drops, so some fish keeps its pristine scale chance while scales are short.
+    if (last_monster() == $monster[some fish] && available_amount($item[pristine fish scale]) < 6)
+        ready["gravel"] = false;
+    string pick = chooseFreeFrom(need, ready);
+    if (!contains_text(pick, "(fallback)"))
+        return;
+    string id = freeSrcBase(pick);
+    if (id == "darts" && to_int(get_property("_dartsLeft")) == 0)
+        return;
+    print("Free fight: no run left, " + id + " on the " + last_monster() + ".", "gray");
+    boolean spent = freeSrcSpend(id);
 }

@@ -2,7 +2,7 @@ import UnderTheSeaGlobals.ash;
 
 // Attempt a free kill using available skills/items.
 // Pass drop=true to skip items that interfere with item drops.
-void freeKillLegacy(string ptext, boolean drop) {
+void free_kill(string ptext, boolean drop) {
     if (free_monster(last_monster()))
         return;
     if (highShiny()){
@@ -67,7 +67,7 @@ void freeKillLegacy(string ptext, boolean drop) {
 
 // Attempt a free run using available skills/items.
 // Pass banish=true to allow banishing skills/items.
-void freeRunLegacy(string ptext, boolean banish) {
+void free_run_any(string ptext, boolean banish) {
     // Don't free run against an already free monster
     if (free_monster(last_monster()))
         return;
@@ -112,20 +112,6 @@ void freeRunLegacy(string ptext, boolean banish) {
     }
 }
 
-// freeKillLegacy with an ALLOC shadow line around it.
-void free_kill(string ptext, boolean drop) {
-    string [int] shadow = allocOpen("kill(drop=" + drop + (highShiny() ? ",hi" : "") + ")", ptext);
-    freeKillLegacy(ptext, drop);
-    allocClose(shadow);
-}
-
-// freeRunLegacy with an ALLOC shadow line around it.
-void free_run_any(string ptext, boolean banish) {
-    string [int] shadow = allocOpen("run(banish=" + banish + ")", ptext);
-    freeRunLegacy(ptext, banish);
-    allocClose(shadow);
-}
-
 // free_run_any, skipped for free fights.
 void free_run(string ptext, boolean banish) {
     if (free_monster(last_monster()))
@@ -137,18 +123,16 @@ void free_run(string ptext, boolean banish) {
 void gymBrickFirst(string ptext) {
     if (!allocLiveBrickReady(ptext))
         return;
-    string [int] rec = allocRecord("live=brick", ptext);
+    print("Free fight: shadow brick on the " + last_monster() + ".", "gray");
     buffer thrown = throw_item($item[shadow brick]);
-    allocClose(rec);
 }
 
 // Casts Gingerbread Mob Hit on a McTwisted monster when allocLiveMobHitReady() allows.
 void mcTwistMobHit(string ptext) {
     if (!allocLiveMobHitReady())
         return;
-    string [int] rec = allocRecord("live=mobhit", ptext);
+    print("Free fight: Gingerbread Mob Hit on the McTwisted " + last_monster() + ".", "gray");
     buffer hit = use_skill($skill[Gingerbread Mob Hit]);
-    allocClose(rec);
 }
 
 // BCZ refracted gaze helper — checks stat threshold before casting
@@ -491,6 +475,7 @@ void main(int round, monster mob, string page_text) {
             use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
             darts();
+            freeRunFallback(page_text);
             cleanUp();
             break;
 
@@ -556,6 +541,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                 } else {
                     free_run(page_text, true);
+                    freeRunFallback(page_text);
                 }
             }
             cleanUp();
@@ -630,6 +616,7 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 darts();
                 free_run(page_text, true);
+                freeRunFallback(page_text);
                 cleanUp();
             } else {
                 free_kill(page_text, true);
