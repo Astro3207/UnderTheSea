@@ -119,6 +119,22 @@ void free_run(string ptext, boolean banish) {
     free_run_any(ptext, banish);
 }
 
+// Throws a shadow brick before the gym's legacy kill when allocLiveBrickReady() allows.
+void gymBrickFirst(string ptext) {
+    if (!allocLiveBrickReady(ptext))
+        return;
+    print("Free fight: shadow brick on the " + last_monster() + ".", "gray");
+    buffer thrown = throw_item($item[shadow brick]);
+}
+
+// Casts Gingerbread Mob Hit on a McTwisted monster when allocLiveMobHitReady() allows.
+void mcTwistMobHit(string ptext) {
+    if (!allocLiveMobHitReady())
+        return;
+    print("Free fight: Gingerbread Mob Hit on the McTwisted " + last_monster() + ".", "gray");
+    buffer hit = use_skill($skill[Gingerbread Mob Hit]);
+}
+
 // BCZ refracted gaze helper — checks stat threshold before casting
 boolean bcz_gaze_ready() {
     if (get_property("NCtoC") == "true")
@@ -459,6 +475,7 @@ void main(int round, monster mob, string page_text) {
             use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
             darts();
+            freeRunFallback(page_text);
             cleanUp();
             break;
 
@@ -524,6 +541,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                 } else {
                     free_run(page_text, true);
+                    freeRunFallback(page_text);
                 }
             }
             cleanUp();
@@ -598,6 +616,7 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 darts();
                 free_run(page_text, true);
+                freeRunFallback(page_text);
                 cleanUp();
             } else {
                 free_kill(page_text, true);
@@ -722,6 +741,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                     use_skill($skill[Do an epic McTwist!]);
+                    mcTwistMobHit(page_text);
                     free_kill(page_text, true);
                     cleanUp();
                 } else {
@@ -746,6 +766,7 @@ void main(int round, monster mob, string page_text) {
                             abort("Software glitch failed");
                         }
                     }
+                    mcTwistMobHit(page_text);
                     free_kill(page_text, true);
                     cleanUp();
                 }
@@ -979,7 +1000,9 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[BCZ: Refracted Gaze]);
             } else {
                 free_run(page_text, true);
-                free_kill(page_text, false);
+                gymBrickFirst(page_text);
+                if (current_round() > 0)
+                    free_kill(page_text, false);
             }
             cleanUp();
             break;
