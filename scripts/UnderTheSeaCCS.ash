@@ -15,7 +15,7 @@ void free_kill(string ptext, boolean drop) {
                 use_skill($skill[Darts: Aim for the Bullseye]);
             }
         }
-        if (contains_text(ptext, "Spit jurassic acid")
+        if (current_round() > 0 && contains_text(ptext, "Spit jurassic acid")
             && my_location() != $location[mer-kin colosseum])
                 use_skill($skill[Spit jurassic acid]);
         return;
@@ -28,6 +28,11 @@ void free_kill(string ptext, boolean drop) {
     foreach freeskill in $skills[Spit jurassic acid, Assert your Authority,
         Club 'Em Back in Time, Darts: Aim for the Bullseye,
         BCZ: Sweat Bullets, Chest X-Ray, Shattering Punch, Gingerbread Mob Hit] {
+        if (current_round() == 0)
+            return;
+        // Assert your Authority kills for meat only, no items.
+        if (freeskill == $skill[Assert your Authority] && drop)
+            continue;
         if (my_location() == $location[mer-kin colosseum]
             && freeskill != $skill[Club 'Em Back in Time])
             continue;
@@ -43,6 +48,7 @@ void free_kill(string ptext, boolean drop) {
     }
 
     foreach freecombat in $items[shadow brick, groveling gravel] {
+        if (current_round() == 0) return;
         if (item_amount(freecombat) == 0) continue;
         if (freecombat == $item[groveling gravel] && drop) continue;
         if (freecombat == $item[shadow brick] && to_int(get_property("_shadowBricksUsed")) == 13) continue;
@@ -73,7 +79,7 @@ void free_run_any(string ptext, boolean banish) {
     if (have_equipped($item[greatest american pants]) && (to_int(get_property("_navelRunaways")) < 3 || (to_int(get_property("_navelRunaways")) < 10 && highShiny())))
         runaway();
     if (current_round() == 0) return;
-    if (my_familiar() == $familiar[Pair of Stomping Boots] && round((familiar_weight($familiar[Pair of Stomping Boots]) + weight_adjustment()/5)) > get_property("_banderRunaways").to_int())
+    if (my_familiar() == $familiar[Pair of Stomping Boots] && bootsRunaways() > get_property("_banderRunaways").to_int())
         runaway();
 
     foreach freeskill in $skills[spring away, Bowl a Curveball, creepy grin, Throw Latte on Opponent, Release the Boots, Feel Hatred, snokebomb] {
@@ -111,6 +117,22 @@ void free_run(string ptext, boolean banish) {
     if (free_monster(last_monster()))
         return;
     free_run_any(ptext, banish);
+}
+
+// Throws a shadow brick before the gym's legacy kill when allocLiveBrickReady() allows.
+void gymBrickFirst(string ptext) {
+    if (!allocLiveBrickReady(ptext))
+        return;
+    print("Free fight: shadow brick on the " + last_monster() + ".", "gray");
+    buffer thrown = throw_item($item[shadow brick]);
+}
+
+// Casts Gingerbread Mob Hit on a McTwisted monster when allocLiveMobHitReady() allows.
+void mcTwistMobHit(string ptext) {
+    if (!allocLiveMobHitReady())
+        return;
+    print("Free fight: Gingerbread Mob Hit on the McTwisted " + last_monster() + ".", "gray");
+    buffer hit = use_skill($skill[Gingerbread Mob Hit]);
 }
 
 // BCZ refracted gaze helper — checks stat threshold before casting
@@ -372,6 +394,17 @@ void main(int round, monster mob, string page_text) {
         yogUrtFight();
         return;
     }
+    // With the ball worn and no unthrown waffle, a banished Corral native gets a non-banishing run.
+    if (current_round() > 0 && my_location() == $location[The Coral Corral]
+        && have_equipped($item[miniature crystal ball])
+        && $monsters[sea cow, sea cowboy, Mer-kin rustler] contains last_monster()
+        && is_banished(last_monster())
+        && !(item_amount($item[waffle]) > 0
+            && !contains_text(get_property("_lastCombatActions"), "it11311"))) {
+        free_run_any(page_text, false);
+        if (current_round() == 0)
+            return;
+    }
     
     if (diverForce(last_monster(), page_text))
         return;
@@ -442,6 +475,7 @@ void main(int round, monster mob, string page_text) {
             use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
             darts();
+            freeRunFallback(page_text);
             cleanUp();
             break;
 
@@ -507,6 +541,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                 } else {
                     free_run(page_text, true);
+                    freeRunFallback(page_text);
                 }
             }
             cleanUp();
@@ -581,6 +616,7 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 darts();
                 free_run(page_text, true);
+                freeRunFallback(page_text);
                 cleanUp();
             } else {
                 free_kill(page_text, true);
@@ -705,6 +741,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
                     use_skill($skill[Do an epic McTwist!]);
+                    mcTwistMobHit(page_text);
                     free_kill(page_text, true);
                     cleanUp();
                 } else {
@@ -729,13 +766,22 @@ void main(int round, monster mob, string page_text) {
                             abort("Software glitch failed");
                         }
                     }
+                    mcTwistMobHit(page_text);
                     free_kill(page_text, true);
                     cleanUp();
                 }
             } else if (item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea lasso]) > 0 && to_int(get_property("lassoTrainingCount")) == 20) {
                 if (last_monster().phylum == $phylum[plant])
                     use_skill($skill[Tear Away your Pants!]);
-                if (get_property("seahorseName") == "") {
+                // A banished native gets the unthrown waffle first and never a second banish.
+                boolean nativeBanished = $monsters[sea cow, sea cowboy, Mer-kin rustler] contains last_monster()
+                    && is_banished(last_monster());
+                if (nativeBanished && current_round() > 0 && item_amount($item[waffle]) > 0
+                    && !contains_text(get_property("_lastCombatActions"), "it11311")) {
+                    throw_item($item[waffle]);
+                    run_combat();
+                }
+                if (get_property("seahorseName") == "" && !nativeBanished) {
                     if ((!contains_text(get_property("banishedMonsters"), "sea cow:")
                         && !contains_text(get_property("banishedMonsters"), "sea cowboy"))
                         || (!contains_text(get_property("banishedMonsters"), "Mer-kin rustler")
@@ -945,7 +991,7 @@ void main(int round, monster mob, string page_text) {
                 && item_amount($item[mer-kin killscroll]) > 0
                 && current_round() > 0 && last_monster().phylum == $phylum[mer-kin])
                 throw_item($item[mer-kin killscroll]);
-            if (get_property("skateParkStatus") == "war"){
+            if (get_property("skateParkStatus") == "war" && get_property("_utsGymForceNC") == "true"){
                 foreach sk in $skills[Launch spikolodon spikes, MCHUGELARGE avalanche]
                     use_if_have_skill(page_text, sk);
             }
@@ -954,7 +1000,9 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[BCZ: Refracted Gaze]);
             } else {
                 free_run(page_text, true);
-                free_kill(page_text, false);
+                gymBrickFirst(page_text);
+                if (current_round() > 0)
+                    free_kill(page_text, false);
             }
             cleanUp();
             break;
