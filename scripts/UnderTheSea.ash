@@ -645,10 +645,10 @@ string DropsItems;
                     use($item[portable mayo clinic]);
                     retrieve_item($item[Mayo Minder&trade;]);
                 }
-                if (get_workshed() == $item[portable mayo clinic] && (storage_amount($item[mayodiol]) < 30 || storage_amount($item[Mayoflex]) < 30)){
-                } else if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
+                if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
                     use($item[Asdon Martin keyfob (on ring)]);
-                else if (item_amount($item[portable Mayo Clinic]) > 0)
+                else if (highShiny()){
+                } else if (item_amount($item[portable Mayo Clinic]) > 0)
                     use($item[portable Mayo Clinic]);
                 else if (item_amount($item[model train set]) == 1)
                     use($item[model train set]);
