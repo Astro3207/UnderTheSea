@@ -642,7 +642,8 @@ string DropsItems;
                     use($item[portable mayo clinic]);
                     retrieve_item($item[Mayo Minder&trade;]);
                 }
-                if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
+                if (get_workshed() == $item[portable mayo clinic] && (storage_amount($item[mayodiol]) < 30 || storage_amount($item[Mayoflex]) < 30)){
+                } else if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
                     use($item[Asdon Martin keyfob (on ring)]);
                 else if (item_amount($item[portable Mayo Clinic]) > 0)
                     use($item[portable Mayo Clinic]);
@@ -2417,7 +2418,7 @@ string DropsItems;
                 set_property("mpAutoRecoveryTarget", "-0.05");
                 while (my_hp() < my_maxhp())
                     use_skill($skill[Cannelloni Cocoon]);
-                cli_execute("recover hp; cast * empathy");
+                cli_execute("recover hp; cast * polka of plenty");
                 adv($location[Mer-kin Temple (Left Door)]);
             }
         }
