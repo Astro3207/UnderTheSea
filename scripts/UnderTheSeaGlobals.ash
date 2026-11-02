@@ -1088,6 +1088,10 @@ void plantAcorn(string page_text) {
     buffer cast;
     if (my_mp() < 11) {
         print("Acorndion worn in the Outpost with " + my_mp() + " MP, no Refrain.", "red");
+        // Later fights retry, three fights in all.
+        int misses = to_int(get_property("_utsAcornMpMisses")) + 1;
+        set_property("_utsAcornMpMisses", to_string(misses));
+        set_property("_utsAcornOutpost", misses < 3 ? "" : "lowmp");
         return;
     }
     if (have_skill($skill[Bawdy Refrain]))
@@ -1096,6 +1100,7 @@ void plantAcorn(string page_text) {
         cast = use_skill($skill[Juvenile Refrain]);
     else {
         print("Acorndion worn in the Outpost but no Refrain on the fight page.", "red");
+        set_property("_utsAcornOutpost", "noskill");
         return;
     }
     set_property("_utsAcornOutpost", "planted");
@@ -1108,6 +1113,12 @@ boolean acornBanishTarget(monster mob) {
         && !contains_text(get_property("_utsAcornBanished"), to_string(mob));
 }
 
+// These routes farm pristine scales with the Monodent in item-drop Outpost fights.
+boolean outpostFarmsScales() {
+    return (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny())
+        && available_amount($item[pristine fish scale]) < 6;
+}
+
 // After the Refrain, Outpost fights stay in the Acorndion until each target has met one Chiasso.
 boolean acornBanishWanted() {
     if (my_path().id != 55 || get_property("uts_acornOutpost") == "false"
@@ -1115,7 +1126,7 @@ boolean acornBanishWanted() {
         || !($strings[tried, planted] contains get_property("_utsAcornOutpost"))
         || contains_text(get_property("_utsAcornBanished"), "stop")
         || !seaCowNeeded() || $location[The Mer-Kin Outpost].turns_spent >= 20
-        || my_maxmp() < 8)
+        || my_maxmp() < 8 || outpostFarmsScales())
         return false;
     return acornBanishTarget($monster[Mer-kin burglar]) || acornBanishTarget($monster[Mer-kin raider]);
 }
