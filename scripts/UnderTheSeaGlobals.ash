@@ -3161,10 +3161,19 @@ void runReport(string text, int turns) {
     int batLost = max(0, 5 - batUsed);
     print("  Bat wings: " + batUsed + " of 5 free fights" + (batWhere == "" ? "" : " (" + batWhere + ")")
         + (batLost > 0 ? ", +" + batLost : ""), batLost > 0 ? "red" : "green");
-    int other = (turns - classOptimal) - lostTotal - batLost + gainedTotal;
-    // A route that skips a seeded zone can push this below 0.
-    if (other > 0)
-        print("  Turns outside the tracked zones: +" + other, "gray");
+    // Zones this run never entered still count toward the best possible run.
+    int skippedTotal;
+    string skipped;
+    foreach z, n in best
+        if (n > 0 && z != guild && !(otherClass contains z) && !((cost contains z) && cost[z] > 0)) {
+            skippedTotal += n;
+            skipped += (skipped == "" ? "" : ", ") + z + " " + n;
+        }
+    if (skipped != "")
+        print("  Not visited, best turns: " + skipped, "gray");
+    int other = (turns - classOptimal) - lostTotal - batLost + gainedTotal + skippedTotal;
+    if (other != 0)
+        print("  Turns outside the tracked zones: " + (other > 0 ? "+" : "") + other, "gray");
     if (atBest != "")
         print("  At their best: " + atBest, "green");
     if (unrecorded != "")
