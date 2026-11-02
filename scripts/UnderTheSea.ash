@@ -624,7 +624,7 @@ string DropsItems;
                     cli_execute("aprilband item piccolo; aprilband play piccolo; aprilband play piccolo; aprilband play piccolo");
                 }
             }
-            if (available_amount($item[McHugeLarge duffel bag]) > 0)
+            if (have_item($item[McHugeLarge duffel bag]))
                 visit_url("inventory.php?action=skiduffel");
             if (get_property("_aprilShowerGlobsCollected") == "false" && have_item($item[April Shower Thoughts shield]))
                 visit_url("inventory.php?action=shower");
