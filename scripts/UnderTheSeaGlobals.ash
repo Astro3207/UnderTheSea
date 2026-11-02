@@ -513,7 +513,7 @@ import <seedfinder/seedfinder.ash>;
             return "";
         if (sheriffPropsFor(loc, to_int(get_property("_assertYourAuthorityCast")), sheriffOutfit()))
             return "Sheriff moustache,Sheriff badge,Sheriff pistol,";
-        if (to_int(get_property("_chestXRayUsed")) < 3 && have_item($item[Lil' Doctor&trade; bag]))
+        if (to_int(get_property("_chestXRayUsed")) < 3 && available_amount($item[Lil' Doctor&trade; bag]) > 0)
             return "Lil' Doctor™ bag,";
         if ((my_basestat($stat[submoxie]) - 22500) > BCZcost("SweatBulletsCasts"))
             return if_equip($item[blood cubic zirconia]);
@@ -878,7 +878,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     boolean leftSkiAvailable(){
-        if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
+        if (available_amount($item[mchugelarge left ski]) > 0 && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
             return true;
         return false;
     }
@@ -1693,7 +1693,7 @@ int NCForceEstimate(){
     // Counts remaining CHARGES, not ownership.
     if (have_item($item[Apriling band tuba]))
         force += max(0, 3 - to_int(get_property("_aprilBandTubaUses")));
-    if (have_item($item[McHugeLarge left ski]))
+    if (available_amount($item[McHugeLarge left ski]) > 0)
         force += max(0, 3 - to_int(get_property("_mcHugeLargeAvalancheUses")));
     if (have_item($item[Cincho de Mayo]))
         force += min(3, 1 + max(0, total_free_rests() - to_int(get_property("timesRested"))) / 2);

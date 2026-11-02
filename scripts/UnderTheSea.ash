@@ -712,7 +712,7 @@ string DropsItems;
         use_familiar("combat");
         string conditional;
             if (forceNC && get_property("skateParkStatus") == "war"){
-                if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
+                if (available_amount($item[mchugelarge left ski]) > 0 && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
                 else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
                     conditional += "jurassic parka,";
@@ -829,7 +829,7 @@ string DropsItems;
         string conditional;
         if (lowShiny() == true)
             conditional += if_equip($item[Congressional Medal of Insanity]);
-        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) && !highShiny())
+        if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0 && !highShiny())
             conditional += "backup camera,";
         // One Force charge on the researcher lands both scrolls (10% slots,
         // the slowest in the zone) and frees their reserved pulls. saberEquip()
@@ -1084,7 +1084,7 @@ string DropsItems;
         use_familiar("itdrop");
         string conditional;
         string conditionalMax;
-        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+        if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
             conditional += "backup camera,";
         else if (have_skill($skill[Double-Fisted Skull Smashing]))
             conditional += "monodent of the sea,";
@@ -1370,7 +1370,7 @@ string DropsItems;
             if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
                 conditional += "sea cowboy hat,sea chaps,";
 
-            if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && have_item($item[backup camera])
+            if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && available_amount($item[backup camera]) > 0
                 && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
                 conditional += "backup camera,";
             else if (to_int(get_property("_bczSweatBulletsCasts")) < 9 && !highShiny())
@@ -1526,7 +1526,7 @@ string DropsItems;
     void caliginous(string str){
         step("phase: Mom rescue (habitats / cyberzone)");
         int initialMomProgress = 24;
-        if (!have_item($item[backup camera]))
+        if (available_amount($item[backup camera]) == 0)
             initialMomProgress += 4;
         if (!have_item($item[2002 Mr. Store Catalog]))
             initialMomProgress += 12;
@@ -1616,7 +1616,7 @@ string DropsItems;
                 mood("superitdrop");
             if (available_amount($item[pro skateboard]) == 0)
                 pullSequence($item[pro skateboard]);
-            if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]) 
+            if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0 
             && (get_property("lastCopyableMonster") == "eye in the darkness" || get_property("lastCopyableMonster") == "slithering thing")){
                 conditional += "backup camera,";
                 tempEquipment("item drop, sea, -equip peridot of peril", "shark jumper,scale-mail underwear," + if_equip(divingHelmet())
@@ -1943,7 +1943,7 @@ string DropsItems;
                         put_closet(item_amount($item[mer-kin hallpass]),
                             $item[mer-kin hallpass]);
                         string conditional;
-                        if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+                        if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
                             conditional += "backup camera,";
                         else if (have_skill($skill[Double-Fisted Skull Smashing]))
                             conditional += "monodent of the sea,";
@@ -2001,7 +2001,7 @@ string DropsItems;
                             buyScholarGear();
                             while ($location[mer-kin library].turns_spent < 4 && have_effect($effect[Steely-Eyed Squint]) > 0) {
                                 string conditional;
-                                if (to_int(get_property("_backUpUses")) < 11 && have_item($item[backup camera]))
+                                if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
                                     conditional += "backup camera,";
                                 tempEquipment("item drop,sea", "mer-kin scholar mask,mer-kin scholar tailpiece,monodent of the sea,"
                                     + if_equip($item[blood cubic zirconia]) + conditional);
@@ -2286,7 +2286,7 @@ string DropsItems;
                 if (item_amount($item[crayon shavings]) < 8)
                     pullSequence($item[null-day exploit]);
                 foreach it in $items[peppermint parasol, ink bladder, Mer-kin pinkslip, stuffed yam stinkbomb, Louder Than Bomb, anchor bomb] {
-                    if (it == $item[peppermint parasol] && (have_item($item[navel ring of navel gazing]) || have_item($item[Greatest American Pants])))
+                    if (it == $item[peppermint parasol] && (available_amount($item[navel ring of navel gazing]) > 0 || have_item($item[Greatest American Pants])))
                         continue;
                     if (!pulledToday(it)) 
                         pullSequence(it);
