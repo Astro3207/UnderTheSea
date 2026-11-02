@@ -1,7 +1,7 @@
 import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
-// Set with the mafia CLI; all default to off.
+// Set with the mafia CLI; all default to off unless noted.
 // uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy, uts_postLoopPrepCodpiece and uts_pearloArgs
 // uts_acornOutpost defaults on; false skips the Outpost Acorndion Refrain and banishes.
 // see the README for what each does.
@@ -1345,6 +1345,16 @@ string DropsItems;
                 set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
             else
                 set_property("_utsAcornOutpost", "noair");
+            tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+            return;
+        }
+        // Taking off the Monodent can lower max MP.
+        if (my_maxmp() < mp || (my_mp() < mp && !restore_mp(mp))) {
+            print("Not enough MP in the Acorndion for the Outpost " + stage + ".", "red");
+            if (banish)
+                set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+            else
+                set_property("_utsAcornOutpost", "lowmp");
             tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
             return;
         }
