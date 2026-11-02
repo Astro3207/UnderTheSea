@@ -406,6 +406,10 @@ void main(int round, monster mob, string page_text) {
             return;
     }
     
+    plantAcorn(page_text);
+    acornBanish(page_text);
+    if (current_round() == 0)
+        return;
     if (diverForce(last_monster(), page_text))
         return;
 
@@ -627,6 +631,30 @@ void main(int round, monster mob, string page_text) {
         case $location[The Mer-Kin Outpost]:
             if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
                 throw_item($item[sea lasso]);
+            // While its cowbell and leather are needed, a sea cow skips Talk to Some Fish and item-less kills.
+            // A live golem Back-Up chain takes the cow instead.
+            boolean golemChain = get_property("_monsterHabitatsFightsLeft") == "0"
+                && to_int(get_property("_monsterHabitatsRecalled")) >= 2
+                && to_int(get_property("_backUpUses")) < 7
+                && get_property("lastCopyableMonster") == "Black Crayon Golem"
+                && have_equipped($item[backup camera])
+                && ($location[The Mer-Kin Outpost].turns_spent < 24
+                    || get_property("merkinLockkeyMonster") != "");
+            if (last_monster() == $monster[sea cow] && seaCowNeeded() && !golemChain) {
+                free_kill(page_text, true);
+                cleanUp();
+                break;
+            }
+            // An Acorndion fight has no Monodent, so it skips the Sea *dent branches below.
+            if (acornPlantFight() && last_monster() != $monster[time cop]
+                && last_monster() != $monster[black crayon golem]) {
+                if (last_monster() == $monster[Mer-kin burglar] || last_monster() == $monster[Mer-kin raider])
+                    free_run(page_text, false);
+                free_kill(page_text, last_monster() == $monster[mer-kin healer]
+                    && item_amount($item[mer-kin prayerbeads]) < 2);
+                cleanUp();
+                break;
+            }
             if (last_monster() == $monster[time cop]) {
                 darts();
                 cleanUp();
