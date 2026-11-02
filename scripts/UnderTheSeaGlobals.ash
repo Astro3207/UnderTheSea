@@ -3161,7 +3161,7 @@ void runReport(string text, int turns) {
     int batLost = max(0, 5 - batUsed);
     print("  Bat wings: " + batUsed + " of 5 free fights" + (batWhere == "" ? "" : " (" + batWhere + ")")
         + (batLost > 0 ? ", +" + batLost : ""), batLost > 0 ? "red" : "green");
-    // Zones this run never entered still count toward the best possible run.
+    // Zones where this run spent no turns still count toward the best possible run.
     int skippedTotal;
     string skipped;
     foreach z, n in best
@@ -3170,7 +3170,7 @@ void runReport(string text, int turns) {
             skipped += (skipped == "" ? "" : ", ") + z + " " + n;
         }
     if (skipped != "")
-        print("  Not visited, best turns: " + skipped, "gray");
+        print("  No turns spent, best turns: " + skipped, "gray");
     int other = (turns - classOptimal) - lostTotal - batLost + gainedTotal + skippedTotal;
     if (other != 0)
         print("  Turns outside the tracked zones: " + (other > 0 ? "+" : "") + other, "gray");
