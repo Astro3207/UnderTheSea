@@ -1115,7 +1115,8 @@ boolean acornBanishTarget(monster mob) {
 
 // These routes farm pristine scales with the Monodent in item-drop Outpost fights.
 boolean outpostFarmsScales() {
-    return (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny())
+    return my_familiar() != $familiar[Sword of S Words]
+        && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny())
         && available_amount($item[pristine fish scale]) < 6;
 }
 
@@ -1123,7 +1124,7 @@ boolean outpostFarmsScales() {
 boolean acornBanishWanted() {
     if (my_path().id != 55 || get_property("uts_acornOutpost") == "false"
         || available_amount($item[legendary acorndion]) == 0
-        || !($strings[tried, planted] contains get_property("_utsAcornOutpost"))
+        || get_property("_utsAcornOutpost") != "planted"
         || contains_text(get_property("_utsAcornBanished"), "stop")
         || !seaCowNeeded() || $location[The Mer-Kin Outpost].turns_spent >= 20
         || my_maxmp() < 8 || outpostFarmsScales())

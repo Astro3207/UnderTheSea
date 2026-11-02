@@ -24,7 +24,7 @@
 | `UnderTheSea sim` | Checklist only: prints which supported IOTMs, skills and familiars you own and which pulls are stocked in Hagnk's. Nothing is pulled, fought or spent; use it before ascending to build a shopping list. |
 | `UnderTheSea postloop` | Runs only the postloop steps — the pilsner drain, the codpiece prep, the screech rundown, the pearl farm, the codpiece top-up and `uts_postloopCommand` — and none of the run. Use it to exercise the `uts_postLoop*` preferences on a finished account, where a bare `UnderTheSea` would start an aftercore Sea run instead. Each step still self-gates on its own preference. |
 
-Preferences, set once in the gCLI; all default to off:
+Preferences, set once in the gCLI; all default to off unless noted:
 
 | Preference | What it does |
 |---|---|
@@ -36,8 +36,8 @@ Preferences, set once in the gCLI; all default to off:
 | `set uts_postLoopCloverFishy = true` | When Fishy runs out, get 20 more turns of it with a Lucky! adventure in The Brinier Deepers. In the screech rundown, UnderTheSea does this itself: free Aug. 2nd casts first, then an 11-leaf clover from inventory or, with `autoSatisfyWithCoinmasters` enabled, the hermit's three a day; when none of those can be used, the rundown stops. For the pearl farm it passes `luckyfishy` to pearlo, which has more Lucky! sources (Apriling band saxophone, Heartstone LUCK, Aug. 2nd, owned clovers, the free pill keeper use, hermit clovers, and mall clovers under its `cloverprice`; see pearlo's README). Only used together with `uts_postLoopRunOutEagleBanish` or `uts_postLoopFarmPearls`. |
 | `set uts_postLoopPrepCodpiece = true` | After the run, load The Eternity Codpiece with five unblemished pearls for your next ascension, in two passes. Each pass does nothing if the codpiece already holds five pearls; otherwise it empties Hagnk's (`pull all`), buys the missing pearls from the mall, and once five are on hand slots all five. The first pass runs before the screech rundown and the pearl farm, so an abort later still leaves the codpiece loaded, and coming up short there only prints a note. The second runs after the pearl farm, so farmed pearls count, and aborts if it still can't reach five. Mall buys only happen with `autoSatisfyWithMall` enabled and `autoBuyPriceLimit` at or above the pearl's mall price. |
 | `set uts_pearloArgs = <args>` | Extra arguments appended to the pearl farm's `pearlo` call, e.g. `airmode=gear potionprice=5000` (`pearlo help` lists them). A `voa` or `luckyfishy` given here replaces the one UnderTheSea would add. A typo shows up as pearlo's "Unknown argument" or "Duplicate key" error. |
-| `set uts_acornOutpost = false` | Skip the legendary acorndion in the Mer-kin Outpost. By default, a run that has it and still needs sea cowbells or leather casts its Refrain there to add sea cows to the zone, then banishes the Mer-kin burglar and raider with Chiasso. |
-| `set uts_saveSeadentWave = true` | Never flood the Shadow Rift, leaving Summon a Wave for later in the day. Lasso training then finishes outside the Rift, which costs extra turns. |
+| `set uts_acornOutpost = false` | On by default. Skips the legendary acorndion in the Mer-kin Outpost. Otherwise a run that still needs sea cows and has at least 11 max MP tries to cast the Refrain in one Outpost fight, adding sea cows to the zone. If it lands, later fights try to banish the Mer-kin burglar and raider. That needs a target to appear within 20 Outpost turns while cows are still needed, and it waits until a route that farms pristine scales has 6. |
+| `set uts_saveSeadentWave = true` | Never flood the Shadow Rift, leaving Summon a Wave for you to use later in the day. Lasso training then finishes outside the Rift, which costs extra turns. |
 
 ## High shiny, low shiny
 
