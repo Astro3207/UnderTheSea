@@ -3020,3 +3020,176 @@ void freeRunFallback(string page_text) {
     print("Free fight: no run left, " + id + " on the " + last_monster() + ".", "gray");
     boolean spent = freeSrcSpend(id);
 }
+
+// ─── RUN REPORT ───────────────────────────────────────────────────────────────
+// Fewest turns each zone has cost in the best recorded UTS runs, counting bat wings frees as turns.
+// The run report names any zone a run finishes below its entry here.
+int [string] zoneMinSeed = {
+    "The Mer-Kin Outpost": 5,
+    "Mer-kin Colosseum": 10,
+    "The Marinara Trench": 3,
+    "durable dolphin whistle": 0,
+    "The Haunted Pantry": 5,
+    "Mer-kin Gymnasium": 2,
+    "Mer-kin Elementary School": 3,
+    "The Skate Park": 5,
+    "The Caliginous Abyss": 1,
+    "The Coral Corral": 0,
+    "Mer-kin Temple (Right Door)": 1,
+    "Mer-kin dreadscroll": 1,
+    "Mer-kin Temple (Left Door)": 1,
+    "The Wreck of the Edgar Fitzsimmons": 1,
+    "Mer-kin Library": 1,
+    "Mer-kin Temple (Center Door)": 1
+};
+// Turns this ascension charged to each "[turn] zone" line of a session log, up to endTurn.
+// A logged bat wings free fight counts as a turn in its zone; bat[] lists where they landed.
+int [string] runZoneCosts(string text, int endTurn, int [string] bat) {
+    int [string] cost;
+    int start = max(last_index_of(text, "kingLiberated changed from true to false"),
+        last_index_of(text, "Ascend as a "));
+    if (start < 0)
+        return cost;
+    string zone = "";
+    int turn = -1;
+    foreach i, line in split_string(substring(text, start), "\n") {
+        if (contains_text(line, "kingLiberated changed from false to true"))
+            break;
+        if (contains_text(line, "_batWingsFreeFights changed") && zone != "") {
+            cost[zone] += 1;
+            bat[zone] += 1;
+            continue;
+        }
+        if (length(line) < 4 || char_at(line, 0) != "[")
+            continue;
+        matcher m = create_matcher("^\\[(\\d+)\\] (.+?)\\s*$", line);
+        if (!m.find())
+            continue;
+        int t = to_int(m.group(1));
+        if (zone != "" && t > turn)
+            cost[zone] += t - turn;
+        turn = max(turn, t);
+        zone = m.group(2);
+    }
+    // A "[n]" line is numbered one past the turns already spent, so the last fight runs to endTurn + 1.
+    if (zone != "" && endTurn + 1 > turn)
+        cost[zone] += endTurn + 1 - turn;
+    return cost;
+}
+
+string overOrUnder(int turns, int target) {
+    return turns >= target ? (turns - target) + " over" : (target - turns) + " under";
+}
+
+// Prints each zone's turns against its fewest, and the run against the best possible one,
+// then names any zone this run finished below its zoneMinSeed entry.
+void runReport(string text, int turns) {
+    int [string] bat;
+    int [string] cost = runZoneCosts(text, turns, bat);
+    if (count(cost) == 0) {
+        print("UTS run report: no ascension found in today's session log.", "red");
+        return;
+    }
+    // Other classes' pearl and guild zones stay out of this class's optimal run.
+    boolean [string] otherClass;
+    foreach st in $stats[muscle, mysticality, moxie]
+        if (st != ps) {
+            otherClass[to_string(pearlLoc[st])] = true;
+            otherClass[to_string(questLoc[st])] = true;
+        }
+    int [string] best;
+    foreach z, n in zoneMinSeed
+        best[z] = n;
+    // An unrecorded zone costs 0 in the best runs. This class's own pearl and guild zones,
+    // when unrecorded, are measured against this run.
+    string guild = to_string(questLoc[ps]);
+    boolean [string] classZone = {to_string(pearlLoc[ps]): true, guild: true};
+    string unrecorded;
+    foreach z, n in cost
+        if (n > 0 && !(best contains z)) {
+            best[z] = (classZone contains z) ? n : 0;
+            if (classZone contains z)
+                unrecorded += (unrecorded == "" ? "" : ", ") + z + " " + n;
+        }
+
+    // The guild quest stays out of the floor; the class total adds it back when this run paid for it.
+    int floor;
+    foreach z, n in best
+        if (!(otherClass contains z) && z != guild)
+            floor += n;
+    int bestPossible = floor - 5;
+    boolean guildRun = (cost contains guild) && cost[guild] > 0;
+    int guildTurns = guildRun && !(ps == $stat[moxie] && available_amount($item[tearaway pants]) > 0) ? best[guild] : 0;
+    int classOptimal = bestPossible + guildTurns;
+    string cls = to_string(my_class());
+    string article = length(cls) > 0 && contains_text("AEIOU", substring(cls, 0, 1)) ? "an " : "a ";
+
+    print("UTS run report: " + turns + " turns.", "blue");
+    print("Best possible run: " + bestPossible + " (zone minimums " + floor
+        + " without the guild quest, 5 bat wings free fights). This run is "
+        + overOrUnder(turns, bestPossible) + ".", "blue");
+    print("Best possible as " + article + cls + ": " + classOptimal + " (guild quest " + guildTurns
+        + "). This run is " + overOrUnder(turns, classOptimal) + ".", "blue");
+
+    int batLogged;
+    string batWhere;
+    foreach z, n in bat {
+        batLogged += n;
+        batWhere += (batWhere == "" ? "" : ", ") + z + (n > 1 ? " x" + n : "");
+    }
+    int batUsed = max(batLogged, to_int(get_property("_batWingsFreeFights")));
+    if (batUsed > batLogged)
+        batWhere += (batWhere == "" ? "" : ", ") + (batUsed - batLogged) + " not in the log";
+    int lostTotal;
+    int gainedTotal;
+    string atBest;
+    string newBest;
+    foreach z, n in cost {
+        if (otherClass contains z || n == 0)
+            continue;
+        int lost = n - best[z];
+        if (lost > 0) {
+            print("  " + z + ": " + n + " (best " + best[z] + ", +" + lost + ")", "red");
+            lostTotal += lost;
+        } else if (lost < 0) {
+            newBest += (newBest == "" ? "" : ", ") + z + " " + n + " (script has " + best[z] + ")";
+            gainedTotal -= lost;
+        } else if (!(classZone contains z) || (zoneMinSeed contains z)) {
+            atBest += (atBest == "" ? "" : ", ") + z + " " + n;
+        }
+    }
+    int batLost = max(0, 5 - batUsed);
+    print("  Bat wings: " + batUsed + " of 5 free fights" + (batWhere == "" ? "" : " (" + batWhere + ")")
+        + (batLost > 0 ? ", +" + batLost : ""), batLost > 0 ? "red" : "green");
+    // Zones where this run spent no turns still count toward the best possible run.
+    int skippedTotal;
+    string skipped;
+    foreach z, n in best
+        if (n > 0 && z != guild && !(otherClass contains z) && !((cost contains z) && cost[z] > 0)) {
+            skippedTotal += n;
+            skipped += (skipped == "" ? "" : ", ") + z + " " + n;
+        }
+    if (skipped != "")
+        print("  No turns spent, best turns: " + skipped, "gray");
+    int other = (turns - classOptimal) - lostTotal - batLost + gainedTotal + skippedTotal;
+    if (other != 0)
+        print("  Turns outside the tracked zones: " + (other > 0 ? "+" : "") + other, "gray");
+    if (atBest != "")
+        print("  At their best: " + atBest, "green");
+    if (unrecorded != "")
+        print("  No recorded minimum yet: " + unrecorded, "gray");
+    // Zone costs miss bat wings fights the log never recorded, so they can read low.
+    if (newBest != "")
+        print("  Below the script's minimum: " + newBest
+            + (batUsed > batLogged ? ". Unconfirmed: " + (batUsed - batLogged)
+                + " bat wings free fights are missing from the zone costs." : "."), "green");
+}
+
+// The report for the run that just ended, from today's session log. Call it before the king is freed,
+// which ends the path.
+void runReport() {
+    if (my_path().id != 55)
+        return;
+    string [int] logs = session_logs(1);
+    runReport(count(logs) > 0 ? logs[0] : "", my_turncount());
+}
