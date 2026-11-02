@@ -1718,12 +1718,10 @@ string DropsItems;
             while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
                 shadowRift();
 
-            // Before turn 26, a run that wears the crystal ball in the Corral takes the day's Shadow Affinity
-            // but keeps what is left for dodges.
-            boolean keepAffinity = my_turncount() <= 25 && corralWearsBall();
+            // A run that wears the crystal ball in the Corral keeps 4 Shadow Affinity for dodges.
+            int keepAffinity = corralWearsBall() ? 4 : 0;
             if (!highShiny() && have_item($item[closed-circuit pay phone])){
-                while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false")
-                    && !(keepAffinity && get_property("_shadowAffinityToday") == "true"))
+                while (have_effect($effect[shadow affinity]) > keepAffinity || get_property("_shadowAffinityToday") == "false")
                     shadowRift();
             }
 
