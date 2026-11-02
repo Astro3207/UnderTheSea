@@ -1042,15 +1042,6 @@ boolean acornOutpostWanted() {
         && my_maxmp() >= 11;
 }
 
-// The acorn sentence of a planting cast. Dropdowns list combat items by name, so they are cut first.
-string acornText(string resp) {
-    string text = create_matcher("(?is)<select.*?</select>", resp).replace_all("");
-    matcher m = create_matcher("(?i)[^.!<>]*\\b(?:acorns?|seeds?)\\b[^.!<>]*", text);
-    if (m.find())
-        return m.group(0);
-    return "";
-}
-
 // The fight acornOutpostDress() prepared, marked by plantAcorn() or acornBanish() at its start.
 boolean acornPlantFight() {
     return acorndionWorn() && get_property("_utsAcornFight") != ""
@@ -1064,26 +1055,21 @@ void plantAcorn(string page_text) {
         return;
     set_property("_utsAcornOutpost", "tried");
     set_property("_utsAcornFight", get_property("_lastCombatStarted"));
-    string resp;
+    buffer cast;
     if (my_mp() < 11) {
         print("Acorndion worn in the Outpost with " + my_mp() + " MP, no Refrain.", "red");
         return;
     }
     if (have_skill($skill[Bawdy Refrain]))
-        resp = to_string(use_skill($skill[Bawdy Refrain]));
+        cast = use_skill($skill[Bawdy Refrain]);
     else if (contains_text(page_text, "value=\"7604\"") || contains_text(page_text, "Juvenile Refrain"))
-        resp = to_string(use_skill($skill[Juvenile Refrain]));
+        cast = use_skill($skill[Juvenile Refrain]);
     else {
         print("Acorndion worn in the Outpost but no Refrain on the fight page.", "red");
         return;
     }
-    string line = acornText(resp);
-    if (line != "") {
-        set_property("_utsAcornOutpost", "planted");
-        print("Outpost acorn: " + line, "blue");
-    } else {
-        print("Refrain cast in the Outpost with no acorn text.", "red");
-    }
+    set_property("_utsAcornOutpost", "planted");
+    print("Outpost acorn: Refrain cast.", "blue");
 }
 
 // The Outpost natives the Acorndion banishes. The healer stays for its prayerbeads.
@@ -1118,21 +1104,17 @@ void acornBanish(string page_text) {
         return;
     }
     set_property("_utsAcornBanished", get_property("_utsAcornBanished") + last_monster() + ",");
-    string resp;
+    buffer cast;
     if (have_skill($skill[Concerto de los Muertos]))
-        resp = to_string(use_skill($skill[Concerto de los Muertos]));
+        cast = use_skill($skill[Concerto de los Muertos]);
     else if (contains_text(page_text, "value=\"7603\"") || contains_text(page_text, "Chiasso de los Muertos"))
-        resp = to_string(use_skill($skill[Chiasso de los Muertos]));
+        cast = use_skill($skill[Chiasso de los Muertos]);
     else {
         print("Acorndion worn in the Outpost but no Chiasso on the fight page.", "red");
         set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
         return;
     }
-    string line = acornText(resp);
-    if (line != "")
-        print("Outpost acorn banish on " + last_monster() + ": " + line, "blue");
-    else
-        print("Chiasso cast on " + last_monster() + " with no acorn text.", "red");
+    print("Outpost acorn: banish cast on the " + last_monster() + ".", "blue");
 }
 
 // The monster the crystal ball has locked into the Coral Corral, or none.
