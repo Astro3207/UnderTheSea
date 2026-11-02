@@ -1044,7 +1044,7 @@ boolean corralLockToBreak() {
 
 // seahorseTaming() puts the crystal ball on in the Corral only alongside the August scepter.
 boolean corralWearsBall() {
-    return have_item($item[august scepter]) && have_item($item[miniature crystal ball]);
+    return have_item($item[august scepter]) && available_amount($item[miniature crystal ball]) > 0;
 }
 
 // Enough Shadow Affinity for a dodge: two fights, or one when the Rift already holds a prediction to meet.
