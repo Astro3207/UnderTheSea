@@ -1,3 +1,4 @@
+since r29402;
 import <seedfinder/seedfinder.ash>;
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────   
     int pearlsDoneToday;
@@ -1049,20 +1050,15 @@ boolean outpostLassoTraining() {
 }
 
 // ─── LEGENDARY ACORNDION ──────────────────────────────────────────────────────
-// Looked up by id. Mafia registers it under a decorated name.
-item acorndion() {
-    return to_item(12392);
-}
-
 boolean acorndionWorn() {
-    return acorndion() != $item[none] && have_equipped(acorndion());
+    return have_equipped($item[legendary acorndion]);
 }
 
 // One Outpost fight in the Acorndion plants a Refrain, so sea cows join the delay pool.
 boolean acornOutpostWanted() {
     return my_path().id == 55
         && get_property("uts_acornOutpost") != "false"
-        && acorndion() != $item[none] && available_amount(acorndion()) > 0
+        && available_amount($item[legendary acorndion]) > 0
         && (get_property("_utsAcornOutpost") == "" || get_property("_utsAcornOutpost") == "dressed")
         && seaCowNeeded()
         && $location[The Mer-Kin Outpost].turns_spent < 20
@@ -1099,7 +1095,7 @@ void plantAcorn(string page_text) {
     if (have_skill($skill[Bawdy Refrain]))
         resp = to_string(use_skill($skill[Bawdy Refrain]));
     else if (contains_text(page_text, "value=\"7604\"") || contains_text(page_text, "Juvenile Refrain"))
-        resp = to_string(visit_url("fight.php?action=skill&whichskill=7604"));
+        resp = to_string(use_skill($skill[Juvenile Refrain]));
     else {
         print("Acorndion worn in the Outpost but no Refrain on the fight page.", "red");
         return;
@@ -1122,7 +1118,7 @@ boolean acornBanishTarget(monster mob) {
 // After the Refrain, Outpost fights stay in the Acorndion until each target has met one Chiasso.
 boolean acornBanishWanted() {
     if (my_path().id != 55 || get_property("uts_acornOutpost") == "false"
-        || acorndion() == $item[none] || available_amount(acorndion()) == 0
+        || available_amount($item[legendary acorndion]) == 0
         || !($strings[tried, planted] contains get_property("_utsAcornOutpost"))
         || contains_text(get_property("_utsAcornBanished"), "stop")
         || !seaCowNeeded() || $location[The Mer-Kin Outpost].turns_spent >= 20
@@ -1149,7 +1145,7 @@ void acornBanish(string page_text) {
     if (have_skill($skill[Concerto de los Muertos]))
         resp = to_string(use_skill($skill[Concerto de los Muertos]));
     else if (contains_text(page_text, "value=\"7603\"") || contains_text(page_text, "Chiasso de los Muertos"))
-        resp = to_string(visit_url("fight.php?action=skill&whichskill=7603"));
+        resp = to_string(use_skill($skill[Chiasso de los Muertos]));
     else {
         print("Acorndion worn in the Outpost but no Chiasso on the fight page.", "red");
         set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
