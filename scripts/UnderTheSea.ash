@@ -1174,7 +1174,7 @@ string DropsItems;
                         if (item_amount($item[greatest american pants]) > 0)  
                             conditional += "greatest american pants,";
                     }
-                    else if (have_item($item[navel ring of navel gazing]))
+                    else if (available_amount($item[navel ring of navel gazing]) > 0)
                         conditional += "navel ring of navel gazing,";
                     else
                         conditional += if_equip($item[designer sweatpants]);

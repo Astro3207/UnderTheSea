@@ -597,6 +597,12 @@ import <seedfinder/seedfinder.ash>;
                 print("String to item mismatch, item is " + itemMap[str] + ", notify fart scauce","red");
                 continue;
             }
+            // Gear the route only wants when owned. In storage it is left off, not a missing item.
+            if ($items[navel ring of navel gazing, backup camera, Lil' Doctor&trade; bag, mchugelarge left ski] contains to_item(itemMap[str])
+                && available_amount(to_item(itemMap[str])) == 0) {
+                print("Not wearing " + itemMap[str] + ": it isn't on hand.", "blue");
+                continue;
+            }
             boolean held = slotsHold(equipmentSelection, to_item(itemMap[str]));
             if (!held && equipmentSelection[itemMap[str].to_item().to_slot()] == $item[none]){
                 equipmentSelection[itemMap[str].to_item().to_slot()] = itemMap[str].to_item(); 
