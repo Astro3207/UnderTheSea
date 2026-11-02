@@ -1719,12 +1719,10 @@ string DropsItems;
             while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && available_amount($item[closed-circuit pay phone]) > 0)
                 shadowRift();
 
-            // Before turn 26, a run that wears the crystal ball in the Corral takes the day's Shadow Affinity
-            // but keeps what is left for dodges.
-            boolean keepAffinity = my_turncount() <= 25 && corralWearsBall();
+            // A run that wears the crystal ball in the Corral keeps 4 Shadow Affinity for dodges.
+            int keepAffinity = corralWearsBall() ? 4 : 0;
             if (!highShiny() && available_amount($item[closed-circuit pay phone]) > 0){
-                while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false")
-                    && !(keepAffinity && get_property("_shadowAffinityToday") == "true"))
+                while (have_effect($effect[shadow affinity]) > keepAffinity || get_property("_shadowAffinityToday") == "false")
                     shadowRift();
             }
 
@@ -1806,7 +1804,7 @@ string DropsItems;
             if (!have_item($item[august scepter])){
                 conditional += "monodent of the sea,";
                 conditional += if_equip($item[heartstone]);
-            } else if (have_item($item[Miniature crystal ball])){
+            } else if (available_amount($item[Miniature crystal ball]) > 0){
                 conditional += "Miniature crystal ball,";
             }
             if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish")
