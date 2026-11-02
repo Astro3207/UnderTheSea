@@ -3118,7 +3118,7 @@ void runReport(string text, int turns) {
             floor += n;
     int bestPossible = floor - 5;
     boolean guildRun = (cost contains guild) && cost[guild] > 0;
-    int guildTurns = guildRun && !(ps == $stat[moxie] && have_item($item[tearaway pants])) ? best[guild] : 0;
+    int guildTurns = guildRun && !(ps == $stat[moxie] && available_amount($item[tearaway pants]) > 0) ? best[guild] : 0;
     int classOptimal = bestPossible + guildTurns;
     string cls = to_string(my_class());
     string article = length(cls) > 0 && contains_text("AEIOU", substring(cls, 0, 1)) ? "an " : "a ";
@@ -3161,8 +3161,9 @@ void runReport(string text, int turns) {
     print("  Bat wings: " + batUsed + " of 5 free fights" + (batWhere == "" ? "" : " (" + batWhere + ")")
         + (batLost > 0 ? ", +" + batLost : ""), batLost > 0 ? "red" : "green");
     int other = (turns - classOptimal) - lostTotal - batLost + gainedTotal;
-    if (other != 0)
-        print("  Turns outside the tracked zones: " + (other > 0 ? "+" : "") + other, "gray");
+    // A route that skips a seeded zone can push this below 0.
+    if (other > 0)
+        print("  Turns outside the tracked zones: +" + other, "gray");
     if (atBest != "")
         print("  At their best: " + atBest, "green");
     if (unrecorded != "")
