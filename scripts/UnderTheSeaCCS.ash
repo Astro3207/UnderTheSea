@@ -435,7 +435,7 @@ void main(int round, monster mob, string page_text) {
         else
             throw_item(bangA());
     }
-    if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
+    if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
         throw_item($item[sea lasso]);
     // A copied diver surfaces in whichever zone the route is adventuring in,
     // and that zone's logic transforms or re-rolls whatever it is handed,
@@ -659,7 +659,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     free_kill(page_text,true);
                     cleanUp();
@@ -678,7 +678,7 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 } else if (last_monster() == $monster[Mer-kin burglar]
                     || last_monster() == $monster[Mer-kin raider]) {
-                    if ((highShiny() || !have_item($item[closed-circuit pay phone])) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
+                    if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
                         use_skill($skill[sea *dent: throw a lightning bolt]);
                     free_run(page_text, true);
                 }
@@ -687,7 +687,7 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             } else {
                 // turns_spent >= 24 and no lockkey monster
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     free_kill(page_text,true);
                     cleanUp();
@@ -855,7 +855,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Caliginous Abyss]:
-            if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
+            if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
                 throw_item($item[sea lasso]);
             if (last_monster() == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
                 if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]) && (available_amount($item[waffle]) > 1 || (available_amount($item[waffle]) == 1 && get_property("seahorseName") != "")))

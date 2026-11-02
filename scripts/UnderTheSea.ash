@@ -81,7 +81,7 @@ string DropsItems;
                 foreach i, ef in itdrop {
                     if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef)))
                         continue;
-                    if (ef == $effect[Party Soundtrack] && !have_item($item[Cincho de Mayo]))
+                    if (ef == $effect[Party Soundtrack] && available_amount($item[Cincho de Mayo]) == 0)
                         continue;
 					if ((ef == $effect[Thoughtful Empathy] || ef == $effect[Lubricating Sauce]) && !have_item($item[April Shower Thoughts Shield]))
 						continue;
@@ -109,7 +109,7 @@ string DropsItems;
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
                         if (ef == $effect[Wild and Westy!]
                             && (to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
-                        if (ef == $effect[Apriling Band Patrol Beat] && (!have_item($item[apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
+                        if (ef == $effect[Apriling Band Patrol Beat] && (available_amount($item[apriling band helmet]) == 0 || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
@@ -130,7 +130,7 @@ string DropsItems;
                             && (get_property("_aug6Cast") == "true" || highShiny())) continue;
                         if (ef == $effect[Bloodbathed]
                             && lowShiny() == true) continue;
-                        if (ef == $effect[Apriling Band Battle Cadence] && (!have_item($item[Apriling band helmet]) || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
+                        if (ef == $effect[Apriling Band Battle Cadence] && (available_amount($item[Apriling band helmet]) == 0 || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
                     }
@@ -615,7 +615,7 @@ string DropsItems;
             visit_url("campground.php?preaction=leaves");
             if (item_amount($item[S.I.T. Course Completion Certificate]) > 0 && get_property("_sitCourseCompleted") == "false")
                 use($item[S.I.T. Course Completion Certificate]);
-            if (get_property("_aprilBandInstruments") == "0" && have_item($item[Apriling band helmet])){
+            if (get_property("_aprilBandInstruments") == "0" && available_amount($item[Apriling band helmet]) > 0){
                 cli_execute("aprilband item tuba");
                 if (highShiny()){
                     cli_execute("aprilband item quad tom");
@@ -624,7 +624,7 @@ string DropsItems;
                     cli_execute("aprilband item piccolo; aprilband play piccolo; aprilband play piccolo; aprilband play piccolo");
                 }
             }
-            if (have_item($item[McHugeLarge duffel bag]))
+            if (available_amount($item[McHugeLarge duffel bag]) > 0)
                 visit_url("inventory.php?action=skiduffel");
             if (get_property("_aprilShowerGlobsCollected") == "false" && have_item($item[April Shower Thoughts shield]))
                 visit_url("inventory.php?action=shower");
@@ -665,7 +665,7 @@ string DropsItems;
             foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,ten-leaf clover,large box,
                 scale-mail underwear, Congressional Medal of Insanity,Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !pulledToday(it)) {
-                    if (it == $item[Flash Liquidizer Ultra Dousing Accessory] && (!have_item($item[closed-circuit pay phone]) || highShiny()))
+                    if (it == $item[Flash Liquidizer Ultra Dousing Accessory] && (available_amount($item[closed-circuit pay phone]) == 0 || highShiny()))
                         continue;
                     if (it == $item[sea lasso] && (lowShiny() == true || (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3)))
                         continue;
@@ -745,8 +745,9 @@ string DropsItems;
             it = $item[skate blade];
         if (get_property("noncombatForcerActive") != "true" && (parkaForceAvailable() || leftSkiAvailable()))
             gymnasium(true);
-        else if (!parkaForceAvailable() && !leftSkiAvailable() && have_item($item[allied radio backpack]))
-            cli_execute("alliedradio misc sniper");
+        else if (!parkaForceAvailable() && !leftSkiAvailable() && available_amount($item[allied radio backpack]) > 0
+            && !cli_execute("alliedradio misc sniper"))
+            print("The allied radio request didn't go through.", "red");
         if ((pulls_remaining( ) > reservedPulls() || it == $item[skate board]) && available_amount(it) == 0)
             pullSequence(it);
         if (get_property("noncombatForcerActive") == "true"){
@@ -922,7 +923,7 @@ string DropsItems;
     }
 
     void shadowRift() {
-        if (!have_item($item[closed-circuit pay phone]) || (get_property("_shadowAffinityToday") == "true" && have_effect($effect[shadow affinity]) == 0))
+        if (available_amount($item[closed-circuit pay phone]) == 0 || (get_property("_shadowAffinityToday") == "true" && have_effect($effect[shadow affinity]) == 0))
             return;
         // These fights run on adv1(), which skips post_adv().
         setMPRecovery();
@@ -1005,7 +1006,7 @@ string DropsItems;
     }
 
     boolean summon(monster mon){
-        if (haveLocketMonster[mon] && !contains_text(get_property("_locketMonstersFought"),to_int(mon)) && count_substring(get_property("_locketMonstersFought"),",") < 2) {
+        if (available_amount($item[Combat lover's locket]) > 0 && haveLocketMonster[mon] && !contains_text(get_property("_locketMonstersFought"),to_int(mon)) && count_substring(get_property("_locketMonstersFought"),",") < 2) {
             cli_execute("reminisce " + mon);
         } else {
             if (available_amount($item[Combat lover's locket]) > 0)
@@ -1043,7 +1044,7 @@ string DropsItems;
     }
 
     boolean lassoShadow(){
-        if (have_item($item[monodent of the sea]) && have_item($item[Closed-circuit pay phone]))
+        if (have_item($item[monodent of the sea]) && available_amount($item[Closed-circuit pay phone]) > 0)
             return true;
         return false;
     }
@@ -1137,7 +1138,7 @@ string DropsItems;
 // Quest Handling Part 2
     void SWordLasso(){
         if (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3 && to_float(get_property("swordOfSWordsMonster")) < 10 && 
-            (highShiny() || !have_item($item[closed-circuit pay phone]))){
+            (highShiny() || available_amount($item[closed-circuit pay phone]) == 0)){
             use_familiar($familiar[Sword of S Words]);
             tempEquipment("item drop", baseball_equip() + freeKill());
             mood("itdrop");
@@ -1355,7 +1356,7 @@ string DropsItems;
                 (get_property("_monsterHabitatsFightsLeft") == "0" || available_amount($item[crayon shavings]) >= 9)){
                 use_familiar($familiar[Sword of S Words]);
                 mood("itdrop");
-            } else if ((highShiny() || lowShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[pristine fish scale]) < 6)
+            } else if ((highShiny() || lowShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[pristine fish scale]) < 6)
                 use_familiar("itdrop");
             else
                 use_familiar("-combat");
@@ -1380,7 +1381,7 @@ string DropsItems;
 
             if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
                 conditional += "shark jumper,scale-mail underwear,";
-            if ((highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
+            if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
                 mood("itdrop");
             if (my_familiar() != $familiar[Sword of S Words])
                 conditional += "monodent of the sea,";
@@ -1664,7 +1665,7 @@ string DropsItems;
                 tempEquipment("item drop", "Flash Liquidizer Ultra Dousing Accessory,monodent of the sea,"
                     + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + if_equip($item[toy cupid bow]));
                 mood("itdrop");
-                if (!highShiny() && have_item($item[closed-circuit pay phone]))
+                if (!highShiny() && available_amount($item[closed-circuit pay phone]) > 0)
                     use($item[closed-circuit pay phone]);
             }
 
@@ -1715,13 +1716,13 @@ string DropsItems;
 
             // ── Lasso training via shadow rift ────────────────────────────────────────
             step("phase: lasso training");
-            while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && have_item($item[closed-circuit pay phone]))
+            while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && available_amount($item[closed-circuit pay phone]) > 0)
                 shadowRift();
 
             // Before turn 26, a run that wears the crystal ball in the Corral takes the day's Shadow Affinity
             // but keeps what is left for dodges.
             boolean keepAffinity = my_turncount() <= 25 && corralWearsBall();
-            if (!highShiny() && have_item($item[closed-circuit pay phone])){
+            if (!highShiny() && available_amount($item[closed-circuit pay phone]) > 0){
                 while ((have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false")
                     && !(keepAffinity && get_property("_shadowAffinityToday") == "true"))
                     shadowRift();
@@ -1745,7 +1746,7 @@ string DropsItems;
     void backupLasso() {
         // ── Lasso training backup ─────────────────────────────────────────────────
         while (to_int(get_property("lassoTrainingCount")) < 20) {
-            if (have_item($item[closed-circuit pay phone]));
+            if (available_amount($item[closed-circuit pay phone]) > 0);
                 print("Lasso training didn't finish via shadow rift", "red");
             if (!pulledToday($item[Elf Guard SCUBA tank]))
                 cli_execute("pull elf guard scuba");
