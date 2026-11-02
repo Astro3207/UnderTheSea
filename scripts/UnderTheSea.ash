@@ -1332,11 +1332,11 @@ string DropsItems;
         boolean breathes = boolean_modifier("Adventure Underwater");
         if (my_mp() < mp && !restore_mp(mp))
             return;
-        // Equips through KoL's inventory page instead of mafia's equip(), then resyncs if mafia missed it.
-        buffer worn = visit_url("inv_equip.php?pwd&which=2&action=equip&whichitem=" + to_int(acorndion()) + "&ajax=1");
-        if (!have_equipped(acorndion()) && !cli_execute("refresh equip"))
+        // Equips through KoL's inventory page. Mafia's equip() refuses this accordion to other classes.
+        buffer worn = visit_url("inv_equip.php?pwd&which=2&action=equip&whichitem=" + to_int($item[legendary acorndion]) + "&ajax=1");
+        if (!have_equipped($item[legendary acorndion]) && !cli_execute("refresh equip"))
             print("Equipment refresh failed after the Acorndion swap.", "red");
-        if (!have_equipped(acorndion())) {
+        if (!have_equipped($item[legendary acorndion])) {
             print("Could not equip the Acorndion for the Outpost " + stage + ".", "red");
             if (banish)
                 set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
