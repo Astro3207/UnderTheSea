@@ -1,7 +1,7 @@
 import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
-// Set with the mafia CLI; all default to off.
+// Set with the mafia CLI; all default to off unless noted.
 // uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy, uts_postLoopPrepCodpiece and uts_pearloArgs
 // uts_acornOutpost defaults on; false skips the Outpost Acorndion Refrain and banishes.
 // uts_saveSeadentWave=true never floods the Shadow Rift, leaving Summon a Wave for later in the day.
@@ -1354,6 +1354,16 @@ string DropsItems;
             tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
             return;
         }
+        // Taking off the Monodent can lower max MP.
+        if (my_maxmp() < mp || (my_mp() < mp && !restore_mp(mp))) {
+            print("Not enough MP in the Acorndion for the Outpost " + stage + ".", "red");
+            if (banish)
+                set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+            else
+                set_property("_utsAcornOutpost", "lowmp");
+            tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+            return;
+        }
         set_property(banish ? "_utsAcornBanishDress" : "_utsAcornOutpost", "dressed");
         step("Outpost: Acorndion on for the " + stage);
     }
@@ -1831,7 +1841,7 @@ string DropsItems;
             use_familiar("itdrop");
             if (available_amount($item[pristine fish scale]) < 6)
                 mood("itdrop");
-            tempEquipment(pearlRes[ps]+",sea","monodent of the sea,sea cowboy hat,sea chaps" + bathysphere($item[none]));
+            tempEquipment(pearlRes[ps]+",sea","monodent of the sea,sea cowboy hat,sea chaps," + bathysphere($item[none]));
             adv(pearlLoc[ps]);
         }
     }
