@@ -347,7 +347,7 @@ string DropsItems;
             }
         }
 
-        if (have_item($item[bat wings])
+        if (available_amount($item[bat wings]) > 0
             && (my_mp() < (my_maxmp() - 1000) || my_mp() < 150)) {
             equip($item[bat wings]);
             use_skill($skill[rest upside down]);
@@ -568,7 +568,7 @@ string DropsItems;
             // UnderTheSea_Choice.ash; we take the familiar weight option, since
             // the elemental resistance one only matters for farming unblemished
             // pearls and those are smuggled in via the codpiece.
-            if (have_item($item[Fourth of May Cosplay Saber])
+            if (available_amount($item[Fourth of May Cosplay Saber]) > 0
                 && get_property("_saberMod") == "0") {
                 // mafia may auto-resolve the choice this visit redirects
                 // into (choiceAdventure1386 steers it to option 4, the +10
@@ -714,7 +714,7 @@ string DropsItems;
             if (forceNC && get_property("skateParkStatus") == "war"){
                 if (available_amount($item[mchugelarge left ski]) > 0 && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
                     conditional += "mchugelarge left ski,";
-                else if (have_item($item[jurassic parka])  && to_int(get_property("_spikolodonSpikeUses")) < 5){
+                else if (available_amount($item[jurassic parka]) > 0  && to_int(get_property("_spikolodonSpikeUses")) < 5){
                     conditional += "jurassic parka,";
                     modes = "parka spikolodon";
                 }
@@ -771,7 +771,7 @@ string DropsItems;
         use_familiar("-combat");
         // A Peridot spent here frees its slot for the Sheriff props.
         tempEquipment("item drop,sea","shark jumper,scale-mail underwear,black glass,"
-            + (gotPeriled($location[The Caliginous Abyss]) ? "" : "peridot of peril,") + "monodent of the sea,"
+            + (gotPeriled($location[The Caliginous Abyss]) ? "" : if_equip($item[peridot of peril])) + "monodent of the sea,"
             + bathysphere($item[none]) + freeKill($location[The Caliginous Abyss]));
         if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) 
             use($item[comb jelly]);
@@ -838,7 +838,7 @@ string DropsItems;
         // truly spare charge exists. worktea and knucklebone come from the
         // other two monsters, so the monodent keeps the slot for those.
         boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0)
-            && saberForcesFree() > 0 && have_item($item[Fourth of May Cosplay Saber]);
+            && saberForcesFree() > 0 && available_amount($item[Fourth of May Cosplay Saber]) > 0;
         if (!saberForResearcher
             && (item_amount($item[mer-kin healscroll]) == 0 || ((item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0) && get_property("dreadScroll7") == "0")))
             conditional += "monodent of the sea,";
@@ -1008,7 +1008,7 @@ string DropsItems;
         if (haveLocketMonster[mon] && !contains_text(get_property("_locketMonstersFought"),to_int(mon)) && count_substring(get_property("_locketMonstersFought"),",") < 2) {
             cli_execute("reminisce " + mon);
         } else {
-            if (have_item($item[Combat lover's locket]))
+            if (available_amount($item[Combat lover's locket]) > 0)
                 equip($slot[acc3], $item[Combat lover's locket]);
             if (get_property("_photocopyUsed") == "false" && have_item($item[Clan VIP Lounge key]) && (faxbot(mon) || faxbot(mon) || faxbot(mon))){
                 use($item[photocopied monster]);
@@ -1151,7 +1151,7 @@ string DropsItems;
             step("phase: guild unlock");
             if (get_property(questProp[ps]) != "finished") {
                 // Moxie shortcut — tearaway pants skip the grind
-                if (ps == $stat[moxie] && have_item($item[tearaway pants])) {
+                if (ps == $stat[moxie] && available_amount($item[tearaway pants]) > 0) {
                     equip($item[tearaway pants]);
                     visit_url("guild.php?place=challenge");
                 } else {
@@ -1363,7 +1363,7 @@ string DropsItems;
             // Conditional gear
             string conditional;
             if (get_property("_monsterHabitatsFightsLeft") == "1" && have_effect($effect[Everything Looks Purple]) == 0
-                && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_item($item[roman candelabra]))
+                && to_int(get_property("_monsterHabitatsRecalled")) == 2 && available_amount($item[roman candelabra]) > 0)
                 conditional += "roman candelabra,";
             else 
                 conditional += baseball_equip();
@@ -1500,7 +1500,7 @@ string DropsItems;
                                 pullSequence($item[pro skateboard]);
                                 conditional += if_equip($item[pro skateboard]);
                             }
-                            if (have_item($item[Fourth of May Cosplay Saber])){
+                            if (available_amount($item[Fourth of May Cosplay Saber]) > 0){
                                 conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
                             } else {
                                 mood("superitdrop");
@@ -1686,7 +1686,7 @@ string DropsItems;
                 tempEquipment("item drop,sea", if_equip($item[peridot of peril]) + bathysphere($item[none]));
                 if (numeric_modifier($modifier[item drop]) > 250){
                     adv($location[anemone mine]);
-                } else if (have_item($item[bat wings])){
+                } else if (available_amount($item[bat wings]) > 0){
                     equip($item[bat wings]);
                     adv($location[anemone mine]);
                 } 
@@ -1814,7 +1814,7 @@ string DropsItems;
             if (contains_text(get_property("banishedMonsters"), "Mer-kin rustler")
                 && contains_text(get_property("banishedMonsters"), "sea cowboy")
                 && contains_text(get_property("banishedMonsters"), "sea cow:")
-                && have_item($item[tearaway pants])) {
+                && available_amount($item[tearaway pants]) > 0) {
                 conditional += "tearaway pants,";
             }
             tempEquipment(DropsItems,conditional + delay());
@@ -2361,11 +2361,11 @@ string DropsItems;
             // the bat wings proc can refund a round.
             while (to_int(get_property("lastColosseumRoundWon")) < 15) {
                 string freeFight;
-                if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && have_item($item[legendary seal-clubbing club]))
+                if (to_int(get_property("_clubEmTimeUsed")) < 5 && !highShiny() && !lowShiny() && available_amount($item[legendary seal-clubbing club]) > 0)
                     freeFight = "legendary seal-clubbing club,";
                 if (to_int(get_property("_batWingsFreeFights")) < 5 && if_equip($item[bat wings]) != "")
                     freeFight += if_equip($item[bat wings]);
-                else if (have_item($item[Unwrapped knock-off retro superhero cape])){
+                else if (available_amount($item[Unwrapped knock-off retro superhero cape]) > 0){
                     freeFight += "unwrapped knock-off retro superhero cape,";
                     modes = "retrocape heck kill";
                 }
@@ -2445,7 +2445,7 @@ string DropsItems;
                 } else {
                     tempEquipment("spell damage percent, mys,sea", "Mer-kin gladiator mask,Mer-kin gladiator tailpiece,"
                         + if_equip($item[Congressional Medal of Insanity]) + bathysphere($item[toy cupid bow]));
-                    if (have_item($item[Unwrapped knock-off retro superhero cape])){
+                    if (available_amount($item[Unwrapped knock-off retro superhero cape]) > 0){
                         cli_execute("retrocape heck kill; equip unwrapped knock-off retro superhero cape");
                     }
                 }
