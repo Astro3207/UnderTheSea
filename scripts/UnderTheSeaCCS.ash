@@ -629,7 +629,9 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Mer-Kin Outpost]:
-            if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+            if (to_int(get_property("lassoTrainingCount")) < 20
+                && (my_path().id == 0 || (have_equipped($item[sea cowboy hat])
+                    && have_equipped($item[sea chaps]) && item_amount($item[sea lasso]) > 0)))
                 throw_item($item[sea lasso]);
             // While its cowbell and leather are needed, a sea cow skips Talk to Some Fish and item-less kills.
             // A live golem Back-Up chain takes the cow instead.

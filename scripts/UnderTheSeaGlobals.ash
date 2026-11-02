@@ -1033,6 +1033,29 @@ boolean seaCowNeeded() {
     return false;
 }
 
+// Underwater breathing that leaves the hat and pants slots to the lasso trainer.
+boolean breathesWithTrainer() {
+    foreach ef in $effects[Driving Waterproofly, Hyperoxygenated Blood, Mer-kinny Flavor,
+        Oxygenated Blood, Pneumatic, Pumped Stomach, Really Deep Breath]
+        if (have_effect(ef) > 0)
+            return true;
+    foreach it in $items[Elf Guard SCUBA tank, old SCUBA tank, makeshift SCUBA gear]
+        if (available_amount(it) > 0 && can_equip(it))
+            return true;
+    return false;
+}
+
+// Path 55 trains the lasso in Outpost item-drop fights once both trainer pieces exist.
+boolean outpostLassoTraining() {
+    return my_path().id == 55 && !highShiny()
+        && to_int(get_property("lassoTrainingCount")) < 20
+        && get_property("merkinLockkeyMonster") == ""
+        && item_amount($item[sea lasso]) > 0
+        && available_amount($item[sea cowboy hat]) > 0 && can_equip($item[sea cowboy hat])
+        && available_amount($item[sea chaps]) > 0 && can_equip($item[sea chaps])
+        && breathesWithTrainer();
+}
+
 // ─── LEGENDARY ACORNDION ──────────────────────────────────────────────────────
 boolean acorndionWorn() {
     return have_equipped($item[legendary acorndion]);
