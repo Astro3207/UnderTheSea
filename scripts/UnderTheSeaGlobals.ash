@@ -426,6 +426,14 @@ import <seedfinder/seedfinder.ash>;
         return bczCostAt(to_int(get_property("_bcz" + BCZskill)));
     }
 
+    // A lounge item needs the key in inventory and that item in the current clan.
+    // Asking for a missing one is a mafia abort that no capture clears, so check first.
+    boolean loungeHas(string image) {
+        if (item_amount($item[Clan VIP Lounge key]) == 0)
+            return false;
+        return contains_text(visit_url("clan_viplounge.php"), image);
+    }
+
     // Assert your Authority needs all three props worn at once. Same test
     // tempEquipment() applies, so a true here means it can dress them.
     boolean sheriffOutfit() {
