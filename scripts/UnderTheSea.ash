@@ -2554,10 +2554,9 @@ string DropsItems;
     // construct banish onto the orc phylum. The zone progress it makes stays
     // for the pearl farm. uts_postLoopFarmPearls hands the farm to pearlo.
     //
-    // Free kills, free runs and fight-enders advance neither a zone's pearl
-    // progress nor screechCombats -- only a combat fought to a plain win on a
-    // spent turn counts. _utsPearlFarm tells the CCS to fight that way while
-    // the walker below is running.
+    // The screech recharges after 11 eagle combats, free kills and free runs
+    // included. Free kills add pearl progress and free runs don't, so
+    // _utsPearlFarm has the CCS kill where it can while the walker below runs.
 
         string [location] pearlZoneRes = {
             $location[Anemone Mine]:          "spooky res",
@@ -2575,18 +2574,19 @@ string DropsItems;
         };
 
     // Pearl progress pays its full 10% a combat only at 18+ of the zone's
-    // element; below that the game pays partial credit and the ten-combat
-    // pearl stretches. Checked every turn, not just at zone entry -- the res
-    // buffs run out mid-zone -- re-upping expired buffs and refusing to farm
-    // slower than the economics were priced at.
+    // element; below that the game pays partial credit. The screech recharges
+    // either way, so a shortfall is reported once per zone. Runs every turn to
+    // re-up buffs that expire mid-zone.
+    location pearlResWarned = $location[none];
     void pearlResCheck(location zone) {
         string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
         mood(elem + "res");
         mood("combat");
-        if (numeric_modifier(elem + " resistance") < 18)
-            abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
-                + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
-                + " is up; add " + elem + " resistance gear or buffs and rerun.");
+        if (numeric_modifier(elem + " resistance") < 18 && pearlResWarned != zone) {
+            pearlResWarned = zone;
+            print("Only " + to_int(numeric_modifier(elem + " resistance")) + " " + elem + " resistance in "
+                + zone + "; pearl progress needs 18 for full speed. Walking on for the screech.", "red");
+        }
     }
 
     void pearlZonePrep(location zone) {
@@ -2599,9 +2599,8 @@ string DropsItems;
         // no combat piece can outbid a needed res level, "18 max" stops the
         // maximizer crediting res past the line, and every slot left over
         // chases +combat -- each noncombat dodged is a turn the pearl doesn't
-        // cost. No "18 min": a hard maximizer failure would abort as
-        // "Maximizer failed" where pearlResCheck names the element and value,
-        // and it runs before the first adventure.
+        // cost. No "18 min": a hard maximizer failure would abort the walk,
+        // which works below the line.
         tempEquipment("200 " + pearlZoneRes[zone] + " 18 max, combat,sea",bathysphere($item[none]));
     }
 
@@ -2668,7 +2667,7 @@ string DropsItems;
     // than aborting, so the rest of the postloop still runs.
     void reportRundownStalled(string why, int spent) {
         print("uts_postLoopRunOutEagleBanish: " + why + " after " + spent
-            + " turns; the Patriotic Screech is still aimed at the construct phylum.", "red");
+            + " fights; the Patriotic Screech is still aimed at the construct phylum.", "red");
         print("Crates are constructs, so garbo will abort on its crate setup. Re-aim by hand: "
             + "take out the Patriotic Eagle and screech in The Smut Orc Logging Camp.", "red");
     }
@@ -2709,6 +2708,31 @@ string DropsItems;
         return my_adventures() > before;
     }
 
+    // Judged by the effect, since a rest with no time left still reports success.
+    boolean cureBeatenUp() {
+        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus])) {
+            boolean cast = use_skill(1, $skill[Tongue of the Walrus]);
+        }
+        if (have_effect($effect[beaten up]) > 0) {
+            boolean rested = cli_execute("campground rest");
+        }
+        return have_effect($effect[beaten up]) == 0;
+    }
+
+    // Ends the walk after a lost fight so the rest of the postloop still runs.
+    boolean rundownFightLost(int spent) {
+        if (get_property("_lastCombatLost") != "true")
+            return false;
+        set_property("_lastCombatLost", "false");
+        if (!cureBeatenUp())
+            print("Could not cure Beaten Up after the lost fight.", "red");
+        if (contains_text(get_property("banishedPhyla"), "construct"))
+            reportRundownStalled("a fight was lost", spent);
+        else
+            print("A fight was lost after " + spent + " fights, but constructs are free.", "blue");
+        return true;
+    }
+
     void screechRundown() {
         if (get_property("uts_postLoopRunOutEagleBanish") != "true"
             || !contains_text(get_property("banishedPhyla"), "construct"))
@@ -2724,6 +2748,7 @@ string DropsItems;
         if (!use_familiar($familiar[Patriotic Eagle]))
             abort("uts_postLoopRunOutEagleBanish: couldn't take out the Patriotic Eagle.");
         set_property("_utsPearlFarm", "true");
+        set_property("_lastCombatLost", "false");
         int spent;
         // The CCS sets _utsScreechReady from each eagle fight's skill dropdown.
         // screechCombats misses eagle chatter, so it only times the fallback try.
@@ -2745,9 +2770,11 @@ string DropsItems;
                 // from "cast, and the banish stayed put".
                 set_property("_utsScreechFired", "");
                 set_property("_utsScreechReaim", "true");
-                adv1($location[The Smut Orc Logging Camp]);
+                boolean campFought = adv1($location[The Smut Orc Logging Camp]);
                 set_property("_utsScreechReaim", "false");
                 spent += 1;
+                if (rundownFightLost(spent))
+                    break;
                 // banishedPhyla is the ground truth. The recorded cast only
                 // explains a banish that did not move, so it is read second.
                 if (!contains_text(get_property("banishedPhyla"), "construct")) {
@@ -2780,7 +2807,7 @@ string DropsItems;
                 }
             }
             if (spent >= 40) {
-                reportRundownStalled("the screech still isn't ready after 40 turns", spent);
+                reportRundownStalled("the screech still isn't ready", spent);
                 break;
             }
             if (my_adventures() == 0 && !drinkPilsner())
@@ -2807,8 +2834,10 @@ string DropsItems;
             if (my_adventures() == 0)
                 continue;
             pearlResCheck(current);
-            adv1(current);
+            boolean zoneFought = adv1(current);
             spent += 1;
+            if (rundownFightLost(spent))
+                break;
         }
         } finally {
             set_property("_utsPearlFarm", "false");
@@ -2947,6 +2976,11 @@ string DropsItems;
             args += " luckyfishy";
         if (extra != "")
             args += " " + extra;
+        // pearlo aborts when Beaten Up, which would end this script too.
+        if (!cureBeatenUp()) {
+            print("uts_postLoopFarmPearls: still Beaten Up, so pearl farming is skipped.", "red");
+            return;
+        }
         // An abort inside pearlo ends this script too. A thrown error returns false.
         if (!cli_execute("pearlo" + args))
             print("uts_postLoopFarmPearls: \"pearlo" + args + "\" failed. Look above for a typo in uts_pearloArgs "
