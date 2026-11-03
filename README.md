@@ -6,8 +6,8 @@
 ## Hard requirements
 
 - **KoLmafia r29057 or newer.**
-- **`autoSatisfyWithNPCs = true`** in mafia's preferences.
 - **A softcore run.** Hardcore isn't supported and stops at the start.
+- **`autoSatisfyWithNPCs = true`** in mafia's preferences.
 - **A clan with a stocked photobooth** — the script claims the three sheriff
   props daily and aborts if the booth is empty.
 - **Aftercore mode (running the sea outside the path):** The script prompts for which boss to fight.
