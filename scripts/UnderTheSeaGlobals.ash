@@ -1064,7 +1064,7 @@ boolean acorndionWorn() {
 // One Outpost fight in the Acorndion plants a Refrain, so sea cows join the delay pool.
 boolean acornOutpostWanted() {
     return my_path().id == 55
-        && get_property("uts_acornOutpost") != "false"
+        && get_property("uts_acornOutpost") == "true"
         && available_amount($item[legendary acorndion]) > 0
         && (get_property("_utsAcornOutpost") == "" || get_property("_utsAcornOutpost") == "dressed")
         && seaCowNeeded()
@@ -1122,7 +1122,7 @@ boolean outpostFarmsScales() {
 
 // After the Refrain, Outpost fights stay in the Acorndion until each target has met one Chiasso.
 boolean acornBanishWanted() {
-    if (my_path().id != 55 || get_property("uts_acornOutpost") == "false"
+    if (my_path().id != 55 || get_property("uts_acornOutpost") != "true"
         || available_amount($item[legendary acorndion]) == 0
         || get_property("_utsAcornOutpost") != "planted"
         || contains_text(get_property("_utsAcornBanished"), "stop")

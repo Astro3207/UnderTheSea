@@ -1,9 +1,9 @@
 import UnderTheSeaGlobals.ash;
 
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
-// Set with the mafia CLI; all default to off unless noted.
+// Set with the mafia CLI; all default to off.
 // uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy, uts_postLoopPrepCodpiece and uts_pearloArgs
-// uts_acornOutpost defaults on; false skips the Outpost Acorndion Refrain and banishes.
+// uts_acornOutpost=true plants the Outpost Acorndion Refrain and banishes.
 // uts_saveSeadentWave=true never floods the Shadow Rift, leaving Summon a Wave for later in the day.
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For 
