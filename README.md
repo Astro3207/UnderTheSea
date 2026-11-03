@@ -24,7 +24,7 @@
 | `UnderTheSea sim` | Prints which IOTMs, skills, familiars and pulls you have. Spends nothing. |
 | `UnderTheSea postloop` | Runs only the postloop steps, each gated by its own preference. |
 
-Preferences, set once in the gCLI; all default to off unless noted:
+Preferences, set once in the gCLI; all default to off:
 
 | Preference | What it does |
 |---|---|
@@ -36,7 +36,7 @@ Preferences, set once in the gCLI; all default to off unless noted:
 | `set uts_postLoopCloverFishy = true` | Gets 20 more turns of Fishy from a Lucky! adventure when it runs out. Needs the screech or pearl farm preference. |
 | `set uts_postLoopPrepCodpiece = true` | Loads The Eternity Codpiece with five unblemished pearls for your next ascension, buying any you're short of if `autoSatisfyWithMall` and `autoBuyPriceLimit` allow. Aborts if it can't reach five. |
 | `set uts_pearloArgs = <args>` | Extra arguments for the `pearlo` call, such as `airmode=gear`. See `pearlo help`. |
-| `set uts_acornOutpost = false` | On by default. Skips the legendary acorndion's sea cows and banishes in the Mer-kin Outpost. |
+| `set uts_acornOutpost = true` | Uses the legendary acorndion in the Mer-kin Outpost to add sea cows and, when it can, banish the burglar and raider. |
 | `set uts_saveSeadentWave = true` | Never floods the Shadow Rift, saving Summon a Wave for later. Costs extra turns. |
 
 The postloop steps run in this order: pilsners, codpiece, screech, pearl farm, codpiece top-up, `uts_postloopCommand`. Most empty Hagnk's first.
