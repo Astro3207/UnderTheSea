@@ -649,7 +649,8 @@ string DropsItems;
                 }
                 if (available_amount($item[Asdon Martin keyfob (on ring)]) > 0)
                     use($item[Asdon Martin keyfob (on ring)]);
-                else if (item_amount($item[portable Mayo Clinic]) > 0)
+                else if (highShiny()){
+                } else if (item_amount($item[portable Mayo Clinic]) > 0)
                     use($item[portable Mayo Clinic]);
                 else if (item_amount($item[model train set]) == 1)
                     use($item[model train set]);
@@ -2512,7 +2513,7 @@ string DropsItems;
                 set_property("mpAutoRecoveryTarget", "-0.05");
                 while (my_hp() < my_maxhp())
                     use_skill($skill[Cannelloni Cocoon]);
-                cli_execute("recover hp; cast * empathy");
+                cli_execute("recover hp; cast * polka of plenty");
                 adv($location[Mer-kin Temple (Left Door)]);
             }
         }
