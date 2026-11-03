@@ -3006,7 +3006,6 @@ void endOfRun() {
     while (item_amount($item[sand penny]) > 10)
         buy($coinmaster[Wet Crap For Sale], 1,
             $item[waterlogged scroll of healing]);
-    runReport();
     council();
     council();
     // First of the postloop steps, since the later ones can abort
