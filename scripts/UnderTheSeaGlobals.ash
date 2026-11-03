@@ -1,3 +1,4 @@
+since r29402;
 import <seedfinder/seedfinder.ash>;
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────   
     int pearlsDoneToday;
@@ -1030,6 +1031,132 @@ boolean seaCowNeeded() {
     if (item_amount($item[sea cowbell]) < 3)
         return true;
     return false;
+}
+
+// Underwater breathing that leaves the hat and pants slots to the lasso trainer.
+boolean breathesWithTrainer() {
+    foreach ef in $effects[Driving Waterproofly, Hyperoxygenated Blood, Mer-kinny Flavor,
+        Oxygenated Blood, Pneumatic, Pumped Stomach, Really Deep Breath]
+        if (have_effect(ef) > 0)
+            return true;
+    foreach it in $items[Elf Guard SCUBA tank, old SCUBA tank, makeshift SCUBA gear]
+        if (available_amount(it) > 0 && can_equip(it))
+            return true;
+    return false;
+}
+
+// Path 55 trains the lasso in Outpost item-drop fights once both trainer pieces exist.
+boolean outpostLassoTraining() {
+    return my_path().id == 55 && !highShiny()
+        && to_int(get_property("lassoTrainingCount")) < 20
+        && get_property("merkinLockkeyMonster") == ""
+        && item_amount($item[sea lasso]) > 0
+        && available_amount($item[sea cowboy hat]) > 0 && can_equip($item[sea cowboy hat])
+        && available_amount($item[sea chaps]) > 0 && can_equip($item[sea chaps])
+        && breathesWithTrainer();
+}
+
+// ─── LEGENDARY ACORNDION ──────────────────────────────────────────────────────
+boolean acorndionWorn() {
+    return have_equipped($item[legendary acorndion]);
+}
+
+// One Outpost fight in the Acorndion plants a Refrain, so sea cows join the delay pool.
+boolean acornOutpostWanted() {
+    return my_path().id == 55
+        && get_property("uts_acornOutpost") == "true"
+        && available_amount($item[legendary acorndion]) > 0
+        && (get_property("_utsAcornOutpost") == "" || get_property("_utsAcornOutpost") == "dressed")
+        && seaCowNeeded()
+        && $location[The Mer-Kin Outpost].turns_spent < 20
+        && my_maxmp() >= 11;
+}
+
+// The fight acornOutpostDress() prepared, marked by plantAcorn() or acornBanish() at its start.
+boolean acornPlantFight() {
+    return acorndionWorn() && get_property("_utsAcornFight") != ""
+        && get_property("_utsAcornFight") == get_property("_lastCombatStarted");
+}
+
+// CCS: casts the planting Refrain once, only in a fight dressed for it. The pref moves on first so no later round recasts.
+void plantAcorn(string page_text) {
+    if (current_round() == 0 || my_location() != $location[The Mer-Kin Outpost]
+        || !acorndionWorn() || get_property("_utsAcornOutpost") != "dressed")
+        return;
+    set_property("_utsAcornOutpost", "tried");
+    set_property("_utsAcornFight", get_property("_lastCombatStarted"));
+    buffer cast;
+    if (my_mp() < 11) {
+        print("Acorndion worn in the Outpost with " + my_mp() + " MP, no Refrain.", "red");
+        // Later fights retry, three fights in all.
+        int misses = to_int(get_property("_utsAcornMpMisses")) + 1;
+        set_property("_utsAcornMpMisses", to_string(misses));
+        set_property("_utsAcornOutpost", misses < 3 ? "" : "lowmp");
+        return;
+    }
+    if (have_skill($skill[Bawdy Refrain]))
+        cast = use_skill($skill[Bawdy Refrain]);
+    else if (contains_text(page_text, "value=\"7604\"") || contains_text(page_text, "Juvenile Refrain"))
+        cast = use_skill($skill[Juvenile Refrain]);
+    else {
+        print("Acorndion worn in the Outpost but no Refrain on the fight page.", "red");
+        set_property("_utsAcornOutpost", "noskill");
+        return;
+    }
+    set_property("_utsAcornOutpost", "planted");
+    print("Outpost acorn: Refrain cast.", "blue");
+}
+
+// The Outpost natives the Acorndion banishes. The healer stays for its prayerbeads.
+boolean acornBanishTarget(monster mob) {
+    return $monsters[Mer-kin burglar, Mer-kin raider] contains mob && !is_banished(mob)
+        && !contains_text(get_property("_utsAcornBanished"), to_string(mob));
+}
+
+// These routes farm pristine scales with the Monodent in item-drop Outpost fights.
+boolean outpostFarmsScales() {
+    return my_familiar() != $familiar[Sword of S Words]
+        && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny())
+        && available_amount($item[pristine fish scale]) < 6;
+}
+
+// After the Refrain, Outpost fights stay in the Acorndion until each target has met one Chiasso.
+boolean acornBanishWanted() {
+    if (my_path().id != 55 || get_property("uts_acornOutpost") != "true"
+        || available_amount($item[legendary acorndion]) == 0
+        || get_property("_utsAcornOutpost") != "planted"
+        || contains_text(get_property("_utsAcornBanished"), "stop")
+        || !seaCowNeeded() || $location[The Mer-Kin Outpost].turns_spent >= 20
+        || my_maxmp() < 8 || outpostFarmsScales())
+        return false;
+    return acornBanishTarget($monster[Mer-kin burglar]) || acornBanishTarget($monster[Mer-kin raider]);
+}
+
+// CCS: in a fight dressed for banishing, casts Chiasso (Concerto for an AT) once on each target.
+void acornBanish(string page_text) {
+    if (current_round() == 0 || my_location() != $location[The Mer-Kin Outpost]
+        || !acorndionWorn() || get_property("_utsAcornBanishDress") != "dressed")
+        return;
+    set_property("_utsAcornBanishDress", "fought");
+    set_property("_utsAcornFight", get_property("_lastCombatStarted"));
+    if (!acornBanishTarget(last_monster()))
+        return;
+    if (my_mp() < 8) {
+        print("Acorndion worn against a " + last_monster() + " with " + my_mp() + " MP, no Chiasso.", "red");
+        return;
+    }
+    set_property("_utsAcornBanished", get_property("_utsAcornBanished") + last_monster() + ",");
+    buffer cast;
+    if (have_skill($skill[Concerto de los Muertos]))
+        cast = use_skill($skill[Concerto de los Muertos]);
+    else if (contains_text(page_text, "value=\"7603\"") || contains_text(page_text, "Chiasso de los Muertos"))
+        cast = use_skill($skill[Chiasso de los Muertos]);
+    else {
+        print("Acorndion worn in the Outpost but no Chiasso on the fight page.", "red");
+        set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+        return;
+    }
+    print("Outpost acorn: banish cast on the " + last_monster() + ".", "blue");
 }
 
 // The monster the crystal ball has locked into the Coral Corral, or none.

@@ -3,6 +3,8 @@ import UnderTheSeaGlobals.ash;
 // ─── PER-ACCOUNT CONFIG ───────────────────────────────────────────────────────
 // Set with the mafia CLI; all default to off.
 // uts_godRunGuard, uts_postloopCommand, uts_usePilsners, uts_postLoopRunOutEagleBanish, uts_postLoopFarmPearls, uts_postLoopCloverFishy, uts_postLoopPrepCodpiece and uts_pearloArgs
+// uts_acornOutpost=true plants the Outpost Acorndion Refrain and banishes.
+// uts_saveSeadentWave=true never floods the Shadow Rift, leaving Summon a Wave for later in the day.
 // see the README for what each does.
 familiar chosenFamiliar = $familiar[none]; //For 
 
@@ -918,6 +920,7 @@ string DropsItems;
     // Shadow Rift fight gear. The Liquidizer grants the Douse Foe the CCS casts on a shadow slab.
     void shadowRiftGear() {
         string trainer = to_int(get_property("lassoTrainingCount")) < 20
+            && get_property("uts_saveSeadentWave") != "true"
             ? if_equip($item[sea cowboy hat]) + if_equip($item[sea chaps]) : "";
         tempEquipment("item drop", if_equip($item[Flash Liquidizer Ultra Dousing Accessory]) + "monodent of the sea," + trainer
             + if_equip($item[bat wings]) + if_equip($item[Everfull Dart Holster]) + riftFamiliarGear() + baseball_equip());
@@ -935,7 +938,9 @@ string DropsItems;
                 NCforce();
                 adv1($location[Shadow Rift (The Misspelled Cemetary)]);
             }
-            if (get_property("_seadentWaveUsed") == "false")
+            if (get_property("_seadentWaveUsed") == "false"
+                && get_property("uts_saveSeadentWave") != "true"
+                && to_int(get_property("lassoTrainingCount")) < 20)
                 use_skill($skill[Sea *dent: Summon a Wave]);
             use($item[closed-circuit pay phone]);
             shadowRiftGear();
@@ -963,6 +968,8 @@ string DropsItems;
                 mood("itdrop");
                 adv1($location[Shadow Rift (The Misspelled Cemetary)]);
                 if (get_property("_seadentWaveUsed") == "false"
+                    && get_property("uts_saveSeadentWave") != "true"
+                    && to_int(get_property("lassoTrainingCount")) < 20
                     && have_effect($effect[shadow affinity]) > 0) {
                     adv1($location[Shadow Rift (The Misspelled Cemetary)]);
                     use_skill($skill[Sea *dent: Summon a Wave]);
@@ -1319,6 +1326,61 @@ string DropsItems;
         }
     }
 
+    // Swaps the weapon for the Acorndion for one fight, unless that costs underwater breathing.
+    // A failed banish dress stops the banish stage; a failed Refrain dress records why.
+    void acornOutpostDress(string conditional, boolean banish) {
+        string stage = banish ? "banish" : "Refrain";
+        int mp = banish ? 8 : 11;
+        boolean breathes = boolean_modifier("Adventure Underwater");
+        if (my_mp() < mp && !restore_mp(mp))
+            return;
+        // Equips through KoL's inventory page. Mafia's equip() refuses this accordion to other classes.
+        buffer worn = visit_url("inv_equip.php?pwd&which=2&action=equip&whichitem=" + to_int($item[legendary acorndion]) + "&ajax=1");
+        if (!have_equipped($item[legendary acorndion]) && !cli_execute("refresh equip"))
+            print("Equipment refresh failed after the Acorndion swap.", "red");
+        if (!have_equipped($item[legendary acorndion])) {
+            print("Could not equip the Acorndion for the Outpost " + stage + ".", "red");
+            if (banish)
+                set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+            else
+                set_property("_utsAcornOutpost", "noequip");
+            return;
+        }
+        if (breathes && !boolean_modifier("Adventure Underwater")) {
+            print("The Acorndion cost underwater breathing; skipping the Outpost " + stage + ".", "red");
+            if (banish)
+                set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+            else
+                set_property("_utsAcornOutpost", "noair");
+            tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+            return;
+        }
+        // Taking off the Monodent can lower max MP.
+        if (my_maxmp() < mp || (my_mp() < mp && !restore_mp(mp))) {
+            print("Not enough MP in the Acorndion for the Outpost " + stage + ".", "red");
+            if (banish)
+                set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+            else
+                set_property("_utsAcornOutpost", "lowmp");
+            tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+            return;
+        }
+        set_property(banish ? "_utsAcornBanishDress" : "_utsAcornOutpost", "dressed");
+        step("Outpost: Acorndion on for the " + stage);
+    }
+
+    // Smiths the lasso trainer pieces from Outpost sea leather while training is short.
+    void outpostTrainerSmith() {
+        if (my_path().id != 55 || highShiny() || to_int(get_property("lassoTrainingCount")) >= 20)
+            return;
+        if (available_amount($item[sea chaps]) == 0 && tailpiece() == $item[none]
+            && item_amount($item[sea leather]) > 0 && !create(1, $item[sea chaps]))
+            print("Could not smith the sea chaps.", "red");
+        if (available_amount($item[sea cowboy hat]) == 0 && item_amount($item[sea leather]) > 0
+            && !create(1, $item[sea cowboy hat]))
+            print("Could not smith the sea cowboy hat.", "red");
+    }
+
     void outpost(){
         step("phase: Mer-kin Outpost (stashbox / lockkey)");
         if (NCForceEstimate() >= 5 && have_effect($effect[driving waterproofly]) > 0)
@@ -1343,6 +1405,12 @@ string DropsItems;
                 }
             }
 
+            // Dressed for the Refrain only in the iteration that equipped the Acorndion.
+            if (get_property("_utsAcornOutpost") == "dressed")
+                set_property("_utsAcornOutpost", "");
+            if (get_property("_utsAcornBanishDress") != "")
+                set_property("_utsAcornBanishDress", "");
+            outpostTrainerSmith();
             if ($location[The Mer-Kin Outpost].turns_spent < 5)
                 set_property("stashboxChecked", "0");
             if (contains_text(get_property("stashboxChecked"), "1")
@@ -1390,7 +1458,16 @@ string DropsItems;
                 mood("-combat");
                 tempEquipment("-combat,sea", bathysphere($item[none]) + conditional + delay());
             } else {
+                // The trainer's chaps share the pants slot with scale-mail underwear.
+                if (outpostLassoTraining() && !contains_text(conditional, "scale-mail underwear"))
+                    conditional += "sea cowboy hat,sea chaps,";
                 tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                if (!contains_text(conditional, "roman candelabra") && !contains_text(conditional, "backup camera")) {
+                    if (acornOutpostWanted())
+                        acornOutpostDress(conditional, false);
+                    else if (acornBanishWanted())
+                        acornOutpostDress(conditional, true);
+                }
             }
             adv($location[The Mer-Kin Outpost]);
 
@@ -1717,7 +1794,9 @@ string DropsItems;
 
             // ── Lasso training via shadow rift ────────────────────────────────────────
             step("phase: lasso training");
-            while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && available_amount($item[closed-circuit pay phone]) > 0)
+            // With uts_saveSeadentWave the Rift stays dry and backupLasso() does the training.
+            while (to_int(get_property("lassoTrainingCount")) < 20 && !highShiny() && (have_effect($effect[shadow affinity]) > 0 || get_property("_shadowAffinityToday") == "false") && available_amount($item[closed-circuit pay phone]) > 0
+                && get_property("uts_saveSeadentWave") != "true")
                 shadowRift();
 
             // A run that wears the crystal ball in the Corral keeps 4 Shadow Affinity for dodges.
@@ -1745,10 +1824,16 @@ string DropsItems;
     void backupLasso() {
         // ── Lasso training backup ─────────────────────────────────────────────────
         while (to_int(get_property("lassoTrainingCount")) < 20) {
-            if (available_amount($item[closed-circuit pay phone]) > 0);
+            if (available_amount($item[closed-circuit pay phone]) > 0 && get_property("uts_saveSeadentWave") != "true")
                 print("Lasso training didn't finish via shadow rift", "red");
-            if (!pulledToday($item[Elf Guard SCUBA tank]))
-                cli_execute("pull elf guard scuba");
+            // Re-drives a lapsed Waterproofly before the breathing check.
+            if (have_effect($effect[Driving Waterproofly]) == 0
+                && get_workshed() == $item[Asdon Martin keyfob (on ring)] && get_fuel() >= 37
+                && !cli_execute("asdonmartin drive Waterproofly"))
+                print("Could not drive Waterproofly before lasso training.", "red");
+            if (!breathesWithTrainer() && !pulledToday($item[Elf Guard SCUBA tank])
+                && !pullSequence($item[Elf Guard SCUBA tank]))
+                print("No underwater breathing outside the hat and pants slots, and no Elf Guard SCUBA tank pull.", "red");
             if (item_amount($item[sea lasso]) == 0){
                 equip($item[really, really nice swimming trunks]);
                 equip($item[little bitty bathysphere]);
@@ -1757,7 +1842,7 @@ string DropsItems;
             use_familiar("itdrop");
             if (available_amount($item[pristine fish scale]) < 6)
                 mood("itdrop");
-            tempEquipment(pearlRes[ps]+",sea","monodent of the sea,sea cowboy hat,sea chaps" + bathysphere($item[none]));
+            tempEquipment(pearlRes[ps]+",sea","monodent of the sea,sea cowboy hat,sea chaps," + bathysphere($item[none]));
             adv(pearlLoc[ps]);
         }
     }
@@ -2470,10 +2555,9 @@ string DropsItems;
     // construct banish onto the orc phylum. The zone progress it makes stays
     // for the pearl farm. uts_postLoopFarmPearls hands the farm to pearlo.
     //
-    // Free kills, free runs and fight-enders advance neither a zone's pearl
-    // progress nor screechCombats -- only a combat fought to a plain win on a
-    // spent turn counts. _utsPearlFarm tells the CCS to fight that way while
-    // the walker below is running.
+    // The screech recharges after 11 eagle combats, free kills and free runs
+    // included. Free kills add pearl progress and free runs don't, so
+    // _utsPearlFarm has the CCS kill where it can while the walker below runs.
 
         string [location] pearlZoneRes = {
             $location[Anemone Mine]:          "spooky res",
@@ -2491,18 +2575,19 @@ string DropsItems;
         };
 
     // Pearl progress pays its full 10% a combat only at 18+ of the zone's
-    // element; below that the game pays partial credit and the ten-combat
-    // pearl stretches. Checked every turn, not just at zone entry -- the res
-    // buffs run out mid-zone -- re-upping expired buffs and refusing to farm
-    // slower than the economics were priced at.
+    // element; below that the game pays partial credit. The screech recharges
+    // either way, so a shortfall is reported once per zone. Runs every turn to
+    // re-up buffs that expire mid-zone.
+    location pearlResWarned = $location[none];
     void pearlResCheck(location zone) {
         string elem = substring(pearlZoneRes[zone], 0, index_of(pearlZoneRes[zone], " "));
         mood(elem + "res");
         mood("combat");
-        if (numeric_modifier(elem + " resistance") < 18)
-            abort("Pearl farming needs 18 " + elem + " resistance for full speed in "
-                + zone + " and only " + to_int(numeric_modifier(elem + " resistance"))
-                + " is up; add " + elem + " resistance gear or buffs and rerun.");
+        if (numeric_modifier(elem + " resistance") < 18 && pearlResWarned != zone) {
+            pearlResWarned = zone;
+            print("Only " + to_int(numeric_modifier(elem + " resistance")) + " " + elem + " resistance in "
+                + zone + "; pearl progress needs 18 for full speed. Walking on for the screech.", "red");
+        }
     }
 
     void pearlZonePrep(location zone) {
@@ -2515,9 +2600,8 @@ string DropsItems;
         // no combat piece can outbid a needed res level, "18 max" stops the
         // maximizer crediting res past the line, and every slot left over
         // chases +combat -- each noncombat dodged is a turn the pearl doesn't
-        // cost. No "18 min": a hard maximizer failure would abort as
-        // "Maximizer failed" where pearlResCheck names the element and value,
-        // and it runs before the first adventure.
+        // cost. No "18 min": a hard maximizer failure would abort the walk,
+        // which works below the line.
         tempEquipment("200 " + pearlZoneRes[zone] + " 18 max, combat,sea",bathysphere($item[none]));
     }
 
@@ -2584,7 +2668,7 @@ string DropsItems;
     // than aborting, so the rest of the postloop still runs.
     void reportRundownStalled(string why, int spent) {
         print("uts_postLoopRunOutEagleBanish: " + why + " after " + spent
-            + " turns; the Patriotic Screech is still aimed at the construct phylum.", "red");
+            + " fights; the Patriotic Screech is still aimed at the construct phylum.", "red");
         print("Crates are constructs, so garbo will abort on its crate setup. Re-aim by hand: "
             + "take out the Patriotic Eagle and screech in The Smut Orc Logging Camp.", "red");
     }
@@ -2625,6 +2709,31 @@ string DropsItems;
         return my_adventures() > before;
     }
 
+    // Judged by the effect, since a rest with no time left still reports success.
+    boolean cureBeatenUp() {
+        if (have_effect($effect[beaten up]) > 0 && have_skill($skill[Tongue of the Walrus])) {
+            boolean cast = use_skill(1, $skill[Tongue of the Walrus]);
+        }
+        if (have_effect($effect[beaten up]) > 0) {
+            boolean rested = cli_execute("campground rest");
+        }
+        return have_effect($effect[beaten up]) == 0;
+    }
+
+    // Ends the walk after a lost fight so the rest of the postloop still runs.
+    boolean rundownFightLost(int spent) {
+        if (get_property("_lastCombatLost") != "true")
+            return false;
+        set_property("_lastCombatLost", "false");
+        if (!cureBeatenUp())
+            print("Could not cure Beaten Up after the lost fight.", "red");
+        if (contains_text(get_property("banishedPhyla"), "construct"))
+            reportRundownStalled("a fight was lost", spent);
+        else
+            print("A fight was lost after " + spent + " fights, but constructs are free.", "blue");
+        return true;
+    }
+
     void screechRundown() {
         if (get_property("uts_postLoopRunOutEagleBanish") != "true"
             || !contains_text(get_property("banishedPhyla"), "construct"))
@@ -2640,6 +2749,7 @@ string DropsItems;
         if (!use_familiar($familiar[Patriotic Eagle]))
             abort("uts_postLoopRunOutEagleBanish: couldn't take out the Patriotic Eagle.");
         set_property("_utsPearlFarm", "true");
+        set_property("_lastCombatLost", "false");
         int spent;
         // The CCS sets _utsScreechReady from each eagle fight's skill dropdown.
         // screechCombats misses eagle chatter, so it only times the fallback try.
@@ -2661,9 +2771,11 @@ string DropsItems;
                 // from "cast, and the banish stayed put".
                 set_property("_utsScreechFired", "");
                 set_property("_utsScreechReaim", "true");
-                adv1($location[The Smut Orc Logging Camp]);
+                boolean campFought = adv1($location[The Smut Orc Logging Camp]);
                 set_property("_utsScreechReaim", "false");
                 spent += 1;
+                if (rundownFightLost(spent))
+                    break;
                 // banishedPhyla is the ground truth. The recorded cast only
                 // explains a banish that did not move, so it is read second.
                 if (!contains_text(get_property("banishedPhyla"), "construct")) {
@@ -2696,7 +2808,7 @@ string DropsItems;
                 }
             }
             if (spent >= 40) {
-                reportRundownStalled("the screech still isn't ready after 40 turns", spent);
+                reportRundownStalled("the screech still isn't ready", spent);
                 break;
             }
             if (my_adventures() == 0 && !drinkPilsner())
@@ -2723,8 +2835,10 @@ string DropsItems;
             if (my_adventures() == 0)
                 continue;
             pearlResCheck(current);
-            adv1(current);
+            boolean zoneFought = adv1(current);
             spent += 1;
+            if (rundownFightLost(spent))
+                break;
         }
         } finally {
             set_property("_utsPearlFarm", "false");
@@ -2863,6 +2977,11 @@ string DropsItems;
             args += " luckyfishy";
         if (extra != "")
             args += " " + extra;
+        // pearlo aborts when Beaten Up, which would end this script too.
+        if (!cureBeatenUp()) {
+            print("uts_postLoopFarmPearls: still Beaten Up, so pearl farming is skipped.", "red");
+            return;
+        }
         // An abort inside pearlo ends this script too. A thrown error returns false.
         if (!cli_execute("pearlo" + args))
             print("uts_postLoopFarmPearls: \"pearlo" + args + "\" failed. Look above for a typo in uts_pearloArgs "
