@@ -1189,7 +1189,7 @@ string DropsItems;
                         conditional += if_equip($item[designer sweatpants]);
                     while (get_property(questProp[ps]) == "started") {
                         tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                            + if_equip($item[toy cupid bow]) + conditional + delay());
+                            + if_equip($item[toy cupid bow]) + conditional + delay() + reflexGear());
                         mood("itdrop");
                         adv1(questLoc[ps]);
                     }

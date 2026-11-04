@@ -542,6 +542,14 @@ import <seedfinder/seedfinder.ash>;
         return freeKill();
     }
 
+    // The bag's Reflex Hammer for the guild test, once Spring Away can't end the fight.
+    string reflexGear() {
+        if (to_int(get_property("_reflexHammerUsed")) >= 3
+            || (have_effect($effect[Everything Looks Green]) == 0 && available_amount($item[spring shoes]) > 0))
+            return "";
+        return if_equip($item[Lil' Doctor&trade; bag]);
+    }
+
     string delay(){
         if (have_item($item[Kramco Sausage-o-Matic&trade;]) && !highShiny())
             return if_equip($item[Kramco Sausage-o-Matic&trade;]) + freeRun();
@@ -1202,6 +1210,9 @@ boolean prayerbeadsShort() {
 // that, so ask them rather than restating their numbers.
 boolean stillWanted(item it) {
     switch (it) {
+    case $item[Mer-kin healscroll]:
+        // One held covers the next use, and healers keep dropping them.
+        return item_amount($item[Mer-kin healscroll]) == 0;
     case $item[rusty broken diving helmet]:
     case $item[rusty porthole]:
     case $item[rusty rivet]:
@@ -1792,8 +1803,7 @@ void feelNostalgic(monster mob, string page_text) {
 
 // ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
 // freeKill() equips the bag for Chest X-Ray; Otoscope rides along, cast
-// early so free_kill() cannot end the fight first. Reflex Hammer is wired
-// into free_run() with the other banishes.
+// early so free_kill() cannot end the fight first.
 void otoscope(monster mob, string page_text) {
     // A fight the saber is about to Force has its drops forced anyway; the
     // +200% would be a wasted charge.

@@ -475,8 +475,12 @@ void main(int round, monster mob, string page_text) {
                 free_run(page_text, false);
                 if (have_equipped($item[greatest american pants]) || have_equipped(($item[navel ring of navel gazing])))
                     runaway( );
+                if (current_round() > 0)
+                    use_if_have_skill(page_text, $skill[Reflex Hammer]);
             }
-            use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
+            // Some fish isn't a free monster, so talking to a free one costs the turn.
+            if (!free_monster(last_monster()))
+                use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
             darts();
             freeRunFallback(page_text);
