@@ -6,6 +6,7 @@
 ## Hard requirements
 
 - **KoLmafia r29057 or newer.**
+- **A softcore run.** Hardcore isn't supported and stops at the start.
 - **`autoSatisfyWithNPCs = true`** in mafia's preferences.
 - **Aftercore mode (running the sea outside the path):** The script prompts for which boss to fight.
 - **A Monodent of the Sea.**
@@ -13,6 +14,8 @@
   ascending. 
 - **A Congressional Medal of Insanity** 
 - **3 Familiars** Grouper Groupie, Glover, Foul Ball
+
+A run that needs a clover from the hermit also needs `autoSatisfyWithCoinmasters = true`, and stops with a message at that point without it.
 
 ## Options
 

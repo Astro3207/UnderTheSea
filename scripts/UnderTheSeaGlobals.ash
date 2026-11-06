@@ -214,16 +214,27 @@ import <seedfinder/seedfinder.ash>;
         return n;
     }
 
+    // Lets a pull nobody depends on be skipped without the over-limit prompt.
+    boolean pullAffordable(item it) {
+        return storage_amount(it) > 0 || mall_price(it) <= to_int(get_property("autoBuyPriceLimit"));
+    }
+
     boolean pullSequence(item it) {
+        // Out of ronin there are no pull limits, and retrieve_item can use the mall directly.
+        if (can_interact())
+            return retrieve_item(it);
         if (pulls_remaining() == 0)
             return false;
         if (!pulledToday(it)) {
             if (storage_amount(it) == 0){
-                if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))){
-                    if (!user_confirm("Price of " + it + " exeeds autoBuyPriceLimit, skip?"))
-                        abort("Price of " + it + " exeeds autoBuyPriceLimit");
+                // Stops after a minute with no answer.
+                if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))
+                    && !user_confirm("Price of " + it + " exceeds autoBuyPriceLimit. Buy it anyway?", 60000, false))
+                    abort("Price of " + it + " exceeds autoBuyPriceLimit. Pull it by hand or raise the limit.");
+                if (!buy_using_storage(it)) {
+                    print("Could not buy " + it + " to pull it.", "red");
+                    return false;
                 }
-                buy_using_storage(it);
             }
             return take_storage(1, it);
         }
@@ -245,7 +256,8 @@ import <seedfinder/seedfinder.ash>;
             if (have_effect($effect[Lucky!]) > 0)
                 return;
         }
-        use($item[11-leaf clover]);
+        if (!use(1, $item[11-leaf clover]))
+            abort("Could not get an 11-leaf clover. The hermit may be out today, and buying from him needs autoSatisfyWithCoinmasters = true.");
     }
 
 // Low roll of Saucegeyser in the worn gear, crits and lanterns aside.
@@ -1934,7 +1946,8 @@ void NCforce() {
                         continue;
                     if (pulls_remaining() == 0)
                         return;
-                    pullSequence(it);
+                    if (!pullSequence(it))
+                        continue;
                     if (it == $item[Clara's bell])
                         use (it);
                     else if (it == $item[Handheld Allied radio])
