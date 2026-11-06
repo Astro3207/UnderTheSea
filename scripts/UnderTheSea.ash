@@ -110,7 +110,7 @@ string DropsItems;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
                         if (ef == $effect[Wild and Westy!]
-                            && (to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
+                            && (to_int(get_property("_photoBoothEffects")) >= 3 || !loungeHas("photobooth.gif"))) continue;
                         if (ef == $effect[Apriling Band Patrol Beat] && (available_amount($item[apriling band helmet]) == 0 || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
@@ -127,7 +127,7 @@ string DropsItems;
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
                             && (get_property("yogUrtDefeated") == "false"
-                                || to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
+                                || to_int(get_property("_photoBoothEffects")) >= 3 || !loungeHas("photobooth.gif"))) continue;
                         if (ef == $effect[Fresh Breath]
                             && (get_property("_aug6Cast") == "true" || highShiny())) continue;
                         if (ef == $effect[Bloodbathed]
@@ -167,7 +167,8 @@ string DropsItems;
                     Tubes of Universal Meat, Mariachi Moisture,Everybody Calls Him Gorgon] {
                     if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                     if (ef == $effect[Ultraheart] && get_property("heartstoneBuffUnlocked") == false) continue;
-                    if (ef == $effect[Everybody Calls Him Gorgon] && (!lowShiny() || !have_item($item[Clan VIP Lounge key]))) continue;
+                    if (ef == $effect[Everybody Calls Him Gorgon] && have_effect(ef) == 0
+                        && (!lowShiny() || get_property("_clanFortuneBuffUsed") == "true" || !loungeHas("fortuneteller.gif"))) continue;
 					if ((ef == $effect[Tubes of Universal Meat] || ef == $effect[Mariachi Moisture]) && !have_item($item[April Shower Thoughts Shield]))
 						continue;
                     if (have_effect(ef) == 0) cli_execute(ef.default);
@@ -500,14 +501,19 @@ string DropsItems;
         if (available_amount($item[black glass]) == 0 && item_amount($item[sand dollar]) > 13)
             blackGlass();
 
+        // The key is a free pull, and the lounge needs it in inventory.
+        if (item_amount($item[Clan VIP Lounge key]) == 0 && storage_amount($item[Clan VIP Lounge key]) > 0
+            && !take_storage(1, $item[Clan VIP Lounge key]))
+            print("Couldn't pull the Clan VIP Lounge key from storage.", "red");
+
         // The borrow counter only advances when the booth reports a grab, so it
         // can fall behind what is actually in inventory. Possession decides:
         // gating on the counter skips the retry for exactly the account that
         // holds a duplicate and is short a prop. A spent booth just declines.
-        if (!sheriffOutfit() && have_item($item[Clan VIP Lounge key])){
+        if (!sheriffOutfit() && item_amount($item[Clan VIP Lounge key]) > 0){
             visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
             foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
+                if (available_amount(it) == 0 && loungeHas("photobooth.gif") && !cli_execute("photobooth item " + it))
                     print("Couldn't borrow the " + it + " from the photo booth.", "red");
         }
         // The props only buy three free kills, so a run without them is a run

@@ -7,8 +7,6 @@
 
 - **KoLmafia r29057 or newer.**
 - **`autoSatisfyWithNPCs = true`** in mafia's preferences.
-- **A clan with a stocked photobooth.** The script claims the three sheriff
-  props daily and aborts if the booth is empty.
 - **Aftercore mode (running the sea outside the path):** The script prompts for which boss to fight.
 - **A Monodent of the Sea.**
 - **The Eternity Codpiece**, loaded with unblemished pearls before
@@ -60,6 +58,8 @@ The script sorts your account into a resource tier and routes accordingly:
 ## Things to prepare BEFORE ascending
 
 - Load up the codpiece with unblemished pearls
+- Be in a clan with a stocked photobooth. The script claims the three sheriff
+  props daily, and does without them and the booth's buffs if it can't.
 - Have all of the underwater maps done
 - Have a damp old wallet (not required but saves a turn)
 - Have black crayon golem and unholy diver in the combat lover's locket
