@@ -535,7 +535,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     string freeRun() {
-        if (have_effect($effect[Everything Looks Green]) == 0)
+        if (have_effect($effect[Everything Looks Green]) == 0 && available_amount($item[spring shoes]) > 0)
             return if_equip($item[spring shoes]);
         if (available_amount($item[greatest american pants]) > 0 && (get_property("_navelRunaways").to_int() < 3 || (get_property("_navelRunaways").to_int() < 10 && highShiny())) && have_effect($effect[driving waterproofly]) > 0)
             return if_equip($item[greatest american pants]);
@@ -543,7 +543,9 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[V for vivala mask]);
         if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
             return if_equip($item[latte lovers member's mug]);
-        if (have_familiar($familiar[Pair of Stomping Boots]) && bootsRunaways() > get_property("_banderRunaways").to_int()){
+        // Without Waterproofly the bathysphere's weight loss would leave the Boots unable to run.
+        if (have_familiar($familiar[Pair of Stomping Boots]) && have_effect($effect[Driving Waterproofly]) > 0
+            && bootsRunaways() > get_property("_banderRunaways").to_int()){
             use_familiar($familiar[Pair of Stomping Boots]);
             return "";
         }
@@ -2021,6 +2023,12 @@ monster banished(string banisher) {
     return m.find() ? to_monster(m.group(1)) : $monster[none];
 }
 
+// True when the banisher is unused, or its last target doesn't appear at the location.
+boolean banisherFree(string banisher, location loc) {
+    monster used = banished(banisher);
+    return used == $monster[none] || appearance_rates(loc, true)[used] == 0;
+}
+
 // Returns true if the given banisher has been used on a monster at your current location
 boolean banishUsedAtYourLocation(string banisher) {
     foreach num in monster_found_in(banished(banisher)) {
@@ -2037,7 +2045,7 @@ item banishGear(location loc) {
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
-        if (appearance_rates(loc)[banished(banMap[ite].pref)] == 0 && have_item(ite)) {
+        if (banisherFree(banMap[ite].pref, loc) && available_amount(ite) > 0) {
             it = ite;
             break;
         }
@@ -2058,7 +2066,7 @@ skill combatBan() {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
         if (have_equipped(ite)
-            && appearance_rates(my_location())[banished(banMap[ite].pref)] == 0) {
+            && banisherFree(banMap[ite].pref, my_location())) {
             print("Banish item being considered " + ite + " parsed banished monster is " + banished(banMap[ite].pref) + " and the calculated appearance rate at current location is " + appearance_rates(my_location())[banished(banMap[ite].pref)]);
             cli_execute("get banishedMonsters");
             return banMap[ite].banSkill;

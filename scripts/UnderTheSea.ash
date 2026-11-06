@@ -1309,7 +1309,6 @@ string DropsItems;
                     baseballD();
                 if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
                     conditional += if_equip($item[blood cubic zirconia]);
-                mood(pearlRes[ps]);
                 tempEquipment("item drop, sea, -100 combat","monodent of the sea," + delay()
                     + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
                 mood("-combat");
