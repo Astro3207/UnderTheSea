@@ -110,7 +110,7 @@ string DropsItems;
                         if (ef == $effect[life goals]
                             && item_amount($item[Life Goals Pamphlet]) == 0) continue;
                         if (ef == $effect[Wild and Westy!]
-                            && (to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
+                            && (to_int(get_property("_photoBoothEffects")) >= 3 || !loungeHas("photobooth.gif"))) continue;
                         if (ef == $effect[Apriling Band Patrol Beat] && (available_amount($item[apriling band helmet]) == 0 || total_turns_played() < to_int(get_property("nextAprilBandTurn")))) continue;
                         if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                         cli_execute(ef.default);
@@ -127,7 +127,7 @@ string DropsItems;
                             && item_amount($item[crunchy brush]) == 0) continue;
                         if (ef == $effect[Towering Muscles]
                             && (get_property("yogUrtDefeated") == "false"
-                                || to_int(get_property("_photoBoothEffects")) >= 3 || !have_item($item[Clan VIP Lounge key]))) continue;
+                                || to_int(get_property("_photoBoothEffects")) >= 3 || !loungeHas("photobooth.gif"))) continue;
                         if (ef == $effect[Fresh Breath]
                             && (get_property("_aug6Cast") == "true" || highShiny())) continue;
                         if (ef == $effect[Bloodbathed]
@@ -167,7 +167,8 @@ string DropsItems;
                     Tubes of Universal Meat, Mariachi Moisture,Everybody Calls Him Gorgon] {
                     if (to_skill(ef) != $skill[none] && !have_skill(to_skill(ef))) continue;
                     if (ef == $effect[Ultraheart] && get_property("heartstoneBuffUnlocked") == false) continue;
-                    if (ef == $effect[Everybody Calls Him Gorgon] && (!lowShiny() || !have_item($item[Clan VIP Lounge key]))) continue;
+                    if (ef == $effect[Everybody Calls Him Gorgon] && have_effect(ef) == 0
+                        && (!lowShiny() || get_property("_clanFortuneBuffUsed") == "true" || !loungeHas("fortuneteller.gif"))) continue;
 					if ((ef == $effect[Tubes of Universal Meat] || ef == $effect[Mariachi Moisture]) && !have_item($item[April Shower Thoughts Shield]))
 						continue;
                     if (have_effect(ef) == 0) cli_execute(ef.default);
@@ -288,8 +289,9 @@ string DropsItems;
             if (have_effect($effect[Driving Waterproofly]) == 0) {
                 if (get_workshed() == $item[Asdon Martin keyfob (on ring)]){
                     if (get_fuel() == 0 && !pulledToday($item[pie man was not meant to eat])){
-                        pullSequence($item[pie man was not meant to eat]);
-                        cli_execute("asdonmartin fuel 1 pie man was not meant to eat");
+                        if (pullSequence($item[pie man was not meant to eat])
+                            && !cli_execute("asdonmartin fuel 1 pie man was not meant to eat"))
+                            print("Could not fuel the Asdon Martin with the pie.", "red");
                     }
                     if (get_fuel() >= 37)
                         cli_execute("asdonmartin drive Waterproofly");
@@ -318,11 +320,11 @@ string DropsItems;
                 } else if (!pulledToday($item[fish sauce]) && !pulledToday($item[cuppa Gill tea]) && pulls_remaining() > reservedPulls()) {
                     int fishSauceCost = mall_price($item[fish sauce]) + valueOfSpleen();
                     if (fishSauceCost <= mall_price($item[cuppa Gill tea])){
-                        pullSequence($item[fish sauce]);
-                        chew($item[fish sauce]);
+                        if (pullSequence($item[fish sauce]))
+                            chew($item[fish sauce]);
                     } else {
-                        pullSequence($item[cuppa Gill tea]);
-                        use($item[cuppa Gill tea]);
+                        if (pullSequence($item[cuppa Gill tea]))
+                            use($item[cuppa Gill tea]);
                     }
                 } else {
                     retrieve_item($item[white rice]);
@@ -467,6 +469,8 @@ string DropsItems;
     void initialization() {
         if (get_revision() < 29057)
             abort("Please update mafia to newer than 29057");
+        if (my_path().id == 55 && in_hardcore())
+            abort("UnderTheSea only supports softcore runs.");
         // A screech rundown that aborted mid-loop leaves this set, and a stuck
         // "true" reduces the whole CCS to cleanUp(); in-run zones need the
         // full consult.
@@ -500,14 +504,19 @@ string DropsItems;
         if (available_amount($item[black glass]) == 0 && item_amount($item[sand dollar]) > 13)
             blackGlass();
 
+        // The key is a free pull, and the lounge needs it in inventory.
+        if (item_amount($item[Clan VIP Lounge key]) == 0 && storage_amount($item[Clan VIP Lounge key]) > 0
+            && !take_storage(1, $item[Clan VIP Lounge key]))
+            print("Couldn't pull the Clan VIP Lounge key from storage.", "red");
+
         // The borrow counter only advances when the booth reports a grab, so it
         // can fall behind what is actually in inventory. Possession decides:
         // gating on the counter skips the retry for exactly the account that
         // holds a duplicate and is short a prop. A spent booth just declines.
-        if (!sheriffOutfit() && have_item($item[Clan VIP Lounge key])){
+        if (!sheriffOutfit() && item_amount($item[Clan VIP Lounge key]) > 0){
             visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
             foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                if (available_amount(it) == 0 && !cli_execute("photobooth item " + it))
+                if (available_amount(it) == 0 && loungeHas("photobooth.gif") && !cli_execute("photobooth item " + it))
                     print("Couldn't borrow the " + it + " from the photo booth.", "red");
         }
         // The props only buy three free kills, so a run without them is a run
@@ -695,6 +704,8 @@ string DropsItems;
 
 // ─── Questing ─────────────────────────────────────────────────────────────
     void mineAnemone(){
+        if (available_amount($item[mer-kin digpick]) == 0)
+            abort("Mining for teflon ore needs a Mer-kin digpick, and there is none on hand or left to pull.");
         equip($item[mer-kin digpick]);
         equipSwimTrunks();
         use_familiar("itdrop");
@@ -867,6 +878,9 @@ string DropsItems;
     }
 
     void getMissingCorralItems(){
+        // The tame spends the cowbells, and the sea cow can stay banished after it.
+        if (get_property("seahorseName") == "" && !doneWithSeaCow() && is_banished($monster[sea cow]))
+            abort("The run still needs sea cow drops, but the sea cow is banished.");
         string conditional;
         use_familiar("itdrop");
         // Backup Fidoxene site for reruns that skip the outpost phase; the
@@ -1124,17 +1138,15 @@ string DropsItems;
             while (item_amount($item[mer-kin killscroll]) == 0){
                 if (item_amount($item[mer-kin thingpouch]) > 0)
                     use(item_amount($item[mer-kin thingpouch]), $item[mer-kin thingpouch]);
-                else if (lowShiny() == false && pulls_remaining() > reservedPulls())
-                    pullSequence($item[mer-kin killscroll]);
-                else
+                else if (lowShiny() || pulls_remaining() <= reservedPulls()
+                    || !pullSequence($item[mer-kin killscroll]))
                     farmPrayerbeads();
             }
         }
         if (get_property("dreadScroll2") == "0"){
             while (item_amount($item[mer-kin healscroll]) == 0){
-                if (lowShiny() == false && pulls_remaining() > reservedPulls())
-                    pullSequence($item[mer-kin healscroll]);
-                else
+                if (lowShiny() || pulls_remaining() <= reservedPulls()
+                    || !pullSequence($item[mer-kin healscroll]))
                     farmPrayerbeads();
             }
         }
@@ -1189,7 +1201,7 @@ string DropsItems;
                         conditional += if_equip($item[designer sweatpants]);
                     while (get_property(questProp[ps]) == "started") {
                         tempEquipment("item drop","monodent of the sea," + if_equip($item[M&ouml;bius ring]) + if_equip($item[everfull dart holster])
-                            + if_equip($item[toy cupid bow]) + conditional + delay());
+                            + if_equip($item[toy cupid bow]) + conditional + delay() + reflexGear());
                         mood("itdrop");
                         adv1(questLoc[ps]);
                     }
@@ -1281,7 +1293,7 @@ string DropsItems;
         if (get_property("questS02Monkees") == "step4") {
             use_familiar("-combat");
             if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
-                if (pullSequence($item[mer-kin hidepaint]));
+                if (item_amount($item[mer-kin hidepaint]) > 0 || pullSequence($item[mer-kin hidepaint]))
                     use($item[mer-kin hidepaint]);
             }
             while (get_property("questS02Monkees") == "step4") {
@@ -1303,7 +1315,6 @@ string DropsItems;
                     baseballD();
                 if (to_int(get_property("_bczSweatBulletsCasts")) < 9)
                     conditional += if_equip($item[blood cubic zirconia]);
-                mood(pearlRes[ps]);
                 tempEquipment("item drop, sea, -100 combat","monodent of the sea," + delay()
                     + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]) + conditional);
                 mood("-combat");
@@ -1737,7 +1748,8 @@ string DropsItems;
             if (to_int(get_property("encountersUntilSRChoice")) > 9
                 && get_property("questRufus") == "unstarted"
                 && item_amount($item[Closed-circuit pay phone]) > 0) {
-                retrieve_item($item[oversized sparkler]);
+                if (!retrieve_item($item[oversized sparkler]))
+                    print("No oversized sparkler; continuing without one.", "gray");
                 if (item_amount($item[lump of loyal latite]) > 0)
                     use($item[lump of loyal latite]);
                 tempEquipment("item drop", "Flash Liquidizer Ultra Dousing Accessory,monodent of the sea,"
@@ -1777,10 +1789,9 @@ string DropsItems;
                 && have_skill($skill[Unaccompanied Miner])
                 && item_amount($item[teflon ore]) == 0)
                 mineAnemone();
-            if (item_amount($item[teflon ore]) == 0 && !pulledToday($item[lodestone])) {
-                pullSequence($item[lodestone]);
+            if (item_amount($item[teflon ore]) == 0
+                && (item_amount($item[lodestone]) > 0 || pullSequence($item[lodestone])))
                 use($item[lodestone]);
-            }
         }
 
         if (my_path().id == 55){
@@ -1885,7 +1896,7 @@ string DropsItems;
             string conditional;
             if (!contains_text(get_property("_perilLocations"), "199"))
                 conditional += if_equip($item[peridot of peril]);
-            if (item_amount($item[waffle]) == 0)
+            if (item_amount($item[waffle]) == 0 && my_path().id == 55)
                 pullSequence($item[waffle]);
             if (!have_item($item[august scepter])){
                 conditional += "monodent of the sea,";
@@ -1906,11 +1917,14 @@ string DropsItems;
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
-            while (item_amount($item[sea cowbell]) < 3
-                && to_int(get_property("_monkeyPawWishesUsed")) < 5)
-                monkeypaw($item[sea cowbell]);
-            if (item_amount($item[sea cowbell]) < 3)
-                abort("need more cowbells");
+            // Without a wish left, the Corral's sea cows supply the rest.
+            while (item_amount($item[sea cowbell]) < 3) {
+                if (available_amount($item[cursed monkey's paw]) > 0
+                    && to_int(get_property("_monkeyPawWishesUsed")) < 5)
+                    monkeypaw($item[sea cowbell]);
+                else
+                    getMissingCorralItems();
+            }
 
             adv($location[The Coral Corral]);
         }
@@ -1932,7 +1946,8 @@ string DropsItems;
         }
 
         // ── Buy crappy disguise if no tailpiece ───────────────────────────────────
-        if (tailpiece() == $item[none]) {
+        boolean buildsTailpiece = tailpiece() == $item[none];
+        if (buildsTailpiece) {
             equipSwimTrunks();
             while (item_amount($item[sand dollar]) < 10)
                 getSandDollar();
@@ -1983,27 +1998,30 @@ string DropsItems;
                     abort();
             }
 
-            if (get_property("dreadScroll3") == "0") {
-                mood("spookyres");
-                maximize("50 spooky res, hp",false);
-                // Mafia skips the cast below 500 maximum HP.
-                if (my_maxhp() < 500)
-                    abort("Deep Dark Visions needs 500 maximum HP; you have " + my_maxhp() + ".");
-                // A cast deals three to four times max HP before resistance. The phrase
-                // comes either way; below this even a full HP cast ends Beaten Up.
-                int spookyRes = to_int(elemental_resistance($element[spooky]));
-                if (spookyRes < 67)
-                    print("Deep Dark Visions: " + spookyRes + "% spooky resistance is too low to survive a cast.", "red");
-                int casts;
-                while (get_property("dreadScroll3") == "0") {
-                    if (casts >= 10)
-                        abort("Deep Dark Visions gave no dreadscroll phrase in 10 casts. Cast it by hand until dreadScroll3 is set, then rerun.");
-                    if (!restore_hp(spookyRes < 67 ? 1000 : my_maxhp()))
-                        abort("Could not restore HP before Deep Dark Visions; see the message above.");
-                    if (!use_skill(1, $skill[deep dark visions]))
-                        abort("Could not cast Deep Dark Visions; see the message above.");
-                    casts += 1;
-                }
+        }
+
+        // A rerun that already holds the tailpiece still needs this hint.
+        if (get_property("dreadScroll3") == "0" && get_property("isMerkinHighPriest") == "false"
+            && (my_path().id == 55 || buildsTailpiece)) {
+            mood("spookyres");
+            maximize("50 spooky res, hp",false);
+            // Mafia skips the cast below 500 maximum HP.
+            if (my_maxhp() < 500)
+                abort("Deep Dark Visions needs 500 maximum HP; you have " + my_maxhp() + ".");
+            // A cast deals three to four times max HP before resistance. The phrase
+            // comes either way; below this even a full HP cast ends Beaten Up.
+            int spookyRes = to_int(elemental_resistance($element[spooky]));
+            if (spookyRes < 67)
+                print("Deep Dark Visions: " + spookyRes + "% spooky resistance is too low to survive a cast.", "red");
+            int casts;
+            while (get_property("dreadScroll3") == "0") {
+                if (casts >= 10)
+                    abort("Deep Dark Visions gave no dreadscroll phrase in 10 casts. Cast it by hand until dreadScroll3 is set, then rerun.");
+                if (!restore_hp(spookyRes < 67 ? 1000 : my_maxhp()))
+                    abort("Could not restore HP before Deep Dark Visions; see the message above.");
+                if (!use_skill(1, $skill[deep dark visions]))
+                    abort("Could not cast Deep Dark Visions; see the message above.");
+                casts += 1;
             }
         }
     }
@@ -2067,9 +2085,8 @@ string DropsItems;
                     // Vocabulary mastery grind
                     while (to_int(get_property("merkinVocabularyMastery")) < 90) {
                         if (item_amount($item[mer-kin wordquiz]) > 0) {
-                            if (item_amount($item[mer-kin cheatsheet]) == 0 && pulls_remaining() > 0){
-                                pullSequence($item[mer-kin cheatsheet]);
-                            } else if (item_amount($item[mer-kin cheatsheet]) == 0 && pulls_remaining() == 0){
+                            if (item_amount($item[mer-kin cheatsheet]) == 0
+                                && (pulls_remaining() == 0 || !pullSequence($item[mer-kin cheatsheet]))) {
                                 while (item_amount($item[mer-kin cheatsheet]) == 0)
                                     getCheatsheet();
                             }
@@ -2154,16 +2171,15 @@ string DropsItems;
                     if (available_amount($item[mer-kin dreadscroll]) > 0){
                         // Knucklebone for scroll 4
                         if (get_property("dreadScroll4") == "0") {
-                            if (item_amount($item[mer-kin knucklebone]) == 0)
-                                pullSequence($item[mer-kin knucklebone]);
-                            use($item[Mer-kin knucklebone]);
+                            if (item_amount($item[mer-kin knucklebone]) > 0 || pullSequence($item[mer-kin knucklebone]))
+                                use($item[Mer-kin knucklebone]);
                             dreadSeedCheck();
                         }
                         if (get_property("dreadScroll7") == "0" && to_int(get_property("merkinVocabularyMastery")) < 90) {
-                            if (available_amount($item[mer-kin worktea]) == 0)
-                                pullSequence($item[mer-kin worktea]);
-                            retrieve_item($item[white rice]);
-                            eatSushi();
+                            if (available_amount($item[mer-kin worktea]) > 0 || pullSequence($item[mer-kin worktea])) {
+                                retrieve_item($item[white rice]);
+                                eatSushi();
+                            }
                         }
                         dreadSeedCheck();
                     }
@@ -2269,9 +2285,9 @@ string DropsItems;
                 cli_execute("acquire waterlogged scroll of healing, sea gel, Doc Galaktik's Pungent Unguent, Doc Galaktik's Homeopathic Elixir; cast cannel");
                 // Null Afternoon stands in for the delevelers while it lasts.
                 if (have_effect($effect[null afternoon]) == 0) {
-                    if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0 && !lowShiny()){
-                        pullSequence($item[null-day exploit]);
-                        use($item[null-day exploit]);
+                    if (delevelers() < 2 && !pulledToday($item[null-day exploit]) && pulls_remaining() > 0 && !lowShiny()
+                            && pullSequence($item[null-day exploit])) {
+                            use($item[null-day exploit]);
                     } else if (delevelers() < 2){
                         string why = pulledToday($item[null-day exploit])
                             ? "the null-day exploit was already pulled today"
@@ -2368,12 +2384,12 @@ string DropsItems;
             // they once ate the last pull slots right before a Shub retry needed
             // the null-day exploit.
             if (pulls_remaining() > 0) {
-                if (item_amount($item[crayon shavings]) < 8)
+                if (item_amount($item[crayon shavings]) < 8 && pullAffordable($item[null-day exploit]))
                     pullSequence($item[null-day exploit]);
                 foreach it in $items[peppermint parasol, ink bladder, Mer-kin pinkslip, stuffed yam stinkbomb, Louder Than Bomb, anchor bomb] {
                     if (it == $item[peppermint parasol] && (available_amount($item[navel ring of navel gazing]) > 0 || have_item($item[Greatest American Pants])))
                         continue;
-                    if (!pulledToday(it)) 
+                    if (!pulledToday(it) && pullAffordable(it))
                         pullSequence(it);
                     if (pulls_remaining() == 0) break;
                 }

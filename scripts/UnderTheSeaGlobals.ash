@@ -214,16 +214,27 @@ import <seedfinder/seedfinder.ash>;
         return n;
     }
 
+    // Lets a pull nobody depends on be skipped without the over-limit prompt.
+    boolean pullAffordable(item it) {
+        return storage_amount(it) > 0 || mall_price(it) <= to_int(get_property("autoBuyPriceLimit"));
+    }
+
     boolean pullSequence(item it) {
+        // Out of ronin there are no pull limits, and retrieve_item can use the mall directly.
+        if (can_interact())
+            return retrieve_item(it);
         if (pulls_remaining() == 0)
             return false;
         if (!pulledToday(it)) {
             if (storage_amount(it) == 0){
-                if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))){
-                    if (!user_confirm("Price of " + it + " exeeds autoBuyPriceLimit, skip?"))
-                        abort("Price of " + it + " exeeds autoBuyPriceLimit");
+                // Stops after a minute with no answer.
+                if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))
+                    && !user_confirm("Price of " + it + " exceeds autoBuyPriceLimit. Buy it anyway?", 60000, false))
+                    abort("Price of " + it + " exceeds autoBuyPriceLimit. Pull it by hand or raise the limit.");
+                if (!buy_using_storage(it)) {
+                    print("Could not buy " + it + " to pull it.", "red");
+                    return false;
                 }
-                buy_using_storage(it);
             }
             return take_storage(1, it);
         }
@@ -245,7 +256,8 @@ import <seedfinder/seedfinder.ash>;
             if (have_effect($effect[Lucky!]) > 0)
                 return;
         }
-        use($item[11-leaf clover]);
+        if (!use(1, $item[11-leaf clover]))
+            abort("Could not get an 11-leaf clover. The hermit may be out today, and buying from him needs autoSatisfyWithCoinmasters = true.");
     }
 
 // Low roll of Saucegeyser in the worn gear, crits and lanterns aside.
@@ -426,6 +438,14 @@ import <seedfinder/seedfinder.ash>;
         return bczCostAt(to_int(get_property("_bcz" + BCZskill)));
     }
 
+    // A lounge item needs the key in inventory and that item in the current clan.
+    // Asking for a missing one is a mafia abort that no capture clears, so check first.
+    boolean loungeHas(string image) {
+        if (item_amount($item[Clan VIP Lounge key]) == 0)
+            return false;
+        return contains_text(visit_url("clan_viplounge.php"), image);
+    }
+
     // Assert your Authority needs all three props worn at once. Same test
     // tempEquipment() applies, so a true here means it can dress them.
     boolean sheriffOutfit() {
@@ -527,7 +547,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     string freeRun() {
-        if (have_effect($effect[Everything Looks Green]) == 0)
+        if (have_effect($effect[Everything Looks Green]) == 0 && available_amount($item[spring shoes]) > 0)
             return if_equip($item[spring shoes]);
         if (available_amount($item[greatest american pants]) > 0 && (get_property("_navelRunaways").to_int() < 3 || (get_property("_navelRunaways").to_int() < 10 && highShiny())) && have_effect($effect[driving waterproofly]) > 0)
             return if_equip($item[greatest american pants]);
@@ -535,11 +555,21 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[V for vivala mask]);
         if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
             return if_equip($item[latte lovers member's mug]);
-        if (have_familiar($familiar[Pair of Stomping Boots]) && bootsRunaways() > get_property("_banderRunaways").to_int()){
+        // Without Waterproofly the bathysphere's weight loss would leave the Boots unable to run.
+        if (have_familiar($familiar[Pair of Stomping Boots]) && have_effect($effect[Driving Waterproofly]) > 0
+            && bootsRunaways() > get_property("_banderRunaways").to_int()){
             use_familiar($familiar[Pair of Stomping Boots]);
             return "";
         }
         return freeKill();
+    }
+
+    // The bag's Reflex Hammer for the guild test, once Spring Away can't end the fight.
+    string reflexGear() {
+        if (to_int(get_property("_reflexHammerUsed")) >= 3
+            || (have_effect($effect[Everything Looks Green]) == 0 && available_amount($item[spring shoes]) > 0))
+            return "";
+        return if_equip($item[Lil' Doctor&trade; bag]);
     }
 
     string delay(){
@@ -1202,6 +1232,9 @@ boolean prayerbeadsShort() {
 // that, so ask them rather than restating their numbers.
 boolean stillWanted(item it) {
     switch (it) {
+    case $item[Mer-kin healscroll]:
+        // One held covers the next use, and healers keep dropping them.
+        return item_amount($item[Mer-kin healscroll]) == 0;
     case $item[rusty broken diving helmet]:
     case $item[rusty porthole]:
     case $item[rusty rivet]:
@@ -1792,8 +1825,7 @@ void feelNostalgic(monster mob, string page_text) {
 
 // ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
 // freeKill() equips the bag for Chest X-Ray; Otoscope rides along, cast
-// early so free_kill() cannot end the fight first. Reflex Hammer is wired
-// into free_run() with the other banishes.
+// early so free_kill() cannot end the fight first.
 void otoscope(monster mob, string page_text) {
     // A fight the saber is about to Force has its drops forced anyway; the
     // +200% would be a wasted charge.
@@ -1914,7 +1946,8 @@ void NCforce() {
                         continue;
                     if (pulls_remaining() == 0)
                         return;
-                    pullSequence(it);
+                    if (!pullSequence(it))
+                        continue;
                     if (it == $item[Clara's bell])
                         use (it);
                     else if (it == $item[Handheld Allied radio])
@@ -2003,6 +2036,12 @@ monster banished(string banisher) {
     return m.find() ? to_monster(m.group(1)) : $monster[none];
 }
 
+// True when the banisher is unused, or its last target doesn't appear at the location.
+boolean banisherFree(string banisher, location loc) {
+    monster used = banished(banisher);
+    return used == $monster[none] || appearance_rates(loc, true)[used] == 0;
+}
+
 // Returns true if the given banisher has been used on a monster at your current location
 boolean banishUsedAtYourLocation(string banisher) {
     foreach num in monster_found_in(banished(banisher)) {
@@ -2019,7 +2058,7 @@ item banishGear(location loc) {
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
-        if (appearance_rates(loc)[banished(banMap[ite].pref)] == 0 && have_item(ite)) {
+        if (banisherFree(banMap[ite].pref, loc) && available_amount(ite) > 0) {
             it = ite;
             break;
         }
@@ -2040,7 +2079,7 @@ skill combatBan() {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
         if (have_equipped(ite)
-            && appearance_rates(my_location())[banished(banMap[ite].pref)] == 0) {
+            && banisherFree(banMap[ite].pref, my_location())) {
             print("Banish item being considered " + ite + " parsed banished monster is " + banished(banMap[ite].pref) + " and the calculated appearance rate at current location is " + appearance_rates(my_location())[banished(banMap[ite].pref)]);
             cli_execute("get banishedMonsters");
             return banMap[ite].banSkill;
