@@ -1891,7 +1891,7 @@ void cargoPocket() {
 
 // ─── KREMLIN'S GREATEST BRIEFCASE ─────────────────────────────────────────────
 // Driven through Ezandora's Briefcase script, which owns the dial, handle
-// and tab state machine; "briefcase buff item" clicks until Items Are
+// and tab state machine; "Briefcase buff item" clicks until Items Are
 // Forever lands.
 void briefcase() {
     if (!have_item($item[Kremlin's Greatest Briefcase]))
@@ -1905,7 +1905,7 @@ void briefcase() {
         return;
     if (get_property("_kgbClicksUsed").to_int() >= 22)
         return;
-    cli_execute("briefcase buff item");
+    cli_execute("Briefcase buff item");
 }
 
 // ─── NONCOMBAT FORCER ─────────────────────────────────────────────────────────
