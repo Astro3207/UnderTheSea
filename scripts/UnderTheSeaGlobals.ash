@@ -1,3 +1,4 @@
+since r29402;
 import <seedfinder/seedfinder.ash>;
 // ─── GLOBALS ──────────────────────────────────────────────────────────────────   
     int pearlsDoneToday;
@@ -213,16 +214,27 @@ import <seedfinder/seedfinder.ash>;
         return n;
     }
 
+    // Lets a pull nobody depends on be skipped without the over-limit prompt.
+    boolean pullAffordable(item it) {
+        return storage_amount(it) > 0 || mall_price(it) <= to_int(get_property("autoBuyPriceLimit"));
+    }
+
     boolean pullSequence(item it) {
+        // Out of ronin there are no pull limits, and retrieve_item can use the mall directly.
+        if (can_interact())
+            return retrieve_item(it);
         if (pulls_remaining() == 0)
             return false;
         if (!pulledToday(it)) {
             if (storage_amount(it) == 0){
-                if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))){
-                    if (!user_confirm("Price of " + it + " exeeds autoBuyPriceLimit, skip?"))
-                        abort("Price of " + it + " exeeds autoBuyPriceLimit");
+                // Stops after a minute with no answer.
+                if (mall_price(it) > to_int(get_property("autoBuyPriceLimit"))
+                    && !user_confirm("Price of " + it + " exceeds autoBuyPriceLimit. Buy it anyway?", 60000, false))
+                    abort("Price of " + it + " exceeds autoBuyPriceLimit. Pull it by hand or raise the limit.");
+                if (!buy_using_storage(it)) {
+                    print("Could not buy " + it + " to pull it.", "red");
+                    return false;
                 }
-                buy_using_storage(it);
             }
             return take_storage(1, it);
         }
@@ -244,7 +256,8 @@ import <seedfinder/seedfinder.ash>;
             if (have_effect($effect[Lucky!]) > 0)
                 return;
         }
-        use($item[11-leaf clover]);
+        if (!use(1, $item[11-leaf clover]))
+            abort("Could not get an 11-leaf clover. The hermit may be out today, and buying from him needs autoSatisfyWithCoinmasters = true.");
     }
 
 // Low roll of Saucegeyser in the worn gear, crits and lanterns aside.
@@ -396,7 +409,7 @@ import <seedfinder/seedfinder.ash>;
 
     void yellowRayPrep(){
         if (have_effect($effect[everything looks yellow]) == 0){
-            if (have_item($item[jurassic parka]))
+            if (available_amount($item[jurassic parka]) > 0)
                 cli_execute("parka dilophosaur; equip jurassic parka");
         else if (have_item($item[April Shower Thoughts shield]) && available_amount($item[spitball]) == 0 && item_amount($item[glob of wet paper]) > 0)
                 create($item[spitball]);
@@ -423,6 +436,14 @@ import <seedfinder/seedfinder.ash>;
 
     int BCZcost(string BCZskill) {
         return bczCostAt(to_int(get_property("_bcz" + BCZskill)));
+    }
+
+    // A lounge item needs the key in inventory and that item in the current clan.
+    // Asking for a missing one is a mafia abort that no capture clears, so check first.
+    boolean loungeHas(string image) {
+        if (item_amount($item[Clan VIP Lounge key]) == 0)
+            return false;
+        return contains_text(visit_url("clan_viplounge.php"), image);
     }
 
     // Assert your Authority needs all three props worn at once. Same test
@@ -505,7 +526,8 @@ import <seedfinder/seedfinder.ash>;
     string freeKill(location loc) {
         if (have_effect($effect[everything looks red]) == 0 && available_amount($item[everfull dart holster]) > 0)
             return if_equip($item[everfull dart holster]);
-        if (highShiny() && my_familiar() != $familiar[Sword of S Words] && have_effect($effect[everything looks yellow]) == 0){
+        if (highShiny() && my_familiar() != $familiar[Sword of S Words] && have_effect($effect[everything looks yellow]) == 0
+            && available_amount($item[jurassic parka]) > 0){
             modes = "parka dilophosaur";
             return if_equip($item[jurassic parka]);
         }
@@ -513,7 +535,7 @@ import <seedfinder/seedfinder.ash>;
             return "";
         if (sheriffPropsFor(loc, to_int(get_property("_assertYourAuthorityCast")), sheriffOutfit()))
             return "Sheriff moustache,Sheriff badge,Sheriff pistol,";
-        if (to_int(get_property("_chestXRayUsed")) < 3 && have_item($item[Lil' Doctor&trade; bag]))
+        if (to_int(get_property("_chestXRayUsed")) < 3 && available_amount($item[Lil' Doctor&trade; bag]) > 0)
             return "Lil' Doctor™ bag,";
         if ((my_basestat($stat[submoxie]) - 22500) > BCZcost("SweatBulletsCasts"))
             return if_equip($item[blood cubic zirconia]);
@@ -525,7 +547,7 @@ import <seedfinder/seedfinder.ash>;
     }
 
     string freeRun() {
-        if (have_effect($effect[Everything Looks Green]) == 0)
+        if (have_effect($effect[Everything Looks Green]) == 0 && available_amount($item[spring shoes]) > 0)
             return if_equip($item[spring shoes]);
         if (available_amount($item[greatest american pants]) > 0 && (get_property("_navelRunaways").to_int() < 3 || (get_property("_navelRunaways").to_int() < 10 && highShiny())) && have_effect($effect[driving waterproofly]) > 0)
             return if_equip($item[greatest american pants]);
@@ -533,11 +555,21 @@ import <seedfinder/seedfinder.ash>;
             return if_equip($item[V for vivala mask]);
         if (available_amount($item[latte lovers member's mug]) > 0 && get_property("_latteBanishUsed") == false)
             return if_equip($item[latte lovers member's mug]);
-        if (have_familiar($familiar[Pair of Stomping Boots]) && bootsRunaways() > get_property("_banderRunaways").to_int()){
+        // Without Waterproofly the bathysphere's weight loss would leave the Boots unable to run.
+        if (have_familiar($familiar[Pair of Stomping Boots]) && have_effect($effect[Driving Waterproofly]) > 0
+            && bootsRunaways() > get_property("_banderRunaways").to_int()){
             use_familiar($familiar[Pair of Stomping Boots]);
             return "";
         }
         return freeKill();
+    }
+
+    // The bag's Reflex Hammer for the guild test, once Spring Away can't end the fight.
+    string reflexGear() {
+        if (to_int(get_property("_reflexHammerUsed")) >= 3
+            || (have_effect($effect[Everything Looks Green]) == 0 && available_amount($item[spring shoes]) > 0))
+            return "";
+        return if_equip($item[Lil' Doctor&trade; bag]);
     }
 
     string delay(){
@@ -595,6 +627,12 @@ import <seedfinder/seedfinder.ash>;
                 continue;
             if (to_item(itemMap[str]) == $item[none]){
                 print("String to item mismatch, item is " + itemMap[str] + ", notify fart scauce","red");
+                continue;
+            }
+            // Gear the route only wants when owned. In storage it is left off, not a missing item.
+            if ($items[navel ring of navel gazing, backup camera, Lil' Doctor&trade; bag, mchugelarge left ski] contains to_item(itemMap[str])
+                && available_amount(to_item(itemMap[str])) == 0) {
+                print("Not wearing " + itemMap[str] + ": it isn't on hand.", "blue");
                 continue;
             }
             boolean held = slotsHold(equipmentSelection, to_item(itemMap[str]));
@@ -866,13 +904,13 @@ import <seedfinder/seedfinder.ash>;
 
 //Non-equipment iotm related functions
     boolean parkaForceAvailable(){
-        if (have_item($item[jurassic parka]) && to_int(get_property("_spikolodonSpikeUses")) < 5)
+        if (available_amount($item[jurassic parka]) > 0 && to_int(get_property("_spikolodonSpikeUses")) < 5)
             return true;
         return false;
     }
 
     boolean leftSkiAvailable(){
-        if (have_item($item[mchugelarge left ski]) && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
+        if (available_amount($item[mchugelarge left ski]) > 0 && to_int(get_property("_mcHugeLargeAvalancheUses")) < 3)
             return true;
         return false;
     }
@@ -881,7 +919,7 @@ import <seedfinder/seedfinder.ash>;
         if (have_familiar($familiar[Sword of S Words]) && to_int(get_property("swordOfSWordsMonster")) == 776){
             if (highShiny() && item_amount($item[sea lasso]) < 7)
                 return true;
-            if (!have_item($item[closed-circuit pay phone]) && item_amount($item[sea lasso]) < 4)
+            if (available_amount($item[closed-circuit pay phone]) == 0 && item_amount($item[sea lasso]) < 4)
                 return true;
         }
         return false;
@@ -971,7 +1009,7 @@ boolean [monster] haveLocketMonster = get_locket_monsters();
 // progress gates on wins or turns spent (the outpost lockkey).
 
 boolean saberReady() {
-    return have_item($item[Fourth of May Cosplay Saber])
+    return available_amount($item[Fourth of May Cosplay Saber]) > 0
         && get_property("_saberForceUses").to_int() < 5;
 }
 
@@ -1025,6 +1063,132 @@ boolean seaCowNeeded() {
     return false;
 }
 
+// Underwater breathing that leaves the hat and pants slots to the lasso trainer.
+boolean breathesWithTrainer() {
+    foreach ef in $effects[Driving Waterproofly, Hyperoxygenated Blood, Mer-kinny Flavor,
+        Oxygenated Blood, Pneumatic, Pumped Stomach, Really Deep Breath]
+        if (have_effect(ef) > 0)
+            return true;
+    foreach it in $items[Elf Guard SCUBA tank, old SCUBA tank, makeshift SCUBA gear]
+        if (available_amount(it) > 0 && can_equip(it))
+            return true;
+    return false;
+}
+
+// Path 55 trains the lasso in Outpost item-drop fights once both trainer pieces exist.
+boolean outpostLassoTraining() {
+    return my_path().id == 55 && !highShiny()
+        && to_int(get_property("lassoTrainingCount")) < 20
+        && get_property("merkinLockkeyMonster") == ""
+        && item_amount($item[sea lasso]) > 0
+        && available_amount($item[sea cowboy hat]) > 0 && can_equip($item[sea cowboy hat])
+        && available_amount($item[sea chaps]) > 0 && can_equip($item[sea chaps])
+        && breathesWithTrainer();
+}
+
+// ─── LEGENDARY ACORNDION ──────────────────────────────────────────────────────
+boolean acorndionWorn() {
+    return have_equipped($item[legendary acorndion]);
+}
+
+// One Outpost fight in the Acorndion plants a Refrain, so sea cows join the delay pool.
+boolean acornOutpostWanted() {
+    return my_path().id == 55
+        && get_property("uts_acornOutpost") == "true"
+        && available_amount($item[legendary acorndion]) > 0
+        && (get_property("_utsAcornOutpost") == "" || get_property("_utsAcornOutpost") == "dressed")
+        && seaCowNeeded()
+        && $location[The Mer-Kin Outpost].turns_spent < 20
+        && my_maxmp() >= 11;
+}
+
+// The fight acornOutpostDress() prepared, marked by plantAcorn() or acornBanish() at its start.
+boolean acornPlantFight() {
+    return acorndionWorn() && get_property("_utsAcornFight") != ""
+        && get_property("_utsAcornFight") == get_property("_lastCombatStarted");
+}
+
+// CCS: casts the planting Refrain once, only in a fight dressed for it. The pref moves on first so no later round recasts.
+void plantAcorn(string page_text) {
+    if (current_round() == 0 || my_location() != $location[The Mer-Kin Outpost]
+        || !acorndionWorn() || get_property("_utsAcornOutpost") != "dressed")
+        return;
+    set_property("_utsAcornOutpost", "tried");
+    set_property("_utsAcornFight", get_property("_lastCombatStarted"));
+    buffer cast;
+    if (my_mp() < 11) {
+        print("Acorndion worn in the Outpost with " + my_mp() + " MP, no Refrain.", "red");
+        // Later fights retry, three fights in all.
+        int misses = to_int(get_property("_utsAcornMpMisses")) + 1;
+        set_property("_utsAcornMpMisses", to_string(misses));
+        set_property("_utsAcornOutpost", misses < 3 ? "" : "lowmp");
+        return;
+    }
+    if (have_skill($skill[Bawdy Refrain]))
+        cast = use_skill($skill[Bawdy Refrain]);
+    else if (contains_text(page_text, "value=\"7604\"") || contains_text(page_text, "Juvenile Refrain"))
+        cast = use_skill($skill[Juvenile Refrain]);
+    else {
+        print("Acorndion worn in the Outpost but no Refrain on the fight page.", "red");
+        set_property("_utsAcornOutpost", "noskill");
+        return;
+    }
+    set_property("_utsAcornOutpost", "planted");
+    print("Outpost acorn: Refrain cast.", "blue");
+}
+
+// The Outpost natives the Acorndion banishes. The healer stays for its prayerbeads.
+boolean acornBanishTarget(monster mob) {
+    return $monsters[Mer-kin burglar, Mer-kin raider] contains mob && !is_banished(mob)
+        && !contains_text(get_property("_utsAcornBanished"), to_string(mob));
+}
+
+// These routes farm pristine scales with the Monodent in item-drop Outpost fights.
+boolean outpostFarmsScales() {
+    return my_familiar() != $familiar[Sword of S Words]
+        && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny())
+        && available_amount($item[pristine fish scale]) < 6;
+}
+
+// After the Refrain, Outpost fights stay in the Acorndion until each target has met one Chiasso.
+boolean acornBanishWanted() {
+    if (my_path().id != 55 || get_property("uts_acornOutpost") != "true"
+        || available_amount($item[legendary acorndion]) == 0
+        || get_property("_utsAcornOutpost") != "planted"
+        || contains_text(get_property("_utsAcornBanished"), "stop")
+        || !seaCowNeeded() || $location[The Mer-Kin Outpost].turns_spent >= 20
+        || my_maxmp() < 8 || outpostFarmsScales())
+        return false;
+    return acornBanishTarget($monster[Mer-kin burglar]) || acornBanishTarget($monster[Mer-kin raider]);
+}
+
+// CCS: in a fight dressed for banishing, casts Chiasso (Concerto for an AT) once on each target.
+void acornBanish(string page_text) {
+    if (current_round() == 0 || my_location() != $location[The Mer-Kin Outpost]
+        || !acorndionWorn() || get_property("_utsAcornBanishDress") != "dressed")
+        return;
+    set_property("_utsAcornBanishDress", "fought");
+    set_property("_utsAcornFight", get_property("_lastCombatStarted"));
+    if (!acornBanishTarget(last_monster()))
+        return;
+    if (my_mp() < 8) {
+        print("Acorndion worn against a " + last_monster() + " with " + my_mp() + " MP, no Chiasso.", "red");
+        return;
+    }
+    set_property("_utsAcornBanished", get_property("_utsAcornBanished") + last_monster() + ",");
+    buffer cast;
+    if (have_skill($skill[Concerto de los Muertos]))
+        cast = use_skill($skill[Concerto de los Muertos]);
+    else if (contains_text(page_text, "value=\"7603\"") || contains_text(page_text, "Chiasso de los Muertos"))
+        cast = use_skill($skill[Chiasso de los Muertos]);
+    else {
+        print("Acorndion worn in the Outpost but no Chiasso on the fight page.", "red");
+        set_property("_utsAcornBanished", get_property("_utsAcornBanished") + "stop,");
+        return;
+    }
+    print("Outpost acorn: banish cast on the " + last_monster() + ".", "blue");
+}
+
 // The monster the crystal ball has locked into the Coral Corral, or none.
 monster corralPrediction() {
     foreach i, entry in split_string(get_property("crystalBallPredictions"), "\\|") {
@@ -1044,7 +1208,7 @@ boolean corralLockToBreak() {
 
 // seahorseTaming() puts the crystal ball on in the Corral only alongside the August scepter.
 boolean corralWearsBall() {
-    return have_item($item[august scepter]) && have_item($item[miniature crystal ball]);
+    return have_item($item[august scepter]) && available_amount($item[miniature crystal ball]) > 0;
 }
 
 // Enough Shadow Affinity for a dodge: two fights, or one when the Rift already holds a prediction to meet.
@@ -1068,6 +1232,9 @@ boolean prayerbeadsShort() {
 // that, so ask them rather than restating their numbers.
 boolean stillWanted(item it) {
     switch (it) {
+    case $item[Mer-kin healscroll]:
+        // One held covers the next use, and healers keep dropping them.
+        return item_amount($item[Mer-kin healscroll]) == 0;
     case $item[rusty broken diving helmet]:
     case $item[rusty porthole]:
     case $item[rusty rivet]:
@@ -1091,7 +1258,7 @@ boolean stillWanted(item it) {
 // ─── THE FORCE BUDGET ─────────────────────────────────────────────────────────
 // 5 saber forces, 2 alloted for unholy diver
 int saberChargesLeft() {
-    if (!have_item($item[Fourth of May Cosplay Saber]))
+    if (available_amount($item[Fourth of May Cosplay Saber]) == 0)
         return 0;
     return 5 - get_property("_saberForceUses").to_int();
 }
@@ -1199,7 +1366,7 @@ boolean healerForce(monster mob, string page_text) {
 string healerSaber() {
     if (prayerbeadsShort()
         && forcesAfterDiver() > 0
-        && have_item($item[Fourth of May Cosplay Saber]))
+        && available_amount($item[Fourth of May Cosplay Saber]) > 0)
         return "Fourth of May Cosplay Saber,";
     return "";
 }
@@ -1263,7 +1430,7 @@ void duplicateMonster(monster mob, string page_text) {
         || (mob == $monster[sea cow] && seaCowNeeded() && !diverHuntActive())
         || (mob == $monster[Mer-kin monitor] && cheatsheetsNeeded())
         || (mob == $monster[unholy diver] && !diverPartsComplete()
-            && !have_item($item[Fourth of May Cosplay Saber]));
+            && available_amount($item[Fourth of May Cosplay Saber]) == 0);
     if (!wanted)
         return;
     if (!contains_text(page_text, "Duplicate"))
@@ -1276,7 +1443,7 @@ void duplicateMonster(monster mob, string page_text) {
 // Take only the daily free pill -- the rest cost spleen the diet needs.
 // `pill` is a mafia pillkeeper keyword, not a pill name.
 void pillKeeper(string pill) {
-    if (!have_item($item[Eight Days a Week Pill Keeper]))
+    if (available_amount($item[Eight Days a Week Pill Keeper]) == 0)
         return;
     if (get_property("_freePillKeeperUsed") != "false")
         return;
@@ -1288,7 +1455,7 @@ void pillKeeper(string pill) {
 // Pinned to the back slot so Become a Bat stays castable; all 10 daily form
 // uses go to the bat.
 boolean cloakeReady() {
-    return have_item($item[vampyric cloake])
+    return available_amount($item[vampyric cloake]) > 0
         && get_property("_vampyreCloakeFormUses").to_int() < 10;
 }
 
@@ -1658,8 +1825,7 @@ void feelNostalgic(monster mob, string page_text) {
 
 // ─── LIL' DOCTOR BAG: OTOSCOPE ────────────────────────────────────────────────
 // freeKill() equips the bag for Chest X-Ray; Otoscope rides along, cast
-// early so free_kill() cannot end the fight first. Reflex Hammer is wired
-// into free_run() with the other banishes.
+// early so free_kill() cannot end the fight first.
 void otoscope(monster mob, string page_text) {
     // A fight the saber is about to Force has its drops forced anyway; the
     // +200% would be a wasted charge.
@@ -1687,11 +1853,11 @@ int NCForceEstimate(){
     // Counts remaining CHARGES, not ownership.
     if (have_item($item[Apriling band tuba]))
         force += max(0, 3 - to_int(get_property("_aprilBandTubaUses")));
-    if (have_item($item[McHugeLarge left ski]))
+    if (available_amount($item[McHugeLarge left ski]) > 0)
         force += max(0, 3 - to_int(get_property("_mcHugeLargeAvalancheUses")));
-    if (have_item($item[Cincho de Mayo]))
+    if (available_amount($item[Cincho de Mayo]) > 0)
         force += min(3, 1 + max(0, total_free_rests() - to_int(get_property("timesRested"))) / 2);
-    if (have_item($item[Jurassic Parka]))
+    if (available_amount($item[Jurassic Parka]) > 0)
         force += max(0, 5 - to_int(get_property("_spikolodonSpikeUses")));
     return force;
 }
@@ -1748,18 +1914,18 @@ void briefcase() {
 
 void NCforce() {
     if (get_property("noncombatForcerActive") != "true") {
-        if (have_item($item[apriling band helmet]) && get_property("_aprilBandTubaUses").to_int() < 3 && have_item($item[Apriling band tuba])) {
+        if (available_amount($item[apriling band helmet]) > 0 && get_property("_aprilBandTubaUses").to_int() < 3 && have_item($item[Apriling band tuba])) {
             cli_execute("aprilband play tuba");
         // Enter the Cincho branch only if it can actually fire -- either
         // enough cinch already, or free rests left to restore it.
-        } else if (have_item($item[Cincho de Mayo])
+        } else if (available_amount($item[Cincho de Mayo]) > 0
             && (get_property("_cinchUsed").to_int() <= 40
                 || get_property("timesRested").to_int() < total_free_rests())){
             while (get_property("_cinchUsed").to_int() > 40
                 && get_property("timesRested").to_int() < total_free_rests()) {
                 // The helmet sweetens the rest but is optional; equipping it
                 // unowned hard-errors.
-                if (have_item($item[Apriling band helmet]))
+                if (available_amount($item[Apriling band helmet]) > 0)
                     cli_execute("unequip hat; equip apriling band helmet");
                 cli_execute("camp rest free");
             }
@@ -1767,20 +1933,21 @@ void NCforce() {
                 equip($slot[acc3], $item[cincho de mayo]);
                 use_skill($skill[Cincho: Fiesta Exit]);
             }
-        } else if (have_item($item[Eight Days a Week Pill Keeper])
+        } else if (available_amount($item[Eight Days a Week Pill Keeper]) > 0
             && get_property("_freePillKeeperUsed") == "false") {
             // Sneakisol has Clara's bell's noncombat-forcing behaviour and is
             // free, so it comes before anything that costs a pull. If the free
             // pill already went on Fidoxene this call is a no-op.
             pillKeeper("free noncombat");
-        } else if (!have_item($item[mchugelarge duffel bag]) && !have_item($item[jurassic parka]) && !have_item($item[allied radio backpack])){
+        } else if (available_amount($item[mchugelarge duffel bag]) == 0 && available_amount($item[jurassic parka]) == 0 && available_amount($item[allied radio backpack]) == 0){
             foreach it in $items[Handheld Allied radio, Clara's bell, stench jelly]{
                 if (!pulledToday(it)){
                     if (it == $item[Clara's Bell] && storage_amount(it) == 0)
                         continue;
                     if (pulls_remaining() == 0)
                         return;
-                    pullSequence(it);
+                    if (!pullSequence(it))
+                        continue;
                     if (it == $item[Clara's bell])
                         use (it);
                     else if (it == $item[Handheld Allied radio])
@@ -1869,6 +2036,12 @@ monster banished(string banisher) {
     return m.find() ? to_monster(m.group(1)) : $monster[none];
 }
 
+// True when the banisher is unused, or its last target doesn't appear at the location.
+boolean banisherFree(string banisher, location loc) {
+    monster used = banished(banisher);
+    return used == $monster[none] || appearance_rates(loc, true)[used] == 0;
+}
+
 // Returns true if the given banisher has been used on a monster at your current location
 boolean banishUsedAtYourLocation(string banisher) {
     foreach num in monster_found_in(banished(banisher)) {
@@ -1885,7 +2058,7 @@ item banishGear(location loc) {
     foreach ite in $items[spring shoes, monodent of the sea, Heartstone] {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
-        if (appearance_rates(loc)[banished(banMap[ite].pref)] == 0 && have_item(ite)) {
+        if (banisherFree(banMap[ite].pref, loc) && available_amount(ite) > 0) {
             it = ite;
             break;
         }
@@ -1906,7 +2079,7 @@ skill combatBan() {
         if (ite == $item[Heartstone] && get_property("heartstoneBanishUnlocked") == "false")
             continue;
         if (have_equipped(ite)
-            && appearance_rates(my_location())[banished(banMap[ite].pref)] == 0) {
+            && banisherFree(banMap[ite].pref, my_location())) {
             print("Banish item being considered " + ite + " parsed banished monster is " + banished(banMap[ite].pref) + " and the calculated appearance rate at current location is " + appearance_rates(my_location())[banished(banMap[ite].pref)]);
             cli_execute("get banishedMonsters");
             return banMap[ite].banSkill;

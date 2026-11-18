@@ -406,6 +406,10 @@ void main(int round, monster mob, string page_text) {
             return;
     }
     
+    plantAcorn(page_text);
+    acornBanish(page_text);
+    if (current_round() == 0)
+        return;
     if (diverForce(last_monster(), page_text))
         return;
 
@@ -435,7 +439,7 @@ void main(int round, monster mob, string page_text) {
         else
             throw_item(bangA());
     }
-    if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
+    if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
         throw_item($item[sea lasso]);
     // A copied diver surfaces in whichever zone the route is adventuring in,
     // and that zone's logic transforms or re-rolls whatever it is handed,
@@ -471,8 +475,12 @@ void main(int round, monster mob, string page_text) {
                 free_run(page_text, false);
                 if (have_equipped($item[greatest american pants]) || have_equipped(($item[navel ring of navel gazing])))
                     runaway( );
+                if (current_round() > 0)
+                    use_if_have_skill(page_text, $skill[Reflex Hammer]);
             }
-            use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
+            // Some fish isn't a free monster, so talking to a free one costs the turn.
+            if (!free_monster(last_monster()))
+                use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
             use_if_have_skill(page_text, $skill[Prepare to reanimate your Foe]);
             darts();
             freeRunFallback(page_text);
@@ -625,8 +633,34 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Mer-Kin Outpost]:
-            if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+            if (to_int(get_property("lassoTrainingCount")) < 20
+                && (my_path().id == 0 || (have_equipped($item[sea cowboy hat])
+                    && have_equipped($item[sea chaps]) && item_amount($item[sea lasso]) > 0)))
                 throw_item($item[sea lasso]);
+            // While its cowbell and leather are needed, a sea cow skips Talk to Some Fish and item-less kills.
+            // A live golem Back-Up chain takes the cow instead.
+            boolean golemChain = get_property("_monsterHabitatsFightsLeft") == "0"
+                && to_int(get_property("_monsterHabitatsRecalled")) >= 2
+                && to_int(get_property("_backUpUses")) < 7
+                && get_property("lastCopyableMonster") == "Black Crayon Golem"
+                && have_equipped($item[backup camera])
+                && ($location[The Mer-Kin Outpost].turns_spent < 24
+                    || get_property("merkinLockkeyMonster") != "");
+            if (last_monster() == $monster[sea cow] && seaCowNeeded() && !golemChain) {
+                free_kill(page_text, true);
+                cleanUp();
+                break;
+            }
+            // An Acorndion fight has no Monodent, so it skips the Sea *dent branches below.
+            if (acornPlantFight() && last_monster() != $monster[time cop]
+                && last_monster() != $monster[black crayon golem]) {
+                if (last_monster() == $monster[Mer-kin burglar] || last_monster() == $monster[Mer-kin raider])
+                    free_run(page_text, false);
+                free_kill(page_text, last_monster() == $monster[mer-kin healer]
+                    && item_amount($item[mer-kin prayerbeads]) < 2);
+                cleanUp();
+                break;
+            }
             if (last_monster() == $monster[time cop]) {
                 darts();
                 cleanUp();
@@ -659,7 +693,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     run_combat();
                 }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     free_kill(page_text,true);
                     cleanUp();
@@ -678,7 +712,7 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 } else if (last_monster() == $monster[Mer-kin burglar]
                     || last_monster() == $monster[Mer-kin raider]) {
-                    if ((highShiny() || !have_item($item[closed-circuit pay phone])) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
+                    if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
                         use_skill($skill[sea *dent: throw a lightning bolt]);
                     free_run(page_text, true);
                 }
@@ -687,7 +721,7 @@ void main(int round, monster mob, string page_text) {
                 cleanUp();
             } else {
                 // turns_spent >= 24 and no lockkey monster
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || !have_item($item[closed-circuit pay phone]) || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
                     free_kill(page_text,true);
                     cleanUp();
@@ -855,7 +889,7 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Caliginous Abyss]:
-            if ((highShiny() || !have_item($item[closed-circuit pay phone])) && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
+            if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[sea lasso]) > 1 && to_int(get_property("lassoTrainingCount")) < 20 && have_equipped($item[sea cowboy hat]))
                 throw_item($item[sea lasso]);
             if (last_monster() == $monster[peanut] && to_int(get_property("lastColosseumRoundWon")) < 15) {
                 if (have_item($item[august scepter]) && have_item($item[2002 Mr. Store Catalog]) && have_skill($skill[just the facts]) && have_familiar($familiar[patriotic eagle]) && (available_amount($item[waffle]) > 1 || (available_amount($item[waffle]) == 1 && get_property("seahorseName") != "")))
