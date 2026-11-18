@@ -1504,7 +1504,7 @@ string DropsItems;
                             if (have_item($item[Fourth of May Cosplay Saber])){
                                 conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
                             } else {
-                                mood("superitdrop");
+                                mood("itdrop");
                             }
                             tempEquipment("item drop,sea", conditional + bathysphere($item[toy cupid bow]));
                         }
@@ -2227,18 +2227,15 @@ string DropsItems;
                     equip($slot[acc2], $item[mer-kin prayerbeads]);
                     equip($slot[acc3], $item[mer-kin prayerbeads]);
                 } else {
-                    if (available_amount($item[mer-kin prayerbeads]) >= 2){
+                    if (available_amount($item[mer-kin prayerbeads]) >= 2)
                         equip($slot[acc2], $item[mer-kin prayerbeads]);
-                        if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
-                            pullSequence($item[New Age healing crystal]);
-                        else if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
-                            pullSequence($item[soggy used band-aid]);
-                    } else {
-                        if (item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
-                            pullSequence($item[New Age healing crystal]);
-                        if (item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
-                            pullSequence($item[soggy used band-aid]);
-                    }
+                    // Pull a backup heal only when the heals on hand can't cover this bead count.
+                    // They are last in yogHealing()'s order, so otherwise the fight never reaches them.
+                    int healsNeeded = YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])];
+                    if (YogHealingsOwned() < healsNeeded && item_amount($item[New Age healing crystal]) == 0 && !pulledToday($item[New Age healing crystal]))
+                        pullSequence($item[New Age healing crystal]);
+                    if (YogHealingsOwned() < healsNeeded && item_amount($item[soggy used band-aid]) == 0 && !pulledToday($item[soggy used band-aid]))
+                        pullSequence($item[soggy used band-aid]);
                 }
                 if (!YogHPCheck()){
                     // Farming the Outpost can move this: the Mer-kin healer
