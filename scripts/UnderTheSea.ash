@@ -2270,11 +2270,6 @@ string DropsItems;
                 visit_url("sea_skatepark.php?action=state2buff1");
             }
 
-            if (available_amount($item[mer-kin prayerbeads]) < 3 && (lowShiny() || pulls_remaining() == 0)){
-                while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
-                    farmPrayerbeads();
-            }
-
             // Healscroll pull
             if (item_amount($item[mer-kin healscroll]) == 0)
                 pullSequence($item[mer-kin healscroll]);
@@ -2307,7 +2302,7 @@ string DropsItems;
                         }
                     }
                 }
-                if (available_amount($item[mer-kin prayerbeads]) < 3 && pulledToday($item[mer-kin prayerbeads]))
+                if (available_amount($item[mer-kin prayerbeads]) < 3)
                     pullSequence($item[mer-kin prayerbeads]);
 
                 // Equip as many prayerbeads as available, pull healing items for gaps
