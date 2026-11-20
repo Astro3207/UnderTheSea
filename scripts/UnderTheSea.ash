@@ -674,7 +674,7 @@ string DropsItems;
 
             step("initialization: storage pulls");
             // Storage pulls for sea gear
-            foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,ten-leaf clover,large box,
+            foreach it in $items[mer-kin sneakmask, sea lasso, shark jumper,
                 scale-mail underwear, Congressional Medal of Insanity,Flash Liquidizer Ultra Dousing Accessory] {
                 if (available_amount(it) == 0 && !pulledToday(it)) {
                     if (it == $item[Flash Liquidizer Ultra Dousing Accessory] && (available_amount($item[closed-circuit pay phone]) == 0 || highShiny()))
@@ -689,10 +689,33 @@ string DropsItems;
                     take_storage(1, it);
                 }
             }
-            if (available_amount($item[large box]) > 0)
-                create($item[blessed large box]);
-            if (available_amount($item[blessed large box]) > 0)
-                use($item[blessed large box]);
+            step("initialization: seed cracking");
+            if (estimated_ascension_seed_possibilities( ) != 1){
+                if (estimated_ascension_seed_possibilities( ) == 0)
+                    abort("Possible ascension seeds is 0, something has gone wrong");
+                if (have_item($item[intriguing puzzle box])){
+                    pullSequence($item[intriguing puzzle box]);
+                    use($item[intriguing puzzle box]);
+                } else {
+                    foreach it in $items[ten-leaf clover, large box] {
+                        if (available_amount(it) == 0 && !pulledToday(it)) {
+                            pullSequence(it);
+                        }
+                    }
+                }
+                if (available_amount($item[large box]) > 0)
+                    create($item[blessed large box]);
+                if (available_amount($item[blessed large box]) > 0)
+                    use($item[blessed large box]);
+            }
+            if (estimated_ascension_seed_possibilities( ) == 1 && get_property("dreadScroll7") == "0"){
+                // ascension_seed_properties() is slow (~5s), so call it once and read all eight from the map.
+                string [string] seedProps = ascension_seed_properties(possible_ascension_seeds( )[0]);
+                for x from 1 to 8{
+                    set_property("dreadScroll" + x, seedProps["dreadScroll" + x]);
+                }
+            } else if (estimated_ascension_seed_possibilities( ) > 1 && have_item($item[intriguing puzzle box]))
+                abort("Intriguing puzzle box handling has failed. Let FS know and randomly click around in puzzle box");
         }
         // Asdon martin refuel with soda bread only after prism break
         if (get_workshed() == $item[Asdon Martin keyfob (on ring)] && !highShiny()

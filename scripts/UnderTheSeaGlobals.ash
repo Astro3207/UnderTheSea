@@ -192,6 +192,25 @@ import <seedfinder/seedfinder.ash>;
         return true;
     }
 
+    string [int, int] puzzleOutcomes;
+
+    // Rebuilds the global outcomes map from "step,choice:outcome|..." in the pref.
+    void puzzleBoxOutcomes() {
+        clear(puzzleOutcomes);
+        string pref = get_property("intriguingPuzzleBoxOutcomes");
+        if (pref == "")
+            return;
+        foreach i, entry in split_string(pref, "\\|") {
+            string [int] kv = split_string(entry, ":");
+            if (count(kv) < 2)
+                continue;
+            string [int] key = split_string(kv[0], ",");
+            if (count(key) < 2)
+                continue;
+            puzzleOutcomes[key[0].to_int(), key[1].to_int()] = kv[1];
+        }
+    }
+
 // Game Mechanics
     boolean pulledToday(item it) {
         string [int] pulledToday = split_string(get_property("_roninStoragePulls"), ",");

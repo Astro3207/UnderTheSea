@@ -138,6 +138,18 @@ void main(int whichchoice, string page) {
             run_choice(2);
             break;
 
+        case 525:
+            while (handling_choice( )){
+                puzzleBoxOutcomes();
+                for x from 1 to 7{
+                    if (puzzleOutcomes[get_property("intriguingPuzzleBoxStep").to_int()][x] == ""){
+                        run_choice(x);
+                        break;
+                    }
+                }
+            }
+            break;
+
         // ── Dread scroll puzzle ───────────────────────────────────────────
         case 703:
             int Scroll7;
