@@ -1419,107 +1419,6 @@ string DropsItems;
             print("Could not smith the sea cowboy hat.", "red");
     }
 
-    void outpost(){
-        step("phase: Mer-kin Outpost (stashbox / lockkey)");
-        if (NCForceEstimate() >= 5 && have_effect($effect[driving waterproofly]) > 0)
-            pillKeeper("free familiar");
-        while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || 
-            contains_text("step6,step7,step8",get_property("questS02Monkees"))){
-
-            if (my_path().id == 55){
-                //Waste baseball if you don't have steely eyed squint and not a lot of NCforces since you may need to save the pull for a pearl necklace
-                if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
-                    baseballD();
-                
-                //If you can't do caliginous abyss in cyberrealm, then BoFa them into outpost
-                while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 
-                    && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40
-                    && contains_text("step9,step10,step11,step12",get_property("questS02Monkees"))){
-                    if (available_amount($item[black glass]) == 0)
-                        oldGuy();
-                    if (available_amount($item[Elf Guard SCUBA tank]) == 0)
-                        pullSequence($item[Elf Guard SCUBA tank]);
-                    recallCaliginous();
-                }
-            }
-
-            // Dressed for the Refrain only in the iteration that equipped the Acorndion.
-            if (get_property("_utsAcornOutpost") == "dressed")
-                set_property("_utsAcornOutpost", "");
-            if (get_property("_utsAcornBanishDress") != "")
-                set_property("_utsAcornBanishDress", "");
-            outpostTrainerSmith();
-            if ($location[The Mer-Kin Outpost].turns_spent < 5)
-                set_property("stashboxChecked", "0");
-            if (contains_text(get_property("stashboxChecked"), "1")
-                && contains_text(get_property("stashboxChecked"), "2")
-                && contains_text(get_property("stashboxChecked"), "3"))
-                abort("All stashbox locations checked but no stashbox — something went wrong");
-            
-            // Familiar choice
-            if (get_property("_monsterHabitatsFightsLeft") == "1" && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_familiar($familiar[patriotic eagle]))
-                use_familiar($familiar[patriotic eagle]);
-            else if (doSWord() == true && $location[The Mer-Kin Outpost].turns_spent < 26 && 
-                (get_property("_monsterHabitatsFightsLeft") == "0" || available_amount($item[crayon shavings]) >= 9)){
-                use_familiar($familiar[Sword of S Words]);
-                mood("itdrop");
-            } else if ((highShiny() || lowShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[pristine fish scale]) < 6)
-                use_familiar("itdrop");
-            else
-                use_familiar("-combat");
-
-            // Conditional gear
-            string conditional;
-            if (get_property("_monsterHabitatsFightsLeft") == "1" && have_effect($effect[Everything Looks Purple]) == 0
-                && to_int(get_property("_monsterHabitatsRecalled")) == 2 && available_amount($item[roman candelabra]) > 0)
-                conditional += "roman candelabra,";
-            else 
-                conditional += baseball_equip();
-            if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
-                conditional += "sea cowboy hat,sea chaps,";
-
-            if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && available_amount($item[backup camera]) > 0
-                && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
-                conditional += "backup camera,";
-            else if (to_int(get_property("_bczSweatBulletsCasts")) < 9 && !highShiny())
-                conditional += if_equip($item[blood cubic zirconia]);
-            else if (lowShiny())
-                conditional += if_equip($item[Congressional Medal of Insanity]);
-
-            if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
-                conditional += "shark jumper,scale-mail underwear,";
-            if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
-                mood("itdrop");
-            if (my_familiar() != $familiar[Sword of S Words])
-                conditional += "monodent of the sea,";
-            if (get_property("merkinLockkeyMonster") != "") {
-                mood("-combat");
-                tempEquipment("-combat,sea", bathysphere($item[none]) + conditional + delay());
-            } else {
-                // The trainer's chaps share the pants slot with scale-mail underwear.
-                if (outpostLassoTraining() && !contains_text(conditional, "scale-mail underwear"))
-                    conditional += "sea cowboy hat,sea chaps,";
-                tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
-                if (!contains_text(conditional, "roman candelabra") && !contains_text(conditional, "backup camera")) {
-                    if (acornOutpostWanted())
-                        acornOutpostDress(conditional, false);
-                    else if (acornBanishWanted())
-                        acornOutpostDress(conditional, true);
-                }
-            }
-            adv($location[The Mer-Kin Outpost]);
-
-            if (item_amount($item[Grandma's Note]) > 0
-                && item_amount($item[Grandma's Fuchsia Yarn]) > 0
-                && item_amount($item[Grandma's Chartreuse Yarn]) > 0){
-                use_familiar("itdrop");
-                equip($item[really, really nice swimming trunks]);
-                cli_execute("grandpa note");
-            }
-        }
-        refresh_status();
-    }
-
     void unholyDiver(string str){
         step("phase: rusty rivets");
         while (!diverPartsComplete() && to_slot(divingHelmet()) != $slot[hat]) {
@@ -1617,8 +1516,8 @@ string DropsItems;
                                 pullSequence($item[pro skateboard]);
                                 conditional += if_equip($item[pro skateboard]);
                             }
-                            if (available_amount($item[Fourth of May Cosplay Saber]) > 0){
-                                conditional += saberEquip($location[The Wreck of the Edgar Fitzsimmons]);
+                            if (have_effect($effect[everything looks yellow]) == 0 && item_amount($item[pulled yellow taffy]) == 0){
+                                pullSequence($item[pulled yellow taffy]);
                             } else {
                                 mood("itdrop");
                             }
@@ -1638,6 +1537,110 @@ string DropsItems;
                 + available_amount($item[rusty diving helmet]) + " rusty diving helmet, "
                 + available_amount($item[bubblin' stone]) + " bubblin' stone, "
                 + my_adventures() + " adventures left.");
+    }
+
+    void outpost(){
+        step("phase: Mer-kin Outpost (stashbox / lockkey)");
+        if (NCForceEstimate() >= 5 && have_effect($effect[driving waterproofly]) > 0)
+            pillKeeper("free familiar");
+        while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || 
+            contains_text("step6,step7,step8",get_property("questS02Monkees"))){
+
+            if (my_path().id == 55){
+                //Waste baseball if you don't have steely eyed squint and not a lot of NCforces since you may need to save the pull for a pearl necklace
+                if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
+                    baseballD();
+                
+                //If you can't do caliginous abyss in cyberrealm, then BoFa them into outpost
+                while (!MomNCyber() && lassoShadow() && to_int(get_property("_monsterHabitatsRecalled")) == 2 
+                    && get_property("_monsterHabitatsFightsLeft") == "0" && to_int(get_property("momSeaMonkeeProgress")) < 40
+                    && contains_text("step9,step10,step11,step12",get_property("questS02Monkees"))){
+                    if (available_amount($item[black glass]) == 0)
+                        oldGuy();
+                    if (available_amount($item[Elf Guard SCUBA tank]) == 0)
+                        pullSequence($item[Elf Guard SCUBA tank]);
+                    recallCaliginous();
+                }
+            }
+            if (highShiny()){
+                unholyDiver("direct");
+                abort("see if unholydiver worked, if yes continue scripting");
+            } else {
+                // Dressed for the Refrain only in the iteration that equipped the Acorndion.
+                if (get_property("_utsAcornOutpost") == "dressed")
+                    set_property("_utsAcornOutpost", "");
+                if (get_property("_utsAcornBanishDress") != "")
+                    set_property("_utsAcornBanishDress", "");
+                outpostTrainerSmith();
+                if ($location[The Mer-Kin Outpost].turns_spent < 5)
+                    set_property("stashboxChecked", "0");
+                if (contains_text(get_property("stashboxChecked"), "1")
+                    && contains_text(get_property("stashboxChecked"), "2")
+                    && contains_text(get_property("stashboxChecked"), "3"))
+                    abort("All stashbox locations checked but no stashbox — something went wrong");
+                
+                // Familiar choice
+                if (get_property("_monsterHabitatsFightsLeft") == "1" && to_int(get_property("_monsterHabitatsRecalled")) == 2 && have_familiar($familiar[patriotic eagle]))
+                    use_familiar($familiar[patriotic eagle]);
+                else if (doSWord() == true && $location[The Mer-Kin Outpost].turns_spent < 26 && 
+                    (get_property("_monsterHabitatsFightsLeft") == "0" || available_amount($item[crayon shavings]) >= 9)){
+                    use_familiar($familiar[Sword of S Words]);
+                    mood("itdrop");
+                } else if ((highShiny() || lowShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[pristine fish scale]) < 6)
+                    use_familiar("itdrop");
+                else
+                    use_familiar("-combat");
+
+                // Conditional gear
+                string conditional;
+                if (get_property("_monsterHabitatsFightsLeft") == "1" && have_effect($effect[Everything Looks Purple]) == 0
+                    && to_int(get_property("_monsterHabitatsRecalled")) == 2 && available_amount($item[roman candelabra]) > 0)
+                    conditional += "roman candelabra,";
+                else 
+                    conditional += baseball_equip();
+                if (my_path().id == 0 && to_int(get_property("lassoTrainingCount")) < 20)
+                    conditional += "sea cowboy hat,sea chaps,";
+
+                if (get_property("lastCopyableMonster") == "Black Crayon Golem" && to_int(get_property("_backUpUses")) < 7 && available_amount($item[backup camera]) > 0
+                    && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != ""))
+                    conditional += "backup camera,";
+                else if (to_int(get_property("_bczSweatBulletsCasts")) < 9 && !highShiny())
+                    conditional += if_equip($item[blood cubic zirconia]);
+                else if (lowShiny())
+                    conditional += if_equip($item[Congressional Medal of Insanity]);
+
+                if ((get_property("_monsterHabitatsMonster") == "eye in the darkness" || get_property("_monsterHabitatsMonster") == "slithering thing") && get_property("_monsterHabitatsFightsLeft") > 0)
+                    conditional += "shark jumper,scale-mail underwear,";
+                if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && item_amount($item[pristine fish scale]) < 6)
+                    mood("itdrop");
+                if (my_familiar() != $familiar[Sword of S Words])
+                    conditional += "monodent of the sea,";
+                if (get_property("merkinLockkeyMonster") != "") {
+                    mood("-combat");
+                    tempEquipment("-combat,sea", bathysphere($item[none]) + conditional + delay());
+                } else {
+                    // The trainer's chaps share the pants slot with scale-mail underwear.
+                    if (outpostLassoTraining() && !contains_text(conditional, "scale-mail underwear"))
+                        conditional += "sea cowboy hat,sea chaps,";
+                    tempEquipment("item drop,sea", bathysphere($item[toy cupid bow]) + conditional + freeKill());
+                    if (!contains_text(conditional, "roman candelabra") && !contains_text(conditional, "backup camera")) {
+                        if (acornOutpostWanted())
+                            acornOutpostDress(conditional, false);
+                        else if (acornBanishWanted())
+                            acornOutpostDress(conditional, true);
+                    }
+                }
+                adv($location[The Mer-Kin Outpost]);
+            }
+            if (item_amount($item[Grandma's Note]) > 0
+                && item_amount($item[Grandma's Fuchsia Yarn]) > 0
+                && item_amount($item[Grandma's Chartreuse Yarn]) > 0){
+                use_familiar("itdrop");
+                equip($item[really, really nice swimming trunks]);
+                cli_execute("grandpa note");
+            }
+        }
+        refresh_status();
     }
 
     void caliginous(string str){
@@ -3090,7 +3093,7 @@ void seaMonkees() {
         cli_execute("grandpa grandma");
 
     golemRecall();
-    abort("revamp high shiny outpost handling");
+
     outpost();
 
     // ── Stashbox use and trail unlock ─────────────────────────────────────────
@@ -3109,7 +3112,7 @@ void seaMonkees() {
     if (get_property("questS01OldGuy") == "started") 
         oldGuy();
 
-    // If high shiny --> s word sea cow --> (scuba) caliginous --> max item mctwist unholy diver (or Feesh and refract merkin) and lasso as necessary --> finish corral
+    // If high shiny --> lasso train/get lasso --> caliginous abyss to finish training --> sea horse --> elementary school to use any remaining -combat buff --> finish caliginous
     // Mid shiny if has cyberrealm and shadow rift and bcz --> max item summon unholy diver --> cyberrealm caliginous --> backup/software glitch mctwist sea cow --> shadow rift lasso --> delay until seahorse
     // Mid shiny no cyberrealm, yes shadow rift and bcz --> greg unholy diver --> 1 turn in caliginous if has backup cam --> max item backp/software glitch taffy mctwist corral --> shadow rift lasso --> unholy diver --> delay until seahorse --> caliginous
     // Mid shiny yes cyberrealm, no shadow rift, yes bcz --> open unholy diver --> cyberrealm caliginous --> max item backp/software glitch mctwist corral --> unholy diver --> delay until seahorse

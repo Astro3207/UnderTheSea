@@ -439,7 +439,7 @@ void main(int round, monster mob, string page_text) {
         else
             throw_item(bangA());
     }
-    if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
+    if (available_amount($item[closed-circuit pay phone]) == 0 && item_amount($item[sea lasso]) > 5 && my_location().environment == "underwater" && to_int(get_property("lassoTrainingCount")) < 6)
         throw_item($item[sea lasso]);
     // A copied diver surfaces in whichever zone the route is adventuring in,
     // and that zone's logic transforms or re-rolls whatever it is handed,
@@ -576,6 +576,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[%fn, spit on them!]);
                 if (have_equipped($item[pro skateboard]))
                     use_skill($skill[Do an epic McTwist!]);
+                if (item_amount($item[pulled yellow taffy]) > 0 && highShiny())
+                    throw_item($item[pulled yellow taffy]);
                 if (have_equipped($item[Fourth of May Cosplay Saber]))
                     use_skill($skill[Use the Force]);
             }
