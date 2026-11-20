@@ -600,7 +600,7 @@ void main(int round, monster mob, string page_text) {
             // step4 pearl hunt, which is over once the corral has started.
             if (((last_monster() == $monster[giant squid] && !contains_text(get_property("trackedMonsters"), "giant squid"))
                 || (last_monster() == $monster[Mer-kin tippler] && !contains_text(get_property("trackedMonsters"), "Mer-kin tippler")))
-                && $location[The coral corral].turns_spent == 0) {
+                && $location[The coral corral].turns_spent == 0 && my_familiar() != $familiar[sword of s words]) {
                 foreach sk in $skills[transcendent olfaction,
                     Gallapagosian Mating Call, MCHUGELARGE SLASH]
                     use_if_have_skill(page_text, sk);
