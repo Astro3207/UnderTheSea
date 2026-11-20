@@ -653,6 +653,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[spring kick]);
                 if (my_familiar() == $familiar[peace turkey])
                     throw_item($item[ink bladder]);
+                free_kill(page_text, true);
+                free_run(page_text, false);
                 cleanup();
             } else {
                 if (to_int(get_property("lassoTrainingCount")) < 20

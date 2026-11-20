@@ -1544,7 +1544,8 @@ string DropsItems;
             pillKeeper("free familiar");
         while ((item_amount($item[Mer-kin stashbox]) == 0  && get_property("corralUnlocked") == "false") || 
             contains_text("step6,step7,step8",get_property("questS02Monkees"))){
-
+            if ($location[The Mer-Kin Outpost].turns_spent < 5)
+                set_property("stashboxChecked", "0");
             if (my_path().id == 55){
                 //Waste baseball if you don't have steely eyed squint and not a lot of NCforces since you may need to save the pull for a pearl necklace
                 if (!have_skill($skill[Steely-Eyed Squint]) && NCForceEstimate() < 4 && contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9)
@@ -1562,7 +1563,8 @@ string DropsItems;
                 }
             }
             if (highShiny()){
-                unholyDiver("direct");
+                if (!diverPartsComplete() && to_slot(divingHelmet()) != $slot[hat])
+                    unholyDiver("direct");
                 string conditional;
                 if (item_amount($item[pristine fish scale]) < 6){
                     use_familiar("itdrop");
@@ -1578,13 +1580,16 @@ string DropsItems;
                 } else if (seaCowNeeded()){
                     use_familiar("itdrop");
                 } else {
-                    if (item_amount($item[ink bladder]) < 6)
+                    if (item_amount($item[ink bladder]) < 6 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
+                        if (!get_property("banishedMonsters").contains_text("sea cow"))
+                            conditional += "spring shoes,";
                         use_familiar($familiar[sword of s words]);
-                    else {
+                    } else {
                         conditional = inkBladderGetup();
                     }
                 }
                 mood("itdrop");
+                mood("-combat");
                 tempEquipment("item drop, sea",conditional + delay());
             } else {
                 // Dressed for the Refrain only in the iteration that equipped the Acorndion.
@@ -1593,8 +1598,6 @@ string DropsItems;
                 if (get_property("_utsAcornBanishDress") != "")
                     set_property("_utsAcornBanishDress", "");
                 outpostTrainerSmith();
-                if ($location[The Mer-Kin Outpost].turns_spent < 5)
-                    set_property("stashboxChecked", "0");
                 if (contains_text(get_property("stashboxChecked"), "1")
                     && contains_text(get_property("stashboxChecked"), "2")
                     && contains_text(get_property("stashboxChecked"), "3"))

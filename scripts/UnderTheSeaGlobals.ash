@@ -661,7 +661,12 @@ import <seedfinder/seedfinder.ash>;
             }
             boolean held = slotsHold(equipmentSelection, to_item(itemMap[str]));
             if (!held && equipmentSelection[itemMap[str].to_item().to_slot()] == $item[none]){
-                equipmentSelection[itemMap[str].to_item().to_slot()] = itemMap[str].to_item(); 
+                equipmentSelection[itemMap[str].to_item().to_slot()] = itemMap[str].to_item();
+                if (to_slot(to_item(itemMap[str])) == $slot[weapon] && weapon_hands(to_item(itemMap[str])) > 1){
+                    if (equipmentSelection[$slot[off-hand]] != $item[none])
+                        print("Dropping " + equipmentSelection[$slot[off-hand]] + ": " + itemMap[str] + " needs both hands.", "red");
+                    equipmentSelection[$slot[off-hand]] = to_item(itemMap[str]);
+                }
                 continue;
             }
             if (!held && to_slot(to_item(itemMap[str])) == $slot[weapon] && doubleFist){
@@ -693,6 +698,8 @@ import <seedfinder/seedfinder.ash>;
             have_skill($skill[Double-Fisted Skull Smashing]),
             highShiny() && MobiusNCReady() && available_amount($item[M&ouml;bius ring]) > 0);
         foreach slo in equipmentSelection{
+            if (slo == $slot[off-hand] && equipmentSelection[slo] == equipmentSelection[$slot[weapon]])
+                continue;
             if (available_amount(equipmentSelection[slo]) == 0)
                 abort("Missing " + equipmentSelection[slo]);
             if (badMaxString(to_string(equipmentSelection[slo])))
