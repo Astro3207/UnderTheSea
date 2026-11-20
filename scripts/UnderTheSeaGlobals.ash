@@ -583,6 +583,11 @@ import <seedfinder/seedfinder.ash>;
         return freeKill();
     }
 
+    string inkBladderGetup(){
+        use_familiar($familiar[peace turkey]);
+        return "spring shoes,KoL Con snowglobe,June cleaver,";
+    }
+
     // The bag's Reflex Hammer for the guild test, once Spring Away can't end the fight.
     string reflexGear() {
         if (to_int(get_property("_reflexHammerUsed")) >= 3
@@ -599,7 +604,7 @@ import <seedfinder/seedfinder.ash>;
         return freeRun();
     }
 
-        int [int] mobiusEncounters = {
+    int [int] mobiusEncounters = {
         0:0,
         1:4,
         2:7,

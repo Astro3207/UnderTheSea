@@ -1372,7 +1372,6 @@ string DropsItems;
         boolean breathes = boolean_modifier("Adventure Underwater");
         if (my_mp() < mp && !restore_mp(mp))
             return;
-        // Equips through KoL's inventory page. Mafia's equip() refuses this accordion to other classes.
         buffer worn = visit_url("inv_equip.php?pwd&which=2&action=equip&whichitem=" + to_int($item[legendary acorndion]) + "&ajax=1");
         if (!have_equipped($item[legendary acorndion]) && !cli_execute("refresh equip"))
             print("Equipment refresh failed after the Acorndion swap.", "red");
@@ -1564,7 +1563,29 @@ string DropsItems;
             }
             if (highShiny()){
                 unholyDiver("direct");
-                abort("see if unholydiver worked, if yes continue scripting");
+                string conditional;
+                if (item_amount($item[pristine fish scale]) < 6){
+                    use_familiar("itdrop");
+                    if (!get_property("legendaryAcornsPlanted").contains_text("The Mer-Kin Outpost:SEA_COWS")){
+                        use_familiar($familiar[sword of s words]);
+                        conditional += "legendary acorndion,";
+                    } else
+                        conditional += "monodent of the sea,";
+                } else if (!get_property("banishedPhyla").contains_text("mer-kin")){
+                    use_familiar($familiar[patriotic eagle]);
+                    if (item_amount($item[ink bladder]) == 0)
+                        conditional += "peridot of peril,";
+                } else if (seaCowNeeded()){
+                    use_familiar("itdrop");
+                } else {
+                    if (item_amount($item[ink bladder]) < 6)
+                        use_familiar($familiar[sword of s words]);
+                    else {
+                        conditional = inkBladderGetup();
+                    }
+                }
+                mood("itdrop");
+                tempEquipment("item drop, sea",conditional + delay());
             } else {
                 // Dressed for the Refrain only in the iteration that equipped the Acorndion.
                 if (get_property("_utsAcornOutpost") == "dressed")
@@ -1629,9 +1650,9 @@ string DropsItems;
                         else if (acornBanishWanted())
                             acornOutpostDress(conditional, true);
                     }
-                }
-                adv($location[The Mer-Kin Outpost]);
+                } 
             }
+            adv($location[The Mer-Kin Outpost]);
             if (item_amount($item[Grandma's Note]) > 0
                 && item_amount($item[Grandma's Fuchsia Yarn]) > 0
                 && item_amount($item[Grandma's Chartreuse Yarn]) > 0){

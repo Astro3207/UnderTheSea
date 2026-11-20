@@ -638,105 +638,123 @@ void main(int round, monster mob, string page_text) {
             break;
 
         case $location[The Mer-Kin Outpost]:
-            if (to_int(get_property("lassoTrainingCount")) < 20
-                && (my_path().id == 0 || (have_equipped($item[sea cowboy hat])
-                    && have_equipped($item[sea chaps]) && item_amount($item[sea lasso]) > 0)))
-                throw_item($item[sea lasso]);
-            // While its cowbell and leather are needed, a sea cow skips Talk to Some Fish and item-less kills.
-            // A live golem Back-Up chain takes the cow instead.
-            boolean golemChain = get_property("_monsterHabitatsFightsLeft") == "0"
-                && to_int(get_property("_monsterHabitatsRecalled")) >= 2
-                && to_int(get_property("_backUpUses")) < 7
-                && get_property("lastCopyableMonster") == "Black Crayon Golem"
-                && have_equipped($item[backup camera])
-                && ($location[The Mer-Kin Outpost].turns_spent < 24
-                    || get_property("merkinLockkeyMonster") != "");
-            if (last_monster() == $monster[sea cow] && seaCowNeeded() && !golemChain) {
-                free_kill(page_text, true);
-                cleanUp();
-                break;
-            }
-            // An Acorndion fight has no Monodent, so it skips the Sea *dent branches below.
-            if (acornPlantFight() && last_monster() != $monster[time cop]
-                && last_monster() != $monster[black crayon golem]) {
-                if (last_monster() == $monster[Mer-kin burglar] || last_monster() == $monster[Mer-kin raider])
-                    free_run(page_text, false);
-                free_kill(page_text, last_monster() == $monster[mer-kin healer]
-                    && item_amount($item[mer-kin prayerbeads]) < 2);
-                cleanUp();
-                break;
-            }
-            if (last_monster() == $monster[time cop]) {
-                darts();
-                cleanUp();
-                break;
-            }
-            if (last_monster() == $monster[black crayon golem]) {
-                if (get_property("_monsterHabitatsFightsLeft") == "0"
-                    && have_effect($effect[everything looks purple]) == 0
-                    && to_int(get_property("_monsterHabitatsRecalled")) == 2)
-                    use_skill($skill[Blow the Purple Candle!]);
-                else if (get_property("_monsterHabitatsFightsLeft") == "0"
-                    && to_int(get_property("_monsterHabitatsRecalled")) < 2)
-                    use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
-                if (get_property("_monsterHabitatsFightsLeft") == "0"
-                    && to_int(get_property("_monsterHabitatsRecalled")) >= 2
-                    && my_familiar() == $familiar[Patriotic Eagle])
+            if (highShiny()){
+                if (last_monster() == $monster[mer-kin healer] && !get_property("trackedMonsters").contains_text("Mer-kin healer"))
+                    use_skill($skill[transcendent olfaction]);
+                if (have_equipped($item[legendary acorndion]) && !get_property("legendaryAcornsPlanted").contains_text("The Mer-Kin Outpost:SEA_COWS"))
+                    use_skill($skill[Juvenile Refrain]);
+                if (my_familiar() == $familiar[patriotic eagle] && item_amount($item[pristine fish scale]) >= 6 && get_property("screechCombats").to_int() == 0 && last_monster().phylum == $phylum[mer-kin]){
                     use_skill($skill[%fn, Release the Patriotic Screech!]);
-                darts();
-                cleanUp();
-                break;
-            }
-            if ($location[The Mer-Kin Outpost].turns_spent < 24
-                || get_property("merkinLockkeyMonster") != "") {
-                // Back-up to Black Crayon Golem if available
-                if (get_property("_monsterHabitatsFightsLeft") == "0"
+                    if (item_amount($item[ink bladder]) > 0)
+                        throw_item($item[ink bladder]);
+                } else if (last_monster().phylum != $phylum[fish] && !free_monster(last_monster()) && have_equipped($item[monodent of the sea]) && item_amount($item[pristine fish scale]) < 6)
+                    use_skill($skill[Sea *dent: Talk to Some Fish]);
+                if (last_monster() == $monster[sea cow] && !seaCowNeeded())
+                    use_skill($skill[spring kick]);
+                if (my_familiar() == $familiar[peace turkey])
+                    throw_item($item[ink bladder]);
+                cleanup();
+            } else {
+                if (to_int(get_property("lassoTrainingCount")) < 20
+                    && (my_path().id == 0 || (have_equipped($item[sea cowboy hat])
+                        && have_equipped($item[sea chaps]) && item_amount($item[sea lasso]) > 0)))
+                    throw_item($item[sea lasso]);
+                // While its cowbell and leather are needed, a sea cow skips Talk to Some Fish and item-less kills.
+                // A live golem Back-Up chain takes the cow instead.
+                boolean golemChain = get_property("_monsterHabitatsFightsLeft") == "0"
                     && to_int(get_property("_monsterHabitatsRecalled")) >= 2
                     && to_int(get_property("_backUpUses")) < 7
                     && get_property("lastCopyableMonster") == "Black Crayon Golem"
-                    && have_equipped($item[backup camera])) {
-                    use_skill($skill[Back-Up to your Last Enemy]);
-                    run_combat();
-                }
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
-                    use_skill($skill[Sea *dent: Talk to Some Fish]);
-                    free_kill(page_text,true);
-                    cleanUp();
-                }
-                if (last_monster() == $monster[mer-kin healer]
-                    && item_amount($item[mer-kin prayerbeads]) < 2) {
-                    if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish"
-                            && to_int(get_property("_curveballFightsLeft")) > 0))
-                        use_skill($skill[Sea *dent: Talk to Some Fish]);
+                    && have_equipped($item[backup camera])
+                    && ($location[The Mer-Kin Outpost].turns_spent < 24
+                        || get_property("merkinLockkeyMonster") != "");
+                if (last_monster() == $monster[sea cow] && seaCowNeeded() && !golemChain) {
                     free_kill(page_text, true);
-                    if (to_int(get_property("_backUpUses")) < 7 && have_equipped($item[backup camera])) {
+                    cleanUp();
+                    break;
+                }
+                // An Acorndion fight has no Monodent, so it skips the Sea *dent branches below.
+                if (acornPlantFight() && last_monster() != $monster[time cop]
+                    && last_monster() != $monster[black crayon golem]) {
+                    if (last_monster() == $monster[Mer-kin burglar] || last_monster() == $monster[Mer-kin raider])
+                        free_run(page_text, false);
+                    free_kill(page_text, last_monster() == $monster[mer-kin healer]
+                        && item_amount($item[mer-kin prayerbeads]) < 2);
+                    cleanUp();
+                    break;
+                }
+                if (last_monster() == $monster[time cop]) {
+                    darts();
+                    cleanUp();
+                    break;
+                }
+                if (last_monster() == $monster[black crayon golem]) {
+                    if (get_property("_monsterHabitatsFightsLeft") == "0"
+                        && have_effect($effect[everything looks purple]) == 0
+                        && to_int(get_property("_monsterHabitatsRecalled")) == 2)
+                        use_skill($skill[Blow the Purple Candle!]);
+                    else if (get_property("_monsterHabitatsFightsLeft") == "0"
+                        && to_int(get_property("_monsterHabitatsRecalled")) < 2)
+                        use_skill($skill[RECALL FACTS: MONSTER HABITATS]);
+                    if (get_property("_monsterHabitatsFightsLeft") == "0"
+                        && to_int(get_property("_monsterHabitatsRecalled")) >= 2
+                        && my_familiar() == $familiar[Patriotic Eagle])
+                        use_skill($skill[%fn, Release the Patriotic Screech!]);
+                    darts();
+                    cleanUp();
+                    break;
+                }
+                if ($location[The Mer-Kin Outpost].turns_spent < 24
+                    || get_property("merkinLockkeyMonster") != "") {
+                    // Back-up to Black Crayon Golem if available
+                    if (get_property("_monsterHabitatsFightsLeft") == "0"
+                        && to_int(get_property("_monsterHabitatsRecalled")) >= 2
+                        && to_int(get_property("_backUpUses")) < 7
+                        && get_property("lastCopyableMonster") == "Black Crayon Golem"
+                        && have_equipped($item[backup camera])) {
                         use_skill($skill[Back-Up to your Last Enemy]);
                         run_combat();
                     }
-                    free_run(page_text, false);
+                    if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                        use_skill($skill[Sea *dent: Talk to Some Fish]);
+                        free_kill(page_text,true);
+                        cleanUp();
+                    }
+                    if (last_monster() == $monster[mer-kin healer]
+                        && item_amount($item[mer-kin prayerbeads]) < 2) {
+                        if (have_equipped($item[baseball diamond]) || (get_property("_curveballMonster") == "some fish"
+                                && to_int(get_property("_curveballFightsLeft")) > 0))
+                            use_skill($skill[Sea *dent: Talk to Some Fish]);
+                        free_kill(page_text, true);
+                        if (to_int(get_property("_backUpUses")) < 7 && have_equipped($item[backup camera])) {
+                            use_skill($skill[Back-Up to your Last Enemy]);
+                            run_combat();
+                        }
+                        free_run(page_text, false);
+                        cleanUp();
+                    } else if (last_monster() == $monster[Mer-kin burglar]
+                        || last_monster() == $monster[Mer-kin raider]) {
+                        if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
+                            use_skill($skill[sea *dent: throw a lightning bolt]);
+                        free_run(page_text, true);
+                    }
+                    if (!free_monster(last_monster()))
+                        free_kill(page_text, false);
                     cleanUp();
-                } else if (last_monster() == $monster[Mer-kin burglar]
-                    || last_monster() == $monster[Mer-kin raider]) {
-                    if ((highShiny() || available_amount($item[closed-circuit pay phone]) == 0) && my_familiar() == $familiar[sword of s words] && !banishUsedAtYourLocation("Sea *dent"))
-                        use_skill($skill[sea *dent: throw a lightning bolt]);
-                    free_run(page_text, true);
-                }
-                if (!free_monster(last_monster()))
-                    free_kill(page_text, false);
-                cleanUp();
-            } else {
-                // turns_spent >= 24 and no lockkey monster
-                if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
-                    use_skill($skill[Sea *dent: Talk to Some Fish]);
-                    free_kill(page_text,true);
+                } else {
+                    // turns_spent >= 24 and no lockkey monster
+                    if (my_familiar() != $familiar[sword of s words] && (highShiny() || available_amount($item[closed-circuit pay phone]) == 0 || lowShiny()) && available_amount($item[pristine fish scale]) < 6 && !free_monster(last_monster())){
+                        use_skill($skill[Sea *dent: Talk to Some Fish]);
+                        free_kill(page_text,true);
+                        cleanUp();
+                    }
+                    if (last_monster() == $monster[mer-kin burglar] || last_monster() == $monster[mer-kin raider])
+                        free_run(page_text, true);
+                    free_kill(page_text,
+                        last_monster() == $monster[mer-kin healer]
+                        && item_amount($item[mer-kin prayerbeads]) < 2);
                     cleanUp();
                 }
-                if (last_monster() == $monster[mer-kin burglar] || last_monster() == $monster[mer-kin raider])
-                    free_run(page_text, true);
-                free_kill(page_text,
-                    last_monster() == $monster[mer-kin healer]
-                    && item_amount($item[mer-kin prayerbeads]) < 2);
-                cleanUp();
             }
             break;
 
