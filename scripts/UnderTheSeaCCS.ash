@@ -616,6 +616,8 @@ void main(int round, monster mob, string page_text) {
                 use_if_have_skill(page_text, $skill[Sea *dent: Talk to Some Fish]);
                 cleanUp();
             }
+            if (last_monster() == $monster[giant squid] && my_familiar() == $familiar[sword of s words] && to_int(get_property("swordOfSWordsMonster")) != 763)
+                use_skill($skill[%fn, kill a lot of these guys]);
             if ((last_monster() != $monster[giant squid] || item_amount($item[comb jelly]) > 0)
                 && last_monster() != $monster[Mer-kin tippler]
                 && (last_monster() != $monster[Mer-kin miner] || item_amount($item[mer-kin digpick]) > 0)) {

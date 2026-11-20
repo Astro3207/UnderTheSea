@@ -1181,7 +1181,7 @@ string DropsItems;
 // Quest Handling Part 2
     void SWordLasso(){
         if (have_familiar($familiar[Sword of S Words]) && count_summons() >= 3 && to_float(get_property("swordOfSWordsMonster")) < 10 && 
-            (highShiny() || available_amount($item[closed-circuit pay phone]) == 0)){
+            available_amount($item[closed-circuit pay phone]) == 0){
             use_familiar($familiar[Sword of S Words]);
             tempEquipment("item drop", baseball_equip() + freeKill());
             mood("itdrop");
@@ -1314,6 +1314,11 @@ string DropsItems;
     void grandpa(){
         step("phase: Grandpa unlock (step 4)");
         if (get_property("questS02Monkees") == "step4") {
+            if (highShiny() && to_int(get_property("swordOfSWordsMonster")) != 763){
+                use_familiar($familiar[Sword of S Words]);
+                tempEquipment("item drop, sea","peridot of peril");
+                adv1($location[the marinara trench]);
+            }
             use_familiar("-combat");
             if (have_effect($effect[Colorfully Concealed]) == 0 && lowShiny() == false) {
                 if (item_amount($item[mer-kin hidepaint]) > 0 || pullSequence($item[mer-kin hidepaint]))
@@ -1321,7 +1326,6 @@ string DropsItems;
             }
             while (get_property("questS02Monkees") == "step4") {
                 string conditional;
-
                 if (doSWord() == true){
                     use_familiar($familiar[Sword of S Words]);
                     mood("itdrop");
@@ -3081,13 +3085,12 @@ void seaMonkees() {
         visit_url("monkeycastle.php?who=2");
         visit_url("monkeycastle.php?who=1");
     }
-
     grandpa();
     if (get_property("questS02Monkees") == "step5")
         cli_execute("grandpa grandma");
 
     golemRecall();
-
+    abort("revamp high shiny outpost handling");
     outpost();
 
     // ── Stashbox use and trail unlock ─────────────────────────────────────────

@@ -941,6 +941,8 @@ import <seedfinder/seedfinder.ash>;
             if (available_amount($item[closed-circuit pay phone]) == 0 && item_amount($item[sea lasso]) < 4)
                 return true;
         }
+        if (to_int(get_property("swordOfSWordsMonster")) == 763)
+            return true;
         return false;
     }
     
@@ -999,7 +1001,7 @@ import <seedfinder/seedfinder.ash>;
         $location[The Haunted Pantry]:                  145,
         $location[The Overgrown Lot]:                   1752,
         $location[The Coral Corral]:                    775,   // sea cow
-        $location[The Marinara Trench]:                 762,
+        $location[The Marinara Trench]:                 763,
         $location[Anemone Mine]:                        765,
         $location[The Dive Bar]:                        768,
         $location[Cyberzone 1]:                         2458,
