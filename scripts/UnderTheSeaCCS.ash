@@ -410,15 +410,16 @@ void main(int round, monster mob, string page_text) {
     acornBanish(page_text);
     if (current_round() == 0)
         return;
-    if (diverForce(last_monster(), page_text))
-        return;
-
-    if (healerForce(last_monster(), page_text))
-        return;
-    if (seaCowForce(last_monster(), page_text))
-        return;
-    if (researcherForce(last_monster(), page_text))
-        return;
+    if (!highShiny()){
+        if (diverForce(last_monster(), page_text))
+            return;
+        if (healerForce(last_monster(), page_text))
+            return;
+        if (seaCowForce(last_monster(), page_text))
+            return;
+        if (researcherForce(last_monster(), page_text))
+            return;
+    }
     // +50% item drops for this fight, before anything has a chance to end it.
     becomeBat(page_text);
     // +200% item on the diver itself, three a day, before free_kill can end it.
