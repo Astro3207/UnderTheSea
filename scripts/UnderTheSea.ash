@@ -936,7 +936,7 @@ string DropsItems;
             conditional += "sea cowboy hat,sea chaps,";
         if (available_amount($item[Elf Guard SCUBA tank]) == 0 && have_effect($effect[driving waterproofly]) == 0)
             pullSequence($item[Elf Guard SCUBA tank]);
-        tempEquipment("item drop,sea", if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
+        tempEquipment("item drop,sea,-equip peridot of peril", if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
             set_property("choiceAdventure1589","1&victim=775");
         else if (!doneWithCowboy())
@@ -2122,7 +2122,7 @@ string DropsItems;
                         put_closet(item_amount($item[mer-kin hallpass]),
                             $item[mer-kin hallpass]);
                         string conditional;
-                        if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
+                        if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0 && !highShiny())
                             conditional += "backup camera,";
                         else if (have_skill($skill[Double-Fisted Skull Smashing]))
                             conditional += "monodent of the sea,";
@@ -2131,9 +2131,8 @@ string DropsItems;
                         else if (baseballPlayers() < 9 || !contains_text(get_property("baseballTeam"),"838"))
                             conditional += if_equip($item[baseball diamond]);
                         tempEquipment("-combat,sea", "crappy Mer-kin tailpiece,crappy Mer-kin mask,"
-                            + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow])
-                            + if_equip($item[M&ouml;bius ring]) + conditional);
-                        mood("-combat");
+                            + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow])+ conditional);
+                        mood("-combat"); saber
                         adv($location[mer-kin elementary school]);
                         if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
                             caliginous("cheap");
@@ -2148,8 +2147,8 @@ string DropsItems;
                             baseballD();
                             continue;
                         }
-                        tempEquipment("item drop, hat drop,sea","crappy Mer-kin tailpiece,crappy Mer-kin mask," + if_equip($item[legendary seal-clubbing club])
-                            + if_equip($item[blood cubic zirconia]) + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+                        tempEquipment("item drop, hat drop,sea","crappy Mer-kin tailpiece,crappy Mer-kin mask,"
+                            + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow]));
                         mood("itdrop");
                         if (get_property("merkinElementaryTeacherUnlock") == "false")
                             mood("-combat");
@@ -2212,16 +2211,36 @@ string DropsItems;
                             }
                         }
                         tempEquipment("-combat,sea", "monodent of the sea,crappy Mer-kin tailpiece,crappy Mer-kin mask," + if_equip($item[blood cubic zirconia])
-                            + bathysphere($item[toy cupid bow]) + if_equip($item[M&ouml;bius ring]) + conditional);
+                            + bathysphere($item[toy cupid bow]) + conditional);
                         mood("-combat");
                         zoneStall("the teacher's lounge noncombat", $item[none],
                             $location[mer-kin elementary school], schoolTurns, 20);
                         adv($location[mer-kin elementary school]);
+                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
+                            caliginous("cheap");
+                        }
                         schoolTurns += 1;
                         put_closet(item_amount($item[mer-kin hallpass]),
                             $item[mer-kin hallpass]);
                         if ((available_amount($item[Mer-kin facecowl]) > 0 && available_amount($item[Mer-kin waistrope]) > 0))
                             break;
+                    }
+                    while (available_amount($item[mer-kin bunwig]) == 0 && !libraryReady()) {
+                        if (contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9){
+                            baseballD();
+                            continue;
+                        }
+                        tempEquipment("item drop, hat drop,sea","crappy Mer-kin tailpiece,crappy Mer-kin mask,"
+                            + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow]));
+                        mood("itdrop");
+                        if (get_property("merkinElementaryTeacherUnlock") == "false")
+                            mood("-combat");
+                        adv($location[mer-kin elementary school]);
+                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
+                            caliginous("cheap");
+                        }
+                        put_closet(item_amount($item[mer-kin hallpass]),
+                            $item[mer-kin hallpass]);
                     }
                     take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
                     pullPrayerbead();
@@ -2238,7 +2257,7 @@ string DropsItems;
                         mood("combat");
                         mood("itdrop");
                         tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + "monodent of the sea,"
-                            + if_equip($item[Blood Cubic Zirconia]) + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+                            + if_equip($item[Blood Cubic Zirconia]) + bathysphere($item[toy cupid bow]));
                         // The lounge wants a hallpass, so that is the real gate.
                         zoneStall("the scholar outfit pieces", $item[Mer-kin hallpass],
                             $location[mer-kin elementary school], schoolTurns, 20);
