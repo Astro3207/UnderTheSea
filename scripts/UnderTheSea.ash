@@ -763,6 +763,7 @@ string DropsItems;
                 use_familiar($familiar[sword of s words]);
             } else {
                 conditional += inkBladderGetup();
+                use_familiar("combat");
             }
         }
         tempEquipment("combat,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + delay() + freeKill(forceNC ? my_location() : $location[Mer-kin Gymnasium]) + bathysphere($item[none]) + conditional);
@@ -1597,13 +1598,13 @@ string DropsItems;
                     use_familiar("itdrop");
                 } else {
                     if (item_amount($item[ink bladder]) < 6 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
-                        if (!get_property("banishedMonsters").contains_text("sea cow"))
-                            conditional += "spring shoes,";
                         use_familiar($familiar[sword of s words]);
                     } else {
                         conditional += inkBladderGetup();
                     }
                 }
+                if (!get_property("banishedMonsters").contains_text("sea cow") && item_amount($item[sea cowbell]) >= 3)
+                    conditional += "spring shoes,";
                 mood("itdrop");
                 mood("-combat");
                 tempEquipment("item drop, sea",conditional + delay());
@@ -1700,7 +1701,7 @@ string DropsItems;
                 while (to_int(get_property("momSeaMonkeeProgress")) < 40){
                     if (get_property("lassoTrainingCount").to_int() >= 20 && get_property("seahorseName") == "")
                         return;
-                    if (available_amount($item[sea cowbell]) < 3)
+                    if (doSword())
                         use_familiar($familiar[sword of s words]);
                     else 
                         use_familiar("itdrop");
@@ -2132,7 +2133,7 @@ string DropsItems;
                             conditional += if_equip($item[baseball diamond]);
                         tempEquipment("-combat,sea", "crappy Mer-kin tailpiece,crappy Mer-kin mask,"
                             + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow])+ conditional);
-                        mood("-combat"); saber
+                        mood("-combat");
                         adv($location[mer-kin elementary school]);
                         if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
                             caliginous("cheap");

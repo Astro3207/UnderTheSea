@@ -1071,7 +1071,7 @@ void main(int round, monster mob, string page_text) {
                 if (current_round() > 0)
                     free_kill(page_text, false);
             }
-            if (my_familiar() == $familiar[peace turkey])
+            if (item_amount($item[ink bladder]) > 0)
                 throw_item($item[ink bladder]);
             cleanUp();
             break;
