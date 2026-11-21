@@ -988,6 +988,7 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[BCZ: Refracted Gaze]);
                 if (have_equipped($item[legendary seal-clubbing club]) && to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
                     use_skill($skill[Club 'Em Across the Battlefield]);
+                }
             }
             free_kill(page_text, true);
             if (my_familiar() == $familiar[peace turkey])
