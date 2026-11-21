@@ -924,7 +924,7 @@ string DropsItems;
             conditional += cloakeEquip($location[The Coral Corral]);
             conditional += champagneEquip($location[The Coral Corral]);
         }
-        if (get_property("lassoTrainingCount").to_int() && available_amount($item[sea lasso]) > 0 && available_amount($item[sea cowboy hat]) > 0 && available_amount($item[sea chaps]) > 0)
+        if (get_property("lassoTrainingCount").to_int() < 20 && available_amount($item[sea lasso]) > 0 && available_amount($item[sea cowboy hat]) > 0 && available_amount($item[sea chaps]) > 0)
             conditional += "sea cowboy hat,sea chaps,";
         tempEquipment("item drop,sea", if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
@@ -3166,6 +3166,7 @@ void seaMonkees() {
                 caliginous("cheap");
         }
     }
+    abort("does this work");
     shadowTeflon();
     backupLasso();
     seahorsePrep();
