@@ -732,7 +732,7 @@ string DropsItems;
         equip($item[mer-kin digpick]);
         equipSwimTrunks();
         use_familiar("itdrop");
-        visit_url("mining.php?mine=3&which=" + mineNum());
+        visit_url("mining.php?mine=3&which=" + solvedMineNum());
         if (my_hp() == 0)
             cli_execute("restore HP");
         if (item_amount($item[teflon ore]) > 0){
@@ -926,6 +926,8 @@ string DropsItems;
         }
         if (get_property("lassoTrainingCount").to_int() < 20 && available_amount($item[sea lasso]) > 0 && available_amount($item[sea cowboy hat]) > 0 && available_amount($item[sea chaps]) > 0)
             conditional += "sea cowboy hat,sea chaps,";
+        if (available_amount($item[Elf Guard SCUBA tank]) == 0 && have_effect($effect[driving waterproofly]) == 0)
+            pullSequence($item[Elf Guard SCUBA tank]);
         tempEquipment("item drop,sea", if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
             set_property("choiceAdventure1589","1&victim=775");
@@ -3166,9 +3168,9 @@ void seaMonkees() {
                 caliginous("cheap");
         }
     }
-    abort("does this work");
     shadowTeflon();
     backupLasso();
+    abort("did it work?");
     seahorsePrep();
     seahorseTaming();
     postSeahorse();

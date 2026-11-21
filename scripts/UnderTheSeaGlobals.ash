@@ -809,6 +809,331 @@ import <seedfinder/seedfinder.ash>;
         return num;
     }
 
+// ─── MINE SOLVER ──────────────────────────────────────────────────────────────
+// ASH port of minesolver.ts. A wall is 6x6 with 12 ore in rows 1-4: one 4-cell connected
+// vein each of teflon, velcro and vinyl, plus 7 or 8 duds (cave-ins, meat, aquamarine)
+// among the other 24 squares. Every vein placement that fits what we have seen is weighed,
+// and we dig the exposed square with the best teflon odds, counting what it leads to.
+// Cell index is (row-1)*6 + (col-1), row 1 the top; KoL's square number is row*8 + col.
+// Rows 1-4 fit in a 24-bit mask.
+
+record mineMasks {
+    int twinkle;    // rows 1-4 twinkles still undug
+    int blocked;    // rows 1-4 squares no ore can be on
+    int teflon;
+    int velcro;
+    int vinyl;
+    int unknown;    // rows 1-4 squares we cannot see into
+    int knownDud;   // whole wall: undug twinkles plus dug duds
+    int knownPlain; // whole wall: squares known to hold nothing
+};
+
+record veinFit {
+    int mask;
+    float weight;
+    int covered;    // how many visible twinkles this vein accounts for
+};
+
+int [int] veinMasks;
+int veinRow4Mask;
+
+    // base^n for small non-negative n.
+    float minePow(float base, int n){
+        float r = 1.0;
+        for i from 1 upto n
+            r = r * base;
+        return r;
+    }
+
+    // Set bits in a mask.
+    int maskBits(int mask){
+        int n;
+        int m = mask;
+        while (m != 0){
+            m = m & (m - 1);
+            n += 1;
+        }
+        return n;
+    }
+
+    // C(n, k), 0 outside the triangle.
+    float mineChoose(int n, int k){
+        if (k < 0 || n < 0 || k > n)
+            return 0.0;
+        float r = 1.0;
+        for i from 1 upto k
+            r = r * (n - k + i) / i;
+        return to_float(round(r));
+    }
+
+    // The orthogonal neighbours of a cell on a cols x rows grid.
+    int [int] mineNeighbors(int idx, int cols, int rows){
+        int [int] out;
+        int col = idx % cols;
+        int row = idx / cols;
+        if (col > 0) out[count(out)] = idx - 1;
+        if (col < cols - 1) out[count(out)] = idx + 1;
+        if (row > 0) out[count(out)] = idx - cols;
+        if (row < rows - 1) out[count(out)] = idx + cols;
+        return out;
+    }
+
+    // True when the cells of mask form one connected vein within rows 1-4.
+    boolean veinConnected(int mask, int first){
+        int seen = 1 << first;
+        int [int] stack = {0: first};
+        int top = 1;
+        while (top > 0){
+            top -= 1;
+            int i = stack[top];
+            foreach k, n in mineNeighbors(i, 6, 4){
+                int bit = 1 << n;
+                if ((mask & bit) != 0 && (seen & bit) == 0){
+                    seen = seen | bit;
+                    stack[top] = n;
+                    top += 1;
+                }
+            }
+        }
+        return seen == mask;
+    }
+
+    // Fills veinMasks with every connected 4-cell vein in rows 1-4, once per session.
+    void buildVeinMasks(){
+        if (count(veinMasks) > 0)
+            return;
+        for i from 18 upto 23
+            veinRow4Mask = veinRow4Mask | (1 << i);
+        for a from 0 upto 20
+            for b from a + 1 upto 21
+                for c from b + 1 upto 22
+                    for d from c + 1 upto 23{
+                        int mask = (1 << a) | (1 << b) | (1 << c) | (1 << d);
+                        if (veinConnected(mask, a))
+                            veinMasks[count(veinMasks)] = mask;
+                    }
+    }
+
+    // What each of the 36 squares looks like to us: unknown, twinkle, rock, dud, or an ore.
+    // state is mafia's mineState3, layout its mineLayout3 (what each dug square held).
+    string [int] mineObserve(string state, string layout, boolean detection){
+        string [int] dug;
+        matcher m = create_matcher("#(\\d+)<img src=\"[^\"]*/([a-z0-9]+)\\.gif\"", layout);
+        while (m.find()){
+            int which = to_int(m.group(1));
+            int col = which % 8;
+            int row = which / 8;
+            if (row < 1 || row > 6 || col < 1 || col > 6)
+                continue;
+            string img = m.group(2);
+            string content = "dud";
+            if (contains_text(img, "teflon")) content = "teflon";
+            else if (contains_text(img, "velcro")) content = "velcro";
+            else if (contains_text(img, "vinyl")) content = "vinyl";
+            dug[(row - 1) * 6 + (col - 1)] = content;
+        }
+        string [int] obs;
+        for i from 0 upto 35{
+            string ch = char_at(state, i);
+            if (ch == "o"){
+                obs[i] = (dug contains i) ? dug[i] : "rock";
+            } else if (ch == "*"){
+                obs[i] = "twinkle";
+            } else {
+                // A plain square is only known plain if a twinkle there would have shown.
+                boolean exposed = detection || i / 6 == 5;
+                foreach k, n in mineNeighbors(i, 6, 6)
+                    if (char_at(state, n) == "o")
+                        exposed = true;
+                obs[i] = exposed ? "rock" : "unknown";
+            }
+        }
+        return obs;
+    }
+
+    // Folds the observation into bitmasks and counts.
+    mineMasks mineMasksOf(string [int] obs){
+        mineMasks mk;
+        foreach i, status in obs{
+            int bit = i < 24 ? (1 << i) : 0;
+            switch (status){
+                case "twinkle":
+                    mk.twinkle = mk.twinkle | bit;
+                    mk.knownDud += 1;
+                    break;
+                case "dud":
+                    mk.blocked = mk.blocked | bit;
+                    mk.knownDud += 1;
+                    break;
+                case "rock":
+                    mk.blocked = mk.blocked | bit;
+                    mk.knownPlain += 1;
+                    break;
+                case "unknown":
+                    mk.unknown = mk.unknown | bit;
+                    break;
+                case "teflon":
+                    mk.teflon = mk.teflon | bit;
+                    break;
+                case "velcro":
+                    mk.velcro = mk.velcro | bit;
+                    break;
+                case "vinyl":
+                    mk.vinyl = mk.vinyl | bit;
+                    break;
+            }
+        }
+        return mk;
+    }
+
+    // Placements of one ore that fit the wall, with the row-4 prior (ore is rare there).
+    veinFit [int] veinFits(string ore, mineMasks mk){
+        int must;
+        if (ore == "teflon") must = mk.teflon;
+        else if (ore == "velcro") must = mk.velcro;
+        else must = mk.vinyl;
+        int forbidden = mk.blocked | ((mk.teflon | mk.velcro | mk.vinyl) ^ must);
+        // Without detection an ore square may still be unknown; otherwise it must twinkle.
+        int allowed = mk.twinkle | mk.unknown | must;
+        veinFit [int] out;
+        foreach k, mask in veinMasks{
+            if ((mask & must) != must) continue;
+            if ((mask & forbidden) != 0) continue;
+            if ((mask & ~allowed) != 0) continue;
+            veinFit f;
+            f.mask = mask;
+            f.weight = minePow(0.2, maskBits(mask & veinRow4Mask));
+            f.covered = maskBits(mask & mk.twinkle);
+            out[count(out)] = f;
+        }
+        return out;
+    }
+
+    // Ways the duds can sit when the three veins cover `covered` visible twinkles:
+    // 8 duds (with the aquamarine) or 7, weighted evenly.
+    float dudWays(mineMasks mk, int covered){
+        int knownDuds = mk.knownDud - covered;
+        int free = 36 - 12 - knownDuds - mk.knownPlain;
+        return 0.5 * mineChoose(free, 8 - knownDuds) + 0.5 * mineChoose(free, 7 - knownDuds);
+    }
+
+    // P(teflon) for each of the 24 ore squares. Empty when no placement fits the wall.
+    float [int] teflonPosterior(string [int] obs){
+        buildVeinMasks();
+        mineMasks mk = mineMasksOf(obs);
+        veinFit [int] tFits = veinFits("teflon", mk);
+        veinFit [int] vFits = veinFits("velcro", mk);
+        veinFit [int] wFits = veinFits("vinyl", mk);
+        float [int] ways;
+        for c from 0 upto 12
+            ways[c] = dudWays(mk, c);
+        // The vinyl sum depends only on the teflon|velcro union, so it is kept per union.
+        float [int, int] vinylSums;
+        boolean [int] vinylDone;
+        float [int] perCell;
+        float mass = 0.0;
+        foreach ti, t in tFits{
+            float rest = 0.0;
+            foreach vi, v in vFits{
+                if ((v.mask & t.mask) != 0) continue;
+                int both = t.mask | v.mask;
+                if (!(vinylDone contains both)){
+                    vinylDone[both] = true;
+                    foreach wi, w in wFits
+                        if ((w.mask & both) == 0)
+                            vinylSums[both, w.covered] += w.weight;
+                }
+                float inner = 0.0;
+                for cw from 0 upto 4{
+                    float s = vinylSums[both, cw];
+                    if (s == 0.0) continue;
+                    inner += s * ways[t.covered + v.covered + cw];
+                }
+                rest += v.weight * inner;
+            }
+            if (rest == 0.0) continue;
+            float weight = t.weight * rest;
+            mass += weight;
+            for i from 0 upto 23
+                if ((t.mask & (1 << i)) != 0)
+                    perCell[i] += weight;
+        }
+        float [int] teflon;
+        if (mass <= 0.0)
+            return teflon;
+        for i from 0 upto 23
+            teflon[i] = perCell[i] / mass;
+        return teflon;
+    }
+
+    // The exposed undug square to dig, as KoL's square number, or 0 when no placement fits.
+    // Greedy on P(teflon), with every other square's odds added at 0.5^(extra digs to reach it).
+    int solvedMineSquare(string state, string layout, boolean detection){
+        if (length(state) != 36)
+            return 0;
+        float [int] p = teflonPosterior(mineObserve(state, layout, detection));
+        if (count(p) == 0)
+            return 0;
+        int best = -1;
+        float bestScore;
+        float bestP;
+        for d from 0 upto 35{
+            if (char_at(state, d) == "o") continue;
+            boolean exposed = d / 6 == 5;
+            foreach k, n in mineNeighbors(d, 6, 6)
+                if (char_at(state, n) == "o")
+                    exposed = true;
+            if (!exposed) continue;
+            // Digs needed to open each undug square by way of d.
+            int [int] digs;
+            digs[d] = 1;
+            int [int] queue = {0: d};
+            int head = 0;
+            int tail = 1;
+            while (head < tail){
+                int i = queue[head];
+                head += 1;
+                foreach k, n in mineNeighbors(i, 6, 6){
+                    if (char_at(state, n) == "o" || (digs contains n)) continue;
+                    digs[n] = digs[i] + 1;
+                    queue[tail] = n;
+                    tail += 1;
+                }
+            }
+            float score = 0.0;
+            foreach s, steps in digs
+                if (s < 24)
+                    score += p[s] * minePow(0.5, steps - 1);
+            float pd = d < 24 ? p[d] : 0.0;
+            if (best < 0 || score > bestScore || (score == bestScore && pd > bestP)){
+                best = d;
+                bestScore = score;
+                bestP = pd;
+            }
+        }
+        if (best < 0)
+            return 0;
+        return 8 * (best / 6 + 1) + (best % 6 + 1);
+    }
+
+    // Next Anemone Mine square: the two fixed openers up column 3, then the solver,
+    // then mineNum()'s fixed order if no vein layout fits the wall.
+    int solvedMineNum(){
+        visit_url("mining.php?mine=3");
+        string state = get_property("mineState3");
+        if (length(state) != 36)
+            return mineNum();
+        if (char_at(state, 32) != "o")
+            return 51;  // (3,6)
+        if (char_at(state, 26) != "o")
+            return 43;  // (3,5)
+        int which = solvedMineSquare(state, get_property("mineLayout3"), have_effect($effect[Object Detection]) > 0);
+        if (which > 0)
+            return which;
+        print("No vein layout fits this wall; falling back to the fixed dig order.", "red");
+        return mineNum();
+    }
+
     int delevelers(){
         int n;
         foreach it in $items[Mer-kin mouthsoap,crayon shavings,table tennis ball,sea lasso,sea cowbell]
