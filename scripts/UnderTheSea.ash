@@ -1993,7 +1993,7 @@ string DropsItems;
                     conditional += inkBladderGetup();
                 }
             }
-            tempEquipment(DropsItems+ "-equip peridot of peril",conditional + delay());
+            tempEquipment(DropsItems,conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);

@@ -273,8 +273,22 @@ void main(int whichchoice, string page) {
         // The same table drives Map the Monsters (1435) below, so the two
         // monster-pickers can never disagree about what we want in a zone.
         case 1557:
-            set_property("NCtoC","true");
             location here = my_location();
+            // Seahorse taming: the Peridot is only worth it on the seahorse. If it isn't
+            // offered, walk away rather than pull a sea cow.
+            if (here == $location[The Coral Corral] && get_property("seahorseName") == ""
+                && to_int(get_property("lassoTrainingCount")) >= 20
+                && item_amount($item[sea cowbell]) >= 3 && item_amount($item[sea lasso]) > 0) {
+                if (contains_text(page, "wild seahorse")) {
+                    set_property("NCtoC","true");
+                    run_choice(1, "bandersnatch=778");
+                    run_choice(2);
+                } else {
+                    run_choice(2);
+                }
+                break;
+            }
+            set_property("NCtoC","true");
             int target = zoneTarget(here);
             if (target > 0) {
                 run_choice(1, "bandersnatch=" + target);
