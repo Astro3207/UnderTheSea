@@ -919,9 +919,13 @@ string DropsItems;
             conditional += if_equip(banishGear($location[The Coral Corral]));
         if (lowShiny())
             conditional += if_equip($item[Congressional Medal of Insanity]);
-        conditional += saberEquip($location[The Coral Corral]);
-        conditional += cloakeEquip($location[The Coral Corral]);
-        conditional += champagneEquip($location[The Coral Corral]);
+        if (!highShiny()){
+            conditional += saberEquip($location[The Coral Corral]);
+            conditional += cloakeEquip($location[The Coral Corral]);
+            conditional += champagneEquip($location[The Coral Corral]);
+        }
+        if (get_property("lassoTrainingCount").to_int() && available_amount($item[sea lasso]) > 0 && available_amount($item[sea cowboy hat]) > 0 && available_amount($item[sea chaps]) > 0)
+            conditional += "sea cowboy hat,sea chaps,";
         tempEquipment("item drop,sea", if_equip($item[legendary seal-clubbing club]) + bathysphere($item[toy cupid bow]) + conditional);
         if (!doneWithSeaCow())
             set_property("choiceAdventure1589","1&victim=775");
@@ -1681,13 +1685,9 @@ string DropsItems;
             if (my_familiar() == $familiar[red-nosed snapper])
                 cli_execute("snapper horror");
             if (highShiny() && to_int(get_property("momSeaMonkeeProgress")) < 36){
-                if (get_property("swordOfSWordsMonster") != "775"){
-                    use_familiar($familiar[sword of s words]);
-                    tempEquipment("item drop,sea", if_equip($item[peridot of peril]) + bathysphere($item[toy cupid bow]));
-                    mood("itdrop");
-                    adv($location[The Coral Corral]);
-                }
                 while (to_int(get_property("momSeaMonkeeProgress")) < 40){
+                    if (get_property("lassoTrainingCount").to_int() >= 20 && get_property("seahorseName") == "")
+                        return;
                     if (available_amount($item[sea cowbell]) < 3)
                         use_familiar($familiar[sword of s words]);
                     else 
@@ -1792,6 +1792,9 @@ string DropsItems;
                     getMissingCorralItems();
                 }
                 create($item[sea cowboy hat]);
+            }
+            while (get_property("lassoTrainingCount").to_int() < 20 && !doneWithCowboy() && highShiny()){
+                getMissingCorralItems();
             }
         }
     }
@@ -3148,9 +3151,8 @@ void seaMonkees() {
             if (!retrieve_item($item[aerated diving helmet]))
                 abort("Could not build an aerated diving helmet.");
         } else if (highShiny()){
-            caliginous("cheap");
-            unholyDiver("direct");
             corral("collect");
+            caliginous("cheap");
         } else if (have_skill($skill[steely-eyed squint]) && MomNCyber() && lassoShadow() && available_amount($item[blood cubic zirconia]) > 0){
             unholyDiver("summon");
             caliginous("cyberrealm");

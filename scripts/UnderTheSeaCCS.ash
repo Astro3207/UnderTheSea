@@ -787,6 +787,8 @@ void main(int round, monster mob, string page_text) {
                     abort("For some reason seahorse wasn't tamed, check that out");
                 }
             }
+            if (have_equipped($item[sea cowboy hat]) && have_equipped($item[sea chaps]) && get_property("lassoTrainingCount").to_int() < 20 && item_amount($item[sea lasso]) > 0)
+                throw_item($item[sea lasso]);
             if (highShiny() && get_property("swordOfSWordsMonster") != "775" && my_familiar() == $familiar[sword of s words]){
                 if (last_monster() == $monster[sea cow]){
                     use_skill($skill[%fn, kill a lot of these guys]);
