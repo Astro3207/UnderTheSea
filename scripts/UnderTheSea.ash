@@ -869,14 +869,8 @@ string DropsItems;
             conditional += if_equip($item[Congressional Medal of Insanity]);
         if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0 && !highShiny())
             conditional += "backup camera,";
-        // One Force charge on the researcher lands both scrolls (10% slots,
-        // the slowest in the zone) and frees their reserved pulls. saberEquip()
-        // below already pins the saber -- but both are weapons, so what
-        // actually lets it into the slot is keeping the monodent OUT while a
-        // truly spare charge exists. worktea and knucklebone come from the
-        // other two monsters, so the monodent keeps the slot for those.
         boolean saberForResearcher = (item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin healscroll]) == 0)
-            && saberForcesFree() > 0 && available_amount($item[Fourth of May Cosplay Saber]) > 0;
+            && saberForcesFree() > 0 && available_amount($item[Fourth of May Cosplay Saber]) > 0 && !highShiny();
         if (!saberForResearcher
             && (item_amount($item[mer-kin healscroll]) == 0 || ((item_amount($item[mer-kin killscroll]) == 0 || item_amount($item[mer-kin worktea]) == 0 || item_amount($item[mer-kin knucklebone]) == 0) && get_property("dreadScroll7") == "0")))
             conditional += "monodent of the sea,";
@@ -884,12 +878,18 @@ string DropsItems;
             conditional += delay();
         conditional += saberEquip($location[mer-kin library]);
         conditional += cloakeEquip($location[mer-kin library]);
-        if (item_amount($item[mer-kin healscroll]) < 2 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
+        if (item_amount($item[mer-kin healscroll]) < 1 || (item_amount($item[Mer-kin worktea]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin knucklebone]) == 0 && get_property("dreadScroll7") == "0") || (item_amount($item[Mer-kin killscroll]) == 0 && get_property("dreadScroll5") == "0"))
             conditional += if_equip($item[blood cubic zirconia]);
-        else 
+        else if (highShiny()){
+            if (item_amount($item[ink bladder]) < 4){
+                use_familiar($familiar[sword of s words]);
+            } else {
+                conditional += inkBladderGetup();
+            }
+        } else
             conditional += delay();
         string max;
-        if (item_amount($item[mer-kin healscroll]) < 2)
+        if (item_amount($item[mer-kin healscroll]) < 1 || doSword())
             max = "item drop,sea";
         else
             max = DropsItems;
@@ -1117,12 +1117,14 @@ string DropsItems;
             string conditional;
             if (lowShiny() == true)
                 conditional += if_equip($item[Congressional Medal of Insanity]);
-            // The weapon slot is free on these trips, so the saber rides along:
-            // any healer that slips through the -combat stack gets Forced for a
-            // guaranteed prayerbead + thingpouch, with the turn refunded.
             conditional += healerSaber();
-            // swimmingTrunks() picks what the path actually allows; the path-55
-            // trunks are quest-gated and abort a path-0 run outright.
+            if (highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
+                if (item_amount($item[ink bladder]) < 3){
+                    use_familiar($familiar[sword of s words]);
+                } else {
+                    conditional += inkBladderGetup();
+                }
+            }
             tempEquipment("-combat,sea", bathysphere($item[toy cupid bow]) + conditional);
             
             mood("-combat");
@@ -1591,7 +1593,7 @@ string DropsItems;
                             conditional += "spring shoes,";
                         use_familiar($familiar[sword of s words]);
                     } else {
-                        conditional = inkBladderGetup();
+                        conditional += inkBladderGetup();
                     }
                 }
                 mood("itdrop");
@@ -1972,6 +1974,13 @@ string DropsItems;
                 && available_amount($item[tearaway pants]) > 0) {
                 conditional += "tearaway pants,";
             }
+            if (highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
+                if (item_amount($item[ink bladder]) < 3){
+                    use_familiar($familiar[sword of s words]);
+                } else {
+                    conditional += inkBladderGetup();
+                }
+            }
             tempEquipment(DropsItems,conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
@@ -2118,6 +2127,9 @@ string DropsItems;
                             + if_equip($item[M&ouml;bius ring]) + conditional);
                         mood("-combat");
                         adv($location[mer-kin elementary school]);
+                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
+                            caliginous("cheap");
+                        }
                         put_closet(item_amount($item[mer-kin hallpass]),
                             $item[mer-kin hallpass]);
                     }
@@ -2134,6 +2146,9 @@ string DropsItems;
                         if (get_property("merkinElementaryTeacherUnlock") == "false")
                             mood("-combat");
                         adv($location[mer-kin elementary school]);
+                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
+                            caliginous("cheap");
+                        }
                         put_closet(item_amount($item[mer-kin hallpass]),
                             $item[mer-kin hallpass]);
                     }
@@ -2181,6 +2196,13 @@ string DropsItems;
                         if (baseballPlayers() < 9 || !contains_text(get_property("baseballTeam"),"838"))
                             conditional += if_equip($item[baseball diamond]);
                         use_familiar("-combat");
+                        if (available_amount($item[mer-kin hallpass]) >= 2 && available_amount($item[mer-kin bunwig]) > 0 && highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
+                            if (item_amount($item[ink bladder]) < 3){
+                                use_familiar($familiar[sword of s words]);
+                            } else {
+                                conditional += inkBladderGetup();
+                            }
+                        }
                         tempEquipment("-combat,sea", "monodent of the sea,crappy Mer-kin tailpiece,crappy Mer-kin mask," + if_equip($item[blood cubic zirconia])
                             + bathysphere($item[toy cupid bow]) + if_equip($item[M&ouml;bius ring]) + conditional);
                         mood("-combat");
@@ -3170,12 +3192,12 @@ void seaMonkees() {
     }
     shadowTeflon();
     backupLasso();
-    abort("did it work?");
     seahorsePrep();
     seahorseTaming();
     postSeahorse();
     YogUrt();
     postYogUrt();
+    abort("did it work");
     Shub();
     finalBoss();
 

@@ -1722,6 +1722,7 @@ boolean healerForce(monster mob, string page_text) {
 }
 
 string healerSaber() {
+    if (highShiny()) return "";
     if (prayerbeadsShort()
         && forcesAfterDiver() > 0
         && available_amount($item[Fourth of May Cosplay Saber]) > 0)

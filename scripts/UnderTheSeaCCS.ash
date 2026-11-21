@@ -876,6 +876,8 @@ void main(int round, monster mob, string page_text) {
                     if (last_monster() == $monster[some fish])
                         cleanUp();
                 }
+                if (my_familiar() == $familiar[peace turkey])
+                    throw_item($item[ink bladder]);
                 free_run(page_text, false);
                 free_kill(page_text, false);
                 cleanUp();
@@ -992,6 +994,8 @@ void main(int round, monster mob, string page_text) {
                     use_skill($skill[BCZ: Refracted Gaze]);
             }
             free_kill(page_text, true);
+            if (my_familiar() == $familiar[peace turkey])
+                throw_item($item[ink bladder]);
             cleanUp();
             break;
 
@@ -1025,6 +1029,8 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                     }
                     free_kill(page_text, true);
+                    if (my_familiar() == $familiar[peace turkey])
+                        throw_item($item[ink bladder]);
                     cleanUp();
                 }
             } else {
