@@ -757,6 +757,14 @@ string DropsItems;
                 }
             }
         conditional += baseball_equip();
+        if (highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
+            if (item_amount($item[ink bladder]) == 0){
+                mood("itdrop");
+                use_familiar($familiar[sword of s words]);
+            } else {
+                conditional += inkBladderGetup();
+            }
+        }
         tempEquipment("combat,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + delay() + freeKill(forceNC ? my_location() : $location[Mer-kin Gymnasium]) + bathysphere($item[none]) + conditional);
         mood("combat");
         if (get_property("noncombatForcerActive") == "true")
@@ -3197,7 +3205,6 @@ void seaMonkees() {
     postSeahorse();
     YogUrt();
     postYogUrt();
-    abort("did it work");
     Shub();
     finalBoss();
 

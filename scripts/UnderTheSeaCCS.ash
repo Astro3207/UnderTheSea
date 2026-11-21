@@ -1029,8 +1029,6 @@ void main(int round, monster mob, string page_text) {
                         free_run(page_text, true);
                     }
                     free_kill(page_text, true);
-                    if (my_familiar() == $familiar[peace turkey])
-                        throw_item($item[ink bladder]);
                     cleanUp();
                 }
             } else {
@@ -1046,6 +1044,8 @@ void main(int round, monster mob, string page_text) {
                     cleanUp();
                 }
             }
+            if (my_familiar() == $familiar[peace turkey])
+                throw_item($item[ink bladder]);
             cleanUp();
             break;
 
@@ -1071,6 +1071,8 @@ void main(int round, monster mob, string page_text) {
                 if (current_round() > 0)
                     free_kill(page_text, false);
             }
+            if (my_familiar() == $familiar[peace turkey])
+                throw_item($item[ink bladder]);
             cleanUp();
             break;
 
