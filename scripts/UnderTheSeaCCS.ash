@@ -789,12 +789,6 @@ void main(int round, monster mob, string page_text) {
             }
             if (have_equipped($item[sea cowboy hat]) && have_equipped($item[sea chaps]) && get_property("lassoTrainingCount").to_int() < 20 && item_amount($item[sea lasso]) > 0)
                 throw_item($item[sea lasso]);
-            if (highShiny() && get_property("swordOfSWordsMonster") != "775" && my_familiar() == $familiar[sword of s words]){
-                if (last_monster() == $monster[sea cow]){
-                    use_skill($skill[%fn, kill a lot of these guys]);
-                    cleanUp();
-                }
-            }
             if (get_property("_epicMcTwistUsed") == "false" && have_equipped($item[pro skateboard])) {
                 if (have_equipped($item[backup camera])) {
                     if (last_monster() == $monster[mer-kin rustler])
@@ -992,6 +986,8 @@ void main(int round, monster mob, string page_text) {
                 use_skill($skill[Sea *dent: Talk to Some Fish]);
                 if (to_monster(get_property("lastEncounter")) != $monster[none] && item_amount($item[mer-kin cheatsheet]) < 10)
                     use_skill($skill[BCZ: Refracted Gaze]);
+                if (have_equipped($item[legendary seal-clubbing club]) && to_int(get_property("_clubEmBattlefieldUsed")) < 5 && get_property("NCtoC") != "true"){
+                    use_skill($skill[Club 'Em Across the Battlefield]);
             }
             free_kill(page_text, true);
             if (my_familiar() == $familiar[peace turkey])

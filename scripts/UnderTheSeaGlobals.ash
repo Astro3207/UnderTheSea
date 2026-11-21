@@ -179,6 +179,8 @@ import <seedfinder/seedfinder.ash>;
     }
 
     boolean isKBandSushiEnough(){
+        if (estimated_ascension_seed_possibilities( ) == 1)
+            return true;
         SeedData[int] possibleSeeds=knownSeeds();
         if (count(possibleSeeds) == 0)
             return false;

@@ -420,7 +420,10 @@ string DropsItems;
         // VHS tape recording window
         if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == ""
             && to_int(get_property("momSeaMonkeeProgress")) < 33 && to_int(get_property("momSeaMonkeeProgress")) > 22) {
-            use_familiar("itdrop");
+            if (highShiny())
+                use_familiar($familiar[sword of s words]);
+            else
+                use_familiar("itdrop");
             string conditional;
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += "monodent of the sea,";
@@ -1990,7 +1993,7 @@ string DropsItems;
                     conditional += inkBladderGetup();
                 }
             }
-            tempEquipment(DropsItems,conditional + delay());
+            tempEquipment(DropsItems+ "-equip peridot of peril",conditional + delay());
             
             while (item_amount($item[sea lasso]) == 0)
                 monkeypaw($item[sea lasso]);
