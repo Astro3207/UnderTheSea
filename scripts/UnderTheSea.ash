@@ -829,9 +829,12 @@ string DropsItems;
     }
 
     boolean libraryReady(){
+        // The library's clues (1, 6, 8) need 90 vocabulary; once all three are known, it doesn't.
+        int vocab = item_amount($item[mer-kin wordquiz]) * 10 + to_int(get_property("merkinVocabularyMastery"));
+        if (vocab < 90 && (get_property("dreadScroll1") == "0" || get_property("dreadScroll6") == "0" || get_property("dreadScroll8") == "0"))
+            return false;
         if ((have_item($item[mer-kin scholar mask]) || have_item($item[mer-kin facecowl])) 
-            && (have_item($item[mer-kin scholar tailpiece]) || have_item($item[mer-kin waistrope])) 
-            && ((item_amount($item[mer-kin wordquiz]) * 10) + to_int(get_property("merkinVocabularyMastery"))) >= 90)
+            && (have_item($item[mer-kin scholar tailpiece]) || have_item($item[mer-kin waistrope])))            
             return true;
         return false;
     }
@@ -2107,160 +2110,134 @@ string DropsItems;
         }
     }
 
+    void merkinElem(){
+        // Unlock teacher via NC if not yet done
+        int schoolTurns;
+        while (get_property("merkinElementaryTeacherUnlock") == "false") {
+            put_closet(item_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
+            string conditional;
+            if (to_int(get_property("_clubEmBattlefieldUsed")) < 5){
+                conditional += if_equip($item[legendary seal-clubbing club]);
+                if (have_skill($skill[Double-Fisted Skull Smashing]))
+                    conditional += "monodent of the sea,";
+            }
+            if (!highShiny()){
+                if (baseballPlayers() < 9 || !contains_text(get_property("baseballTeam"),"838"))
+                    conditional += if_equip($item[baseball diamond]);
+                if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
+                    conditional += "backup camera,";
+            }
+            if (available_amount($item[mer-kin hallpass]) < 2 || (available_amount($item[mer-kin bunwig]) == 0 && isKBandSushiEnough() == false))
+                use_familiar("itdrop");
+            else if (available_amount($item[mer-kin hallpass]) >= 2 && highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
+                if (item_amount($item[ink bladder]) == 0)
+                    use_familiar($familiar[sword of s words]);
+                else 
+                    conditional += inkBladderGetup();
+            } else
+                use_familiar("-combat");
+            tempEquipment("-combat,sea", "crappy Mer-kin tailpiece,crappy Mer-kin mask," + if_equip($item[blood cubic zirconia])
+                + bathysphere($item[toy cupid bow]) + conditional);
+            mood("-combat");
+            zoneStall("the teacher's lounge noncombat", $item[none],
+                $location[mer-kin elementary school], schoolTurns, 20);
+            adv($location[mer-kin elementary school]);
+            if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40)
+                caliginous("cheap");
+            schoolTurns += 1;
+            put_closet(item_amount($item[mer-kin hallpass]),
+                $item[mer-kin hallpass]);
+            if ((available_amount($item[Mer-kin facecowl]) > 0 && available_amount($item[Mer-kin waistrope]) > 0))
+                break;
+        }
+        if (my_path().id == 0 && estimated_ascension_seed_possibilities( ) > 1)
+            cli_execute("acquire 10 mer-kin cheatsheet, 10 mer-kin wordquiz, mer-kin killscroll, mer-kin healscroll, mer-kin knucklebone");
+
+        step("phase: elementary school (cheatsheets / vocabulary)");
+        while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0" && isKBandSushiEnough() == false)
+            getCheatsheet();
+
+        // Get mer-kin bunwig if missing
+        while (available_amount($item[mer-kin bunwig]) == 0 && !libraryReady() && isKBandSushiEnough() == false) {
+            if (contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9){
+                baseballD();
+                continue;
+            }
+            use_familiar("itdrop");
+            tempEquipment("item drop, hat drop,sea","crappy Mer-kin tailpiece,crappy Mer-kin mask,"
+                + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow]));
+            mood("itdrop");
+            adv($location[mer-kin elementary school]);
+            put_closet(item_amount($item[mer-kin hallpass]),
+                $item[mer-kin hallpass]);
+        }
+
+        take_closet(closet_amount($item[mer-kin hallpass]),
+            $item[mer-kin hallpass]);
+
+        // Vocabulary mastery grind
+        while (to_int(get_property("merkinVocabularyMastery")) < 90 && isKBandSushiEnough() == false) {
+            if (item_amount($item[mer-kin wordquiz]) > 0) {
+                if (item_amount($item[mer-kin cheatsheet]) == 0
+                    && (pulls_remaining() == 0 || !pullSequence($item[mer-kin cheatsheet]))) {
+                    while (item_amount($item[mer-kin cheatsheet]) == 0)
+                        getCheatsheet();
+                }
+                use($item[mer-kin wordquiz]);
+            } else {
+                tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
+                adv($location[mer-kin elementary school]);
+            }
+
+            // Library runs while Steely-Eyed Squint is active
+            if (item_amount($item[mer-kin facecowl]) > 0
+                && item_amount($item[mer-kin waistrope]) > 0
+                && have_effect($effect[Steely-Eyed Squint]) > 0) {
+                buyScholarGear();
+                while ($location[mer-kin library].turns_spent < 4 && have_effect($effect[Steely-Eyed Squint]) > 0) {
+                    string conditional;
+                    if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
+                        conditional += "backup camera,";
+                    tempEquipment("item drop,sea", "mer-kin scholar mask,mer-kin scholar tailpiece,monodent of the sea,"
+                        + if_equip($item[blood cubic zirconia]) + conditional);
+                    useMapIfAvailable();
+                    adv($location[mer-kin library]);
+                }
+                print ("turns played? " + turns_played(), "orange");
+            }
+        }
+        if (available_amount($item[mer-kin dreadscroll]) == 0 && available_amount($item[Mer-kin scholar tailpiece]) == 0){
+            take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
+            pullPrayerbead();
+            while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
+                farmPrayerbeads();
+            cli_execute("uneffect the sonata of sneakiness");
+            while (available_amount($item[Mer-kin facecowl]) == 0 || available_amount($item[Mer-kin waistrope]) == 0){
+                if (available_amount($item[mer-kin hallpass]) == 0
+                    && pulls_remaining( ) > reservedPulls())
+                    pullSequence($item[mer-kin hallpass]);
+                mood("itdrop");
+                tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + "monodent of the sea,"
+                    + if_equip($item[Blood Cubic Zirconia]) + bathysphere($item[toy cupid bow]));
+                // The lounge wants a hallpass, so that is the real gate.
+                zoneStall("the scholar outfit pieces", $item[Mer-kin hallpass],
+                    $location[mer-kin elementary school], schoolTurns, 20);
+                adv($location[mer-kin elementary school]);
+                schoolTurns += 1;
+                if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
+                    caliginous("cheap");
+                }
+            }
+        }
+    }
+
     void YogUrt(){
         // ── YogUrt preparation ────────────────────────────────────────────────────
         step("phase: Yog-Urt preparation");
         if ((get_property("yogUrtDefeated") == "false" && my_path().id == 55) || (my_path().id == 0 && boss == "Yogurt")) {
             if (get_property("isMerkinHighPriest") == "false") {
-                if (isKBandSushiEnough() == false || my_path().id == 0){
-                    // Farm mer-kin cheatsheets and unlock teacher
-                    if (my_path().id == 0){
-                        cli_execute("acquire 10 mer-kin cheatsheet, 10 mer-kin wordquiz, mer-kin killscroll, mer-kin healscroll, mer-kin knucklebone");
-                    }
-                    step("phase: elementary school (cheatsheets / vocabulary)");
-                    while (item_amount($item[mer-kin cheatsheet]) < 9 && get_property("merkinVocabularyMastery") == "0") {
-                        getCheatsheet();
-                    }
-
-                    // Unlock teacher via NC if not yet done
-                    while (get_property("merkinElementaryTeacherUnlock") == "false" && !libraryReady()) {
-                        put_closet(item_amount($item[mer-kin hallpass]),
-                            $item[mer-kin hallpass]);
-                        if (available_amount($item[mer-kin hallpass]) < 2 || available_amount($item[mer-kin bunwig]) == 0)
-                            use_familiar("itdrop");
-                        else
-                            use_familiar("-combat");
-                        string conditional;
-                        if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0 && !highShiny())
-                            conditional += "backup camera,";
-                        else if (have_skill($skill[Double-Fisted Skull Smashing]))
-                            conditional += "monodent of the sea,";
-                        if (to_int(get_property("_clubEmBattlefieldUsed")) < 5)
-                            conditional += if_equip($item[legendary seal-clubbing club]);
-                        else if (baseballPlayers() < 9 || !contains_text(get_property("baseballTeam"),"838"))
-                            conditional += if_equip($item[baseball diamond]);
-                        tempEquipment("-combat,sea", "crappy Mer-kin tailpiece,crappy Mer-kin mask,"
-                            + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow])+ conditional);
-                        mood("-combat");
-                        adv($location[mer-kin elementary school]);
-                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
-                            caliginous("cheap");
-                        }
-                        put_closet(item_amount($item[mer-kin hallpass]),
-                            $item[mer-kin hallpass]);
-                    }
-
-                    // Get mer-kin bunwig if missing
-                    while (available_amount($item[mer-kin bunwig]) == 0 && !libraryReady()) {
-                        if (contains_text(get_property("baseballTeam"),"773") && baseballPlayers() == 9){
-                            baseballD();
-                            continue;
-                        }
-                        use_familiar("itdrop");
-                        tempEquipment("item drop, hat drop,sea","crappy Mer-kin tailpiece,crappy Mer-kin mask,"
-                            + if_equip($item[blood cubic zirconia]) + bathysphere($item[toy cupid bow]));
-                        mood("itdrop");
-                        if (get_property("merkinElementaryTeacherUnlock") == "false")
-                            mood("-combat");
-                        adv($location[mer-kin elementary school]);
-                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
-                            caliginous("cheap");
-                        }
-                        put_closet(item_amount($item[mer-kin hallpass]),
-                            $item[mer-kin hallpass]);
-                    }
-
-                    take_closet(closet_amount($item[mer-kin hallpass]),
-                        $item[mer-kin hallpass]);
-
-                    // Vocabulary mastery grind
-                    while (to_int(get_property("merkinVocabularyMastery")) < 90) {
-                        if (item_amount($item[mer-kin wordquiz]) > 0) {
-                            if (item_amount($item[mer-kin cheatsheet]) == 0
-                                && (pulls_remaining() == 0 || !pullSequence($item[mer-kin cheatsheet]))) {
-                                while (item_amount($item[mer-kin cheatsheet]) == 0)
-                                    getCheatsheet();
-                            }
-                            use($item[mer-kin wordquiz]);
-                        } else {
-                            tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + if_equip($item[M&ouml;bius ring]) + bathysphere($item[toy cupid bow]));
-                            adv($location[mer-kin elementary school]);
-                        }
-
-                        // Library runs while Steely-Eyed Squint is active
-                        if (item_amount($item[mer-kin facecowl]) > 0
-                            && item_amount($item[mer-kin waistrope]) > 0
-                            && have_effect($effect[Steely-Eyed Squint]) > 0) {
-                            buyScholarGear();
-                            while ($location[mer-kin library].turns_spent < 4 && have_effect($effect[Steely-Eyed Squint]) > 0) {
-                                string conditional;
-                                if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
-                                    conditional += "backup camera,";
-                                tempEquipment("item drop,sea", "mer-kin scholar mask,mer-kin scholar tailpiece,monodent of the sea,"
-                                    + if_equip($item[blood cubic zirconia]) + conditional);
-                                useMapIfAvailable();
-                                adv($location[mer-kin library]);
-                            }
-                            print ("turns played? " + turns_played(), "orange");
-                        }
-                    }
-                } else if (available_amount($item[mer-kin dreadscroll]) == 0 && available_amount($item[Mer-kin scholar tailpiece]) == 0){
-                    int schoolTurns;
-                    while (get_property("merkinElementaryTeacherUnlock") == "false") {
-                        put_closet(item_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
-                        string conditional;
-                        if (baseballPlayers() < 9 || !contains_text(get_property("baseballTeam"),"838"))
-                            conditional += if_equip($item[baseball diamond]);
-                        if (to_int(get_property("_clubEmBattlefieldUsed")) < 5)
-                            conditional += if_equip($item[legendary seal-clubbing club]);
-                        if (available_amount($item[mer-kin hallpass]) < 2)
-                            use_familiar("itdrop");
-                        else if (available_amount($item[mer-kin hallpass]) >= 2 && highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
-                            if (item_amount($item[ink bladder]) == 0){
-                                use_familiar($familiar[sword of s words]);
-                            } else {
-                                conditional += inkBladderGetup();
-                            }
-                        } else
-                            use_familiar("-combat");
-                        tempEquipment("-combat,sea", "monodent of the sea,crappy Mer-kin tailpiece,crappy Mer-kin mask," + if_equip($item[blood cubic zirconia])
-                            + bathysphere($item[toy cupid bow]) + conditional);
-                        mood("-combat");
-                        zoneStall("the teacher's lounge noncombat", $item[none],
-                            $location[mer-kin elementary school], schoolTurns, 20);
-                        adv($location[mer-kin elementary school]);
-                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
-                            caliginous("cheap");
-                        }
-                        schoolTurns += 1;
-                        put_closet(item_amount($item[mer-kin hallpass]),
-                            $item[mer-kin hallpass]);
-                        if ((available_amount($item[Mer-kin facecowl]) > 0 && available_amount($item[Mer-kin waistrope]) > 0))
-                            break;
-                    }
-                    take_closet(closet_amount($item[mer-kin hallpass]), $item[mer-kin hallpass]);
-                    pullPrayerbead();
-                    while (YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ))
-                        farmPrayerbeads();
-                    cli_execute("uneffect the sonata of sneakiness");
-                    while (available_amount($item[Mer-kin facecowl]) == 0 || available_amount($item[Mer-kin waistrope]) == 0){
-                        if (available_amount($item[mer-kin hallpass]) == 0
-                            && pulls_remaining( ) > reservedPulls())
-                            pullSequence($item[mer-kin hallpass]);
-                        mood("itdrop");
-                        tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + "monodent of the sea,"
-                            + if_equip($item[Blood Cubic Zirconia]) + bathysphere($item[toy cupid bow]));
-                        // The lounge wants a hallpass, so that is the real gate.
-                        zoneStall("the scholar outfit pieces", $item[Mer-kin hallpass],
-                            $location[mer-kin elementary school], schoolTurns, 20);
-                        adv($location[mer-kin elementary school]);
-                        schoolTurns += 1;
-                        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
-                            caliginous("cheap");
-                        }
-                    }
-                }
-
+                if (!libraryReady())
+                    merkinElem();
                 buyScholarGear();
 
                 if (available_amount($item[mer-kin dreadscroll]) > 0){
