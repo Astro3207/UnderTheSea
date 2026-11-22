@@ -101,6 +101,7 @@ void free_run_any(string ptext, boolean banish) {
         stuffed yam stinkbomb, handful of split pea soup,
         mer-kin pinkslip, ink bladder] {
         if (item_amount(freecombat) == 0) continue;
+        if (freecombat == $item[ink bladder] && highShiny()) continue;
         if (!banish && $items[anchor bomb, stuffed yam stinkbomb,
             handful of split pea soup] contains freecombat) continue;
         if (freecombat == $item[peppermint parasol]
@@ -649,8 +650,11 @@ void main(int round, monster mob, string page_text) {
                         throw_item($item[ink bladder]);
                 } else if (last_monster().phylum != $phylum[fish] && !free_monster(last_monster()) && have_equipped($item[monodent of the sea]) && item_amount($item[pristine fish scale]) < 6)
                     use_skill($skill[Sea *dent: Talk to Some Fish]);
-                if (last_monster() == $monster[sea cow] && !seaCowNeeded())
+                if (last_monster() == $monster[sea cow] && !seaCowNeeded()){
                     use_skill($skill[spring kick]);
+                    if (item_amount($item[ink bladder]) > 0 && my_familiar() != $familiar[sword of s words])
+                        throw_item($item[ink bladder]);
+                }
                 if (my_familiar() == $familiar[peace turkey])
                     throw_item($item[ink bladder]);
                 free_kill(page_text, true);
@@ -991,7 +995,7 @@ void main(int round, monster mob, string page_text) {
                 }
             }
             free_kill(page_text, true);
-            if (my_familiar() == $familiar[peace turkey])
+            if (my_familiar() == $familiar[peace turkey] && last_monster() != $monster[some fish])
                 throw_item($item[ink bladder]);
             cleanUp();
             break;
@@ -1034,8 +1038,8 @@ void main(int round, monster mob, string page_text) {
                     && have_equipped($item[backup camera])) {
                     use_skill($skill[Back-Up to your Last Enemy]);
                     use_skill($skill[BCZ: Refracted Gaze]);
-                } else {
-                        if (bcz_gaze_ready() && item_amount($item[mer-kin healscroll]) == 0 && last_monster() != $monster[Mer-kin researcher])
+                } else if (item_amount($item[mer-kin healscroll]) == 0){
+                    if (bcz_gaze_ready() && last_monster() != $monster[Mer-kin researcher])
                         use_skill($skill[BCZ: Refracted Gaze]);
                     free_kill(page_text, true);
                     cleanUp();
