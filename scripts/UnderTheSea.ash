@@ -420,16 +420,17 @@ string DropsItems;
         // VHS tape recording window
         if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == ""
             && to_int(get_property("momSeaMonkeeProgress")) < 33 && to_int(get_property("momSeaMonkeeProgress")) > 22) {
+            string conditional;
             if (highShiny())
                 use_familiar($familiar[sword of s words]);
-            else
+            else{
                 use_familiar("itdrop");
-            string conditional;
+                conditional += (gotPeriled($location[The Caliginous Abyss]) ? "" : if_equip($item[peridot of peril]));
+            }
             if (!contains_text(get_property("banishedMonsters"), "school of many"))
                 conditional += "monodent of the sea,";
             // A Peridot spent here frees its slot for the Sheriff props. The Monodent goes before the pistol, so it keeps a hand.
-            tempEquipment("item drop,sea","shark jumper,scale-mail underwear,black glass,"
-                + (gotPeriled($location[The Caliginous Abyss]) ? "" : if_equip($item[peridot of peril]))
+            tempEquipment("item drop,sea,-equip peridot","shark jumper,scale-mail underwear,black glass,"
                 + conditional + freeKill($location[The Caliginous Abyss]) + bathysphere($item[toy cupid bow]));
             adv1($location[The Caliginous Abyss]);
         }
@@ -833,8 +834,8 @@ string DropsItems;
         int vocab = item_amount($item[mer-kin wordquiz]) * 10 + to_int(get_property("merkinVocabularyMastery"));
         if (vocab < 90 && (get_property("dreadScroll1") == "0" || get_property("dreadScroll6") == "0" || get_property("dreadScroll8") == "0"))
             return false;
-        if ((have_item($item[mer-kin scholar mask]) || have_item($item[mer-kin facecowl])) 
-            && (have_item($item[mer-kin scholar tailpiece]) || have_item($item[mer-kin waistrope])))            
+        if ((available_amount($item[mer-kin scholar mask]) > 0 || available_amount($item[mer-kin facecowl]) > 0) 
+            && (available_amount($item[mer-kin scholar tailpiece]) > 0 || available_amount($item[mer-kin waistrope]) > 0))            
             return true;
         return false;
     }
@@ -2118,6 +2119,7 @@ string DropsItems;
             string conditional;
             if (to_int(get_property("_clubEmBattlefieldUsed")) < 5){
                 conditional += if_equip($item[legendary seal-clubbing club]);
+                set_property("choiceAdventure1589","1&victim=839");
                 if (have_skill($skill[Double-Fisted Skull Smashing]))
                     conditional += "monodent of the sea,";
             }
@@ -2216,6 +2218,7 @@ string DropsItems;
                 if (available_amount($item[mer-kin hallpass]) == 0
                     && pulls_remaining( ) > reservedPulls())
                     pullSequence($item[mer-kin hallpass]);
+                use_familiar("itdrop");
                 mood("itdrop");
                 tempEquipment("item drop,sea", if_equip(divingHelmet()) + if_equip(tailpiece()) + "monodent of the sea,"
                     + if_equip($item[Blood Cubic Zirconia]) + bathysphere($item[toy cupid bow]));
