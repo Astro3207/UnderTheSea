@@ -2129,8 +2129,10 @@ string DropsItems;
                 if (to_int(get_property("_backUpUses")) < 11 && available_amount($item[backup camera]) > 0)
                     conditional += "backup camera,";
             }
-            if (available_amount($item[mer-kin hallpass]) < 2 || (available_amount($item[mer-kin bunwig]) == 0 && isKBandSushiEnough() == false))
+            if (available_amount($item[mer-kin hallpass]) < 2 || (available_amount($item[mer-kin bunwig]) == 0 && isKBandSushiEnough() == false)){
                 use_familiar("itdrop");
+                mood("itdrop");
+            }
             else if (available_amount($item[mer-kin hallpass]) >= 2 && highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
                 if (item_amount($item[ink bladder]) == 0)
                     use_familiar($familiar[sword of s words]);
