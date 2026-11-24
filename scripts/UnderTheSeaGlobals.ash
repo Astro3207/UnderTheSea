@@ -587,7 +587,7 @@ import <seedfinder/seedfinder.ash>;
 
     string inkBladderGetup(){
         use_familiar($familiar[peace turkey]);
-        return "spring shoes,KoL Con snowglobe,June cleaver,";
+        return "spring shoes,June cleaver,"+ if_equip($item[kol con 13 snowglobe]);
     }
 
     // The bag's Reflex Hammer for the guild test, once Spring Away can't end the fight.
