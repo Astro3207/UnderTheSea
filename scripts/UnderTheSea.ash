@@ -1591,21 +1591,21 @@ string DropsItems;
                 if (!diverPartsComplete() && to_slot(divingHelmet()) != $slot[hat])
                     unholyDiver("direct");
                 string conditional;
-                if (item_amount($item[pristine fish scale]) < 6){
+                if (item_amount($item[pristine fish scale]) < 6 && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != "")){
                     use_familiar("itdrop");
                     if (!get_property("legendaryAcornsPlanted").contains_text("The Mer-Kin Outpost:SEA_COWS")){
                         use_familiar($familiar[sword of s words]);
                         conditional += "legendary acorndion,";
                     } else
                         conditional += "monodent of the sea,";
-                } else if (!get_property("banishedPhyla").contains_text("mer-kin")){
+                } else if (item_amount($item[pristine fish scale]) >= 6 && !get_property("banishedPhyla").contains_text("mer-kin")){
                     use_familiar($familiar[patriotic eagle]);
                     if (item_amount($item[ink bladder]) == 0)
                         conditional += "peridot of peril,";
-                } else if (seaCowNeeded()){
+                } else if (seaCowNeeded() && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != "")){
                     use_familiar("itdrop");
                 } else {
-                    if (item_amount($item[ink bladder]) < 6 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
+                    if (item_amount($item[ink bladder]) < 3 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
                         use_familiar($familiar[sword of s words]);
                     } else {
                         conditional += inkBladderGetup();
