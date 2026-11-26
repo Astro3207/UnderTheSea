@@ -409,11 +409,14 @@ string DropsItems;
         // VHS tape monster follow-up
         if (total_turns_played() >= to_int(get_property("spookyVHSTapeMonsterTurn")) + 8
             && get_property("spookyVHSTapeMonster") != "") {
-            if (doSWord())
+            if (doSWord()) {
                 use_familiar($familiar[sword of s words]);
-            else
+                mood("itdrop");
+                tempEquipment("item drop,sea",if_equip($item[legendary seal-clubbing club]) + "shark jumper,scale-mail underwear," + bathysphere($item[toy cupid bow]));
+            } else {
                 use_familiar("itdrop");
-            tempEquipment(pearlRes[ps] + ",sea",if_equip($item[legendary seal-clubbing club]) + "shark jumper,scale-mail underwear," + bathysphere($item[none]));
+                tempEquipment(pearlRes[ps] + ",sea",if_equip($item[legendary seal-clubbing club]) + "shark jumper,scale-mail underwear," + bathysphere($item[none]));
+            }
             adv1(pearlLoc[ps]);
         }
 
@@ -421,9 +424,10 @@ string DropsItems;
         if (item_amount($item[spooky VHS tape]) > 0 && get_property("spookyVHSTapeMonster") == ""
             && to_int(get_property("momSeaMonkeeProgress")) < 33 && to_int(get_property("momSeaMonkeeProgress")) > 22) {
             string conditional;
-            if (highShiny())
+            if (highShiny()){
                 use_familiar($familiar[sword of s words]);
-            else{
+                mood("itdrop");
+            } else {
                 use_familiar("itdrop");
                 conditional += (gotPeriled($location[The Caliginous Abyss]) ? "" : if_equip($item[peridot of peril]));
             }
