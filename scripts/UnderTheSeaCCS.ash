@@ -880,7 +880,7 @@ void main(int round, monster mob, string page_text) {
                     if (last_monster() == $monster[some fish])
                         cleanUp();
                 }
-                if (my_familiar() == $familiar[peace turkey])
+                if (my_familiar() != $familiar[sword of s words] && item_amount($item[ink bladder]) > 0)
                     throw_item($item[ink bladder]);
                 free_run(page_text, false);
                 free_kill(page_text, false);
