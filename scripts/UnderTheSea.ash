@@ -924,6 +924,8 @@ string DropsItems;
         mood("itdrop");
         useMapIfAvailable();
         adv($location[mer-kin library]);
+        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40)
+            caliginous("cheap");
     }
 
     void getMissingCorralItems(){
