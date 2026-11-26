@@ -1999,7 +1999,13 @@ string DropsItems;
                     use_familiar($familiar[sword of s words]);
                 } else {
                     conditional += inkBladderGetup();
+                    if (available_amount($item[Miniature crystal ball]) > 0)
+                        conditional += "Miniature crystal ball,";
+                    use_familiar("itdrop");
                 }
+            } else {
+                if (available_amount($item[Miniature crystal ball]) > 0)
+                    conditional += "Miniature crystal ball,";
             }
             tempEquipment(DropsItems,conditional + delay());
             
