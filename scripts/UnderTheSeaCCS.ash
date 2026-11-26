@@ -852,6 +852,12 @@ void main(int round, monster mob, string page_text) {
                                 if (last_monster() == $monster[some fish])
                                     cleanUp();
                             }
+                            if (item_amount($item[waffle]) > 0
+                                && !contains_text(get_property("_lastCombatActions"), "it11311")) {
+                                throw_item($item[waffle]);
+                                if (last_monster() == $monster[wild seahorse])
+                                    run_combat();
+                            }
                             free_run(page_text, true);
                             if (last_monster() == $monster[mer-kin rustler]){
                                 if (have_skill($skill[heartstone: %banish]) && get_property("heartstoneBanishUnlocked") == "true"){
