@@ -867,6 +867,7 @@ void main(int round, monster mob, string page_text) {
                 if (item_amount($item[waffle]) > 0
                     && !contains_text(get_property("_lastCombatActions"), "it11311")) {
                     throw_item($item[waffle]);
+                    user_confirm("test waffle refresh");
                     run_combat();
                 }
                 if (get_property("_curveballFightsLeft").to_int() > 0 && get_property("_curveballMonster") == "some fish"){
