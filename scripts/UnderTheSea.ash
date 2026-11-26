@@ -514,10 +514,15 @@ string DropsItems;
         // gating on the counter skips the retry for exactly the account that
         // holds a duplicate and is short a prop. A spent booth just declines.
         if (!sheriffOutfit() && item_amount($item[Clan VIP Lounge key]) > 0){
-            visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
-            foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
-                if (available_amount(it) == 0 && loungeHas("photobooth.gif") && !cli_execute("photobooth item " + it))
-                    print("Couldn't borrow the " + it + " from the photo booth.", "red");
+            int clan = get_clan_id( );
+            try {
+                visit_url("showclan.php?whichclan=90485&action=joinclan&confirm=on");
+                foreach it in $items[sheriff pistol, sheriff moustache, sheriff badge]
+                    if (available_amount(it) == 0 && loungeHas("photobooth.gif") && !cli_execute("photobooth item " + it))
+                        print("Couldn't borrow the " + it + " from the photo booth.", "red");
+            } finally {
+                visit_url("showclan.php?whichclan="+clan+"&action=joinclan&confirm=on");
+            }
         }
         // The props only buy three free kills, so a run without them is a run
         // three turns longer. Every site that would dress them checks for them.
@@ -1583,7 +1588,7 @@ string DropsItems;
                     string conditional;
                     if (total_turns_played( ) >= to_int(get_property("_lastFitzsimmonsHatch")) + 20){
                         use_familiar("-combat");
-                        tempEquipment("-combat,sea", bathysphere($item[toy cupid bow]));
+                        tempEquipment("-combat,sea, -equip peridot of peril", bathysphere($item[toy cupid bow]));
                         mood("-combat");
                         if (NCForceEstimate() > 4)
                             NCforce();
