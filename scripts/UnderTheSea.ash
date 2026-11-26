@@ -908,7 +908,7 @@ string DropsItems;
         } else if (highShiny()){
             if (item_amount($item[mer-kin healscroll]) == 0)
                 use_familiar("itdrop");
-            else if (item_amount($item[ink bladder]) < 4){
+            else if (item_amount($item[ink bladder]) < 1){
                 use_familiar($familiar[sword of s words]);
             } else {
                 conditional += inkBladderGetup();
@@ -1616,7 +1616,7 @@ string DropsItems;
                 } else if (seaCowNeeded() && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != "" || get_property("banishedPhyla").contains_text("mer-kin"))){
                     use_familiar("itdrop");
                 } else {
-                    if (item_amount($item[ink bladder]) < 3 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
+                    if (item_amount($item[ink bladder]) < 1 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
                         use_familiar($familiar[sword of s words]);
                     } else {
                         conditional += inkBladderGetup();
