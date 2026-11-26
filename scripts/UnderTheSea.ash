@@ -1607,7 +1607,7 @@ string DropsItems;
                     use_familiar($familiar[patriotic eagle]);
                     if (item_amount($item[ink bladder]) == 0)
                         conditional += "peridot of peril,";
-                } else if (seaCowNeeded() && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != "") || get_property("banishedPhyla").contains_text("mer-kin")){
+                } else if (seaCowNeeded() && ($location[The Mer-Kin Outpost].turns_spent < 26 || get_property("merkinLockkeyMonster") != "" || get_property("banishedPhyla").contains_text("mer-kin"))){
                     use_familiar("itdrop");
                 } else {
                     if (item_amount($item[ink bladder]) < 3 || ($location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "")){
