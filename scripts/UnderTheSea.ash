@@ -977,7 +977,7 @@ string DropsItems;
             conditional += saberEquip($location[mer-kin library]);
             conditional += cloakeEquip($location[mer-kin library]);
         } else if (highShiny()){
-            if (item_amount($item[mer-kin healscroll]) == 0)
+            if (item_amount($item[mer-kin healscroll]) == 0 && YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ) - reservedPulls())
                 use_familiar("itdrop");
             else if (item_amount($item[ink bladder]) < 1){
                 use_familiar($familiar[sword of s words]);
