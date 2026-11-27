@@ -722,10 +722,9 @@ string DropsItems;
                     use($item[blessed large box]);
             }
             if (estimated_ascension_seed_possibilities( ) == 1 && get_property("dreadScroll7") == "0"){
-                // ascension_seed_properties() is slow (~5s), so call it once and read all eight from the map.
                 string [string] seedProps = ascension_seed_properties(possible_ascension_seeds( )[0]);
-                for x from 1 to 8{
-                    set_property("dreadScroll" + x, seedProps["dreadScroll" + x]);
+                foreach str in seedProps{
+                    set_property(str, seedProps[str]);
                 }
             } else if (estimated_ascension_seed_possibilities( ) > 1 && have_item($item[intriguing puzzle box]))
                 abort("Intriguing puzzle box handling has failed. Let FS know and randomly click around in puzzle box");
@@ -881,6 +880,78 @@ string DropsItems;
             buy($coinmaster[Big Brother], 1, $item[damp old boot]);
         visit_url("place.php?whichplace=sea_oldman&action=oldman_oldman"
             + "&preaction=pickreward&whichreward=6313");
+    }
+
+    void caliginous(string str){
+        step("phase: Mom rescue (habitats / cyberzone)");
+        int initialMomProgress = 24;
+        if (available_amount($item[backup camera]) == 0)
+            initialMomProgress += 4;
+        if (!have_item($item[2002 Mr. Store Catalog]))
+            initialMomProgress += 12;
+        if (str == "cheap"){
+            if (available_amount($item[black glass]) == 0) 
+                buy($coinmaster[Big Brother], 1, $item[black glass]);
+            use_familiar("itdrop");
+            if (my_familiar() == $familiar[red-nosed snapper])
+                cli_execute("snapper horror");
+            if (highShiny() && to_int(get_property("momSeaMonkeeProgress")) < 36){
+                while (to_int(get_property("momSeaMonkeeProgress")) < 40){
+                    if (get_property("lassoTrainingCount").to_int() >= 20 && get_property("seahorseName") == "")
+                        return;
+                    if (doSword())
+                        use_familiar($familiar[sword of s words]);
+                    else 
+                        use_familiar("itdrop");
+                    if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) {
+                        use($item[comb jelly]);
+                    }
+                    if (available_amount($item[sea leather]) > 0 && available_amount($item[sea cowboy hat]) == 0)
+                        create($item[sea cowboy hat]);
+                    string conditional;
+                    if (!contains_text(get_property("banishedMonsters"), "school of many"))
+                        conditional += "monodent of the sea,";
+                    if (to_int(get_property("lassoTrainingCount")) < 20 && available_amount($item[sea cowboy hat]) > 0)
+                        conditional += "sea cowboy hat,";
+                    if (have_effect($effect[driving waterproofly]) == 0){
+                        pullSequence($item[elf guard scuba tank]);
+                        conditional += "elf guard scuba tank,";
+                    }
+                    tempEquipment("item drop,sea,-equip peridot", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
+                    mood("itdrop");
+                    adv($location[The Caliginous Abyss]);
+                }
+            }
+        }
+        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && str == "cyberrealm"){
+            if (!contains_text(get_property("banishedPhyla"), "construct")) {
+                if (get_property("madnessBakeryAvailable") == "false") {
+                    visit_url("shop.php?whichshop=armory&action=talk");
+                    run_choice(1);
+                }
+                while (!contains_text(get_property("banishedPhyla"), "construct")
+                    && $location[madness bakery].turns_spent < 3) {
+                    use_familiar($familiar[patriotic eagle]);
+                    tempEquipment("item drop", "monodent of the sea");
+                    adv($location[madness bakery]);
+                }
+            }
+            while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
+                && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
+                recallCaliginous();
+            }
+            while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
+                && to_int(get_property("_cyberFreeFights")) < 10
+                && to_int(get_property("momSeaMonkeeProgress")) < 40) {
+                use_familiar($familiar[glover]);
+                tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
+                if (my_buffedstat($stat[moxie]) < 500)
+                    abort("Need 500 moxie here to be safe");
+                adv($location[Cyberzone 1]);
+            }
+            while (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress)
+                finishCaliginous();
+        }
     }
 
     void merkinLib(){
@@ -1701,78 +1772,6 @@ string DropsItems;
             }
         }
         refresh_status();
-    }
-
-    void caliginous(string str){
-        step("phase: Mom rescue (habitats / cyberzone)");
-        int initialMomProgress = 24;
-        if (available_amount($item[backup camera]) == 0)
-            initialMomProgress += 4;
-        if (!have_item($item[2002 Mr. Store Catalog]))
-            initialMomProgress += 12;
-        if (str == "cheap"){
-            if (available_amount($item[black glass]) == 0) 
-                buy($coinmaster[Big Brother], 1, $item[black glass]);
-            use_familiar("itdrop");
-            if (my_familiar() == $familiar[red-nosed snapper])
-                cli_execute("snapper horror");
-            if (highShiny() && to_int(get_property("momSeaMonkeeProgress")) < 36){
-                while (to_int(get_property("momSeaMonkeeProgress")) < 40){
-                    if (get_property("lassoTrainingCount").to_int() >= 20 && get_property("seahorseName") == "")
-                        return;
-                    if (doSword())
-                        use_familiar($familiar[sword of s words]);
-                    else 
-                        use_familiar("itdrop");
-                    if (have_effect($effect[jelly combed]) == 0 && pullSequence($item[comb jelly])) {
-                        use($item[comb jelly]);
-                    }
-                    if (available_amount($item[sea leather]) > 0 && available_amount($item[sea cowboy hat]) == 0)
-                        create($item[sea cowboy hat]);
-                    string conditional;
-                    if (!contains_text(get_property("banishedMonsters"), "school of many"))
-                        conditional += "monodent of the sea,";
-                    if (to_int(get_property("lassoTrainingCount")) < 20 && available_amount($item[sea cowboy hat]) > 0)
-                        conditional += "sea cowboy hat,";
-                    if (have_effect($effect[driving waterproofly]) == 0){
-                        pullSequence($item[elf guard scuba tank]);
-                        conditional += "elf guard scuba tank,";
-                    }
-                    tempEquipment("item drop,sea,-equip peridot", "shark jumper,scale-mail underwear,black glass," + conditional + bathysphere($item[toy cupid bow]));
-                    mood("itdrop");
-                    adv($location[The Caliginous Abyss]);
-                }
-            }
-        }
-        if (to_int(get_property("momSeaMonkeeProgress")) < 24 && str == "cyberrealm"){
-            if (!contains_text(get_property("banishedPhyla"), "construct")) {
-                if (get_property("madnessBakeryAvailable") == "false") {
-                    visit_url("shop.php?whichshop=armory&action=talk");
-                    run_choice(1);
-                }
-                while (!contains_text(get_property("banishedPhyla"), "construct")
-                    && $location[madness bakery].turns_spent < 3) {
-                    use_familiar($familiar[patriotic eagle]);
-                    tempEquipment("item drop", "monodent of the sea");
-                    adv($location[madness bakery]);
-                }
-            }
-            while (get_property("_monsterHabitatsMonster") != "eye in the darkness" && get_property("_monsterHabitatsMonster") != "slithering thing" 
-                && to_int(get_property("_monsterHabitatsRecalled")) < 3 && have_skill($skill[just the facts])) {
-                recallCaliginous();
-            }
-            while (to_int(get_property("_monsterHabitatsFightsLeft")) > 0
-                && to_int(get_property("_cyberFreeFights")) < 10
-                && to_int(get_property("momSeaMonkeeProgress")) < 40) {
-                use_familiar($familiar[glover]);
-                tempEquipment("moxie", "shark jumper,scale-mail underwear,monodent of the sea");
-                if (my_buffedstat($stat[moxie]) < 500)
-                    abort("Need 500 moxie here to be safe");
-                adv($location[Cyberzone 1]);
-            }
-            while (to_int(get_property("momSeaMonkeeProgress")) < initialMomProgress)
-                finishCaliginous();
-        }
     }
 
     void corral(string str){
