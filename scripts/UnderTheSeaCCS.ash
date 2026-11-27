@@ -655,7 +655,7 @@ void main(int round, monster mob, string page_text) {
                     if (item_amount($item[ink bladder]) > 0 && my_familiar() != $familiar[sword of s words])
                         throw_item($item[ink bladder]);
                 }
-                if (my_familiar() == $familiar[peace turkey])
+                if (my_familiar() == $familiar[peace turkey] || (last_monster() == $monster[sea cow] && $location[The Mer-Kin Outpost].turns_spent >= 26 && get_property("merkinLockkeyMonster") == "") && item_amount($item[ink bladder]) > 0)
                     throw_item($item[ink bladder]);
                 free_kill(page_text, true);
                 free_run(page_text, false);
