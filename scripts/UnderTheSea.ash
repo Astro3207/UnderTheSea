@@ -2152,8 +2152,7 @@ string DropsItems;
             if (available_amount($item[mer-kin hallpass]) < 2 || (available_amount($item[mer-kin bunwig]) == 0 && isKBandSushiEnough() == false)){
                 use_familiar("itdrop");
                 mood("itdrop");
-            }
-            else if (available_amount($item[mer-kin hallpass]) >= 2 && highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
+            } else if (available_amount($item[mer-kin hallpass]) >= 1 && highShiny() && to_int(get_property("swordOfSWordsMonster")) == 763){
                 if (item_amount($item[ink bladder]) == 0)
                     use_familiar($familiar[sword of s words]);
                 else 
