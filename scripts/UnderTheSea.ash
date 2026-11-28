@@ -722,9 +722,13 @@ string DropsItems;
                     use($item[blessed large box]);
             }
             if (estimated_ascension_seed_possibilities( ) == 1 && get_property("dreadScroll7") == "0"){
+  //              for x from 1 to 6
+    //                set_property("raveCombo"+x,"");
                 string [string] seedProps = ascension_seed_properties(possible_ascension_seeds( )[0]);
                 foreach str in seedProps{
                     set_property(str, seedProps[str]);
+                    if (str == "merkinCatalogChoices")
+                        break;
                 }
             } else if (estimated_ascension_seed_possibilities( ) > 1 && have_item($item[intriguing puzzle box]))
                 abort("Intriguing puzzle box handling has failed. Let FS know and randomly click around in puzzle box");
