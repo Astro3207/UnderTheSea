@@ -439,6 +439,9 @@ string DropsItems;
             adv1($location[The Caliginous Abyss]);
         }
 
+        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40 && to_int(get_property("momSeaMonkeeProgress")) > 32)
+            caliginous("cheap");
+
         // Club em next week monster follow-up
         if (total_turns_played() >= to_int(get_property("clubEmNextWeekMonsterTurn")) + 8
             && get_property("clubEmNextWeekMonster") != "") {
@@ -981,6 +984,7 @@ string DropsItems;
             conditional += saberEquip($location[mer-kin library]);
             conditional += cloakeEquip($location[mer-kin library]);
         } else if (highShiny()){
+            cli_execute("acquire waterlogged scroll of healing, sea gel");
             if (item_amount($item[mer-kin healscroll]) == 0 && YogHealingsNeeded[available_amount($item[mer-kin prayerbeads])] - YogHealingsOwned() > pulls_remaining( ) - reservedPulls())
                 use_familiar("itdrop");
             else if (item_amount($item[ink bladder]) < 1){
@@ -999,8 +1003,6 @@ string DropsItems;
         mood("itdrop");
         useMapIfAvailable();
         adv($location[mer-kin library]);
-        if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40)
-            caliginous("cheap");
     }
 
     void getMissingCorralItems(){
@@ -2164,8 +2166,6 @@ string DropsItems;
             zoneStall("the teacher's lounge noncombat", $item[none],
                 $location[mer-kin elementary school], schoolTurns, 20);
             adv($location[mer-kin elementary school]);
-            if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40)
-                caliginous("cheap");
             schoolTurns += 1;
             put_closet(item_amount($item[mer-kin hallpass]),
                 $item[mer-kin hallpass]);
@@ -2247,9 +2247,6 @@ string DropsItems;
                     $location[mer-kin elementary school], schoolTurns, 20);
                 adv($location[mer-kin elementary school]);
                 schoolTurns += 1;
-                if (get_property("spookyVHSTapeMonster") == "" && to_int(get_property("momSeaMonkeeProgress")) < 40){
-                    caliginous("cheap");
-                }
             }
         }
     }
